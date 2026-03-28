@@ -10,6 +10,9 @@ import OrdersPage from '../pages/OrdersPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import LoginPage from '../pages/LoginPage';
 import AdminPage from '../pages/AdminPage';
+import AboutPage from '../pages/AboutPage';
+import ServicePage from '../pages/ServicePage';
+import ContactPage from '../pages/ContactPage';
 import { useAppSelector } from '../hooks/useAppDispatch';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -30,8 +33,11 @@ const AppRoutes: React.FC = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/service" element={<ServicePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/cart"

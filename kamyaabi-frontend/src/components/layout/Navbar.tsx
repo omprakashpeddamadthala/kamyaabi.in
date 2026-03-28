@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   IconButton,
   Badge,
@@ -20,10 +19,10 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Typography,
 } from '@mui/material';
 import {
   ShoppingCart,
-  Person,
   Menu as MenuIcon,
   Home,
   Store,
@@ -31,14 +30,26 @@ import {
   Dashboard,
   Logout,
   Login,
+  Info,
+  Build,
+  ContactMail,
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
+
+const navLinks = [
+  { label: 'Home', to: '/' },
+  { label: 'About Us', to: '/about' },
+  { label: 'Service', to: '/service' },
+  { label: 'Products', to: '/products' },
+  { label: 'Contact', to: '/contact' },
+];
 
 const Navbar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const { user } = useAppSelector((state) => state.auth);
@@ -63,40 +74,59 @@ const Navbar: React.FC = () => {
 
   const cartItemCount = cart?.totalItems || 0;
 
+  const drawerIcons: Record<string, React.ReactNode> = {
+    '/': <Home />,
+    '/about': <Info />,
+    '/service': <Build />,
+    '/products': <Store />,
+    '/contact': <ContactMail />,
+  };
+
   return (
-    <AppBar position="sticky" elevation={0}>
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{ bgcolor: '#FFFFFF', borderBottom: '1px solid #eee' }}
+    >
       <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+        <Toolbar disableGutters sx={{ justifyContent: 'space-between', minHeight: { xs: 64, md: 72 } }}>
           {isMobile && (
             <IconButton onClick={() => setDrawerOpen(true)} edge="start">
               <MenuIcon />
             </IconButton>
           )}
 
-          <Typography
-            variant="h5"
-            component={Link}
-            to="/"
-            sx={{
-              textDecoration: 'none',
-              color: 'primary.main',
-              fontFamily: '"Playfair Display", serif',
-              fontWeight: 700,
-              letterSpacing: 1,
-            }}
-          >
-            KAMYAABI
-          </Typography>
+          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 50 }} />
+          </Box>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-              <Button component={Link} to="/" color="inherit">Home</Button>
-              <Button component={Link} to="/products" color="inherit">Products</Button>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              {navLinks.map((link) => (
+                <Button
+                  key={link.to}
+                  component={Link}
+                  to={link.to}
+                  sx={{
+                    color: location.pathname === link.to ? 'primary.main' : '#1A1A1A',
+                    fontWeight: location.pathname === link.to ? 700 : 500,
+                    fontSize: '0.95rem',
+                    px: 2,
+                    '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                  }}
+                >
+                  {link.label}
+                </Button>
+              ))}
               {user && (
-                <Button component={Link} to="/orders" color="inherit">Orders</Button>
+                <Button component={Link} to="/orders" sx={{ color: '#1A1A1A', fontWeight: 500, fontSize: '0.95rem', px: 2 }}>
+                  Orders
+                </Button>
               )}
               {user?.role === 'ADMIN' && (
-                <Button component={Link} to="/admin" color="inherit">Admin</Button>
+                <Button component={Link} to="/admin" sx={{ color: '#1A1A1A', fontWeight: 500, fontSize: '0.95rem', px: 2 }}>
+                  Admin
+                </Button>
               )}
             </Box>
           )}
@@ -105,7 +135,7 @@ const Navbar: React.FC = () => {
             {user && (
               <IconButton component={Link} to="/cart" color="inherit">
                 <Badge badgeContent={cartItemCount} color="primary">
-                  <ShoppingCart />
+                  <ShoppingCart sx={{ color: '#1A1A1A' }} />
                 </Badge>
               </IconButton>
             )}
@@ -113,23 +143,13 @@ const Navbar: React.FC = () => {
             {user ? (
               <>
                 <IconButton onClick={handleMenuOpen}>
-                  <Avatar
-                    src={user.avatarUrl || undefined}
-                    alt={user.name}
-                    sx={{ width: 32, height: 32 }}
-                  >
+                  <Avatar src={user.avatarUrl || undefined} alt={user.name} sx={{ width: 32, height: 32 }}>
                     {user.name.charAt(0)}
                   </Avatar>
                 </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                   <MenuItem disabled>
-                    <Typography variant="body2" color="text.secondary">
-                      {user.name}
-                    </Typography>
+                    <Typography variant="body2" color="text.secondary">{user.name}</Typography>
                   </MenuItem>
                   <Divider />
                   <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
@@ -151,14 +171,23 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <Button
-                component={Link}
-                to="/login"
+                component="a"
+                href="https://wa.me/8985858888"
+                target="_blank"
+                rel="noopener noreferrer"
                 variant="contained"
-                color="primary"
-                startIcon={<Login />}
                 size="small"
+                startIcon={<Login />}
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  borderRadius: 6,
+                  px: 2,
+                  fontWeight: 600,
+                  '&:hover': { bgcolor: 'primary.dark' },
+                }}
               >
-                Login
+                {"Let's Talk"}
               </Button>
             )}
           </Box>
@@ -168,20 +197,16 @@ const Navbar: React.FC = () => {
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 250 }} onClick={() => setDrawerOpen(false)}>
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6" color="primary" fontFamily='"Playfair Display", serif'>
-              KAMYAABI
-            </Typography>
+            <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 40 }} />
           </Box>
           <Divider />
           <List>
-            <ListItem component={Link} to="/">
-              <ListItemIcon><Home /></ListItemIcon>
-              <ListItemText primary="Home" />
-            </ListItem>
-            <ListItem component={Link} to="/products">
-              <ListItemIcon><Store /></ListItemIcon>
-              <ListItemText primary="Products" />
-            </ListItem>
+            {navLinks.map((link) => (
+              <ListItem key={link.to} component={Link} to={link.to}>
+                <ListItemIcon>{drawerIcons[link.to]}</ListItemIcon>
+                <ListItemText primary={link.label} />
+              </ListItem>
+            ))}
             {user && (
               <ListItem component={Link} to="/orders">
                 <ListItemIcon><Receipt /></ListItemIcon>
