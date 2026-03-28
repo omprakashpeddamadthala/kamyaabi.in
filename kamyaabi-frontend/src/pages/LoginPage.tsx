@@ -9,7 +9,7 @@ import {
   Divider,
   Alert,
 } from '@mui/material';
-import { Google } from '@mui/icons-material';
+import { Google, AdminPanelSettings } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { googleLogin } from '../features/auth/authSlice';
 
@@ -18,13 +18,12 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
 
+  const isDev = !import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   const handleGoogleLogin = () => {
-    // In production, this would use Google OAuth SDK
-    // For now, we'll open Google OAuth and process the callback
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!clientId) {
-      // Demo mode: simulate login for development
       dispatch(
         googleLogin({
           email: 'demo@kamyaabi.in',
@@ -40,11 +39,25 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    // Production Google OAuth flow
     const redirectUri = encodeURIComponent(window.location.origin + '/auth/callback');
     const scope = encodeURIComponent('email profile');
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline`;
     window.location.href = authUrl;
+  };
+
+  const handleAdminLogin = () => {
+    dispatch(
+      googleLogin({
+        email: 'admin@kamyaabi.in',
+        name: 'Kamyaabi Admin',
+        picture: '',
+        sub: 'admin-google-id',
+      })
+    ).then((result) => {
+      if (googleLogin.fulfilled.match(result)) {
+        navigate('/admin');
+      }
+    });
   };
 
   return (
@@ -94,6 +107,30 @@ const LoginPage: React.FC = () => {
         >
           {loading ? 'Signing in...' : 'Continue with Google'}
         </Button>
+
+        {isDev && (
+          <>
+            <Divider sx={{ my: 3 }}>
+              <Typography variant="body2" color="text.secondary">Dev Mode</Typography>
+            </Divider>
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              startIcon={<AdminPanelSettings />}
+              onClick={handleAdminLogin}
+              disabled={loading}
+              sx={{
+                py: 1.5,
+                borderColor: 'primary.main',
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'primary.main', color: '#fff' },
+              }}
+            >
+              Login as Admin
+            </Button>
+          </>
+        )}
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="body2" color="text.secondary">
