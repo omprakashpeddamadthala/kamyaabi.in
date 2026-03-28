@@ -1,0 +1,86 @@
+package com.kamyaabi.service.impl;
+
+import com.kamyaabi.dto.request.AddressRequest;
+import com.kamyaabi.dto.response.AddressResponse;
+import com.kamyaabi.entity.Address;
+import com.kamyaabi.entity.User;
+import com.kamyaabi.exception.BadRequestException;
+import com.kamyaabi.exception.ResourceNotFoundException;
+import com.kamyaabi.mapper.AddressMapper;
+import com.kamyaabi.repository.AddressRepository;
+import com.kamyaabi.repository.UserRepository;
+import com.kamyaabi.service.AddressService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Slf4j
+@Service
+@Transactional
+public class AddressServiceImpl implements AddressService {
+
+    private final AddressRepository addressRepository;
+    private final UserRepository userRepository;
+    private final AddressMapper addressMapper;
+
+    public AddressServiceImpl(AddressRepository addressRepository,
+                              UserRepository userRepository,
+                              AddressMapper addressMapper) {
+        this.addressRepository = addressRepository;
+        this.userRepository = userRepository;
+        this.addressMapper = addressMapper;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AddressResponse> getUserAddresses(Long userId) {
+        log.debug("Fetching addresses for user: {}", userId);
+        return addressRepository.findByUserId(userId).stream()
+                .map(addressMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public AddressResponse createAddress(Long userId, AddressRequest request) {
+        log.info("Creating address for user: {}", userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+
+        Address address = addressMapper.toEntity(request, user);
+        Address saved = addressRepository.save(address);
+        log.info("Address created with id: {}", saved.getId());
+        return addressMapper.toResponse(saved);
+    }
+
+    @Override
+    public AddressResponse updateAddress(Long userId, Long addressId, AddressRequest request) {
+        log.info("Updating address {} for user: {}", addressId, userId);
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address", addressId));
+
+        if (!address.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Address does not belong to user");
+        }
+
+        addressMapper.updateEntity(address, request);
+        Address saved = addressRepository.save(address);
+        log.info("Address updated: {}", saved.getId());
+        return addressMapper.toResponse(saved);
+    }
+
+    @Override
+    public void deleteAddress(Long userId, Long addressId) {
+        log.info("Deleting address {} for user: {}", addressId, userId);
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address", addressId));
+
+        if (!address.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Address does not belong to user");
+        }
+
+        addressRepository.delete(address);
+        log.info("Address deleted: {}", addressId);
+    }
+}

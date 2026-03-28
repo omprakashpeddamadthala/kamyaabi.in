@@ -1,0 +1,161 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Container,
+  Grid,
+  Typography,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  IconButton,
+  Breadcrumbs,
+  Link as MuiLink,
+} from '@mui/material';
+import { ShoppingCart, Add, Remove } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
+import { fetchProductById, clearSelectedProduct } from '../features/product/productSlice';
+import { addToCart } from '../features/cart/cartSlice';
+import Loading from '../components/common/Loading';
+
+const ProductDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { selectedProduct: product, loading } = useAppSelector((state) => state.products);
+  const { user } = useAppSelector((state) => state.auth);
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchProductById(Number(id)));
+    }
+    return () => {
+      dispatch(clearSelectedProduct());
+    };
+  }, [dispatch, id]);
+
+  const handleAddToCart = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (product) {
+      dispatch(addToCart({ productId: product.id, quantity }));
+    }
+  };
+
+  if (loading || !product) return <Loading />;
+
+  const hasDiscount = product.discountPrice !== null && product.discountPrice < product.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
+    : 0;
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <MuiLink component={Link} to="/" underline="hover" color="inherit">
+          Home
+        </MuiLink>
+        <MuiLink component={Link} to="/products" underline="hover" color="inherit">
+          Products
+        </MuiLink>
+        <Typography color="text.primary">{product.name}</Typography>
+      </Breadcrumbs>
+
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <Box
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              bgcolor: '#F5F5F0',
+            }}
+          >
+            <Box
+              component="img"
+              src={product.imageUrl || 'https://via.placeholder.com/600x500?text=Product'}
+              alt={product.name}
+              sx={{ width: '100%', height: 'auto', maxHeight: 500, objectFit: 'cover' }}
+            />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Chip label={product.categoryName} color="primary" variant="outlined" sx={{ mb: 2 }} />
+
+          <Typography variant="h3" sx={{ mb: 1, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
+            {product.name}
+          </Typography>
+
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {product.weight} {product.unit}
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="h4" color="primary" fontWeight={700}>
+              ₹{hasDiscount ? product.discountPrice : product.price}
+            </Typography>
+            {hasDiscount && (
+              <>
+                <Typography
+                  variant="h5"
+                  sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
+                >
+                  ₹{product.price}
+                </Typography>
+                <Chip label={`${discountPercent}% OFF`} color="error" size="small" />
+              </>
+            )}
+          </Box>
+
+          <Divider sx={{ mb: 3 }} />
+
+          <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8 }}>
+            {product.description}
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="body1" fontWeight={600}>
+              Quantity:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
+              <IconButton
+                size="small"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              >
+                <Remove />
+              </IconButton>
+              <Typography sx={{ px: 2, fontWeight: 600 }}>{quantity}</Typography>
+              <IconButton
+                size="small"
+                onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+              >
+                <Add />
+              </IconButton>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              ({product.stock} in stock)
+            </Typography>
+          </Box>
+
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            startIcon={<ShoppingCart />}
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+            sx={{ py: 1.5 }}
+          >
+            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
+  );
+};
+
+export default ProductDetailPage;

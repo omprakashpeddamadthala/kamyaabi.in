@@ -1,0 +1,140 @@
+package com.kamyaabi.service.impl;
+
+import com.kamyaabi.config.AppProperties;
+import com.kamyaabi.dto.request.PaymentVerifyRequest;
+import com.kamyaabi.dto.response.PaymentResponse;
+import com.kamyaabi.dto.response.RazorpayOrderResponse;
+import com.kamyaabi.entity.Order;
+import com.kamyaabi.entity.Payment;
+import com.kamyaabi.exception.PaymentException;
+import com.kamyaabi.exception.ResourceNotFoundException;
+import com.kamyaabi.mapper.PaymentMapper;
+import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.repository.PaymentRepository;
+import com.kamyaabi.service.PaymentService;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
+import com.razorpay.Utils;
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+@Slf4j
+@Service
+@Transactional
+public class PaymentServiceImpl implements PaymentService {
+
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentMapper paymentMapper;
+    private final AppProperties appProperties;
+
+    public PaymentServiceImpl(PaymentRepository paymentRepository,
+                              OrderRepository orderRepository,
+                              PaymentMapper paymentMapper,
+                              AppProperties appProperties) {
+        this.paymentRepository = paymentRepository;
+        this.orderRepository = orderRepository;
+        this.paymentMapper = paymentMapper;
+        this.appProperties = appProperties;
+    }
+
+    @Override
+    public RazorpayOrderResponse createRazorpayOrder(Long orderId) {
+        log.info("Creating Razorpay order for order: {}", orderId);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+
+        if (order.getPayment() != null && order.getPayment().getStatus() == Payment.PaymentStatus.COMPLETED) {
+            throw new PaymentException("Payment already completed for this order");
+        }
+
+        try {
+            RazorpayClient razorpay = new RazorpayClient(
+                    appProperties.getRazorpay().getKeyId(),
+                    appProperties.getRazorpay().getKeySecret());
+
+            // Razorpay expects amount in paise (smallest currency unit)
+            long amountInPaise = order.getTotalAmount().multiply(new BigDecimal("100")).longValue();
+
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", amountInPaise);
+            orderRequest.put("currency", "INR");
+            orderRequest.put("receipt", "order_" + orderId);
+
+            com.razorpay.Order razorpayOrder = razorpay.orders.create(orderRequest);
+
+            String razorpayOrderId = razorpayOrder.get("id");
+
+            // Save payment record
+            Payment payment = Payment.builder()
+                    .order(order)
+                    .razorpayOrderId(razorpayOrderId)
+                    .amount(order.getTotalAmount())
+                    .status(Payment.PaymentStatus.PENDING)
+                    .build();
+            paymentRepository.save(payment);
+
+            log.info("Razorpay order created: {}", razorpayOrderId);
+
+            return RazorpayOrderResponse.builder()
+                    .razorpayOrderId(razorpayOrderId)
+                    .amount(order.getTotalAmount())
+                    .currency("INR")
+                    .orderId(orderId)
+                    .keyId(appProperties.getRazorpay().getKeyId())
+                    .build();
+
+        } catch (RazorpayException e) {
+            log.error("Failed to create Razorpay order", e);
+            throw new PaymentException("Failed to create payment order: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public PaymentResponse verifyPayment(PaymentVerifyRequest request) {
+        log.info("Verifying payment for order: {}", request.getOrderId());
+
+        Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Razorpay order: " + request.getRazorpayOrderId()));
+
+        try {
+            // Verify signature
+            JSONObject attributes = new JSONObject();
+            attributes.put("razorpay_order_id", request.getRazorpayOrderId());
+            attributes.put("razorpay_payment_id", request.getRazorpayPaymentId());
+            attributes.put("razorpay_signature", request.getRazorpaySignature());
+
+            boolean isValid = Utils.verifyPaymentSignature(attributes,
+                    appProperties.getRazorpay().getKeySecret());
+
+            if (isValid) {
+                payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
+                payment.setRazorpaySignature(request.getRazorpaySignature());
+                payment.setStatus(Payment.PaymentStatus.COMPLETED);
+
+                // Update order status
+                Order order = payment.getOrder();
+                order.setStatus(Order.OrderStatus.CONFIRMED);
+                orderRepository.save(order);
+
+                Payment saved = paymentRepository.save(payment);
+                log.info("Payment verified successfully for order: {}", request.getOrderId());
+                return paymentMapper.toResponse(saved);
+            } else {
+                payment.setStatus(Payment.PaymentStatus.FAILED);
+                paymentRepository.save(payment);
+                throw new PaymentException("Payment verification failed - invalid signature");
+            }
+        } catch (RazorpayException e) {
+            log.error("Payment verification failed", e);
+            payment.setStatus(Payment.PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            throw new PaymentException("Payment verification failed: " + e.getMessage(), e);
+        }
+    }
+}
