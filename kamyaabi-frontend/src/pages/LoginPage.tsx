@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
 
-  const isDev = !import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const isDev = import.meta.env.DEV;
 
   const handleGoogleLogin = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
