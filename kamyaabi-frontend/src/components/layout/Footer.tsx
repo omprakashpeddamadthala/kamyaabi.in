@@ -1,8 +1,28 @@
-import React from 'react';
-import { Box, Container, Typography, Link as MuiLink, Grid, Divider, TextField, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Container, Typography, Link as MuiLink, Grid, Divider, TextField, Button, Alert } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+
+  const handleSubscribe = () => {
+    setEmailError(null);
+    setEmailSuccess(null);
+    if (!email.trim()) {
+      setEmailError('Please enter an email address.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    setEmailSuccess('Thank you for subscribing!');
+    setEmail('');
+  };
+
   return (
     <Box component="footer" sx={{ bgcolor: '#1A1A1A', color: '#FFFFFF', py: 6, mt: 'auto' }}>
       <Container maxWidth="lg">
@@ -42,15 +62,25 @@ const Footer: React.FC = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontSize: '1rem' }}>Newsletter</Typography>
             <Typography variant="body2" sx={{ color: '#AAA', mb: 2 }}>Subscribe to get updates on our latest offers.</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField placeholder="Your email" variant="outlined" size="small" sx={{ flex: 1, '& .MuiOutlinedInput-root': { color: '#fff', '& fieldset': { borderColor: '#555' }, '&:hover fieldset': { borderColor: '#888' } } }} />
-              <Button variant="contained" size="small" sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}>Subscribe</Button>
+              <TextField
+                placeholder="Your email"
+                variant="outlined"
+                size="small"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(null); setEmailSuccess(null); }}
+                error={!!emailError}
+                sx={{ flex: 1, '& .MuiOutlinedInput-root': { color: '#fff', '& fieldset': { borderColor: emailError ? '#f44336' : '#555' }, '&:hover fieldset': { borderColor: emailError ? '#f44336' : '#888' } } }}
+              />
+              <Button variant="contained" size="small" onClick={handleSubscribe} sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}>Subscribe</Button>
             </Box>
+            {emailError && <Typography variant="body2" sx={{ color: '#f44336', mt: 1, fontSize: '0.75rem' }}>{emailError}</Typography>}
+            {emailSuccess && <Alert severity="success" sx={{ mt: 1, py: 0, '& .MuiAlert-message': { py: 0.5 } }}>{emailSuccess}</Alert>}
           </Grid>
         </Grid>
 
         <Divider sx={{ my: 4, borderColor: '#333' }} />
 
-        <Typography variant="body2" align="center" sx={{ color: '#666' }}>
+        <Typography variant="body2" align="center" sx={{ color: '#666', whiteSpace: 'nowrap' }}>
           &copy; {new Date().getFullYear()} Kamyaabi. All rights reserved.
         </Typography>
       </Container>

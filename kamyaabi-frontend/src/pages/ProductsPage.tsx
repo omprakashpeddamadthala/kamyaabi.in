@@ -151,8 +151,13 @@ const ProductsPage: React.FC = () => {
       ) : products.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
-            No products found
+            {searchQuery ? `No products found for "${searchQuery}".` : 'No products found.'}
           </Typography>
+          {searchQuery && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Try a different search term or browse our categories.
+            </Typography>
+          )}
         </Box>
       ) : (
         <>

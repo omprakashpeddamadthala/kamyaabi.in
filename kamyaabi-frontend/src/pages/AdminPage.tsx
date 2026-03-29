@@ -27,8 +27,9 @@ import {
   InputLabel,
   Alert,
   Pagination,
+  Paper,
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, AttachMoney, Warning } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProducts, fetchCategories } from '../features/product/productSlice';
 import { adminApi, ProductRequest, CategoryRequest } from '../api/adminApi';
@@ -199,9 +200,43 @@ const AdminPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4 }}>
+      <Typography variant="h3" sx={{ mb: 3 }}>
         Admin Dashboard
       </Typography>
+
+      {/* Dashboard Stats */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <Inventory sx={{ fontSize: 36, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{products.length}</Typography>
+            <Typography variant="body2" color="text.secondary">Total Products</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <CartIcon sx={{ fontSize: 36, color: 'info.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{orders.length}</Typography>
+            <Typography variant="body2" color="text.secondary">Total Orders</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <AttachMoney sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              ₹{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString('en-IN')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <Warning sx={{ fontSize: 36, color: 'warning.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{products.filter(p => p.stock < 10).length}</Typography>
+            <Typography variant="body2" color="text.secondary">Low Stock Alerts</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>{success}</Alert>}

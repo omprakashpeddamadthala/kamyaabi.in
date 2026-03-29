@@ -112,6 +112,9 @@ const Navbar: React.FC = () => {
                     fontWeight: location.pathname === link.to ? 700 : 500,
                     fontSize: '0.95rem',
                     px: 2,
+                    borderBottom: location.pathname === link.to ? '2px solid' : '2px solid transparent',
+                    borderColor: location.pathname === link.to ? 'primary.main' : 'transparent',
+                    borderRadius: 0,
                     '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
                   }}
                 >
@@ -119,12 +122,30 @@ const Navbar: React.FC = () => {
                 </Button>
               ))}
               {user && (
-                <Button component={Link} to="/orders" sx={{ color: '#1A1A1A', fontWeight: 500, fontSize: '0.95rem', px: 2 }}>
+                <Button component={Link} to="/orders" sx={{
+                  color: location.pathname === '/orders' ? 'primary.main' : '#1A1A1A',
+                  fontWeight: location.pathname === '/orders' ? 700 : 500,
+                  fontSize: '0.95rem',
+                  px: 2,
+                  borderBottom: location.pathname === '/orders' ? '2px solid' : '2px solid transparent',
+                  borderColor: location.pathname === '/orders' ? 'primary.main' : 'transparent',
+                  borderRadius: 0,
+                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                }}>
                   Orders
                 </Button>
               )}
               {user?.role === 'ADMIN' && (
-                <Button component={Link} to="/admin" sx={{ color: '#1A1A1A', fontWeight: 500, fontSize: '0.95rem', px: 2 }}>
+                <Button component={Link} to="/admin" sx={{
+                  color: location.pathname === '/admin' ? 'primary.main' : '#1A1A1A',
+                  fontWeight: location.pathname === '/admin' ? 700 : 500,
+                  fontSize: '0.95rem',
+                  px: 2,
+                  borderBottom: location.pathname === '/admin' ? '2px solid' : '2px solid transparent',
+                  borderColor: location.pathname === '/admin' ? 'primary.main' : 'transparent',
+                  borderRadius: 0,
+                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                }}>
                   Admin
                 </Button>
               )}
@@ -134,7 +155,7 @@ const Navbar: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {user && (
               <IconButton component={Link} to="/cart" color="inherit">
-                <Badge badgeContent={cartItemCount} color="primary">
+                <Badge badgeContent={cartItemCount} color="primary" invisible={cartItemCount === 0}>
                   <ShoppingCart sx={{ color: '#1A1A1A' }} />
                 </Badge>
               </IconButton>
