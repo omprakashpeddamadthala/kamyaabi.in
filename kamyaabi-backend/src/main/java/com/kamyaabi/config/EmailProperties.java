@@ -19,7 +19,7 @@ import java.util.List;
 public class EmailProperties {
 
     private boolean enabled = true;
-    private String fromEmail = "noreply@kamyaabi.in";
+    private String fromEmail = "omprakashornold@gmail.com";
     private String fromName = "Kamyaabi";
     private List<String> adminEmails = new ArrayList<>();
 
