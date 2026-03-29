@@ -141,17 +141,19 @@ const ProductDetailPage: React.FC = () => {
             </Typography>
           </Box>
 
-          <Button
-            variant="contained"
-            size="large"
-            fullWidth
-            startIcon={<ShoppingCart />}
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            sx={{ py: 1.5 }}
-          >
-            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-          </Button>
+          {(!user || user.role !== 'ADMIN') && (
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              startIcon={<ShoppingCart />}
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              sx={{ py: 1.5 }}
+            >
+              {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+            </Button>
+          )}
         </Grid>
       </Grid>
     </Container>
