@@ -24,7 +24,6 @@ import {
 } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
 import Loading from '../components/common/Loading';
-import { useAppSelector as useAuthSelector } from '../hooks/useAppDispatch';
 
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +31,7 @@ const ProductsPage: React.FC = () => {
   const { products, categories, totalPages, currentPage, loading } = useAppSelector(
     (state) => state.products
   );
-  const { user } = useAuthSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
   const isAdmin = user?.role === 'ADMIN';
 
   const [searchQuery, setSearchQuery] = useState('');
