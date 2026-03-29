@@ -23,7 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice !== product.price;
+  const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;

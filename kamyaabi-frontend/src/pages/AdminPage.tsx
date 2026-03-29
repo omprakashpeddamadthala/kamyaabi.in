@@ -48,13 +48,15 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 
 const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { products, categories, totalPages, currentPage, loading } = useAppSelector(
+  const { products, categories, totalPages, totalElements, currentPage, loading } = useAppSelector(
     (state) => state.products
   );
 
   const [tabValue, setTabValue] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+  const [ordersTotalElements, setOrdersTotalElements] = useState(0);
+  const [ordersTotalRevenue, setOrdersTotalRevenue] = useState(0);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
@@ -90,8 +92,12 @@ const AdminPage: React.FC = () => {
   const loadOrders = async (page: number) => {
     try {
       const res = await adminApi.getAllOrders(page);
-      setOrders(res.data.data.content);
-      setOrdersTotalPages(res.data.data.totalPages);
+      const data = res.data.data;
+      setOrders(data.content);
+      setOrdersTotalPages(data.totalPages);
+      setOrdersTotalElements(data.totalElements);
+      // Sum revenue from loaded orders (best effort from available data)
+      setOrdersTotalRevenue(data.content.reduce((sum: number, o: Order) => sum + o.totalAmount, 0));
     } catch {
       setError('Failed to load orders');
     }
@@ -209,14 +215,14 @@ const AdminPage: React.FC = () => {
         <Grid item xs={6} md={3}>
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <Inventory sx={{ fontSize: 36, color: 'primary.main', mb: 1 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>{products.length}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{totalElements}</Typography>
             <Typography variant="body2" color="text.secondary">Total Products</Typography>
           </Paper>
         </Grid>
         <Grid item xs={6} md={3}>
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <CartIcon sx={{ fontSize: 36, color: 'info.main', mb: 1 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>{orders.length}</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{ordersTotalElements}</Typography>
             <Typography variant="body2" color="text.secondary">Total Orders</Typography>
           </Paper>
         </Grid>
@@ -224,7 +230,7 @@ const AdminPage: React.FC = () => {
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <AttachMoney sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              ₹{orders.reduce((sum, o) => sum + o.totalAmount, 0).toLocaleString('en-IN')}
+              ₹{ordersTotalRevenue.toLocaleString('en-IN')}
             </Typography>
             <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
           </Paper>
