@@ -102,7 +102,9 @@ const Navbar: React.FC = () => {
 
           {!isMobile && (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              {navLinks.map((link) => (
+              {navLinks
+                .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
+                .map((link) => (
                 <Button
                   key={link.to}
                   component={Link}
@@ -121,7 +123,7 @@ const Navbar: React.FC = () => {
                   {link.label}
                 </Button>
               ))}
-              {user && (
+              {user && user.role !== 'ADMIN' && (
                 <Button component={Link} to="/orders" sx={{
                   color: location.pathname === '/orders' ? 'primary.main' : '#1A1A1A',
                   fontWeight: location.pathname === '/orders' ? 700 : 500,
@@ -173,10 +175,12 @@ const Navbar: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">{user.name}</Typography>
                   </MenuItem>
                   <Divider />
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
-                    <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>
-                    My Orders
-                  </MenuItem>
+                  {user.role !== 'ADMIN' && (
+                    <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
+                      <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>
+                      My Orders
+                    </MenuItem>
+                  )}
                   {user.role === 'ADMIN' && (
                     <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }}>
                       <ListItemIcon><Dashboard fontSize="small" /></ListItemIcon>
@@ -220,13 +224,15 @@ const Navbar: React.FC = () => {
           </Box>
           <Divider />
           <List>
-            {navLinks.map((link) => (
+            {navLinks
+              .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
+              .map((link) => (
               <ListItem key={link.to} component={Link} to={link.to}>
                 <ListItemIcon>{drawerIcons[link.to]}</ListItemIcon>
                 <ListItemText primary={link.label} />
               </ListItem>
             ))}
-            {user && (
+            {user && user.role !== 'ADMIN' && (
               <ListItem component={Link} to="/orders">
                 <ListItemIcon><Receipt /></ListItemIcon>
                 <ListItemText primary="Orders" />
