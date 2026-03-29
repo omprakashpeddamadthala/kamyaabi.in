@@ -2,11 +2,14 @@ package com.kamyaabi.event;
 
 import com.kamyaabi.email.OrderEmailService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.stereotype.Component;
 
 /**
  * Listens for OrderEvent and delegates to OrderEmailService for email notifications.
+ * Uses @TransactionalEventListener to process events after the transaction commits,
+ * ensuring order status updates succeed even if email notification fails.
  */
 @Slf4j
 @Component
@@ -18,9 +21,13 @@ public class OrderEventListener {
         this.orderEmailService = orderEmailService;
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderEvent(OrderEvent event) {
-        log.info("Received order event: {} for order: {}", event.getEventType(), event.getOrder().getId());
-        orderEmailService.sendOrderNotification(event.getOrder(), event.getEventType());
+        try {
+            log.info("Received order event: {} for order: {}", event.getEventType(), event.getOrder().getId());
+            orderEmailService.sendOrderNotification(event.getOrder(), event.getEventType());
+        } catch (Exception e) {
+            log.error("Failed to process order event for order: {}", event.getOrder().getId(), e);
+        }
     }
 }
