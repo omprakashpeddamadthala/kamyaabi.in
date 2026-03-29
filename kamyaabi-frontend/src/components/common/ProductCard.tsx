@@ -23,7 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  const hasDiscount = product.discountPrice !== null && product.discountPrice < product.price;
+  const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
@@ -66,17 +66,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
           {product.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, whiteSpace: 'nowrap' }}>
           {product.weight} {product.unit}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, mt: 'auto' }}>
-          <Typography variant="h6" color="primary" fontWeight={700}>
+          <Typography variant="h6" color="primary" fontWeight={700} sx={{ whiteSpace: 'nowrap' }}>
             ₹{hasDiscount ? product.discountPrice : product.price}
           </Typography>
           {hasDiscount && (
             <Typography
               variant="body2"
-              sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
+              sx={{ textDecoration: 'line-through', color: 'text.secondary', whiteSpace: 'nowrap' }}
             >
               ₹{product.price}
             </Typography>

@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
+import ProductCard from '../components/common/ProductCard';
 import Loading from '../components/common/Loading';
 
 const heroSlides = [
@@ -41,17 +42,10 @@ const counters = [
   { icon: '/assets/img/icon/counter-icon4.webp', label: 'Sustainably Grown' },
 ];
 
-const productGallery = [
-  { name: 'Premium Split Cashews', images: ['/assets/img/product/splitcashew1.webp', '/assets/img/product/splitcashew2.webp', '/assets/img/product/splitcashew3.webp', '/assets/img/product/splitcashew4.webp'] },
-  { name: 'Whole Cashews', images: ['/assets/img/product/wholecashew3.webp', '/assets/img/product/whole_cashew4.webp', '/assets/img/product/whole_cashew1.webp', '/assets/img/product/whole_cashew2.webp'] },
-  { name: 'Premium California Almonds - Jumbo', images: ['/assets/img/product/almond_jumbo1.webp', '/assets/img/product/almond_jumbo2.webp', '/assets/img/product/almond_jumbo3.webp', '/assets/img/product/almond_jumbo4.webp'] },
-  { name: 'Premium California Almonds - Regular', images: ['/assets/img/product/almond_1.webp', '/assets/img/product/almond_2.webp', '/assets/img/product/almond_3.webp', '/assets/img/product/almond_4.webp'] },
-  { name: 'Roasted and Salted Pistachios', images: ['/assets/img/product/pista1.webp', '/assets/img/product/pista2.webp', '/assets/img/product/pista3.webp', '/assets/img/product/pista4.webp'] },
-];
 
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.products);
+  const { featuredProducts, loading } = useAppSelector((state) => state.products);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
@@ -148,7 +142,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Our Products Gallery */}
+      {/* Our Products */}
       <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -156,22 +150,18 @@ const HomePage: React.FC = () => {
             <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>Our Products</Typography>
             <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Our Products</Typography>
           </Box>
-          {productGallery.map((product) => (
-            <Box key={product.name} sx={{ mb: 4 }}>
-              <Grid container spacing={2}>
-                {product.images.map((img, idx) => (
-                  <Grid item xs={6} sm={3} key={idx}>
-                    <Card component={Link} to="/products" sx={{ textDecoration: 'none', overflow: 'hidden', borderRadius: 3, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.03)' } }}>
-                      <CardMedia component="img" image={img} alt={product.name} sx={{ height: 220, objectFit: 'cover' }} />
-                      <Box sx={{ p: 1.5, textAlign: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1A1A1A' }}>{product.name}</Typography>
-                      </Box>
-                    </Card>
-                  </Grid>
-                ))}
+          <Grid container spacing={3}>
+            {featuredProducts.map((product) => (
+              <Grid item xs={6} sm={4} md={3} key={product.id}>
+                <ProductCard product={product} />
               </Grid>
-            </Box>
-          ))}
+            ))}
+          </Grid>
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
+            <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
+              View All Products
+            </Button>
+          </Box>
         </Container>
       </Box>
 
@@ -184,7 +174,7 @@ const HomePage: React.FC = () => {
           <Grid container spacing={2}>
             {galleryImages.map((img, idx) => (
               <Grid item xs={6} sm={4} key={idx}>
-                <Box component="img" src={img} alt={`Gallery ${idx + 1}`} sx={{ width: '100%', height: { xs: 150, md: 220 }, objectFit: 'cover', borderRadius: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }} />
+                <Box component="img" src={img} alt={`Premium dry fruits collection ${idx + 1}`} sx={{ width: '100%', height: { xs: 150, md: 220 }, objectFit: 'cover', borderRadius: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }} />
               </Grid>
             ))}
           </Grid>

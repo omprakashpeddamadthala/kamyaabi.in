@@ -27,8 +27,9 @@ import {
   InputLabel,
   Alert,
   Pagination,
+  Paper,
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, AttachMoney, Warning } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProducts, fetchCategories } from '../features/product/productSlice';
 import { adminApi, ProductRequest, CategoryRequest } from '../api/adminApi';
@@ -47,13 +48,15 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 
 const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { products, categories, totalPages, currentPage, loading } = useAppSelector(
+  const { products, categories, totalPages, totalElements, currentPage, loading } = useAppSelector(
     (state) => state.products
   );
 
   const [tabValue, setTabValue] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+  const [ordersTotalElements, setOrdersTotalElements] = useState(0);
+  const [ordersTotalRevenue, setOrdersTotalRevenue] = useState(0);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
@@ -89,8 +92,12 @@ const AdminPage: React.FC = () => {
   const loadOrders = async (page: number) => {
     try {
       const res = await adminApi.getAllOrders(page);
-      setOrders(res.data.data.content);
-      setOrdersTotalPages(res.data.data.totalPages);
+      const data = res.data.data;
+      setOrders(data.content);
+      setOrdersTotalPages(data.totalPages);
+      setOrdersTotalElements(data.totalElements);
+      // Sum revenue from loaded orders (best effort from available data)
+      setOrdersTotalRevenue(data.content.reduce((sum: number, o: Order) => sum + o.totalAmount, 0));
     } catch {
       setError('Failed to load orders');
     }
@@ -199,9 +206,43 @@ const AdminPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4 }}>
+      <Typography variant="h3" sx={{ mb: 3 }}>
         Admin Dashboard
       </Typography>
+
+      {/* Dashboard Stats */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <Inventory sx={{ fontSize: 36, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{totalElements}</Typography>
+            <Typography variant="body2" color="text.secondary">Total Products</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <CartIcon sx={{ fontSize: 36, color: 'info.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{ordersTotalElements}</Typography>
+            <Typography variant="body2" color="text.secondary">Total Orders</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <AttachMoney sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              ₹{ordersTotalRevenue.toLocaleString('en-IN')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
+            <Warning sx={{ fontSize: 36, color: 'warning.main', mb: 1 }} />
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>{products.filter(p => p.stock < 10).length}</Typography>
+            <Typography variant="body2" color="text.secondary">Low Stock Alerts</Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>{success}</Alert>}
