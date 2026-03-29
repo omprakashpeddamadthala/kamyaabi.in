@@ -29,7 +29,7 @@ import {
   Pagination,
   Paper,
 } from '@mui/material';
-import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, AttachMoney, Warning } from '@mui/icons-material';
+import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, CurrencyRupee, Warning } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProducts, fetchCategories } from '../features/product/productSlice';
 import { adminApi, ProductRequest, CategoryRequest } from '../api/adminApi';
@@ -231,7 +231,7 @@ const AdminPage: React.FC = () => {
         </Grid>
         <Grid item xs={6} md={3}>
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
-            <AttachMoney sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
+            <CurrencyRupee sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
               ₹{ordersTotalRevenue.toLocaleString('en-IN')}
             </Typography>
