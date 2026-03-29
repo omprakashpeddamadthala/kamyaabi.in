@@ -6,7 +6,7 @@ spring:
     name: kamyaabi-backend
 
   profiles:
-    active: dev
+    active: local
 
   jpa:
     hibernate:

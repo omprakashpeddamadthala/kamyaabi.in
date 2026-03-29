@@ -34,8 +34,9 @@ import {
   Build,
   ContactMail,
 } from '@mui/icons-material';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
-import { logout } from '../../features/auth/authSlice';
+import { logout, googleLogin } from '../../features/auth/authSlice';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -54,6 +55,8 @@ const Navbar: React.FC = () => {
 
   const { user } = useAppSelector((state) => state.auth);
   const { cart } = useAppSelector((state) => state.cart);
+
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -170,25 +173,27 @@ const Navbar: React.FC = () => {
                 </Menu>
               </>
             ) : (
-              <Button
-                component="a"
-                href="https://wa.me/8985858888"
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="contained"
-                size="small"
-                startIcon={<Login />}
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: '#fff',
-                  borderRadius: 6,
-                  px: 2,
-                  fontWeight: 600,
-                  '&:hover': { bgcolor: 'primary.dark' },
-                }}
-              >
-                {"Let's Talk"}
-              </Button>
+              <GoogleOAuthProvider clientId={clientId}>
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    if (credentialResponse.credential) {
+                      dispatch(
+                        googleLogin({
+                          idToken: credentialResponse.credential,
+                        })
+                      );
+                    }
+                  }}
+                  onError={() => {
+                    console.error('Login Failed');
+                  }}
+                  type="standard"
+                  theme="outline"
+                  size="medium"
+                  text="signin_with"
+                  shape="pill"
+                />
+              </GoogleOAuthProvider>
             )}
           </Box>
         </Toolbar>
