@@ -1,10 +1,15 @@
 package com.kamyaabi.service.impl;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.kamyaabi.dto.response.AuthResponse;
 import com.kamyaabi.dto.response.UserResponse;
 import com.kamyaabi.entity.User;
-import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
+import com.kamyaabi.exception.UnauthorizedException;
 import com.kamyaabi.mapper.UserMapper;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.security.JwtTokenProvider;
@@ -13,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
@@ -59,9 +65,24 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void googleLogin_shouldThrowBadRequestException() {
-        assertThatThrownBy(() -> authService.googleLogin("some-token"))
-                .isInstanceOf(BadRequestException.class);
+    void googleLogin_nullToken_shouldThrowUnauthorizedException() {
+        assertThatThrownBy(() -> authService.googleLogin(null))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Failed to verify Google ID token");
+    }
+
+    @Test
+    void googleLogin_emptyToken_shouldThrowUnauthorizedException() {
+        assertThatThrownBy(() -> authService.googleLogin(""))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Failed to verify Google ID token");
+    }
+
+    @Test 
+    void googleLogin_invalidToken_shouldThrowUnauthorizedException() {
+        assertThatThrownBy(() -> authService.googleLogin("invalid-token"))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Failed to verify Google ID token");
     }
 
     @Test

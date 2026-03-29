@@ -3,7 +3,8 @@ package com.kamyaabi.controller;
 import com.kamyaabi.dto.response.AuthResponse;
 import com.kamyaabi.dto.response.UserResponse;
 import com.kamyaabi.security.CurrentUser;
-import com.kamyaabi.service.impl.AuthServiceImpl;
+import com.kamyaabi.security.JwtTokenProvider;
+import com.kamyaabi.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,20 +21,53 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
-    @Mock private AuthServiceImpl authService;
+    @Mock private AuthService authService;
     @Mock private CurrentUser currentUser;
+    @Mock private JwtTokenProvider jwtTokenProvider;
 
     @InjectMocks private AuthController authController;
 
     @Test
-    void googleLogin_shouldReturnAuthResponse() {
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("email", "test@kamyaabi.in");
+    void googleLogin_withIdToken_shouldReturnAuthResponse() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("idToken", "valid-google-id-token");
+        
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
                 .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
-        when(authService.processGoogleUser(userInfo)).thenReturn(authResponse);
+        when(authService.googleLogin("valid-google-id-token")).thenReturn(authResponse);
 
-        ResponseEntity<?> response = authController.googleLogin(userInfo);
+        ResponseEntity<?> response = authController.googleLogin(request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void googleLogin_withUserInfo_shouldReturnAuthResponse() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("email", "test@kamyaabi.in");
+        request.put("name", "Test User");
+        request.put("picture", "http://avatar.url");
+        request.put("sub", "google-123");
+        
+        AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
+                .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
+        when(authService.processGoogleUser(request)).thenReturn(authResponse);
+
+        ResponseEntity<?> response = authController.googleLogin(request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void googleLogin_missingIdToken_shouldUseUserInfo() {
+        Map<String, Object> request = new HashMap<>();
+        request.put("email", "test@kamyaabi.in");
+        
+        AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
+                .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
+        when(authService.processGoogleUser(request)).thenReturn(authResponse);
+
+        ResponseEntity<?> response = authController.googleLogin(request);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }

@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 
 @Slf4j
 @Configuration
-@Profile("dev")
+@Profile({"dev", "local"})
 public class DataInitializer {
 
     @Bean
@@ -31,14 +31,17 @@ public class DataInitializer {
 
             log.info("Initializing sample data...");
 
-            // Create admin user
-            User admin = User.builder()
-                    .email("admin@kamyaabi.in")
-                    .name("Kamyaabi Admin")
-                    .role(User.Role.ADMIN)
-                    .googleId("admin-google-id")
-                    .build();
-            userRepo.save(admin);
+            // Create default admin user
+            if (!userRepo.existsByEmail("omprakashornold@gmail.com")) {
+                User adminUser = User.builder()
+                        .email("omprakashornold@gmail.com")
+                        .name("Admin User")
+                        .role(User.Role.ADMIN)
+                        .googleId("admin-default")
+                        .build();
+                userRepo.save(adminUser);
+                log.info("Default admin user created: omprakashornold@gmail.com");
+            }
 
             // Create categories
             Category cashews = categoryRepo.save(Category.builder()
