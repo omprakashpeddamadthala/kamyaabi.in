@@ -162,12 +162,15 @@ const AdminPage: React.FC = () => {
   };
 
   const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+    if (!status) return;
     try {
       await adminApi.updateOrderStatus(orderId, status);
       setSuccess('Order status updated');
       loadOrders(0);
-    } catch {
-      setError('Failed to update order status');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      const msg = axiosError?.response?.data?.message || 'Failed to update order status';
+      setError(msg);
     }
   };
 
