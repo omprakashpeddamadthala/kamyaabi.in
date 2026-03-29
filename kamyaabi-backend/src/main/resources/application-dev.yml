@@ -14,6 +14,18 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
 
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+
   security:
     oauth2:
       client:
@@ -34,3 +46,19 @@ app:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
+
+  email:
+    enabled: true
+    from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
+    from-name: Kamyaabi
+    admin-emails:
+      - ${ADMIN_EMAIL:admin@kamyaabi.in}
+    sendgrid:
+      api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key}
+    smtp:
+      host: ${SMTP_HOST:smtp.gmail.com-placeholder}
+      port: ${SMTP_PORT:587}
+      username: ${SMTP_USERNAME:}
+      password: ${SMTP_PASSWORD:}
+      starttls-enabled: true
+      auth: true

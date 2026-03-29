@@ -9,6 +9,8 @@ import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.*;
 import com.kamyaabi.service.CartService;
 import com.kamyaabi.service.OrderService;
+import com.kamyaabi.event.OrderEventPublisher;
+import com.kamyaabi.event.OrderEventType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final CartService cartService;
+    private final OrderEventPublisher orderEventPublisher;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             CartRepository cartRepository,
@@ -38,7 +41,8 @@ public class OrderServiceImpl implements OrderService {
                             UserRepository userRepository,
                             ProductRepository productRepository,
                             OrderMapper orderMapper,
-                            CartService cartService) {
+                            CartService cartService,
+                            OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.addressRepository = addressRepository;
@@ -46,6 +50,7 @@ public class OrderServiceImpl implements OrderService {
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.cartService = cartService;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @Override
@@ -113,6 +118,9 @@ public class OrderServiceImpl implements OrderService {
         // Clear the cart
         cartService.clearCart(userId);
 
+        // Publish order placed event for email notification
+        orderEventPublisher.publishOrderEvent(savedOrder, OrderEventType.ORDER_PLACED);
+
         return orderMapper.toResponse(savedOrder);
     }
 
@@ -149,6 +157,22 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(status);
         Order saved = orderRepository.save(order);
         log.info("Order {} status updated to: {}", orderId, status);
+
+        // Publish order status change event for email notification
+        OrderEventType eventType = mapStatusToEventType(status);
+        orderEventPublisher.publishOrderEvent(saved, eventType);
+
         return orderMapper.toResponse(saved);
+    }
+
+    private OrderEventType mapStatusToEventType(Order.OrderStatus status) {
+        return switch (status) {
+            case PENDING -> OrderEventType.ORDER_PLACED;
+            case CONFIRMED -> OrderEventType.ORDER_CONFIRMED;
+            case PROCESSING -> OrderEventType.ORDER_PROCESSING;
+            case SHIPPED -> OrderEventType.ORDER_SHIPPED;
+            case DELIVERED -> OrderEventType.ORDER_DELIVERED;
+            case CANCELLED -> OrderEventType.ORDER_CANCELLED;
+        };
     }
 }

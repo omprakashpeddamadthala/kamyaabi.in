@@ -8,6 +8,8 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.*;
 import com.kamyaabi.service.CartService;
+import com.kamyaabi.event.OrderEventPublisher;
+import com.kamyaabi.event.OrderEventType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +41,7 @@ class OrderServiceImplTest {
     @Mock private ProductRepository productRepository;
     @Mock private OrderMapper orderMapper;
     @Mock private CartService cartService;
+    @Mock private OrderEventPublisher orderEventPublisher;
 
     @InjectMocks private OrderServiceImpl orderService;
 
@@ -81,6 +84,7 @@ class OrderServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(1L);
         verify(cartService).clearCart(1L);
+        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.ORDER_PLACED);
     }
 
     @Test
@@ -224,6 +228,7 @@ class OrderServiceImplTest {
 
         assertThat(result).isNotNull();
         verify(orderRepository).save(order);
+        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.ORDER_CONFIRMED);
     }
 
     @Test

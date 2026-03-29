@@ -112,6 +112,19 @@
             <version>1.4.6</version>
         </dependency>
 
+        <!-- Email -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- SendGrid -->
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.10.2</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -150,6 +163,9 @@
                         <exclude>com/kamyaabi/dto/**</exclude>
                         <exclude>com/kamyaabi/config/DataInitializer.class</exclude>
                         <exclude>com/kamyaabi/config/SwaggerConfig.class</exclude>
+                        <exclude>com/kamyaabi/config/AsyncConfig.class</exclude>
+                        <exclude>com/kamyaabi/config/EmailProperties.class</exclude>
+                        <exclude>com/kamyaabi/config/EmailProperties$*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

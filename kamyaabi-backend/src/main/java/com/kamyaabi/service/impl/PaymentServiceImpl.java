@@ -12,6 +12,8 @@ import com.kamyaabi.mapper.PaymentMapper;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.repository.PaymentRepository;
 import com.kamyaabi.service.PaymentService;
+import com.kamyaabi.event.OrderEventPublisher;
+import com.kamyaabi.event.OrderEventType;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
@@ -31,15 +33,18 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
     private final AppProperties appProperties;
+    private final OrderEventPublisher orderEventPublisher;
 
     public PaymentServiceImpl(PaymentRepository paymentRepository,
                               OrderRepository orderRepository,
                               PaymentMapper paymentMapper,
-                              AppProperties appProperties) {
+                              AppProperties appProperties,
+                              OrderEventPublisher orderEventPublisher) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.paymentMapper = paymentMapper;
         this.appProperties = appProperties;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @Override
@@ -124,16 +129,28 @@ public class PaymentServiceImpl implements PaymentService {
 
                 Payment saved = paymentRepository.save(payment);
                 log.info("Payment verified successfully for order: {}", request.getOrderId());
+
+                // Publish order confirmed event for email notification
+                orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_CONFIRMED);
+
                 return paymentMapper.toResponse(saved);
             } else {
                 payment.setStatus(Payment.PaymentStatus.FAILED);
                 paymentRepository.save(payment);
+
+                // Publish order failed event for email notification
+                orderEventPublisher.publishOrderEvent(payment.getOrder(), OrderEventType.ORDER_FAILED);
+
                 throw new PaymentException("Payment verification failed - invalid signature");
             }
         } catch (RazorpayException e) {
             log.error("Payment verification failed", e);
             payment.setStatus(Payment.PaymentStatus.FAILED);
             paymentRepository.save(payment);
+
+            // Publish order failed event for email notification
+            orderEventPublisher.publishOrderEvent(payment.getOrder(), OrderEventType.ORDER_FAILED);
+
             throw new PaymentException("Payment verification failed: " + e.getMessage(), e);
         }
     }
