@@ -12,6 +12,7 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.PaymentMapper;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.repository.PaymentRepository;
+import com.kamyaabi.event.OrderEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,7 @@ class PaymentServiceImplTest {
     @Mock private OrderRepository orderRepository;
     @Mock private PaymentMapper paymentMapper;
     @Mock private AppProperties appProperties;
+    @Mock private OrderEventPublisher orderEventPublisher;
 
     @InjectMocks private PaymentServiceImpl paymentService;
 

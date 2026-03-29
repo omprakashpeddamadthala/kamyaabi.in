@@ -38,3 +38,10 @@ app:
   razorpay:
     key-id: rzp_test_placeholder
     key-secret: placeholder_secret
+
+  email:
+    enabled: false
+    sendgrid:
+      api-key: your-sendgrid-api-key
+    smtp:
+      host: smtp.gmail.com-placeholder

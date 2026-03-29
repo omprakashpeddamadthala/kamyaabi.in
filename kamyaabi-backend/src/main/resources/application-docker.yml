@@ -5,6 +5,18 @@ spring:
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -31,3 +43,19 @@ app:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
+
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
+    from-name: ${EMAIL_FROM_NAME:Kamyaabi}
+    admin-emails:
+      - ${ADMIN_EMAIL:admin@kamyaabi.in}
+    sendgrid:
+      api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key}
+    smtp:
+      host: ${SMTP_HOST:smtp.gmail.com-placeholder}
+      port: ${SMTP_PORT:587}
+      username: ${SMTP_USERNAME:}
+      password: ${SMTP_PASSWORD:}
+      starttls-enabled: true
+      auth: true
