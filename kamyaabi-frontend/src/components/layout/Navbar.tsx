@@ -153,7 +153,7 @@ const Navbar: React.FC = () => {
           )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {user && (
+            {user && user.role !== 'ADMIN' && (
               <IconButton component={Link} to="/cart" color="inherit">
                 <Badge badgeContent={cartItemCount} color="primary" invisible={cartItemCount === 0}>
                   <ShoppingCart sx={{ color: '#1A1A1A' }} />
@@ -192,10 +192,8 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <Button
-                component="a"
-                href="https://wa.me/8985858888"
-                target="_blank"
-                rel="noopener noreferrer"
+                component={Link}
+                to="/login"
                 variant="contained"
                 size="small"
                 startIcon={<Login />}
@@ -208,7 +206,7 @@ const Navbar: React.FC = () => {
                   '&:hover': { bgcolor: 'primary.dark' },
                 }}
               >
-                {"Let's Talk"}
+                Sign In
               </Button>
             )}
           </Box>

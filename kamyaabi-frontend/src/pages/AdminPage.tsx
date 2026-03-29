@@ -270,7 +270,8 @@ const AdminPage: React.FC = () => {
                   <TableRow>
                     <TableCell>Name</TableCell>
                     <TableCell>Category</TableCell>
-                    <TableCell>Price</TableCell>
+                    <TableCell>Price (MRP)</TableCell>
+                    <TableCell>Discount Price</TableCell>
                     <TableCell>Stock</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>Actions</TableCell>
@@ -281,7 +282,8 @@ const AdminPage: React.FC = () => {
                     <TableRow key={p.id}>
                       <TableCell>{p.name}</TableCell>
                       <TableCell>{p.categoryName}</TableCell>
-                      <TableCell>₹{p.discountPrice || p.price}</TableCell>
+                      <TableCell>₹{p.price}</TableCell>
+                      <TableCell>{p.discountPrice ? `₹${p.discountPrice}` : '—'}</TableCell>
                       <TableCell>{p.stock}</TableCell>
                       <TableCell>
                         <Chip label={p.active ? 'Active' : 'Inactive'} color={p.active ? 'success' : 'default'} size="small" />
@@ -395,7 +397,7 @@ const AdminPage: React.FC = () => {
             <TextField label="Description" value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} fullWidth multiline rows={3} />
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <TextField label="Price" type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} fullWidth required />
+                <TextField label="Price (MRP)" type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} fullWidth required />
               </Grid>
               <Grid item xs={6}>
                 <TextField label="Discount Price" type="number" value={productForm.discountPrice} onChange={(e) => setProductForm({ ...productForm, discountPrice: Number(e.target.value) })} fullWidth />

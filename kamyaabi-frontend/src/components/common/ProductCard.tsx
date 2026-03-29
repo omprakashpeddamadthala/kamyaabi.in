@@ -82,16 +82,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </Typography>
           )}
         </Box>
-        <Button
-          variant="contained"
-          size="small"
-          fullWidth
-          startIcon={<ShoppingCart />}
-          onClick={handleAddToCart}
-          disabled={product.stock === 0}
-        >
-          {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-        </Button>
+        {(!user || user.role !== 'ADMIN') && (
+          <Button
+            variant="contained"
+            size="small"
+            fullWidth
+            startIcon={<ShoppingCart />}
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+          >
+            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

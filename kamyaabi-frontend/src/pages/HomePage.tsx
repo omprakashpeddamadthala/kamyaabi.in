@@ -46,6 +46,8 @@ const counters = [
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { featuredProducts, loading } = useAppSelector((state) => state.products);
+  const { user } = useAppSelector((state) => state.auth);
+  const isAdmin = user?.role === 'ADMIN';
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
@@ -143,27 +145,29 @@ const HomePage: React.FC = () => {
       </Box>
 
       {/* Our Products */}
-      <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8 }} />
-            <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>Our Products</Typography>
-            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Our Products</Typography>
-          </Box>
-          <Grid container spacing={3}>
-            {featuredProducts.map((product) => (
-              <Grid item xs={6} sm={4} md={3} key={product.id}>
-                <ProductCard product={product} />
-              </Grid>
-            ))}
-          </Grid>
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
-              View All Products
-            </Button>
-          </Box>
-        </Container>
-      </Box>
+      {!isAdmin && (
+        <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
+          <Container maxWidth="lg">
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8 }} />
+              <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>Our Products</Typography>
+              <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Our Products</Typography>
+            </Box>
+            <Grid container spacing={3}>
+              {featuredProducts.map((product) => (
+                <Grid item xs={6} sm={4} md={3} key={product.id}>
+                  <ProductCard product={product} />
+                </Grid>
+              ))}
+            </Grid>
+            <Box sx={{ textAlign: 'center', mt: 4 }}>
+              <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
+                View All Products
+              </Button>
+            </Box>
+          </Container>
+        </Box>
+      )}
 
       {/* Gallery Collection */}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>

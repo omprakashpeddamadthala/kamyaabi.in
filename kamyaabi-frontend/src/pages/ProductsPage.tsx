@@ -24,6 +24,7 @@ import {
 } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
 import Loading from '../components/common/Loading';
+import { useAppSelector as useAuthSelector } from '../hooks/useAppDispatch';
 
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -31,6 +32,8 @@ const ProductsPage: React.FC = () => {
   const { products, categories, totalPages, currentPage, loading } = useAppSelector(
     (state) => state.products
   );
+  const { user } = useAuthSelector((state) => state.auth);
+  const isAdmin = user?.role === 'ADMIN';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
@@ -146,7 +149,13 @@ const ProductsPage: React.FC = () => {
         ))}
       </Box>
 
-      {loading ? (
+      {isAdmin ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" color="text.secondary">
+            Admin users cannot browse products. Please use the Admin Dashboard to manage products.
+          </Typography>
+        </Box>
+      ) : loading ? (
         <Loading />
       ) : products.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
