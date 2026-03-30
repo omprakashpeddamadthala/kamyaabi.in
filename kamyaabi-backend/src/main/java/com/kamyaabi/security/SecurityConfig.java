@@ -49,7 +49,7 @@ public class SecurityConfig {
                         // OAuth2 endpoints
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         // Swagger
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // H2 Console
                         .requestMatchers("/h2-console/**").permitAll()
                         // Actuator
