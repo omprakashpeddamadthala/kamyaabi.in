@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: framework
+
 spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/kamyaabi}

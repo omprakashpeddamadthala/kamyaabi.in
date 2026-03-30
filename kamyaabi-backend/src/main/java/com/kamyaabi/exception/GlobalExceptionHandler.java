@@ -2,6 +2,7 @@ package com.kamyaabi.exception;
 
 import com.kamyaabi.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -76,6 +77,11 @@ public class GlobalExceptionHandler {
         log.warn("Message not readable: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("Invalid request body"));
+    }
+
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbortException(ClientAbortException ex) {
+        log.debug("Client disconnected (broken pipe): {}", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,6 +1,7 @@
 package com.kamyaabi.exception;
 
 import com.kamyaabi.dto.response.ApiResponse;
+import org.apache.catalina.connector.ClientAbortException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,6 +98,14 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getMessage()).isEqualTo("Validation failed");
         assertThat(response.getBody().getData()).containsEntry("name", "must not be blank");
         assertThat(response.getBody().getData()).containsEntry("price", "must be positive");
+    }
+
+    @Test
+    void handleClientAbortException_shouldNotThrow() {
+        ClientAbortException ex = new ClientAbortException(new IOException("Broken pipe"));
+
+        handler.handleClientAbortException(ex);
+        // Should complete without throwing - client already disconnected so no response needed
     }
 
     @Test
