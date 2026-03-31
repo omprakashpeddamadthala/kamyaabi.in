@@ -88,7 +88,7 @@ docker compose run --rm --entrypoint "\
     $STAGING_ARG \
     --email $EMAIL \
     --rsa-key-size $RSA_KEY_SIZE \
-    -d $DOMAINS \
+    -d $DOMAINS -d www.$DOMAINS \
     --agree-tos \
     --no-eff-email \
     --force-renewal" certbot
