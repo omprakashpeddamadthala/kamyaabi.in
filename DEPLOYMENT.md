@@ -13,10 +13,15 @@ Internet → NGINX (SSL :443/:80)
             └── /actuator   → Backend
 
 Services:
-  ┌─────────────┐  ┌───────────┐  ┌───────────┐  ┌──────────┐  ┌─────────┐
-  │  NGINX :80  │  │ Frontend  │  │  Backend  │  │ Postgres │  │ Certbot │
-  │  NGINX :443 │──│  :80      │  │  :8080    │──│  :5432   │  │ (cron)  │
-  └─────────────┘  └───────────┘  └───────────┘  └──────────┘  └─────────┘
+  ┌─────────────┐  ┌───────────┐  ┌───────────┐  ┌─────────┐
+  │  NGINX :80  │  │ Frontend  │  │  Backend  │  │ Certbot │
+  │  NGINX :443 │──│  :80      │  │  :8080    │──│ (cron)  │
+  └─────────────┘  └───────────┘  └───────────┘  └─────────┘
+                                        │
+                                  ┌──────────────┐
+                                  │ External DB  │
+                                  │ (PostgreSQL) │
+                                  └──────────────┘
 ```
 
 ## Prerequisites
@@ -42,7 +47,9 @@ nano .env  # Edit with your actual values
 ```
 
 **Required values to update:**
-- `POSTGRES_PASSWORD` — strong database password
+- `DATABASE_URL` — JDBC URL for your external PostgreSQL database
+- `DATABASE_USERNAME` — database username
+- `DATABASE_PASSWORD` — database password
 - `JWT_SECRET` — at least 256-bit secret for HS256
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — from Google Cloud Console
 - `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` — from Razorpay Dashboard
@@ -147,7 +154,7 @@ Ensure these ports are open on Oracle Cloud:
 | 443  | TCP      | HTTPS |
 | 22   | TCP      | SSH (admin access) |
 
-Port 5432 (PostgreSQL) and 8080 (backend) are internal only — not exposed to the internet.
+Port 8080 (backend) is internal only — not exposed to the internet. The database is hosted externally.
 
 ## SSL Certificate Auto-Renewal
 
@@ -159,10 +166,13 @@ The `certbot` container automatically renews certificates every 12 hours. The `n
 Run `init-letsencrypt.sh` first to obtain certificates.
 
 ### Backend can't connect to PostgreSQL
-Check that the `postgres` container is healthy:
+Verify your external database connection settings in `.env`:
 ```bash
-docker compose ps postgres
-docker compose logs postgres
+# Check DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD are set correctly
+cat .env | grep DATABASE
+
+# Test connectivity to external database
+docker compose logs backend | grep -i "database\|postgres\|connection"
 ```
 
 ### CORS errors in browser
@@ -184,9 +194,9 @@ docker compose run --rm certbot certbot certificates
 
 | Variable | Service | Description | Default |
 |----------|---------|-------------|---------|
-| `POSTGRES_DB` | postgres | Database name | `kamyaabi` |
-| `POSTGRES_USER` | postgres | Database user | `postgres` |
-| `POSTGRES_PASSWORD` | postgres | Database password | `postgres` |
+| `DATABASE_URL` | backend | JDBC URL for external PostgreSQL | (required) |
+| `DATABASE_USERNAME` | backend | External database username | (required) |
+| `DATABASE_PASSWORD` | backend | External database password | (required) |
 | `JWT_SECRET` | backend | JWT signing secret (256+ bits) | dev default |
 | `CORS_ALLOWED_ORIGINS` | backend | Allowed CORS origins | `https://nextnotepad.com,...` |
 | `GOOGLE_CLIENT_ID` | backend | Google OAuth client ID | placeholder |
