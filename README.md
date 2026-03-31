@@ -8,7 +8,7 @@ A full-stack eCommerce web application for premium dry fruits, built with Spring
 - Java 17, Spring Boot 3.2.5
 - Spring Security + OAuth2 (Google Login)
 - JWT Authentication
-- JPA/Hibernate with H2 (dev) / PostgreSQL (prod/docker)
+- JPA/Hibernate with H2 (dev) / PostgreSQL (prod, external)
 - Razorpay Payment Integration
 - Caffeine Caching
 - Swagger/OpenAPI Documentation
@@ -27,7 +27,7 @@ A full-stack eCommerce web application for premium dry fruits, built with Spring
 ### DevOps
 - Docker & Docker Compose
 - GitHub Actions CI/CD
-- PostgreSQL 16 (Docker)
+- PostgreSQL (external, production)
 - Nginx (Frontend serving)
 
 ## Project Structure
@@ -124,20 +124,19 @@ docker compose down
 docker compose down -v
 ```
 
-This starts three services:
-- **PostgreSQL** — `localhost:5432` (database)
+This starts two services (database is external):
 - **Backend** — `localhost:8080` (Spring Boot API)
 - **Frontend** — `localhost:3000` (React app via Nginx)
 
 ### Docker Environment Variables
 
-Create a `.env` file in the project root (optional, defaults are provided):
+Create a `.env` file in the project root (required for database configuration):
 
 ```env
-# PostgreSQL
-POSTGRES_USER=kamyaabi
-POSTGRES_PASSWORD=kamyaabi123
-POSTGRES_DB=kamyaabi_db
+# External Database (PostgreSQL)
+DATABASE_URL=jdbc:postgresql://your-db-host:5432/kamyaabi
+DATABASE_USERNAME=your-db-username
+DATABASE_PASSWORD=your-secure-db-password
 
 # Backend
 JWT_SECRET=your-jwt-secret-key
