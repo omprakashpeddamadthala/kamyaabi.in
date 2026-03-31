@@ -130,7 +130,7 @@ This starts two services (database is external):
 
 ### Docker Environment Variables
 
-Create a `.env` file in the project root (optional, defaults are provided):
+Create a `.env` file in the project root (required for database configuration):
 
 ```env
 # External Database (PostgreSQL)
