@@ -81,8 +81,8 @@ const FlyingImage: React.FC<{ item: FlyingItem }> = ({ item }) => {
         zIndex: 9999,
         pointerEvents: 'none',
         boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-        animation: 'flyToCart 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-        '@keyframes flyToCart': {
+        animation: `flyToCart-${item.id} 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards`,
+        [`@keyframes flyToCart-${item.id}`]: {
           '0%': {
             transform: 'translate(0, 0) scale(1)',
             opacity: 1,
