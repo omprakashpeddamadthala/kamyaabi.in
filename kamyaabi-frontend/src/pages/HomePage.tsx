@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Box, Container, Typography, Grid, Button, TextField, Card, CardMedia,
+  Box, Container, Typography, Grid, Button, TextField, Card, CardMedia, Skeleton,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
-import Loading from '../components/common/Loading';
+import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
+import PageTransition from '../components/common/PageTransition';
 
 const heroSlides = [
   { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: '/assets/img/hero/banner2.webp' },
@@ -66,9 +67,10 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) return <Loading />;
+  const showProductSkeletons = loading && featuredProducts.length === 0;
 
   return (
+    <PageTransition>
     <Box>
       {/* Hero Section */}
       <Box sx={{ bgcolor: '#f0ede6', position: 'relative', overflow: 'hidden' }}>
@@ -154,11 +156,17 @@ const HomePage: React.FC = () => {
               <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Our Products</Typography>
             </Box>
             <Grid container spacing={3}>
-              {featuredProducts.map((product) => (
-                <Grid item xs={6} sm={4} md={3} key={product.id}>
-                  <ProductCard product={product} />
-                </Grid>
-              ))}
+              {showProductSkeletons
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <Grid item xs={6} sm={4} md={3} key={i}>
+                      <ProductCardSkeleton />
+                    </Grid>
+                  ))
+                : featuredProducts.map((product) => (
+                    <Grid item xs={6} sm={4} md={3} key={product.id}>
+                      <ProductCard product={product} />
+                    </Grid>
+                  ))}
             </Grid>
             <Box sx={{ textAlign: 'center', mt: 4 }}>
               <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
@@ -271,6 +279,7 @@ const HomePage: React.FC = () => {
         <img src="/assets/img/wicon.webp" alt="WhatsApp" style={{ width: '100%', height: '100%' }} />
       </Box>
     </Box>
+    </PageTransition>
   );
 };
 

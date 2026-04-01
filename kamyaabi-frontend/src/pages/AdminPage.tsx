@@ -104,19 +104,32 @@ const AdminPage: React.FC = () => {
   };
 
   const handleSaveProduct = async () => {
+    if (productForm.price <= 0) {
+      setError('Price (MRP) must be greater than zero');
+      return;
+    }
+    if (productForm.discountPrice && productForm.discountPrice > 0 && productForm.discountPrice >= productForm.price) {
+      setError('Discount Price (Selling Price) must be less than the original Price (MRP)');
+      return;
+    }
     try {
+      const payload = {
+        ...productForm,
+        discountPrice: productForm.discountPrice && productForm.discountPrice > 0 ? productForm.discountPrice : undefined,
+      };
       if (editingProductId) {
-        await adminApi.updateProduct(editingProductId, productForm);
+        await adminApi.updateProduct(editingProductId, payload);
         setSuccess('Product updated successfully');
       } else {
-        await adminApi.createProduct(productForm);
+        await adminApi.createProduct(payload);
         setSuccess('Product created successfully');
       }
       setShowProductDialog(false);
       resetProductForm();
       dispatch(fetchProducts({}));
-    } catch {
-      setError('Failed to save product');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError?.response?.data?.message || 'Failed to save product');
     }
   };
 
@@ -400,12 +413,35 @@ const AdminPage: React.FC = () => {
             <TextField label="Description" value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} fullWidth multiline rows={3} />
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <TextField label="Price (MRP)" type="number" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} fullWidth required />
+                <TextField
+                  label="Price (MRP) ₹"
+                  type="number"
+                  value={productForm.price || ''}
+                  onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                  fullWidth
+                  required
+                  helperText="Original price before any discount"
+                  inputProps={{ min: 0, step: '0.01' }}
+                />
               </Grid>
               <Grid item xs={6}>
-                <TextField label="Discount Price" type="number" value={productForm.discountPrice} onChange={(e) => setProductForm({ ...productForm, discountPrice: Number(e.target.value) })} fullWidth />
+                <TextField
+                  label="Discount Price (Selling Price) ₹"
+                  type="number"
+                  value={productForm.discountPrice || ''}
+                  onChange={(e) => setProductForm({ ...productForm, discountPrice: Number(e.target.value) })}
+                  fullWidth
+                  helperText="Final selling price (must be less than MRP). Leave empty for no discount."
+                  inputProps={{ min: 0, step: '0.01' }}
+                  error={!!(productForm.discountPrice && productForm.discountPrice > 0 && productForm.price > 0 && productForm.discountPrice >= productForm.price)}
+                />
               </Grid>
             </Grid>
+            {productForm.discountPrice && productForm.discountPrice > 0 && productForm.price > 0 && productForm.discountPrice < productForm.price && (
+              <Alert severity="info" sx={{ mt: -1 }}>
+                Discount: {Math.round(((productForm.price - productForm.discountPrice) / productForm.price) * 100)}% OFF — Customer pays ₹{productForm.discountPrice} instead of ₹{productForm.price}
+              </Alert>
+            )}
             <TextField label="Image URL" value={productForm.imageUrl} onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })} fullWidth />
             <Grid container spacing={2}>
               <Grid item xs={4}>

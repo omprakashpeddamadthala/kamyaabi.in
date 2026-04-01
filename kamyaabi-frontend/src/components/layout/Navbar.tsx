@@ -36,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
+import { useFlyToCart } from '../common/FlyToCartAnimation';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -54,6 +55,7 @@ const Navbar: React.FC = () => {
 
   const { user } = useAppSelector((state) => state.auth);
   const { cart } = useAppSelector((state) => state.cart);
+  const { cartIconRef } = useFlyToCart();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -156,11 +158,22 @@ const Navbar: React.FC = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {user && user.role !== 'ADMIN' && (
-              <IconButton component={Link} to="/cart" color="inherit">
-                <Badge badgeContent={cartItemCount} color="primary" invisible={cartItemCount === 0}>
-                  <ShoppingCart sx={{ color: '#1A1A1A' }} />
-                </Badge>
-              </IconButton>
+              <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
+                <IconButton component={Link} to="/cart" color="inherit">
+                  <Badge
+                    badgeContent={cartItemCount}
+                    color="primary"
+                    invisible={cartItemCount === 0}
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      },
+                    }}
+                  >
+                    <ShoppingCart sx={{ color: '#1A1A1A' }} />
+                  </Badge>
+                </IconButton>
+              </Box>
             )}
 
             {user ? (

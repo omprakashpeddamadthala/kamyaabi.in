@@ -1,19 +1,20 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
-import HomePage from '../pages/HomePage';
-import ProductsPage from '../pages/ProductsPage';
-import ProductDetailPage from '../pages/ProductDetailPage';
-import CartPage from '../pages/CartPage';
-import CheckoutPage from '../pages/CheckoutPage';
-import OrdersPage from '../pages/OrdersPage';
-import OrderDetailPage from '../pages/OrderDetailPage';
-import LoginPage from '../pages/LoginPage';
-import AdminPage from '../pages/AdminPage';
-import AboutPage from '../pages/AboutPage';
-import ServicePage from '../pages/ServicePage';
-import ContactPage from '../pages/ContactPage';
 import { useAppSelector } from '../hooks/useAppDispatch';
+
+const HomePage = lazy(() => import('../pages/HomePage'));
+const ProductsPage = lazy(() => import('../pages/ProductsPage'));
+const ProductDetailPage = lazy(() => import('../pages/ProductDetailPage'));
+const CartPage = lazy(() => import('../pages/CartPage'));
+const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
+const OrdersPage = lazy(() => import('../pages/OrdersPage'));
+const OrderDetailPage = lazy(() => import('../pages/OrderDetailPage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const AdminPage = lazy(() => import('../pages/AdminPage'));
+const AboutPage = lazy(() => import('../pages/AboutPage'));
+const ServicePage = lazy(() => import('../pages/ServicePage'));
+const ContactPage = lazy(() => import('../pages/ContactPage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppSelector((state) => state.auth);

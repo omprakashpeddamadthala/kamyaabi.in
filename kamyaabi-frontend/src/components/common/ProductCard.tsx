@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -13,6 +13,7 @@ import { ShoppingCart } from '@mui/icons-material';
 import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart } from '../../features/cart/cartSlice';
+import { useFlyToCart } from './FlyToCartAnimation';
 
 interface ProductCardProps {
   product: Product;
@@ -22,6 +23,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { triggerFlyToCart } = useFlyToCart();
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
@@ -34,6 +37,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       navigate('/login');
       return;
     }
+    if (imageRef.current) {
+      triggerFlyToCart(
+        product.imageUrl || 'https://via.placeholder.com/50',
+        imageRef.current
+      );
+    }
     dispatch(addToCart({ productId: product.id, quantity: 1 }));
   };
 
@@ -45,10 +54,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
+          ref={imageRef}
           height="220"
           image={product.imageUrl || 'https://via.placeholder.com/300x220?text=Product'}
           alt={product.name}
           sx={{ objectFit: 'cover' }}
+          loading="lazy"
         />
         {hasDiscount && (
           <Chip
@@ -90,6 +101,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             startIcon={<ShoppingCart />}
             onClick={handleAddToCart}
             disabled={product.stock === 0}
+            sx={{
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              '&:active': {
+                transform: 'scale(0.95)',
+              },
+            }}
           >
             {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
           </Button>
