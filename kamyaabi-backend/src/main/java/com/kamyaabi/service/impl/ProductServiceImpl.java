@@ -4,6 +4,7 @@ import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
+import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.ProductMapper;
 import com.kamyaabi.repository.CategoryRepository;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -86,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(value = {"products", "featuredProducts"}, allEntries = true)
     public ProductResponse createProduct(ProductRequest request) {
         log.info("Creating new product: {}", request.getName());
+        validateDiscountPrice(request);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId()));
         Product product = productMapper.toEntity(request, category);
@@ -98,6 +101,7 @@ public class ProductServiceImpl implements ProductService {
     @CacheEvict(value = {"products", "productById", "featuredProducts"}, allEntries = true)
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         log.info("Updating product: {}", id);
+        validateDiscountPrice(request);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         Category category = categoryRepository.findById(request.getCategoryId())
@@ -106,6 +110,15 @@ public class ProductServiceImpl implements ProductService {
         Product saved = productRepository.save(product);
         log.info("Product updated: {}", saved.getId());
         return productMapper.toResponse(saved);
+    }
+
+    private void validateDiscountPrice(ProductRequest request) {
+        if (request.getDiscountPrice() != null
+                && request.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
+                && request.getPrice() != null
+                && request.getDiscountPrice().compareTo(request.getPrice()) >= 0) {
+            throw new BadRequestException("Discount price must be less than the original price (MRP)");
+        }
     }
 
     @Override

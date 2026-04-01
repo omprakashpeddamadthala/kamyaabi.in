@@ -23,7 +23,8 @@ import {
   fetchCategories,
 } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
-import Loading from '../components/common/Loading';
+import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
+import PageTransition from '../components/common/PageTransition';
 
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -76,6 +77,7 @@ const ProductsPage: React.FC = () => {
   const selectedCategory = categories.find((c) => c.id === Number(categoryId));
 
   return (
+    <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h3" sx={{ mb: 1 }}>
         {selectedCategory ? selectedCategory.name : 'All Products'}
@@ -155,7 +157,13 @@ const ProductsPage: React.FC = () => {
           </Typography>
         </Box>
       ) : loading ? (
-        <Loading />
+        <Grid container spacing={3}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Grid item xs={6} sm={4} md={3} key={i}>
+              <ProductCardSkeleton />
+            </Grid>
+          ))}
+        </Grid>
       ) : products.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="text.secondary">
@@ -191,6 +199,7 @@ const ProductsPage: React.FC = () => {
         </>
       )}
     </Container>
+    </PageTransition>
   );
 };
 
