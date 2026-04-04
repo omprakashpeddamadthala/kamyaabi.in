@@ -84,7 +84,8 @@ class OrderServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(1L);
         verify(cartService).clearCart(1L);
-        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.ORDER_PLACED);
+        // No email event on order creation — emails sent only after payment verification
+        verifyNoInteractions(orderEventPublisher);
     }
 
     @Test
@@ -233,14 +234,15 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void updateOrderStatus_toPaid_shouldPublishPaymentSuccessEvent() {
+    void updateOrderStatus_toPaid_shouldSkipEmailEvent() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
 
         orderService.updateOrderStatus(1L, Order.OrderStatus.PAID);
 
-        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
+        // PAID status set by admin skips email — payment verification handles this
+        verifyNoInteractions(orderEventPublisher);
     }
 
     @Test

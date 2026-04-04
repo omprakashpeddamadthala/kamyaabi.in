@@ -51,6 +51,8 @@ const CheckoutPage: React.FC = () => {
     pincode: '',
   });
   const [loading, setLoading] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +73,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handleSaveAddress = async () => {
+    setSavingAddress(true);
     try {
       await addressApi.create(formData);
       setShowAddDialog(false);
@@ -78,6 +81,8 @@ const CheckoutPage: React.FC = () => {
       loadAddresses();
     } catch {
       setError('Failed to save address');
+    } finally {
+      setSavingAddress(false);
     }
   };
 
@@ -86,6 +91,7 @@ const CheckoutPage: React.FC = () => {
       setError('Please select a shipping address');
       return;
     }
+    if (paymentProcessing) return;
     setLoading(true);
     setError(null);
     try {
@@ -94,6 +100,8 @@ const CheckoutPage: React.FC = () => {
       // Create Razorpay order
       const paymentRes = await paymentApi.createOrder(orderResult.id);
       const razorpayOrder = paymentRes.data.data;
+
+      setPaymentProcessing(true);
 
       const options = {
         key: razorpayOrder.keyId,
@@ -113,9 +121,17 @@ const CheckoutPage: React.FC = () => {
             navigate(`/orders/${orderResult.id}`);
           } catch {
             setError('Payment verification failed. If you were charged, a refund will be processed automatically.');
-            // Still navigate to order page so user can see the order status
             setTimeout(() => navigate(`/orders/${orderResult.id}`), 3000);
+          } finally {
+            setPaymentProcessing(false);
           }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentProcessing(false);
+            setError('Payment was cancelled. You can retry from your orders page.');
+            setTimeout(() => navigate(`/orders/${orderResult.id}`), 3000);
+          },
         },
         prefill: {
           name: user?.name,
@@ -128,6 +144,7 @@ const CheckoutPage: React.FC = () => {
       rzp.open();
     } catch {
       setError('Failed to create order');
+      setPaymentProcessing(false);
     } finally {
       setLoading(false);
     }
@@ -231,9 +248,9 @@ const CheckoutPage: React.FC = () => {
               fullWidth
               size="large"
               onClick={handlePlaceOrder}
-              disabled={loading || !selectedAddressId}
+              disabled={loading || paymentProcessing || !selectedAddressId}
             >
-              {loading ? 'Processing...' : 'Place Order & Pay'}
+              {loading ? 'Processing...' : paymentProcessing ? 'Payment in progress...' : 'Place Order & Pay'}
             </Button>
           </Card>
         </Grid>
@@ -297,9 +314,9 @@ const CheckoutPage: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowAddDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveAddress}>
-            Save Address
+          <Button onClick={() => setShowAddDialog(false)} disabled={savingAddress}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveAddress} disabled={savingAddress}>
+            {savingAddress ? 'Saving...' : 'Save Address'}
           </Button>
         </DialogActions>
       </Dialog>
