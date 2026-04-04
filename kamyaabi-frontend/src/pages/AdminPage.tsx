@@ -180,7 +180,7 @@ const AdminPage: React.FC = () => {
     try {
       await adminApi.updateOrderStatus(orderId, status);
       setSuccess('Order status updated');
-      loadOrders(0);
+      loadOrders(0, orderStatusFilter);
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
       const msg = axiosError?.response?.data?.message || 'Failed to update order status';

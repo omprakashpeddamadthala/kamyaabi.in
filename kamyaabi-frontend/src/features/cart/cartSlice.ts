@@ -41,11 +41,13 @@ export const addToCart = createAsyncThunk(
 
 export const updateCartItem = createAsyncThunk(
   'cart/updateItem',
-  async ({ itemId, quantity }: { itemId: number; quantity: number }, { rejectWithValue }) => {
+  async ({ itemId, quantity }: { itemId: number; quantity: number }, { rejectWithValue, dispatch }) => {
     try {
       const response = await cartApi.updateQuantity(itemId, quantity);
       return response.data.data;
     } catch (error: unknown) {
+      // Re-fetch cart to revert optimistic update on failure
+      dispatch(fetchCart());
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Failed to update cart');
     }
@@ -107,6 +109,7 @@ const cartSlice = createSlice({
       .addCase(updateCartItem.rejected, (state, action) => {
         state.updatingItemIds = state.updatingItemIds.filter(id => id !== action.meta.arg.itemId);
         state.error = action.payload as string;
+        // fetchCart() is dispatched in the thunk to revert optimistic update
       })
       .addCase(removeFromCart.fulfilled, (state, action) => { state.cart = action.payload; });
   },
