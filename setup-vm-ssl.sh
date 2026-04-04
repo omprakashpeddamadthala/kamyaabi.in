@@ -14,7 +14,7 @@ set -euo pipefail
 
 # ─── Load .env if present ────────────────────────────────────────────────────
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+    export $(grep -v '^#' .env | xargs) || true
 fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
