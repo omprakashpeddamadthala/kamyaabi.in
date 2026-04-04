@@ -105,9 +105,31 @@ class AdminControllerTest {
         Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).build()));
         when(orderService.getAllOrders(any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<?> response = adminController.getAllOrders(0, 10);
+        ResponseEntity<?> response = adminController.getAllOrders(0, 10, null);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void getAllOrders_withStatusFilter_shouldReturnFilteredPage() {
+        Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).status("PAID").build()));
+        when(orderService.getOrdersByStatus(eq(Order.OrderStatus.PAID), any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = adminController.getAllOrders(0, 10, "PAID");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(orderService).getOrdersByStatus(eq(Order.OrderStatus.PAID), any(Pageable.class));
+    }
+
+    @Test
+    void getAllOrders_withInvalidStatus_shouldReturnAllOrders() {
+        Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).build()));
+        when(orderService.getAllOrders(any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = adminController.getAllOrders(0, 10, "INVALID_STATUS");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(orderService).getAllOrders(any(Pageable.class));
     }
 
     @Test

@@ -42,9 +42,9 @@ export const adminApi = {
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/categories/${id}`),
 
   // Orders
-  getAllOrders: (page = 0, size = 10) =>
+  getAllOrders: (page = 0, size = 10, status?: string) =>
     axiosInstance.get<ApiResponse<PageResponse<Order>>>('/api/admin/orders', {
-      params: { page, size },
+      params: { page, size, ...(status ? { status } : {}) },
     }),
 
   updateOrderStatus: (id: number, status: string) =>

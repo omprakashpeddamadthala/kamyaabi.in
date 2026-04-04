@@ -107,6 +107,12 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Razorpay order: " + request.getRazorpayOrderId()));
 
+        // Idempotency: if payment already completed, return existing response
+        if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
+            log.info("Payment already completed for order: {}, skipping duplicate verification", request.getOrderId());
+            return paymentMapper.toResponse(payment);
+        }
+
         try {
             // Verify signature
             JSONObject attributes = new JSONObject();
@@ -122,24 +128,29 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setRazorpaySignature(request.getRazorpaySignature());
                 payment.setStatus(Payment.PaymentStatus.COMPLETED);
 
-                // Update order status
+                // Update order status to PAID on successful payment
                 Order order = payment.getOrder();
-                order.setStatus(Order.OrderStatus.CONFIRMED);
+                order.setStatus(Order.OrderStatus.PAID);
                 orderRepository.save(order);
 
                 Payment saved = paymentRepository.save(payment);
                 log.info("Payment verified successfully for order: {}", request.getOrderId());
 
-                // Publish order confirmed event for email notification
-                orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_CONFIRMED);
+                // Publish payment success event for email notification
+                orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
 
                 return paymentMapper.toResponse(saved);
             } else {
                 payment.setStatus(Payment.PaymentStatus.FAILED);
                 paymentRepository.save(payment);
 
-                // Publish order failed event for email notification
-                orderEventPublisher.publishOrderEvent(payment.getOrder(), OrderEventType.ORDER_FAILED);
+                // Update order status to PAYMENT_FAILED
+                Order order = payment.getOrder();
+                order.setStatus(Order.OrderStatus.PAYMENT_FAILED);
+                orderRepository.save(order);
+
+                // Publish payment failed event for email notification
+                orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_FAILED);
 
                 throw new PaymentException("Payment verification failed - invalid signature");
             }
@@ -148,8 +159,13 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(Payment.PaymentStatus.FAILED);
             paymentRepository.save(payment);
 
-            // Publish order failed event for email notification
-            orderEventPublisher.publishOrderEvent(payment.getOrder(), OrderEventType.ORDER_FAILED);
+            // Update order status to PAYMENT_FAILED
+            Order order = payment.getOrder();
+            order.setStatus(Order.OrderStatus.PAYMENT_FAILED);
+            orderRepository.save(order);
+
+            // Publish payment failed event for email notification
+            orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_FAILED);
 
             throw new PaymentException("Payment verification failed: " + e.getMessage(), e);
         }

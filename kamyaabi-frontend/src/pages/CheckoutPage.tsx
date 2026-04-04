@@ -112,7 +112,9 @@ const CheckoutPage: React.FC = () => {
             });
             navigate(`/orders/${orderResult.id}`);
           } catch {
-            setError('Payment verification failed');
+            setError('Payment verification failed. If you were charged, a refund will be processed automatically.');
+            // Still navigate to order page so user can see the order status
+            setTimeout(() => navigate(`/orders/${orderResult.id}`), 3000);
           }
         },
         prefill: {

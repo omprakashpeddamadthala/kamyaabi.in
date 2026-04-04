@@ -184,6 +184,44 @@ class EmailTemplateEngineTest {
     }
 
     @Test
+    void getSubject_paymentSuccess_shouldReturnCorrectSubject() {
+        String subject = templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order);
+        assertThat(subject).contains("Payment Successful").contains("#100");
+    }
+
+    @Test
+    void getSubject_paymentPending_shouldReturnCorrectSubject() {
+        String subject = templateEngine.getSubject(OrderEventType.PAYMENT_PENDING, order);
+        assertThat(subject).contains("Payment Pending").contains("#100");
+    }
+
+    @Test
+    void getSubject_paymentFailed_shouldReturnCorrectSubject() {
+        String subject = templateEngine.getSubject(OrderEventType.PAYMENT_FAILED, order);
+        assertThat(subject).contains("Payment Failed").contains("#100");
+    }
+
+    @Test
+    void renderCustomerEmail_paymentSuccess_shouldContainSuccessInfo() {
+        String html = templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order);
+        assertThat(html).contains("Payment Successful");
+        assertThat(html).contains("Test User");
+    }
+
+    @Test
+    void renderCustomerEmail_paymentPending_shouldContainPendingInfo() {
+        String html = templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_PENDING, order);
+        assertThat(html).contains("Payment Pending");
+    }
+
+    @Test
+    void renderCustomerEmail_paymentFailed_shouldContainFailureInfo() {
+        String html = templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_FAILED, order);
+        assertThat(html).contains("Payment Failed");
+        assertThat(html).contains("refund");
+    }
+
+    @Test
     void escapeHtml_shouldEscapeSpecialCharacters() {
         assertThat(templateEngine.escapeHtml("<script>alert('xss')</script>"))
                 .doesNotContain("<script>")

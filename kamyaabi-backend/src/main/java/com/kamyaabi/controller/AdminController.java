@@ -90,12 +90,24 @@ public class AdminController {
 
     // Order Management
     @GetMapping("/orders")
-    @Operation(summary = "Get all orders", description = "Get paginated list of all orders (Admin only)")
+    @Operation(summary = "Get all orders", description = "Get paginated list of all orders with optional status filter (Admin only)")
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<OrderResponse> orders = orderService.getAllOrders(pageable);
+        Page<OrderResponse> orders;
+        if (status != null && !status.isBlank()) {
+            try {
+                com.kamyaabi.entity.Order.OrderStatus orderStatus =
+                        com.kamyaabi.entity.Order.OrderStatus.valueOf(status.toUpperCase());
+                orders = orderService.getOrdersByStatus(orderStatus, pageable);
+            } catch (IllegalArgumentException e) {
+                orders = orderService.getAllOrders(pageable);
+            }
+        } else {
+            orders = orderService.getAllOrders(pageable);
+        }
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 

@@ -63,6 +63,7 @@ const AdminPage: React.FC = () => {
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
 
   const [productForm, setProductForm] = useState<ProductRequest>({
     name: '',
@@ -89,9 +90,9 @@ const AdminPage: React.FC = () => {
     loadOrders(0);
   }, [dispatch]);
 
-  const loadOrders = async (page: number) => {
+  const loadOrders = async (page: number, status?: string) => {
     try {
-      const res = await adminApi.getAllOrders(page);
+      const res = await adminApi.getAllOrders(page, 10, status || undefined);
       const data = res.data.data;
       setOrders(data.content);
       setOrdersTotalPages(data.totalPages);
@@ -179,7 +180,7 @@ const AdminPage: React.FC = () => {
     try {
       await adminApi.updateOrderStatus(orderId, status);
       setSuccess('Order status updated');
-      loadOrders(0);
+      loadOrders(0, orderStatusFilter);
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
       const msg = axiosError?.response?.data?.message || 'Failed to update order status';
@@ -358,6 +359,25 @@ const AdminPage: React.FC = () => {
 
       {/* Orders Tab */}
       <TabPanel value={tabValue} index={2}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Filter by Status</InputLabel>
+            <Select
+              label="Filter by Status"
+              value={orderStatusFilter}
+              onChange={(e) => {
+                const val = e.target.value;
+                setOrderStatusFilter(val);
+                loadOrders(0, val);
+              }}
+            >
+              <MenuItem value="">All Orders</MenuItem>
+              {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'PAYMENT_FAILED', 'PENDING'].map((s) => (
+                <MenuItem key={s} value={s}>{s.replace('_', ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
           <Table>
             <TableHead>
@@ -386,7 +406,7 @@ const AdminPage: React.FC = () => {
                         value=""
                         onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
                       >
-                        {['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
+                        {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
                           <MenuItem key={s} value={s}>{s}</MenuItem>
                         ))}
                       </Select>
@@ -399,7 +419,7 @@ const AdminPage: React.FC = () => {
         </TableContainer>
         {ordersTotalPages > 1 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Pagination count={ordersTotalPages} onChange={(_, p) => loadOrders(p - 1)} />
+            <Pagination count={ordersTotalPages} onChange={(_, p) => loadOrders(p - 1, orderStatusFilter)} />
           </Box>
         )}
       </TabPanel>

@@ -27,6 +27,9 @@ public class EmailTemplateEngine {
             case ORDER_DELIVERED -> "Order Delivered - #" + order.getId() + " | Kamyaabi";
             case ORDER_CANCELLED -> "Order Cancelled - #" + order.getId() + " | Kamyaabi";
             case ORDER_FAILED -> "Order Failed - #" + order.getId() + " | Kamyaabi";
+            case PAYMENT_SUCCESS -> "Payment Successful - Order #" + order.getId() + " | Kamyaabi";
+            case PAYMENT_PENDING -> "Payment Pending - Order #" + order.getId() + " | Kamyaabi";
+            case PAYMENT_FAILED -> "Payment Failed - Order #" + order.getId() + " | Kamyaabi";
         };
     }
 
@@ -48,6 +51,10 @@ public class EmailTemplateEngine {
             case ORDER_CANCELLED -> renderStatusChangeEmail(customerName, order, "Cancelled",
                     "Your order has been cancelled. If you have any questions, please contact our support.", "#F44336");
             case ORDER_FAILED -> renderOrderFailedEmail(customerName, order);
+            case PAYMENT_SUCCESS -> renderPaymentSuccessEmail(customerName, order);
+            case PAYMENT_PENDING -> renderStatusChangeEmail(customerName, order, "Payment Pending",
+                    "Your payment is being processed. We'll update you once it's confirmed.", "#FF9800");
+            case PAYMENT_FAILED -> renderPaymentFailedEmail(customerName, order);
         };
     }
 
@@ -92,6 +99,31 @@ public class EmailTemplateEngine {
                 + renderOrderDetailsSection(order)
                 + renderStatusBadge(statusLabel, color)
                 + renderTotalSection(order)
+        );
+    }
+
+    private String renderPaymentSuccessEmail(String customerName, Order order) {
+        return wrapInLayout(
+                "Payment Successful!",
+                "#4CAF50",
+                "<p style=\"font-size:16px;color:#333;\">Hi " + escapeHtml(customerName) + ",</p>"
+                + "<p style=\"font-size:15px;color:#555;\">Your payment has been successfully processed and your order is now confirmed!</p>"
+                + renderOrderDetailsSection(order)
+                + renderItemsTable(order)
+                + renderTotalSection(order)
+                + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">Your order will be processed and shipped soon. We'll keep you updated!</p>"
+        );
+    }
+
+    private String renderPaymentFailedEmail(String customerName, Order order) {
+        return wrapInLayout(
+                "Payment Failed",
+                "#F44336",
+                "<p style=\"font-size:16px;color:#333;\">Hi " + escapeHtml(customerName) + ",</p>"
+                + "<p style=\"font-size:15px;color:#555;\">Unfortunately, your payment could not be processed. Please try again or use a different payment method.</p>"
+                + renderOrderDetailsSection(order)
+                + renderTotalSection(order)
+                + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">If you were charged, a refund will be processed automatically within 5-7 business days.</p>"
         );
     }
 

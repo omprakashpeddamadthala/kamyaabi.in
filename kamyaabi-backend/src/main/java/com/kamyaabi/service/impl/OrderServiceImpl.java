@@ -150,6 +150,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
+        log.debug("Fetching orders with status: {}", status);
+        return orderRepository.findByStatusOrderByCreatedAtDesc(status, pageable)
+                .map(orderMapper::toResponse);
+    }
+
+    @Override
     public OrderResponse updateOrderStatus(Long orderId, Order.OrderStatus status) {
         log.info("Updating order {} status to: {}", orderId, status);
         Order order = orderRepository.findById(orderId)
@@ -168,11 +176,13 @@ public class OrderServiceImpl implements OrderService {
     private OrderEventType mapStatusToEventType(Order.OrderStatus status) {
         return switch (status) {
             case PENDING -> OrderEventType.ORDER_PLACED;
+            case PAID -> OrderEventType.PAYMENT_SUCCESS;
             case CONFIRMED -> OrderEventType.ORDER_CONFIRMED;
             case PROCESSING -> OrderEventType.ORDER_PROCESSING;
             case SHIPPED -> OrderEventType.ORDER_SHIPPED;
             case DELIVERED -> OrderEventType.ORDER_DELIVERED;
             case CANCELLED -> OrderEventType.ORDER_CANCELLED;
+            case PAYMENT_FAILED -> OrderEventType.PAYMENT_FAILED;
         };
     }
 }

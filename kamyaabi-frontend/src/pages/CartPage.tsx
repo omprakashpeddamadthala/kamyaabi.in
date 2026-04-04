@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Container,
@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Add, Remove, Delete, ShoppingBag } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import { fetchCart, updateCartItem, removeFromCart } from '../features/cart/cartSlice';
+import { fetchCart, updateCartItem, removeFromCart, optimisticUpdateQuantity } from '../features/cart/cartSlice';
 import PageTransition from '../components/common/PageTransition';
 
 const CartSkeleton: React.FC = () => (
@@ -54,10 +54,39 @@ const CartPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { cart, loading } = useAppSelector((state) => state.cart);
+  const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
+
+  // Debounced quantity update: optimistically update UI, then debounce API call
+  const handleQuantityChange = useCallback(
+    (itemId: number, quantity: number) => {
+      // Optimistic update for instant UI response
+      dispatch(optimisticUpdateQuantity({ itemId, quantity }));
+
+      // Clear any pending debounce for this item
+      if (debounceTimers.current[itemId]) {
+        clearTimeout(debounceTimers.current[itemId]);
+      }
+
+      // Debounce the actual API call (400ms)
+      debounceTimers.current[itemId] = setTimeout(() => {
+        dispatch(updateCartItem({ itemId, quantity }));
+        delete debounceTimers.current[itemId];
+      }, 400);
+    },
+    [dispatch]
+  );
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    const timers = debounceTimers.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
 
   if (loading) return <CartSkeleton />;
 
@@ -112,7 +141,7 @@ const CartPage: React.FC = () => {
                   <IconButton
                     size="small"
                     onClick={() =>
-                      dispatch(updateCartItem({ itemId: item.id, quantity: Math.max(1, item.quantity - 1) }))
+                      handleQuantityChange(item.id, Math.max(1, item.quantity - 1))
                     }
                   >
                     <Remove />
@@ -121,7 +150,7 @@ const CartPage: React.FC = () => {
                   <IconButton
                     size="small"
                     onClick={() =>
-                      dispatch(updateCartItem({ itemId: item.id, quantity: item.quantity + 1 }))
+                      handleQuantityChange(item.id, item.quantity + 1)
                     }
                   >
                     <Add />
