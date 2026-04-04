@@ -33,6 +33,7 @@ import {
   Info,
   Build,
   ContactMail,
+  Person,
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
@@ -188,6 +189,10 @@ const Navbar: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">{user.name}</Typography>
                   </MenuItem>
                   <Divider />
+                  <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                    <ListItemIcon><Person fontSize="small" /></ListItemIcon>
+                    My Profile
+                  </MenuItem>
                   {user.role !== 'ADMIN' && (
                     <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
                       <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>

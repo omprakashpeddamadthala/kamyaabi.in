@@ -15,6 +15,7 @@ const AdminPage = lazy(() => import('../pages/AdminPage'));
 const AboutPage = lazy(() => import('../pages/AboutPage'));
 const ServicePage = lazy(() => import('../pages/ServicePage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppSelector((state) => state.auth);
@@ -69,6 +70,14 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <OrderDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

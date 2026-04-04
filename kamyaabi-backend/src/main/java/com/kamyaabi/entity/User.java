@@ -28,9 +28,26 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    private String firstName;
+
+    private String lastName;
+
     private String avatarUrl;
 
     private String googleId;
+
+    private String shippingAddressLine1;
+
+    private String shippingAddressLine2;
+
+    private String shippingState;
+
+    private String shippingCity;
+
+    private String shippingPincode;
+
+    @Builder.Default
+    private String shippingCountry = "India";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
