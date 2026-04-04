@@ -97,8 +97,20 @@ docker image prune -f
 echo "Done."
 echo ""
 
+# --- Verify Nginx is running (VM-level reverse proxy) ---
+echo "### Checking host Nginx status ..."
+if systemctl is-active --quiet nginx 2>/dev/null; then
+    echo "  Nginx is running (SSL termination active)."
+else
+    echo "  WARNING: Nginx is NOT running on the host."
+    echo "  SSL termination requires Nginx on the VM. Run: sudo ./setup-vm-ssl.sh"
+fi
+echo ""
+
 echo "=== Deployment Complete ==="
 echo "Backend:  omprakashornold/kamyaabi-backend:${BACKEND_IMAGE_TAG}"
 echo "Frontend: omprakashornold/kamyaabi-frontend:${FRONTEND_IMAGE_TAG}"
 echo ""
-echo "Verify: docker compose -f $COMPOSE_FILE logs -f"
+echo "Verify:"
+echo "  docker compose -f $COMPOSE_FILE logs -f"
+echo "  curl -I https://kamyaabi.in"

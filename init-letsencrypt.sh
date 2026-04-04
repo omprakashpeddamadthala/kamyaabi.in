@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # init-letsencrypt.sh
-# Obtains initial Let's Encrypt SSL certificates for nextnotepad.com
+# Obtains initial Let's Encrypt SSL certificates for kamyaabi.in
 # Usage: sudo ./init-letsencrypt.sh
 
 set -e
@@ -11,8 +11,8 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
-DOMAINS="${DOMAIN:-nextnotepad.com}"
-EMAIL="${CERTBOT_EMAIL:-admin@nextnotepad.com}"
+DOMAINS="${DOMAIN:-kamyaabi.in}"
+EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.in}"
 STAGING="${CERTBOT_STAGING:-0}" # Set to 1 for testing (avoids rate limits)
 DATA_PATH="./certbot"
 RSA_KEY_SIZE=4096
