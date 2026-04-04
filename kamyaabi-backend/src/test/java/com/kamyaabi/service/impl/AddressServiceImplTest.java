@@ -168,6 +168,63 @@ class AddressServiceImplTest {
     }
 
     @Test
+    void updateAddress_setDefault_shouldClearOtherDefaults() {
+        Address existingDefault = Address.builder().id(2L).user(user).fullName("Other")
+                .phone("9876543210").street("Other St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        AddressRequest defaultRequest = AddressRequest.builder().fullName("Test User").phone("9876543210")
+                .street("123 Main St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        when(addressValidator.isValidState("Maharashtra")).thenReturn(true);
+        when(addressValidator.isValidCityForState("Maharashtra", "Mumbai")).thenReturn(true);
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        // Simulate updateEntity actually setting isDefault on the address
+        doAnswer(inv -> {
+            Address a = inv.getArgument(0);
+            AddressRequest r = inv.getArgument(1);
+            a.setIsDefault(r.getIsDefault());
+            return null;
+        }).when(addressMapper).updateEntity(address, defaultRequest);
+        when(addressRepository.findByUserId(1L)).thenReturn(List.of(address, existingDefault));
+        when(addressRepository.save(any(Address.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(addressMapper.toResponse(any(Address.class))).thenReturn(addressResponse);
+
+        addressService.updateAddress(1L, 1L, defaultRequest);
+
+        assertThat(existingDefault.getIsDefault()).isFalse();
+        verify(addressRepository, atLeast(2)).save(any(Address.class));
+    }
+
+    @Test
+    void createAddress_setDefault_shouldClearOtherDefaults() {
+        Address existingDefault = Address.builder().id(2L).user(user).fullName("Other")
+                .phone("9876543210").street("Other St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        AddressRequest defaultRequest = AddressRequest.builder().fullName("New Default").phone("9876543210")
+                .street("New St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        Address newAddress = Address.builder().id(null).user(user).fullName("New Default").phone("9876543210")
+                .street("New St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        when(addressValidator.isValidState("Maharashtra")).thenReturn(true);
+        when(addressValidator.isValidCityForState("Maharashtra", "Mumbai")).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressMapper.toEntity(defaultRequest, user)).thenReturn(newAddress);
+        when(addressRepository.findByUserId(1L)).thenReturn(List.of(existingDefault));
+        when(addressRepository.save(any(Address.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(addressMapper.toResponse(any(Address.class))).thenReturn(addressResponse);
+
+        addressService.createAddress(1L, defaultRequest);
+
+        assertThat(existingDefault.getIsDefault()).isFalse();
+    }
+
+    @Test
     void deleteAddress_shouldDelete() {
         when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
 

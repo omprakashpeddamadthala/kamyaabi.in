@@ -55,6 +55,9 @@ public class AddressServiceImpl implements AddressService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         Address address = addressMapper.toEntity(request, user);
+        if (Boolean.TRUE.equals(address.getIsDefault())) {
+            clearOtherDefaults(userId, null);
+        }
         Address saved = addressRepository.save(address);
         log.info("Address created with id: {}", saved.getId());
         return addressMapper.toResponse(saved);
@@ -73,6 +76,9 @@ public class AddressServiceImpl implements AddressService {
         }
 
         addressMapper.updateEntity(address, request);
+        if (Boolean.TRUE.equals(address.getIsDefault())) {
+            clearOtherDefaults(userId, addressId);
+        }
         Address saved = addressRepository.save(address);
         log.info("Address updated: {}", saved.getId());
         return addressMapper.toResponse(saved);
@@ -90,6 +96,16 @@ public class AddressServiceImpl implements AddressService {
 
         addressRepository.delete(address);
         log.info("Address deleted: {}", addressId);
+    }
+
+    private void clearOtherDefaults(Long userId, Long excludeAddressId) {
+        addressRepository.findByUserId(userId).stream()
+                .filter(a -> !a.getId().equals(excludeAddressId))
+                .filter(a -> Boolean.TRUE.equals(a.getIsDefault()))
+                .forEach(a -> {
+                    a.setIsDefault(false);
+                    addressRepository.save(a);
+                });
     }
 
     private void validateAddress(AddressRequest request) {
