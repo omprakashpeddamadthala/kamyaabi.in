@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # setup-vm-ssl.sh
-# Installs Nginx + Certbot on the host VM and configures SSL for kamyaabi.in
+# Installs Nginx + Certbot on the host VM and configures SSL for your domain
 # Usage: sudo ./setup-vm-ssl.sh
 #
 # Prerequisites:
 #   - Ubuntu 20.04+ VM
-#   - Domain (kamyaabi.in) DNS A record pointing to this server's public IP
+#   - Domain DNS A record pointing to this server's public IP
 #   - Ports 80 and 443 open in firewall / Oracle Cloud security list
 #   - Docker containers running (frontend on 127.0.0.1:3000, backend on 127.0.0.1:8080)
 
@@ -18,8 +18,8 @@ if [ -f .env ]; then
 fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-DOMAIN="${DOMAIN:-kamyaabi.in}"
-EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.in}"
+DOMAIN="${DOMAIN:-nextnotepad.com}"
+EMAIL="${CERTBOT_EMAIL:-admin@nextnotepad.com}"
 STAGING="${CERTBOT_STAGING:-0}"  # Set to 1 to use Let's Encrypt staging (avoids rate limits)
 NGINX_CONF_SRC="./nginx/vm/kamyaabi.conf"
 NGINX_CONF_DEST="/etc/nginx/sites-available/kamyaabi.conf"
@@ -118,31 +118,33 @@ echo "### Step 7: Installing production Nginx config with SSL ..."
 
 if [ -f "$NGINX_CONF_SRC" ]; then
     cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
-    echo "  Copied from $NGINX_CONF_SRC"
+    # Replace default domain with actual $DOMAIN from .env
+    sed -i "s/nextnotepad\.com/$DOMAIN/g" "$NGINX_CONF_DEST"
+    echo "  Copied from $NGINX_CONF_SRC (domain set to $DOMAIN)"
 else
     echo "  WARNING: $NGINX_CONF_SRC not found, generating config inline ..."
     cat > "$NGINX_CONF_DEST" <<'NGINXEOF'
 server {
     listen 80;
     listen [::]:80;
-    server_name kamyaabi.in www.kamyaabi.in;
+    server_name nextnotepad.com www.nextnotepad.com;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
     location / {
-        return 301 https://kamyaabi.in$request_uri;
+        return 301 https://nextnotepad.com$request_uri;
     }
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name kamyaabi.in www.kamyaabi.in;
+    server_name nextnotepad.com www.nextnotepad.com;
 
-    ssl_certificate /etc/letsencrypt/live/kamyaabi.in/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/kamyaabi.in/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/nextnotepad.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/nextnotepad.com/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
@@ -225,6 +227,9 @@ server {
     }
 }
 NGINXEOF
+    # Replace default domain with actual $DOMAIN from .env
+    sed -i "s/nextnotepad\.com/$DOMAIN/g" "$NGINX_CONF_DEST"
+    echo "  Domain set to $DOMAIN"
 fi
 
 nginx -t && systemctl reload nginx
