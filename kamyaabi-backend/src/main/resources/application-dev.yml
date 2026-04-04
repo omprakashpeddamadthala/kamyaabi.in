@@ -49,10 +49,10 @@ app:
 
   email:
     enabled: true
-    from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
+    from-email: ${EMAIL_FROM:noreply@nextnotepad.com}
     from-name: Kamyaabi
     admin-emails:
-      - ${ADMIN_EMAIL:admin@kamyaabi.in}
+      - ${ADMIN_EMAIL:admin@nextnotepad.com}
     sendgrid:
       api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key}
     smtp:
