@@ -34,8 +34,21 @@ public class OrderEmailService {
             return;
         }
 
+        // No emails for ORDER_PLACED (payment not yet confirmed) or PAYMENT_PENDING
+        if (eventType == OrderEventType.ORDER_PLACED || eventType == OrderEventType.PAYMENT_PENDING) {
+            log.info("Skipping email for event: {} order: {} — awaiting payment confirmation", eventType, order.getId());
+            return;
+        }
+
+        // Customer always gets notified for actionable events
         sendCustomerEmail(order, eventType);
-        sendAdminEmails(order, eventType);
+
+        // Admin only gets notified on payment success (confirmed revenue)
+        if (eventType == OrderEventType.PAYMENT_SUCCESS) {
+            sendAdminEmails(order, eventType);
+        } else {
+            log.debug("Skipping admin email for event: {} order: {} — admin notified only on payment success", eventType, order.getId());
+        }
     }
 
     private void sendCustomerEmail(Order order, OrderEventType eventType) {

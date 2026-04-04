@@ -54,23 +54,31 @@ class OrderEmailServiceTest {
     }
 
     @Test
-    void sendOrderNotification_shouldSendCustomerAndAdminEmails() {
+    void sendOrderNotification_paymentSuccess_shouldSendCustomerAndAdminEmails() {
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
-        when(templateEngine.getSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("Order Confirmed");
-        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>Customer</p>");
-        when(templateEngine.getAdminSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("[Admin] Order Confirmed");
-        when(templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>Admin</p>");
+        when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
+        when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
+        when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Payment Confirmed");
+        when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Admin</p>");
 
-        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail("customer@test.com", "Order Confirmed", "<p>Customer</p>");
-        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Order Confirmed", "<p>Admin</p>");
+        verify(emailService).sendEmail("customer@test.com", "Payment Confirmed", "<p>Customer</p>");
+        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Payment Confirmed", "<p>Admin</p>");
     }
 
     @Test
     void sendOrderNotification_emailDisabled_shouldNotSend() {
         emailProperties.setEnabled(false);
 
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
+
+        verifyNoInteractions(emailServiceFactory);
+        verifyNoInteractions(templateEngine);
+    }
+
+    @Test
+    void sendOrderNotification_orderPlaced_shouldSkipEmails() {
         orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
 
         verifyNoInteractions(emailServiceFactory);
@@ -81,38 +89,38 @@ class OrderEmailServiceTest {
     void sendOrderNotification_noAdminEmails_shouldOnlySendCustomerEmail() {
         emailProperties.setAdminEmails(new ArrayList<>());
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
-        when(templateEngine.getSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("Order Confirmed");
-        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>Customer</p>");
+        when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
+        when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
 
-        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
         verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
-        verify(emailService).sendEmail("customer@test.com", "Order Confirmed", "<p>Customer</p>");
+        verify(emailService).sendEmail("customer@test.com", "Payment Confirmed", "<p>Customer</p>");
     }
 
     @Test
     void sendOrderNotification_customerEmailFails_shouldStillSendAdminEmail() {
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
-        when(templateEngine.getSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("Order Confirmed");
-        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order)).thenThrow(new RuntimeException("Template error"));
-        when(templateEngine.getAdminSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("[Admin] Order Confirmed");
-        when(templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>Admin</p>");
+        when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
+        when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenThrow(new RuntimeException("Template error"));
+        when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Payment Confirmed");
+        when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Admin</p>");
 
-        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Order Confirmed", "<p>Admin</p>");
+        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Payment Confirmed", "<p>Admin</p>");
     }
 
     @Test
     void sendOrderNotification_multipleAdminEmails_shouldSendToAll() {
         emailProperties.setAdminEmails(new ArrayList<>(List.of("admin1@kamyaabi.in", "admin2@kamyaabi.in")));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
-        when(templateEngine.getSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("Subject");
-        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>C</p>");
-        when(templateEngine.getAdminSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("[Admin] Subject");
-        when(templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>A</p>");
+        when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Subject");
+        when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
+        when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Subject");
+        when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>A</p>");
 
-        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
         verify(emailService).sendEmail("admin1@kamyaabi.in", "[Admin] Subject", "<p>A</p>");
         verify(emailService).sendEmail("admin2@kamyaabi.in", "[Admin] Subject", "<p>A</p>");
@@ -121,16 +129,29 @@ class OrderEmailServiceTest {
     @Test
     void sendOrderNotification_adminEmailFails_shouldNotBreak() {
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
-        when(templateEngine.getSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("Subject");
-        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>C</p>");
-        when(templateEngine.getAdminSubject(OrderEventType.ORDER_PLACED, order)).thenReturn("[Admin] Subject");
-        when(templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order)).thenReturn("<p>A</p>");
+        when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Subject");
+        when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
+        when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Subject");
+        when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>A</p>");
         doThrow(new RuntimeException("Send failed")).when(emailService)
                 .sendEmail(eq("admin@kamyaabi.in"), anyString(), anyString());
 
         // Should not throw
-        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_PLACED);
+        orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
         verify(emailService).sendEmail(eq("customer@test.com"), anyString(), anyString());
+    }
+
+    @Test
+    void sendOrderNotification_nonPaymentEvent_shouldOnlySendCustomerEmail() {
+        when(emailServiceFactory.getEmailService()).thenReturn(emailService);
+        when(templateEngine.getSubject(OrderEventType.ORDER_CONFIRMED, order)).thenReturn("Order Confirmed");
+        when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_CONFIRMED, order)).thenReturn("<p>Confirmed</p>");
+
+        orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_CONFIRMED);
+
+        // Only customer gets email for non-payment events
+        verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService).sendEmail("customer@test.com", "Order Confirmed", "<p>Confirmed</p>");
     }
 }

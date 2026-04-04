@@ -64,6 +64,12 @@ const AdminPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+  const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
 
   const [productForm, setProductForm] = useState<ProductRequest>({
     name: '',
@@ -91,6 +97,7 @@ const AdminPage: React.FC = () => {
   }, [dispatch]);
 
   const loadOrders = async (page: number, status?: string) => {
+    setOrdersLoading(true);
     try {
       const res = await adminApi.getAllOrders(page, 10, status || undefined);
       const data = res.data.data;
@@ -101,6 +108,8 @@ const AdminPage: React.FC = () => {
       setOrdersTotalRevenue(data.content.reduce((sum: number, o: Order) => sum + o.totalAmount, 0));
     } catch {
       setError('Failed to load orders');
+    } finally {
+      setOrdersLoading(false);
     }
   };
 
@@ -113,6 +122,7 @@ const AdminPage: React.FC = () => {
       setError('Discount Price (Selling Price) must be less than the original Price (MRP)');
       return;
     }
+    setSavingProduct(true);
     try {
       const payload = {
         ...productForm,
@@ -131,22 +141,28 @@ const AdminPage: React.FC = () => {
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
       setError(axiosError?.response?.data?.message || 'Failed to save product');
+    } finally {
+      setSavingProduct(false);
     }
   };
 
   const handleDeleteProduct = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
+      setDeletingProductId(id);
       try {
         await adminApi.deleteProduct(id);
         setSuccess('Product deleted');
         dispatch(fetchProducts({}));
       } catch {
         setError('Failed to delete product');
+      } finally {
+        setDeletingProductId(null);
       }
     }
   };
 
   const handleSaveCategory = async () => {
+    setSavingCategory(true);
     try {
       if (editingCategoryId) {
         await adminApi.updateCategory(editingCategoryId, categoryForm);
@@ -160,23 +176,29 @@ const AdminPage: React.FC = () => {
       dispatch(fetchCategories());
     } catch {
       setError('Failed to save category');
+    } finally {
+      setSavingCategory(false);
     }
   };
 
   const handleDeleteCategory = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
+      setDeletingCategoryId(id);
       try {
         await adminApi.deleteCategory(id);
         setSuccess('Category deleted');
         dispatch(fetchCategories());
       } catch {
         setError('Failed to delete category');
+      } finally {
+        setDeletingCategoryId(null);
       }
     }
   };
 
   const handleUpdateOrderStatus = async (orderId: number, status: string) => {
     if (!status) return;
+    setUpdatingOrderId(orderId);
     try {
       await adminApi.updateOrderStatus(orderId, status);
       setSuccess('Order status updated');
@@ -185,6 +207,8 @@ const AdminPage: React.FC = () => {
       const axiosError = err as { response?: { data?: { message?: string } } };
       const msg = axiosError?.response?.data?.message || 'Failed to update order status';
       setError(msg);
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -306,8 +330,8 @@ const AdminPage: React.FC = () => {
                         <Chip label={p.active ? 'Active' : 'Inactive'} color={p.active ? 'success' : 'default'} size="small" />
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small" onClick={() => openEditProduct(p)}><Edit /></IconButton>
-                        <IconButton size="small" color="error" onClick={() => handleDeleteProduct(p.id)}><Delete /></IconButton>
+                            <IconButton size="small" onClick={() => openEditProduct(p)} disabled={deletingProductId === p.id}><Edit /></IconButton>
+                            <IconButton size="small" color="error" onClick={() => handleDeleteProduct(p.id)} disabled={deletingProductId === p.id}><Delete /></IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -347,8 +371,8 @@ const AdminPage: React.FC = () => {
                   <TableCell>{c.description}</TableCell>
                   <TableCell>{c.productCount}</TableCell>
                   <TableCell>
-                    <IconButton size="small" onClick={() => openEditCategory(c)}><Edit /></IconButton>
-                    <IconButton size="small" color="error" onClick={() => handleDeleteCategory(c.id)}><Delete /></IconButton>
+                    <IconButton size="small" onClick={() => openEditCategory(c)} disabled={deletingCategoryId === c.id}><Edit /></IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDeleteCategory(c.id)} disabled={deletingCategoryId === c.id}><Delete /></IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -360,7 +384,7 @@ const AdminPage: React.FC = () => {
       {/* Orders Tab */}
       <TabPanel value={tabValue} index={2}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl size="small" sx={{ minWidth: 180 }} disabled={ordersLoading}>
             <InputLabel>Filter by Status</InputLabel>
             <Select
               label="Filter by Status"
@@ -378,49 +402,62 @@ const AdminPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-        <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Order ID</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Items</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {orders.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell>#{o.id}</TableCell>
-                  <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                  <TableCell>{o.items.length}</TableCell>
-                  <TableCell>₹{o.totalAmount}</TableCell>
-                  <TableCell><Chip label={o.status} size="small" /></TableCell>
-                  <TableCell>
-                    <FormControl size="small" sx={{ minWidth: 130 }}>
-                      <InputLabel>Update</InputLabel>
-                      <Select
-                        label="Update"
-                        value=""
-                        onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
-                      >
-                        {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
-                          <MenuItem key={s} value={s}>{s}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {ordersTotalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Pagination count={ordersTotalPages} onChange={(_, p) => loadOrders(p - 1, orderStatusFilter)} />
+        {ordersLoading ? <Loading message="Loading orders..." /> : orders.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Typography variant="h6" color="text.secondary">
+              {orderStatusFilter ? `No orders found for status: ${orderStatusFilter.replace('_', ' ')}` : 'No orders found'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {orderStatusFilter ? 'Try selecting a different status filter.' : 'Orders will appear here once customers place them.'}
+            </Typography>
           </Box>
+        ) : (
+          <>
+            <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Order ID</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Items</TableCell>
+                    <TableCell>Total</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {orders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell>#{o.id}</TableCell>
+                      <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                      <TableCell>{o.items.length}</TableCell>
+                      <TableCell>₹{o.totalAmount}</TableCell>
+                      <TableCell><Chip label={o.status} size="small" /></TableCell>
+                      <TableCell>
+                        <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingOrderId === o.id}>
+                          <InputLabel>Update</InputLabel>
+                          <Select
+                            label="Update"
+                            value=""
+                            onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
+                          >
+                            {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
+                              <MenuItem key={s} value={s}>{s}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {ordersTotalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Pagination count={ordersTotalPages} onChange={(_, p) => loadOrders(p - 1, orderStatusFilter)} />
+              </Box>
+            )}
+          </>
         )}
       </TabPanel>
 
@@ -492,8 +529,10 @@ const AdminPage: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowProductDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveProduct}>Save</Button>
+          <Button onClick={() => setShowProductDialog(false)} disabled={savingProduct}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveProduct} disabled={savingProduct}>
+            {savingProduct ? 'Saving...' : 'Save'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -508,8 +547,10 @@ const AdminPage: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowCategoryDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveCategory}>Save</Button>
+          <Button onClick={() => setShowCategoryDialog(false)} disabled={savingCategory}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveCategory} disabled={savingCategory}>
+            {savingCategory ? 'Saving...' : 'Save'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -118,8 +118,8 @@ public class OrderServiceImpl implements OrderService {
         // Clear the cart
         cartService.clearCart(userId);
 
-        // Publish order placed event for email notification
-        orderEventPublisher.publishOrderEvent(savedOrder, OrderEventType.ORDER_PLACED);
+        // No email on order creation — emails are sent only after payment verification
+        log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
 
         return orderMapper.toResponse(savedOrder);
     }
@@ -162,13 +162,19 @@ public class OrderServiceImpl implements OrderService {
         log.info("Updating order {} status to: {}", orderId, status);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+
+        Order.OrderStatus previousStatus = order.getStatus();
         order.setStatus(status);
         Order saved = orderRepository.save(order);
-        log.info("Order {} status updated to: {}", orderId, status);
+        log.info("Order {} status updated from {} to {}", orderId, previousStatus, status);
 
-        // Publish order status change event for email notification
-        OrderEventType eventType = mapStatusToEventType(status);
-        orderEventPublisher.publishOrderEvent(saved, eventType);
+        // Skip email for PAID status set by admin — payment verification already handles this
+        if (status == Order.OrderStatus.PAID) {
+            log.info("Skipping email for admin PAID status update on order {} — payment verification handles this", orderId);
+        } else {
+            OrderEventType eventType = mapStatusToEventType(status);
+            orderEventPublisher.publishOrderEvent(saved, eventType);
+        }
 
         return orderMapper.toResponse(saved);
     }

@@ -7,12 +7,14 @@ import theme from './theme/theme';
 import AppRoutes from './routes/AppRoutes';
 import { FlyToCartProvider } from './components/common/FlyToCartAnimation';
 import Loading from './components/common/Loading';
+import GlobalLoadingBar from './components/common/GlobalLoadingBar';
 
 const App: React.FC = () => {
   return (
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <GlobalLoadingBar />
         <BrowserRouter>
           <Suspense fallback={<Loading message="Loading page..." />}>
             <FlyToCartProvider>
