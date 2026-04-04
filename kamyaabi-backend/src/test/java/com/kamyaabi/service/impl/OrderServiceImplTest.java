@@ -219,6 +219,42 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getOrdersByStatus_shouldReturnFilteredPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        order.setStatus(Order.OrderStatus.PAID);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        when(orderRepository.findByStatusOrderByCreatedAtDesc(Order.OrderStatus.PAID, pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        Page<OrderResponse> result = orderService.getOrdersByStatus(Order.OrderStatus.PAID, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findByStatusOrderByCreatedAtDesc(Order.OrderStatus.PAID, pageable);
+    }
+
+    @Test
+    void updateOrderStatus_toPaid_shouldPublishPaymentSuccessEvent() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateOrderStatus(1L, Order.OrderStatus.PAID);
+
+        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
+    }
+
+    @Test
+    void updateOrderStatus_toPaymentFailed_shouldPublishPaymentFailedEvent() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.updateOrderStatus(1L, Order.OrderStatus.PAYMENT_FAILED);
+
+        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.PAYMENT_FAILED);
+    }
+
+    @Test
     void updateOrderStatus_shouldUpdateAndReturn() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenReturn(order);

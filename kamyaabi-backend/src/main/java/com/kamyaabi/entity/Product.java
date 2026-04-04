@@ -9,7 +9,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+        @Index(name = "idx_products_category_id", columnList = "category_id"),
+        @Index(name = "idx_products_active", columnList = "active"),
+        @Index(name = "idx_products_created_at", columnList = "createdAt")
+})
 @Getter
 @Setter
 @NoArgsConstructor

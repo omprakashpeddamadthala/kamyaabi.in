@@ -50,7 +50,7 @@ class CartServiceImplTest {
 
     @Test
     void getCart_existingCart_shouldReturnCart() {
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(cart)).thenReturn(cartResponse);
 
         CartResponse result = cartService.getCart(1L);
@@ -60,6 +60,7 @@ class CartServiceImplTest {
 
     @Test
     void getCart_noCart_shouldCreateAndReturnCart() {
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.empty());
         when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
@@ -73,6 +74,7 @@ class CartServiceImplTest {
 
     @Test
     void getCart_noCartNoUser_shouldThrowException() {
+        when(cartRepository.findByUserIdWithItems(999L)).thenReturn(Optional.empty());
         when(cartRepository.findByUserId(999L)).thenReturn(Optional.empty());
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -87,6 +89,7 @@ class CartServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(cartItemRepository.findByCartIdAndProductId(1L, 1L)).thenReturn(Optional.empty());
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(any(Cart.class))).thenReturn(cartResponse);
 
         CartResponse result = cartService.addItemToCart(1L, request);
@@ -104,6 +107,7 @@ class CartServiceImplTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(cartItemRepository.findByCartIdAndProductId(1L, 1L)).thenReturn(Optional.of(existingItem));
         when(cartItemRepository.save(any(CartItem.class))).thenReturn(existingItem);
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(any(Cart.class))).thenReturn(cartResponse);
 
         CartResponse result = cartService.addItemToCart(1L, request);
@@ -166,7 +170,7 @@ class CartServiceImplTest {
         CartItem item = CartItem.builder().id(1L).cart(cart).product(product).quantity(1).build();
         when(cartItemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(cartItemRepository.save(any(CartItem.class))).thenReturn(item);
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(cart)).thenReturn(cartResponse);
 
         CartResponse result = cartService.updateCartItemQuantity(1L, 1L, 3);
@@ -181,7 +185,7 @@ class CartServiceImplTest {
         cart.getItems().add(item);
         when(cartItemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(cart)).thenReturn(cartResponse);
 
         CartResponse result = cartService.updateCartItemQuantity(1L, 1L, 0);
@@ -226,7 +230,7 @@ class CartServiceImplTest {
         cart.getItems().add(item);
         when(cartItemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(cartRepository.save(any(Cart.class))).thenReturn(cart);
-        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepository.findByUserIdWithItems(1L)).thenReturn(Optional.of(cart));
         when(cartMapper.toResponse(cart)).thenReturn(cartResponse);
 
         CartResponse result = cartService.removeItemFromCart(1L, 1L);

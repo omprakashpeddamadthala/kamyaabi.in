@@ -47,7 +47,8 @@ public class CartServiceImpl implements CartService {
     @Transactional(readOnly = true)
     public CartResponse getCart(Long userId) {
         log.debug("Fetching cart for user: {}", userId);
-        Cart cart = getOrCreateCart(userId);
+        Cart cart = cartRepository.findByUserIdWithItems(userId)
+                .orElseGet(() -> getOrCreateCart(userId));
         return cartMapper.toResponse(cart);
     }
 
@@ -87,7 +88,7 @@ public class CartServiceImpl implements CartService {
             cartRepository.save(cart);
         }
 
-        Cart updatedCart = cartRepository.findByUserId(userId)
+        Cart updatedCart = cartRepository.findByUserIdWithItems(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         return cartMapper.toResponse(updatedCart);
     }
@@ -112,7 +113,7 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(item);
         }
 
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findByUserIdWithItems(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         return cartMapper.toResponse(cart);
     }
@@ -129,7 +130,7 @@ public class CartServiceImpl implements CartService {
 
         cart_removeItem(item);
 
-        Cart cart = cartRepository.findByUserId(userId)
+        Cart cart = cartRepository.findByUserIdWithItems(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
         return cartMapper.toResponse(cart);
     }

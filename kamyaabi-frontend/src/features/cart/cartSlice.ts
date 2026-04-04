@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { cartApi } from '../../api/cartApi';
 import { Cart } from '../../types';
 
@@ -6,12 +6,14 @@ interface CartState {
   cart: Cart | null;
   loading: boolean;
   error: string | null;
+  updatingItemIds: number[];
 }
 
 const initialState: CartState = {
   cart: null,
   loading: false,
   error: null,
+  updatingItemIds: [],
 };
 
 export const fetchCart = createAsyncThunk('cart/fetch', async (_, { rejectWithValue }) => {
@@ -70,6 +72,18 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.cart = null;
     },
+    optimisticUpdateQuantity: (state, action: PayloadAction<{ itemId: number; quantity: number }>) => {
+      if (state.cart) {
+        const item = state.cart.items.find(i => i.id === action.payload.itemId);
+        if (item) {
+          const price = item.productDiscountPrice || item.productPrice;
+          item.quantity = action.payload.quantity;
+          item.subtotal = price * action.payload.quantity;
+          state.cart.totalItems = state.cart.items.reduce((sum, i) => sum + i.quantity, 0);
+          state.cart.totalAmount = state.cart.items.reduce((sum, i) => sum + i.subtotal, 0);
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -83,10 +97,20 @@ const cartSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(addToCart.fulfilled, (state, action) => { state.cart = action.payload; })
-      .addCase(updateCartItem.fulfilled, (state, action) => { state.cart = action.payload; })
+      .addCase(updateCartItem.pending, (state, action) => {
+        state.updatingItemIds = [...state.updatingItemIds, action.meta.arg.itemId];
+      })
+      .addCase(updateCartItem.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.updatingItemIds = state.updatingItemIds.filter(id => id !== action.meta.arg.itemId);
+      })
+      .addCase(updateCartItem.rejected, (state, action) => {
+        state.updatingItemIds = state.updatingItemIds.filter(id => id !== action.meta.arg.itemId);
+        state.error = action.payload as string;
+      })
       .addCase(removeFromCart.fulfilled, (state, action) => { state.cart = action.payload; });
   },
 });
 
-export const { clearCart } = cartSlice.actions;
+export const { clearCart, optimisticUpdateQuantity } = cartSlice.actions;
 export default cartSlice.reducer;
