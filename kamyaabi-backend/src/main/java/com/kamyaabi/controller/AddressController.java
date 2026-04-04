@@ -5,6 +5,7 @@ import com.kamyaabi.dto.response.AddressResponse;
 import com.kamyaabi.dto.response.ApiResponse;
 import com.kamyaabi.security.CurrentUser;
 import com.kamyaabi.service.AddressService;
+import com.kamyaabi.validation.IndianAddressValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,10 +23,13 @@ public class AddressController {
 
     private final AddressService addressService;
     private final CurrentUser currentUser;
+    private final IndianAddressValidator addressValidator;
 
-    public AddressController(AddressService addressService, CurrentUser currentUser) {
+    public AddressController(AddressService addressService, CurrentUser currentUser,
+                             IndianAddressValidator addressValidator) {
         this.addressService = addressService;
         this.currentUser = currentUser;
+        this.addressValidator = addressValidator;
     }
 
     @GetMapping
@@ -57,5 +61,18 @@ public class AddressController {
     public ResponseEntity<ApiResponse<Void>> deleteAddress(@PathVariable Long id) {
         addressService.deleteAddress(currentUser.getUserId(), id);
         return ResponseEntity.ok(ApiResponse.success("Address deleted", null));
+    }
+
+    @GetMapping("/states")
+    @Operation(summary = "Get Indian states", description = "Get list of all Indian states and union territories")
+    public ResponseEntity<ApiResponse<List<String>>> getStates() {
+        return ResponseEntity.ok(ApiResponse.success(addressValidator.getStates()));
+    }
+
+    @GetMapping("/states/{state}/cities")
+    @Operation(summary = "Get cities for state", description = "Get list of cities for a given Indian state")
+    public ResponseEntity<ApiResponse<List<String>>> getCities(@PathVariable String state) {
+        List<String> cities = addressValidator.getCitiesForState(state);
+        return ResponseEntity.ok(ApiResponse.success(cities));
     }
 }

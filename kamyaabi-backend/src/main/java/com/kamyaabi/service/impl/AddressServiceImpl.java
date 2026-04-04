@@ -10,6 +10,7 @@ import com.kamyaabi.mapper.AddressMapper;
 import com.kamyaabi.repository.AddressRepository;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.service.AddressService;
+import com.kamyaabi.validation.IndianAddressValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +25,16 @@ public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
     private final AddressMapper addressMapper;
+    private final IndianAddressValidator addressValidator;
 
     public AddressServiceImpl(AddressRepository addressRepository,
                               UserRepository userRepository,
-                              AddressMapper addressMapper) {
+                              AddressMapper addressMapper,
+                              IndianAddressValidator addressValidator) {
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
         this.addressMapper = addressMapper;
+        this.addressValidator = addressValidator;
     }
 
     @Override
@@ -45,6 +49,8 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public AddressResponse createAddress(Long userId, AddressRequest request) {
         log.info("Creating address for user: {}", userId);
+        validateAddress(request);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
@@ -57,6 +63,8 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public AddressResponse updateAddress(Long userId, Long addressId, AddressRequest request) {
         log.info("Updating address {} for user: {}", addressId, userId);
+        validateAddress(request);
+
         Address address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResourceNotFoundException("Address", addressId));
 
@@ -82,5 +90,15 @@ public class AddressServiceImpl implements AddressService {
 
         addressRepository.delete(address);
         log.info("Address deleted: {}", addressId);
+    }
+
+    private void validateAddress(AddressRequest request) {
+        if (!addressValidator.isValidState(request.getState())) {
+            throw new BadRequestException("Invalid state: " + request.getState());
+        }
+        if (!addressValidator.isValidCityForState(request.getState(), request.getCity())) {
+            throw new BadRequestException(
+                    "Invalid city '" + request.getCity() + "' for state '" + request.getState() + "'");
+        }
     }
 }

@@ -1,19 +1,22 @@
 package com.kamyaabi.service.impl;
 
 import com.kamyaabi.dto.request.ProfileRequest;
+import com.kamyaabi.dto.response.AddressResponse;
 import com.kamyaabi.dto.response.ProfileResponse;
+import com.kamyaabi.entity.Address;
 import com.kamyaabi.entity.User;
-import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
+import com.kamyaabi.mapper.AddressMapper;
+import com.kamyaabi.repository.AddressRepository;
 import com.kamyaabi.repository.UserRepository;
-import com.kamyaabi.validation.IndianAddressValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,14 +29,17 @@ import static org.mockito.Mockito.when;
 class ProfileServiceImplTest {
 
     @Mock private UserRepository userRepository;
-    @Mock private IndianAddressValidator addressValidator;
+    @Mock private AddressRepository addressRepository;
+    @Mock private AddressMapper addressMapper;
 
-    @InjectMocks private ProfileServiceImpl profileService;
+    private ProfileServiceImpl profileService;
 
     private User user;
 
     @BeforeEach
     void setUp() {
+        profileService = new ProfileServiceImpl(userRepository, addressRepository, addressMapper);
+
         user = User.builder()
                 .id(1L)
                 .email("test@kamyaabi.in")
@@ -49,6 +55,7 @@ class ProfileServiceImplTest {
     @Test
     void getProfile_existingUser_shouldReturnProfileResponse() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         ProfileResponse response = profileService.getProfile(1L);
 
@@ -57,6 +64,7 @@ class ProfileServiceImplTest {
         assertThat(response.getFirstName()).isEqualTo("Test");
         assertThat(response.getLastName()).isEqualTo("User");
         assertThat(response.getRole()).isEqualTo("USER");
+        assertThat(response.getAddresses()).isEmpty();
     }
 
     @Test
@@ -68,33 +76,40 @@ class ProfileServiceImplTest {
     }
 
     @Test
-    void getProfile_withShippingAddress_shouldIncludeAddress() {
-        user.setShippingAddressLine1("123 Main St");
-        user.setShippingAddressLine2("Apt 4");
-        user.setShippingState("Karnataka");
-        user.setShippingCity("Bengaluru");
-        user.setShippingPincode("560001");
-        user.setShippingCountry("India");
+    void getProfile_withAddresses_shouldIncludeAddressList() {
+        Address address = Address.builder()
+                .id(10L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").addressLine2("Apt 4")
+                .city("Bengaluru").state("Karnataka").pincode("560001")
+                .isDefault(true).user(user).build();
+
+        AddressResponse addressResponse = AddressResponse.builder()
+                .id(10L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").addressLine2("Apt 4")
+                .city("Bengaluru").state("Karnataka").pincode("560001")
+                .isDefault(true).build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressRepository.findByUserId(1L)).thenReturn(List.of(address));
+        when(addressMapper.toResponse(address)).thenReturn(addressResponse);
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getShippingAddress()).isNotNull();
-        assertThat(response.getShippingAddress().getAddressLine1()).isEqualTo("123 Main St");
-        assertThat(response.getShippingAddress().getState()).isEqualTo("Karnataka");
-        assertThat(response.getShippingAddress().getCity()).isEqualTo("Bengaluru");
-        assertThat(response.getShippingAddress().getPincode()).isEqualTo("560001");
-        assertThat(response.getShippingAddress().getCountry()).isEqualTo("India");
+        assertThat(response.getAddresses()).hasSize(1);
+        assertThat(response.getAddresses().get(0).getFullName()).isEqualTo("Test User");
+        assertThat(response.getAddresses().get(0).getCity()).isEqualTo("Bengaluru");
+        assertThat(response.getAddresses().get(0).getAddressLine2()).isEqualTo("Apt 4");
+        assertThat(response.getAddresses().get(0).getIsDefault()).isTrue();
     }
 
     @Test
-    void getProfile_withoutShippingAddress_shouldReturnNullAddress() {
+    void getProfile_withoutAddresses_shouldReturnEmptyList() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getShippingAddress()).isNull();
+        assertThat(response.getAddresses()).isEmpty();
     }
 
     @Test
@@ -106,8 +121,9 @@ class ProfileServiceImplTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
+        when(addressRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
-        ProfileResponse response = profileService.updateProfile(1L, request);
+        profileService.updateProfile(1L, request);
 
         verify(userRepository).save(any(User.class));
         assertThat(user.getFirstName()).isEqualTo("Updated");
@@ -129,175 +145,58 @@ class ProfileServiceImplTest {
     }
 
     @Test
-    void updateProfile_withValidAddress_shouldUpdateAddress() {
+    void updateProfile_shouldTrimNames() {
         ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .addressLine2("Apt 4")
-                .state("Karnataka")
-                .city("Bengaluru")
-                .pincode("560001")
+                .firstName("  Trimmed  ")
+                .lastName("  Name  ")
                 .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
-        when(addressValidator.isValidState("Karnataka")).thenReturn(true);
-        when(addressValidator.isValidCityForState("Karnataka", "Bengaluru")).thenReturn(true);
+        when(addressRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         profileService.updateProfile(1L, request);
 
-        assertThat(user.getShippingAddressLine1()).isEqualTo("123 Main St");
-        assertThat(user.getShippingState()).isEqualTo("Karnataka");
-        assertThat(user.getShippingCity()).isEqualTo("Bengaluru");
-        assertThat(user.getShippingPincode()).isEqualTo("560001");
-        assertThat(user.getShippingCountry()).isEqualTo("India");
+        assertThat(user.getFirstName()).isEqualTo("Trimmed");
+        assertThat(user.getLastName()).isEqualTo("Name");
+        assertThat(user.getName()).isEqualTo("Trimmed Name");
     }
 
     @Test
-    void updateProfile_invalidState_shouldThrowBadRequest() {
+    void updateProfile_shouldReturnProfileWithAddresses() {
+        Address address = Address.builder()
+                .id(10L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").city("Bengaluru").state("Karnataka")
+                .pincode("560001").isDefault(true).user(user).build();
+
+        AddressResponse addressResponse = AddressResponse.builder()
+                .id(10L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").city("Bengaluru").state("Karnataka")
+                .pincode("560001").isDefault(true).build();
+
         ProfileRequest request = ProfileRequest.builder()
                 .firstName("Test")
                 .lastName("User")
-                .addressLine1("123 Main St")
-                .state("InvalidState")
-                .city("SomeCity")
-                .pincode("560001")
                 .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(addressValidator.isValidState("InvalidState")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(addressRepository.findByUserId(1L)).thenReturn(List.of(address));
+        when(addressMapper.toResponse(address)).thenReturn(addressResponse);
 
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Invalid state");
+        ProfileResponse response = profileService.updateProfile(1L, request);
+
+        assertThat(response.getAddresses()).hasSize(1);
+        assertThat(response.getAddresses().get(0).getCity()).isEqualTo("Bengaluru");
     }
 
     @Test
-    void updateProfile_invalidCityForState_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .state("Karnataka")
-                .city("InvalidCity")
-                .pincode("560001")
-                .build();
-
+    void getProfile_shouldIncludeAvatarUrl() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(addressValidator.isValidState("Karnataka")).thenReturn(true);
-        when(addressValidator.isValidCityForState("Karnataka", "InvalidCity")).thenReturn(false);
+        when(addressRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Invalid city");
-    }
+        ProfileResponse response = profileService.getProfile(1L);
 
-    @Test
-    void updateProfile_invalidPincode_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .state("Karnataka")
-                .city("Bengaluru")
-                .pincode("12345")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(addressValidator.isValidState("Karnataka")).thenReturn(true);
-        when(addressValidator.isValidCityForState("Karnataka", "Bengaluru")).thenReturn(true);
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Pincode must be a valid 6-digit Indian pincode");
-    }
-
-    @Test
-    void updateProfile_missingAddressLine1_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .state("Karnataka")
-                .city("Bengaluru")
-                .pincode("560001")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Address Line 1 is required");
-    }
-
-    @Test
-    void updateProfile_missingState_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .city("Bengaluru")
-                .pincode("560001")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("State is required");
-    }
-
-    @Test
-    void updateProfile_missingCity_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .state("Karnataka")
-                .pincode("560001")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("City is required");
-    }
-
-    @Test
-    void updateProfile_missingPincode_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .state("Karnataka")
-                .city("Bengaluru")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Pincode is required");
-    }
-
-    @Test
-    void updateProfile_pincodeStartingWithZero_shouldThrowBadRequest() {
-        ProfileRequest request = ProfileRequest.builder()
-                .firstName("Test")
-                .lastName("User")
-                .addressLine1("123 Main St")
-                .state("Karnataka")
-                .city("Bengaluru")
-                .pincode("012345")
-                .build();
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(addressValidator.isValidState("Karnataka")).thenReturn(true);
-        when(addressValidator.isValidCityForState("Karnataka", "Bengaluru")).thenReturn(true);
-
-        assertThatThrownBy(() -> profileService.updateProfile(1L, request))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Pincode must be a valid 6-digit Indian pincode");
+        assertThat(response.getAvatarUrl()).isEqualTo("http://avatar.url");
     }
 }

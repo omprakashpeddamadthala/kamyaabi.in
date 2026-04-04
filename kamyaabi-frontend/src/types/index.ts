@@ -63,6 +63,7 @@ export interface Address {
   fullName: string;
   phone: string;
   street: string;
+  addressLine2: string | null;
   city: string;
   state: string;
   pincode: string;

@@ -16,8 +16,8 @@ class AddressMapperTest {
     void toResponse_shouldMapAllFields() {
         Address address = Address.builder()
                 .id(1L).fullName("Test User").phone("9876543210")
-                .street("123 Main St").city("Mumbai").state("MH")
-                .pincode("400001").isDefault(true)
+                .street("123 Main St").addressLine2("Apt 4").city("Mumbai")
+                .state("Maharashtra").pincode("400001").isDefault(true)
                 .build();
 
         AddressResponse response = addressMapper.toResponse(address);
@@ -26,10 +26,24 @@ class AddressMapperTest {
         assertThat(response.getFullName()).isEqualTo("Test User");
         assertThat(response.getPhone()).isEqualTo("9876543210");
         assertThat(response.getStreet()).isEqualTo("123 Main St");
+        assertThat(response.getAddressLine2()).isEqualTo("Apt 4");
         assertThat(response.getCity()).isEqualTo("Mumbai");
-        assertThat(response.getState()).isEqualTo("MH");
+        assertThat(response.getState()).isEqualTo("Maharashtra");
         assertThat(response.getPincode()).isEqualTo("400001");
         assertThat(response.getIsDefault()).isTrue();
+    }
+
+    @Test
+    void toResponse_nullAddressLine2_shouldReturnNull() {
+        Address address = Address.builder()
+                .id(1L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(false)
+                .build();
+
+        AddressResponse response = addressMapper.toResponse(address);
+
+        assertThat(response.getAddressLine2()).isNull();
     }
 
     @Test
@@ -37,13 +51,14 @@ class AddressMapperTest {
         User user = User.builder().id(1L).email("test@kamyaabi.in").build();
         AddressRequest request = AddressRequest.builder()
                 .fullName("Test User").phone("9876543210")
-                .street("123 Main St").city("Mumbai").state("MH")
-                .pincode("400001").isDefault(true)
+                .street("123 Main St").addressLine2("Apt 4").city("Mumbai")
+                .state("Maharashtra").pincode("400001").isDefault(true)
                 .build();
 
         Address address = addressMapper.toEntity(request, user);
 
         assertThat(address.getFullName()).isEqualTo("Test User");
+        assertThat(address.getAddressLine2()).isEqualTo("Apt 4");
         assertThat(address.getUser()).isEqualTo(user);
         assertThat(address.getIsDefault()).isTrue();
     }
@@ -53,7 +68,7 @@ class AddressMapperTest {
         User user = User.builder().id(1L).build();
         AddressRequest request = AddressRequest.builder()
                 .fullName("Test User").phone("9876543210")
-                .street("123 Main St").city("Mumbai").state("MH")
+                .street("123 Main St").city("Mumbai").state("Maharashtra")
                 .pincode("400001")
                 .build();
 
@@ -66,17 +81,20 @@ class AddressMapperTest {
     void updateEntity_shouldUpdateAllFields() {
         Address address = Address.builder()
                 .id(1L).fullName("Old Name").phone("111").street("Old St")
-                .city("Old City").state("Old").pincode("000000").isDefault(false)
+                .addressLine2("Old Line2").city("Old City").state("Old")
+                .pincode("000000").isDefault(false)
                 .build();
         AddressRequest request = AddressRequest.builder()
                 .fullName("New Name").phone("222").street("New St")
-                .city("New City").state("New").pincode("111111").isDefault(true)
+                .addressLine2("New Line2").city("New City").state("New")
+                .pincode("111111").isDefault(true)
                 .build();
 
         addressMapper.updateEntity(address, request);
 
         assertThat(address.getFullName()).isEqualTo("New Name");
         assertThat(address.getPhone()).isEqualTo("222");
+        assertThat(address.getAddressLine2()).isEqualTo("New Line2");
         assertThat(address.getCity()).isEqualTo("New City");
         assertThat(address.getIsDefault()).isTrue();
     }

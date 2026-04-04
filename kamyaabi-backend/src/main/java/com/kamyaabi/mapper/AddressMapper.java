@@ -15,6 +15,7 @@ public class AddressMapper {
                 .fullName(address.getFullName())
                 .phone(address.getPhone())
                 .street(address.getStreet())
+                .addressLine2(address.getAddressLine2())
                 .city(address.getCity())
                 .state(address.getState())
                 .pincode(address.getPincode())
@@ -27,6 +28,7 @@ public class AddressMapper {
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .street(request.getStreet())
+                .addressLine2(request.getAddressLine2())
                 .city(request.getCity())
                 .state(request.getState())
                 .pincode(request.getPincode())
@@ -39,6 +41,7 @@ public class AddressMapper {
         address.setFullName(request.getFullName());
         address.setPhone(request.getPhone());
         address.setStreet(request.getStreet());
+        address.setAddressLine2(request.getAddressLine2());
         address.setCity(request.getCity());
         address.setState(request.getState());
         address.setPincode(request.getPincode());
