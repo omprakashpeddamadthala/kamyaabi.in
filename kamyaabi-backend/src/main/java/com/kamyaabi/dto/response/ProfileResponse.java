@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,18 +19,5 @@ public class ProfileResponse {
     private String lastName;
     private String avatarUrl;
     private String role;
-    private ShippingAddress shippingAddress;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ShippingAddress {
-        private String addressLine1;
-        private String addressLine2;
-        private String state;
-        private String city;
-        private String pincode;
-        private String country;
-    }
+    private List<AddressResponse> addresses;
 }

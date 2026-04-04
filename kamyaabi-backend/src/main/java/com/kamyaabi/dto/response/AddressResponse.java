@@ -14,6 +14,7 @@ public class AddressResponse {
     private String fullName;
     private String phone;
     private String street;
+    private String addressLine2;
     private String city;
     private String state;
     private String pincode;

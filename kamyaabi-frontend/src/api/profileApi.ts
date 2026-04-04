@@ -1,14 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse } from '../types';
-
-export interface ShippingAddress {
-  addressLine1: string;
-  addressLine2: string;
-  state: string;
-  city: string;
-  pincode: string;
-  country: string;
-}
+import { Address, ApiResponse } from '../types';
 
 export interface ProfileResponse {
   id: number;
@@ -18,18 +9,12 @@ export interface ProfileResponse {
   lastName: string | null;
   avatarUrl: string | null;
   role: string;
-  shippingAddress: ShippingAddress | null;
+  addresses: Address[];
 }
 
 export interface ProfileRequest {
   firstName: string;
   lastName: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  state?: string;
-  city?: string;
-  pincode?: string;
-  country?: string;
 }
 
 export const profileApi = {
@@ -38,10 +23,4 @@ export const profileApi = {
 
   updateProfile: (data: ProfileRequest) =>
     axiosInstance.put<ApiResponse<ProfileResponse>>('/api/profile', data),
-
-  getStates: () =>
-    axiosInstance.get<ApiResponse<string[]>>('/api/profile/states'),
-
-  getCities: (state: string) =>
-    axiosInstance.get<ApiResponse<string[]>>(`/api/profile/states/${encodeURIComponent(state)}/cities`),
 };

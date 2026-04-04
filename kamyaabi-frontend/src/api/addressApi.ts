@@ -5,6 +5,7 @@ export interface AddressRequest {
   fullName: string;
   phone: string;
   street: string;
+  addressLine2?: string;
   city: string;
   state: string;
   pincode: string;
@@ -23,4 +24,10 @@ export const addressApi = {
 
   delete: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/addresses/${id}`),
+
+  getStates: () =>
+    axiosInstance.get<ApiResponse<string[]>>('/api/addresses/states'),
+
+  getCities: (state: string) =>
+    axiosInstance.get<ApiResponse<string[]>>(`/api/addresses/states/${encodeURIComponent(state)}/cities`),
 };

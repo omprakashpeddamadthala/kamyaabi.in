@@ -31,6 +31,8 @@ public class Address {
     @Column(nullable = false)
     private String street;
 
+    private String addressLine2;
+
     @Column(nullable = false)
     private String city;
 

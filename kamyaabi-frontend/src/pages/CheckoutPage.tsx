@@ -10,11 +10,6 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Divider,
   Alert,
 } from '@mui/material';
@@ -22,10 +17,11 @@ import { Add } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart } from '../features/cart/cartSlice';
 import { createOrder } from '../features/order/orderSlice';
-import { addressApi, AddressRequest } from '../api/addressApi';
+import { addressApi } from '../api/addressApi';
 import { paymentApi } from '../api/paymentApi';
 import { Address } from '../types';
 import Loading from '../components/common/Loading';
+import AddressFormDialog from '../components/common/AddressFormDialog';
 
 declare global {
   interface Window {
@@ -42,16 +38,7 @@ const CheckoutPage: React.FC = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [formData, setFormData] = useState<AddressRequest>({
-    fullName: '',
-    phone: '',
-    street: '',
-    city: '',
-    state: '',
-    pincode: '',
-  });
   const [loading, setLoading] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,20 +56,6 @@ const CheckoutPage: React.FC = () => {
       else if (res.data.data.length > 0) setSelectedAddressId(res.data.data[0].id);
     } catch {
       setError('Failed to load addresses');
-    }
-  };
-
-  const handleSaveAddress = async () => {
-    setSavingAddress(true);
-    try {
-      await addressApi.create(formData);
-      setShowAddDialog(false);
-      setFormData({ fullName: '', phone: '', street: '', city: '', state: '', pincode: '' });
-      loadAddresses();
-    } catch {
-      setError('Failed to save address');
-    } finally {
-      setSavingAddress(false);
     }
   };
 
@@ -257,69 +230,11 @@ const CheckoutPage: React.FC = () => {
       </Grid>
 
       {/* Add Address Dialog */}
-      <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Shipping Address</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Full Name"
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Street Address"
-              value={formData.street}
-              onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-              fullWidth
-              multiline
-              rows={2}
-              required
-            />
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField
-                  label="City"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="State"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  fullWidth
-                  required
-                />
-              </Grid>
-            </Grid>
-            <TextField
-              label="Pincode"
-              value={formData.pincode}
-              onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-              fullWidth
-              required
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowAddDialog(false)} disabled={savingAddress}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveAddress} disabled={savingAddress}>
-            {savingAddress ? 'Saving...' : 'Save Address'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AddressFormDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        onSaved={loadAddresses}
+      />
     </Container>
   );
 };
