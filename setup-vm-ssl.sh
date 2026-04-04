@@ -12,6 +12,11 @@
 
 set -euo pipefail
 
+# ─── Load .env if present ────────────────────────────────────────────────────
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
 # ─── Configuration ───────────────────────────────────────────────────────────
 DOMAIN="${DOMAIN:-kamyaabi.in}"
 EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.in}"
