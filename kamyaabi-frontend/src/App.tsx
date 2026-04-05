@@ -8,6 +8,7 @@ import AppRoutes from './routes/AppRoutes';
 import { FlyToCartProvider } from './components/common/FlyToCartAnimation';
 import Loading from './components/common/Loading';
 import GlobalLoadingBar from './components/common/GlobalLoadingBar';
+import SessionManager from './components/common/SessionManager';
 
 const App: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <GlobalLoadingBar />
+        <SessionManager />
         <BrowserRouter>
           <Suspense fallback={<Loading message="Loading page..." />}>
             <FlyToCartProvider>

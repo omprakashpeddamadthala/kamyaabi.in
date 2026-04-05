@@ -8,8 +8,9 @@ import {
   Box,
   Chip,
   Button,
+  CircularProgress,
 } from '@mui/material';
-import { ShoppingCart } from '@mui/icons-material';
+import { ShoppingCart, Check } from '@mui/icons-material';
 import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart } from '../../features/cart/cartSlice';
@@ -23,8 +24,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { addingProductIds } = useAppSelector((state) => state.cart);
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
+  const [justAdded, setJustAdded] = React.useState(false);
+
+  const isAdding = addingProductIds.includes(product.id);
 
   const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
@@ -37,13 +42,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       navigate('/login');
       return;
     }
+    // Prevent duplicate clicks while adding
+    if (isAdding) return;
     if (imageRef.current) {
       triggerFlyToCart(
         product.imageUrl || 'https://via.placeholder.com/50',
         imageRef.current
       );
     }
-    dispatch(addToCart({ productId: product.id, quantity: 1 }));
+    dispatch(addToCart({ productId: product.id, quantity: 1 })).then((result) => {
+      if (addToCart.fulfilled.match(result)) {
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 1500);
+      }
+    });
+  };
+
+  const getButtonContent = () => {
+    if (product.stock === 0) return 'Out of Stock';
+    if (isAdding) return 'Adding to cart...';
+    if (justAdded) return 'Added!';
+    return 'Add to Cart';
+  };
+
+  const getButtonIcon = () => {
+    if (isAdding) return <CircularProgress size={18} color="inherit" />;
+    if (justAdded) return <Check />;
+    return <ShoppingCart />;
   };
 
   return (
@@ -98,17 +123,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             variant="contained"
             size="small"
             fullWidth
-            startIcon={<ShoppingCart />}
+            startIcon={getButtonIcon()}
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={product.stock === 0 || isAdding}
+            color={justAdded ? 'success' : 'primary'}
             sx={{
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
               '&:active': {
                 transform: 'scale(0.95)',
               },
             }}
           >
-            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+            {getButtonContent()}
           </Button>
         )}
       </CardContent>
@@ -116,4 +142,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   );
 };
 
-export default ProductCard;
+export default React.memo(ProductCard);

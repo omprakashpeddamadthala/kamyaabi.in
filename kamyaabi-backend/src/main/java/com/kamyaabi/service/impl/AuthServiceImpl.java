@@ -37,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
     
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+    
+    // Reuse verifier instance to avoid cold-start delays in production
+    private volatile GoogleIdTokenVerifier cachedVerifier;
 
     public AuthServiceImpl(UserRepository userRepository,
                            JwtTokenProvider jwtTokenProvider,
@@ -45,40 +48,78 @@ public class AuthServiceImpl implements AuthService {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userMapper = userMapper;
     }
+    
+    private GoogleIdTokenVerifier getVerifier() {
+        if (cachedVerifier == null) {
+            synchronized (this) {
+                if (cachedVerifier == null) {
+                    cachedVerifier = new GoogleIdTokenVerifier.Builder(
+                            HTTP_TRANSPORT, JSON_FACTORY)
+                            .setAudience(Collections.singletonList(googleClientId))
+                            .build();
+                    log.info("Initialized Google ID token verifier with client ID: {}...{}", 
+                            googleClientId.substring(0, Math.min(8, googleClientId.length())),
+                            googleClientId.length() > 8 ? googleClientId.substring(googleClientId.length() - 4) : "");
+                }
+            }
+        }
+        return cachedVerifier;
+    }
 
     @Override
     public AuthResponse googleLogin(String idToken) {
         log.info("Processing Google login with ID token verification");
         
-        try {
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                    HTTP_TRANSPORT, JSON_FACTORY)
-                    .setAudience(Collections.singletonList(googleClientId))
-                    .build();
-            
-            GoogleIdToken googleIdToken = verifier.verify(idToken);
-            if (googleIdToken == null) {
-                log.error("Invalid Google ID token");
-                throw new UnauthorizedException("Invalid Google ID token");
+        // Retry logic to handle transient failures (e.g., Google cert fetch on cold start)
+        int maxRetries = 2;
+        Exception lastException = null;
+        
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                if (attempt > 0) {
+                    log.info("Retrying Google ID token verification, attempt {}", attempt + 1);
+                    Thread.sleep(500L * attempt);
+                }
+                
+                GoogleIdToken googleIdToken = getVerifier().verify(idToken);
+                if (googleIdToken == null) {
+                    log.error("Invalid Google ID token (null result from verifier)");
+                    throw new UnauthorizedException("Invalid Google ID token");
+                }
+                
+                GoogleIdToken.Payload payload = googleIdToken.getPayload();
+                
+                String email = payload.getEmail();
+                Object nameObj = payload.get("name");
+                Object pictureObj = payload.get("picture");
+                String sub = payload.getSubject();
+                
+                // Build user info map with null-safe values
+                java.util.HashMap<String, Object> userInfo = new java.util.HashMap<>();
+                userInfo.put("email", email);
+                userInfo.put("name", nameObj != null ? nameObj : email);
+                userInfo.put("picture", pictureObj != null ? pictureObj : "");
+                userInfo.put("sub", sub);
+                
+                log.info("Successfully verified Google ID token for user: {}", email);
+                return processGoogleUser(userInfo);
+                
+            } catch (UnauthorizedException e) {
+                throw e;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new UnauthorizedException("Token verification interrupted");
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("Google ID token verification attempt {} failed: {}", attempt + 1, e.getMessage());
+                // Invalidate cached verifier on failure so it gets rebuilt on retry
+                cachedVerifier = null;
             }
-            
-            GoogleIdToken.Payload payload = googleIdToken.getPayload();
-            
-            // Extract user information from the verified token
-            Map<String, Object> userInfo = Map.of(
-                "email", payload.getEmail(),
-                "name", payload.get("name"),
-                "picture", payload.get("picture"),
-                "sub", payload.getSubject()
-            );
-            
-            log.info("Successfully verified Google ID token for user: {}", payload.getEmail());
-            return processGoogleUser(userInfo);
-            
-        } catch (Exception e) {
-            log.error("Failed to verify Google ID token", e);
-            throw new UnauthorizedException("Failed to verify Google ID token: " + e.getMessage());
         }
+        
+        log.error("Failed to verify Google ID token after {} attempts", maxRetries + 1, lastException);
+        throw new UnauthorizedException("Failed to verify Google ID token: " + 
+                (lastException != null ? lastException.getMessage() : "unknown error"));
     }
 
     @Override

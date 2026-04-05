@@ -49,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "productsByCategory", key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.debug("Fetching products by category: {}", categoryId);
         return productRepository.findByCategoryIdAndActiveTrue(categoryId, pageable)
@@ -85,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "featuredProducts"}, allEntries = true)
+    @CacheEvict(value = {"products", "featuredProducts", "productsByCategory"}, allEntries = true)
     public ProductResponse createProduct(ProductRequest request) {
         log.info("Creating new product: {}", request.getName());
         validateDiscountPrice(request);
@@ -98,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         log.info("Updating product: {}", id);
         validateDiscountPrice(request);
@@ -122,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProduct(Long id) {
         log.info("Deleting product: {}", id);
         Product product = productRepository.findById(id)

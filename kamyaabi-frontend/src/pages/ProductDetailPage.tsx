@@ -12,8 +12,9 @@ import {
   Breadcrumbs,
   Link as MuiLink,
   Skeleton,
+  CircularProgress,
 } from '@mui/material';
-import { ShoppingCart, Add, Remove } from '@mui/icons-material';
+import { ShoppingCart, Add, Remove, Check } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProductById, clearSelectedProduct } from '../features/product/productSlice';
@@ -49,9 +50,13 @@ const ProductDetailPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { selectedProduct: product, loading } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
+  const { addingProductIds } = useAppSelector((state) => state.cart);
   const [quantity, setQuantity] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
+
+  const isAdding = product ? addingProductIds.includes(product.id) : false;
 
   useEffect(() => {
     if (id) {
@@ -67,6 +72,8 @@ const ProductDetailPage: React.FC = () => {
       navigate('/login');
       return;
     }
+    // Prevent duplicate clicks while adding
+    if (isAdding) return;
     if (product) {
       if (imageRef.current) {
         triggerFlyToCart(
@@ -74,7 +81,12 @@ const ProductDetailPage: React.FC = () => {
           imageRef.current
         );
       }
-      dispatch(addToCart({ productId: product.id, quantity }));
+      dispatch(addToCart({ productId: product.id, quantity })).then((result) => {
+        if (addToCart.fulfilled.match(result)) {
+          setJustAdded(true);
+          setTimeout(() => setJustAdded(false), 2000);
+        }
+      });
     }
   };
 
@@ -181,18 +193,24 @@ const ProductDetailPage: React.FC = () => {
                 variant="contained"
                 size="large"
                 fullWidth
-                startIcon={<ShoppingCart />}
+                startIcon={
+                  isAdding ? <CircularProgress size={20} color="inherit" /> :
+                  justAdded ? <Check /> : <ShoppingCart />
+                }
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={product.stock === 0 || isAdding}
+                color={justAdded ? 'success' : 'primary'}
                 sx={{
                   py: 1.5,
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
                   '&:active': {
                     transform: 'scale(0.97)',
                   },
                 }}
               >
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {product.stock === 0 ? 'Out of Stock' :
+                 isAdding ? 'Adding to cart...' :
+                 justAdded ? 'Added to Cart!' : 'Add to Cart'}
               </Button>
             )}
           </Grid>

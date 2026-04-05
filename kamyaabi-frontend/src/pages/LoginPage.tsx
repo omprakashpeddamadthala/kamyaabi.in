@@ -7,6 +7,7 @@ import {
   Box,
   Divider,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
@@ -15,9 +16,29 @@ import { googleLogin } from '../features/auth/authSlice';
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { error } = useAppSelector((state) => state.auth);
+  const { error, loading } = useAppSelector((state) => state.auth);
+  const [loginAttempted, setLoginAttempted] = React.useState(false);
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
+  const handleGoogleSuccess = React.useCallback(
+    (credentialResponse: { credential?: string }) => {
+      if (credentialResponse.credential) {
+        setLoginAttempted(true);
+        dispatch(
+          googleLogin({
+            idToken: credentialResponse.credential,
+          })
+        ).then((result) => {
+          if (googleLogin.fulfilled.match(result)) {
+            navigate('/');
+          }
+          setLoginAttempted(false);
+        });
+      }
+    },
+    [dispatch, navigate]
+  );
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -59,25 +80,23 @@ const LoginPage: React.FC = () => {
           )}
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                if (credentialResponse.credential) {
-                  dispatch(
-                    googleLogin({
-                      idToken: credentialResponse.credential,
-                    })
-                  ).then((result) => {
-                    if (googleLogin.fulfilled.match(result)) {
-                      navigate('/');
-                    }
-                  });
-                }
-              }}
-              onError={() => {
-                console.error('Login Failed');
-              }}
-              useOneTap
-            />
+            {(loading || loginAttempted) ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={32} />
+                <Typography variant="body2" color="text.secondary">
+                  Signing you in...
+                </Typography>
+              </Box>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  console.error('Google Login Failed - check OAuth configuration');
+                }}
+                useOneTap
+                auto_select
+              />
+            )}
           </Box>
 
           <Box sx={{ mt: 4 }}>

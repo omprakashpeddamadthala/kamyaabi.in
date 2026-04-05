@@ -7,6 +7,7 @@ interface CartState {
   loading: boolean;
   error: string | null;
   updatingItemIds: number[];
+  addingProductIds: number[];
 }
 
 const initialState: CartState = {
@@ -14,6 +15,7 @@ const initialState: CartState = {
   loading: false,
   error: null,
   updatingItemIds: [],
+  addingProductIds: [],
 };
 
 export const fetchCart = createAsyncThunk('cart/fetch', async (_, { rejectWithValue }) => {
@@ -98,7 +100,17 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(addToCart.fulfilled, (state, action) => { state.cart = action.payload; })
+      .addCase(addToCart.pending, (state, action) => {
+        state.addingProductIds = [...state.addingProductIds, action.meta.arg.productId];
+      })
+      .addCase(addToCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
+      })
+      .addCase(addToCart.rejected, (state, action) => {
+        state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
+        state.error = action.payload as string;
+      })
       .addCase(updateCartItem.pending, (state, action) => {
         state.updatingItemIds = [...state.updatingItemIds, action.meta.arg.itemId];
       })
