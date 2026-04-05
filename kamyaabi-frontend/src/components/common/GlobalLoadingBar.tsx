@@ -1,9 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { LinearProgress, Box } from '@mui/material';
+import React, { useEffect, useState, useRef } from 'react';
+import { LinearProgress, Box, Fade } from '@mui/material';
 import axiosInstance from '../../api/axiosInstance';
 
 const GlobalLoadingBar: React.FC = () => {
   const [activeRequests, setActiveRequests] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Show bar immediately when requests start, hide with a slight delay for smooth UX
+  useEffect(() => {
+    if (activeRequests > 0) {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      setVisible(true);
+    } else {
+      // Brief delay before hiding to prevent flickering on fast sequential requests
+      hideTimerRef.current = setTimeout(() => {
+        setVisible(false);
+      }, 300);
+    }
+    return () => {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+    };
+  }, [activeRequests]);
 
   useEffect(() => {
     const requestInterceptor = axiosInstance.interceptors.request.use(
@@ -34,20 +57,20 @@ const GlobalLoadingBar: React.FC = () => {
     };
   }, []);
 
-  if (activeRequests <= 0) return null;
-
   return (
-    <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000 }}>
-      <LinearProgress
-        color="primary"
-        sx={{
-          height: 3,
-          '& .MuiLinearProgress-bar': {
-            transition: 'transform 0.2s linear',
-          },
-        }}
-      />
-    </Box>
+    <Fade in={visible} timeout={{ enter: 200, exit: 400 }}>
+      <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000 }}>
+        <LinearProgress
+          color="primary"
+          sx={{
+            height: 3,
+            '& .MuiLinearProgress-bar': {
+              transition: 'transform 0.3s linear',
+            },
+          }}
+        />
+      </Box>
+    </Fade>
   );
 };
 

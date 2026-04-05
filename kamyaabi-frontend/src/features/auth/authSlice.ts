@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
 import { User } from '../../types';
+import { updateLastActivity } from '../../api/axiosInstance';
 
 interface AuthState {
   user: User | null;
@@ -24,6 +25,8 @@ export const googleLogin = createAsyncThunk(
       const { token, user } = response.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      // Initialize session activity tracking on login
+      updateLastActivity();
       return { token, user };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

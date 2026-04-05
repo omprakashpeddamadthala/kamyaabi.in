@@ -21,6 +21,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Skeleton,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   Person,
@@ -45,8 +48,44 @@ interface FormErrors {
   lastName?: string;
 }
 
+// Skeleton loader for profile page
+const ProfileSkeleton: React.FC = () => (
+  <Container maxWidth="md" sx={{ py: 4 }}>
+    <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Skeleton variant="circular" width={64} height={64} animation="wave" />
+        <Box>
+          <Skeleton variant="text" width={150} height={32} animation="wave" />
+          <Skeleton variant="text" width={200} height={20} animation="wave" />
+        </Box>
+      </Box>
+      <Skeleton variant="text" width={180} height={28} sx={{ mb: 2 }} animation="wave" />
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} animation="wave" />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Skeleton variant="rectangular" height={56} sx={{ borderRadius: 1 }} animation="wave" />
+        </Grid>
+      </Grid>
+    </Paper>
+    <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
+      <Skeleton variant="text" width={200} height={28} sx={{ mb: 2 }} animation="wave" />
+      <Grid container spacing={2}>
+        {[1, 2].map((i) => (
+          <Grid item xs={12} sm={6} key={i}>
+            <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 1 }} animation="wave" />
+          </Grid>
+        ))}
+      </Grid>
+    </Paper>
+  </Container>
+);
+
 const ProfilePage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -56,6 +95,7 @@ const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [settingDefault, setSettingDefault] = useState<number | null>(null);
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -156,6 +196,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleSetDefault = async (address: Address) => {
+    setSettingDefault(address.id);
     try {
       await addressApi.update(address.id, {
         fullName: address.fullName,
@@ -171,6 +212,8 @@ const ProfilePage: React.FC = () => {
       setSuccessMessage('Default address updated');
     } catch {
       setErrorMessage('Failed to set default address');
+    } finally {
+      setSettingDefault(null);
     }
   };
 
@@ -180,28 +223,28 @@ const ProfilePage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <Container maxWidth="md" sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Container>
-    );
+    return <ProfileSkeleton />;
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
       {/* Profile Header & Personal Info */}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <Avatar
             src={user?.avatarUrl || undefined}
             alt={user?.name}
-            sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}
+            sx={{ width: { xs: 48, md: 64 }, height: { xs: 48, md: 64 }, bgcolor: 'primary.main' }}
           >
             {user?.name?.charAt(0) || <Person />}
           </Avatar>
-          <Box>
-            <Typography variant="h5" fontWeight={700}>My Profile</Typography>
-            <Typography variant="body2" color="text.secondary">{user?.email}</Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={700} noWrap>
+              My Profile
+            </Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {user?.email}
+            </Typography>
           </Box>
         </Box>
 
@@ -246,11 +289,12 @@ const ProfilePage: React.FC = () => {
               />
             </Grid>
           </Grid>
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
             <Button
               type="submit"
               variant="contained"
               size="large"
+              fullWidth={isMobile}
               startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <Save />}
               disabled={saving}
               sx={{ px: 4, py: 1.5, borderRadius: 2, fontWeight: 600, textTransform: 'none', fontSize: '1rem' }}
@@ -263,12 +307,24 @@ const ProfilePage: React.FC = () => {
 
       {/* Shipping Addresses */}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 1,
+        }}>
           <Typography variant="h6" fontWeight={600}>
             <Home sx={{ verticalAlign: 'middle', mr: 1 }} />
             Shipping Addresses
           </Typography>
-          <Button variant="contained" startIcon={<Add />} onClick={handleAddAddress}>
+          <Button 
+            variant="contained" 
+            startIcon={<Add />} 
+            onClick={handleAddAddress}
+            size={isMobile ? 'small' : 'medium'}
+          >
             Add Address
           </Button>
         </Box>
@@ -288,11 +344,14 @@ const ProfilePage: React.FC = () => {
                   variant="outlined"
                   sx={{
                     height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
                     borderColor: addr.isDefault ? 'primary.main' : 'divider',
                     borderWidth: addr.isDefault ? 2 : 1,
+                    transition: 'border-color 0.2s ease',
                   }}
                 >
-                  <CardContent sx={{ pb: 1 }}>
+                  <CardContent sx={{ pb: 1, flexGrow: 1 }}>
                     {addr.isDefault && (
                       <Chip label="Default" color="primary" size="small" sx={{ mb: 1 }} />
                     )}
@@ -329,8 +388,16 @@ const ProfilePage: React.FC = () => {
                     </Tooltip>
                     {!addr.isDefault && (
                       <Tooltip title="Set as Default">
-                        <IconButton size="small" onClick={() => handleSetDefault(addr)}>
-                          <StarBorder fontSize="small" />
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleSetDefault(addr)}
+                          disabled={settingDefault === addr.id}
+                        >
+                          {settingDefault === addr.id ? (
+                            <CircularProgress size={18} />
+                          ) : (
+                            <StarBorder fontSize="small" />
+                          )}
                         </IconButton>
                       </Tooltip>
                     )}
@@ -356,10 +423,10 @@ const ProfilePage: React.FC = () => {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog open={deleteDialogOpen} onClose={() => !deletingAddress && setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Address</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this address?</Typography>
+          <Typography>Are you sure you want to delete this address? This action cannot be undone.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)} disabled={deletingAddress}>Cancel</Button>
@@ -368,6 +435,7 @@ const ProfilePage: React.FC = () => {
             variant="contained"
             onClick={handleDeleteConfirm}
             disabled={deletingAddress}
+            startIcon={deletingAddress ? <CircularProgress size={18} color="inherit" /> : undefined}
           >
             {deletingAddress ? 'Deleting...' : 'Delete'}
           </Button>
