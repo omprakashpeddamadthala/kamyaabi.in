@@ -96,4 +96,19 @@ class AddressControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
+
+    @Test
+    void setDefaultAddress_shouldReturnUpdatedAddress() {
+        AddressResponse defaultResponse = AddressResponse.builder()
+                .id(1L).fullName("Test User").phone("9876543210")
+                .street("123 Main St").city("Mumbai")
+                .state("Maharashtra").pincode("400001").isDefault(true).build();
+        when(currentUser.getUserId()).thenReturn(1L);
+        when(addressService.setDefaultAddress(1L, 1L)).thenReturn(defaultResponse);
+
+        ResponseEntity<?> response = addressController.setDefaultAddress(1L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(addressService).setDefaultAddress(1L, 1L);
+    }
 }

@@ -98,6 +98,23 @@ public class AddressServiceImpl implements AddressService {
         log.info("Address deleted: {}", addressId);
     }
 
+    @Override
+    public AddressResponse setDefaultAddress(Long userId, Long addressId) {
+        log.info("Setting default address {} for user: {}", addressId, userId);
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address", addressId));
+
+        if (!address.getUser().getId().equals(userId)) {
+            throw new BadRequestException("Address does not belong to user");
+        }
+
+        clearOtherDefaults(userId, addressId);
+        address.setIsDefault(true);
+        Address saved = addressRepository.save(address);
+        log.info("Default address set to: {}", saved.getId());
+        return addressMapper.toResponse(saved);
+    }
+
     private void clearOtherDefaults(Long userId, Long excludeAddressId) {
         addressRepository.findByUserId(userId).stream()
                 .filter(a -> !a.getId().equals(excludeAddressId))

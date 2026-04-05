@@ -198,16 +198,7 @@ const ProfilePage: React.FC = () => {
   const handleSetDefault = async (address: Address) => {
     setSettingDefault(address.id);
     try {
-      await addressApi.update(address.id, {
-        fullName: address.fullName,
-        phone: address.phone,
-        street: address.street,
-        addressLine2: address.addressLine2 || undefined,
-        city: address.city,
-        state: address.state,
-        pincode: address.pincode,
-        isDefault: true,
-      });
+      await addressApi.setDefault(address.id);
       loadAddresses();
       setSuccessMessage('Default address updated');
     } catch {
