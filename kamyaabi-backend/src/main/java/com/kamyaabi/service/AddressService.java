@@ -10,4 +10,5 @@ public interface AddressService {
     AddressResponse createAddress(Long userId, AddressRequest request);
     AddressResponse updateAddress(Long userId, Long addressId, AddressRequest request);
     void deleteAddress(Long userId, Long addressId);
+    AddressResponse setDefaultAddress(Long userId, Long addressId);
 }

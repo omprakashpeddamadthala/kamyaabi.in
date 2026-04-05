@@ -250,4 +250,48 @@ class AddressServiceImplTest {
         assertThatThrownBy(() -> addressService.deleteAddress(1L, 2L))
                 .isInstanceOf(BadRequestException.class);
     }
+
+    @Test
+    void setDefaultAddress_shouldSetDefaultAndClearOthers() {
+        Address existingDefault = Address.builder().id(2L).user(user).fullName("Other")
+                .phone("9876543210").street("Other St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        AddressResponse defaultResponse = AddressResponse.builder().id(1L).fullName("Test User")
+                .phone("9876543210").street("123 Main St").city("Mumbai").state("Maharashtra")
+                .pincode("400001").isDefault(true).build();
+
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        when(addressRepository.findByUserId(1L)).thenReturn(List.of(address, existingDefault));
+        when(addressRepository.save(any(Address.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(addressMapper.toResponse(any(Address.class))).thenReturn(defaultResponse);
+
+        AddressResponse result = addressService.setDefaultAddress(1L, 1L);
+
+        assertThat(result.getIsDefault()).isTrue();
+        assertThat(existingDefault.getIsDefault()).isFalse();
+        assertThat(address.getIsDefault()).isTrue();
+        verify(addressRepository, atLeast(2)).save(any(Address.class));
+    }
+
+    @Test
+    void setDefaultAddress_notFound_shouldThrowException() {
+        when(addressRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> addressService.setDefaultAddress(1L, 999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void setDefaultAddress_wrongUser_shouldThrowException() {
+        User otherUser = User.builder().id(2L).build();
+        Address otherAddress = Address.builder().id(2L).user(otherUser).fullName("Other")
+                .phone("1234567890").street("Other St").city("Delhi").state("Delhi")
+                .pincode("110001").isDefault(false).build();
+
+        when(addressRepository.findById(2L)).thenReturn(Optional.of(otherAddress));
+
+        assertThatThrownBy(() -> addressService.setDefaultAddress(1L, 2L))
+                .isInstanceOf(BadRequestException.class);
+    }
 }

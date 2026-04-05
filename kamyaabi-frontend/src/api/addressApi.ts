@@ -25,6 +25,9 @@ export const addressApi = {
   delete: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/addresses/${id}`),
 
+  setDefault: (id: number) =>
+    axiosInstance.put<ApiResponse<Address>>(`/api/addresses/${id}/default`),
+
   getStates: () =>
     axiosInstance.get<ApiResponse<string[]>>('/api/addresses/states'),
 

@@ -63,6 +63,13 @@ public class AddressController {
         return ResponseEntity.ok(ApiResponse.success("Address deleted", null));
     }
 
+    @PutMapping("/{id}/default")
+    @Operation(summary = "Set default address", description = "Mark an address as the default shipping address")
+    public ResponseEntity<ApiResponse<AddressResponse>> setDefaultAddress(@PathVariable Long id) {
+        AddressResponse address = addressService.setDefaultAddress(currentUser.getUserId(), id);
+        return ResponseEntity.ok(ApiResponse.success("Default address updated", address));
+    }
+
     @GetMapping("/states")
     @Operation(summary = "Get Indian states", description = "Get list of all Indian states and union territories")
     public ResponseEntity<ApiResponse<List<String>>> getStates() {

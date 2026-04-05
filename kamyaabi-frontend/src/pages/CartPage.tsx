@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Container,
@@ -11,10 +11,19 @@ import {
   Button,
   Divider,
   Skeleton,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  CircularProgress,
+  Alert,
+  Chip,
 } from '@mui/material';
-import { Add, Remove, Delete, ShoppingBag } from '@mui/icons-material';
+import { Add, Remove, Delete, ShoppingBag, LocationOn, Person } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart, updateCartItem, removeFromCart, optimisticUpdateQuantity } from '../features/cart/cartSlice';
+import { addressApi } from '../api/addressApi';
+import { Address } from '../types';
+import AddressFormDialog from '../components/common/AddressFormDialog';
 import PageTransition from '../components/common/PageTransition';
 
 const CartSkeleton: React.FC = () => (
@@ -50,28 +59,71 @@ const CartSkeleton: React.FC = () => (
   </Container>
 );
 
+const AddressSkeleton: React.FC = () => (
+  <Box>
+    {[1, 2].map((i) => (
+      <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+        <Skeleton variant="circular" width={20} height={20} sx={{ mr: 1.5, mt: 0.5 }} animation="wave" />
+        <Box sx={{ flexGrow: 1 }}>
+          <Skeleton variant="text" width="40%" height={22} animation="wave" />
+          <Skeleton variant="text" width="70%" height={18} animation="wave" />
+          <Skeleton variant="text" width="30%" height={18} animation="wave" />
+        </Box>
+      </Box>
+    ))}
+  </Box>
+);
+
 const CartPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { cart, loading } = useAppSelector((state) => state.cart);
+  const { token } = useAppSelector((state) => state.auth);
   const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  // Debounced quantity update: optimistically update UI, then debounce API call
+  const loadAddresses = useCallback(async () => {
+    if (!token) return;
+    setAddressLoading(true);
+    setAddressError(null);
+    try {
+      const res = await addressApi.getAll();
+      const fetchedAddresses = res.data.data;
+      setAddresses(fetchedAddresses);
+      const defaultAddr = fetchedAddresses.find((a) => a.isDefault);
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+      } else if (fetchedAddresses.length > 0) {
+        setSelectedAddressId(fetchedAddresses[0].id);
+      } else {
+        setSelectedAddressId(null);
+      }
+    } catch {
+      setAddressError('Failed to load addresses');
+    } finally {
+      setAddressLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadAddresses();
+  }, [loadAddresses]);
+
   const handleQuantityChange = useCallback(
     (itemId: number, quantity: number) => {
-      // Optimistic update for instant UI response
       dispatch(optimisticUpdateQuantity({ itemId, quantity }));
-
-      // Clear any pending debounce for this item
       if (debounceTimers.current[itemId]) {
         clearTimeout(debounceTimers.current[itemId]);
       }
-
-      // Debounce the actual API call (400ms)
       debounceTimers.current[itemId] = setTimeout(() => {
         dispatch(updateCartItem({ itemId, quantity }));
         delete debounceTimers.current[itemId];
@@ -80,13 +132,16 @@ const CartPage: React.FC = () => {
     [dispatch]
   );
 
-  // Clean up timers on unmount
   useEffect(() => {
     const timers = debounceTimers.current;
     return () => {
       Object.values(timers).forEach(clearTimeout);
     };
   }, []);
+
+  const handleAddressSaved = () => {
+    loadAddresses();
+  };
 
   if (loading) return <CartSkeleton />;
 
@@ -107,6 +162,9 @@ const CartPage: React.FC = () => {
     );
   }
 
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+  const hasAddresses = addresses.length > 0;
+
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -116,6 +174,97 @@ const CartPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
+          {/* Delivery Address Section */}
+          <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LocationOn color="primary" />
+                Delivery Address
+              </Typography>
+              {hasAddresses && (
+                <Button
+                  size="small"
+                  component={Link}
+                  to="/profile"
+                  startIcon={<Person />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Manage Addresses
+                </Button>
+              )}
+            </Box>
+
+            {addressError && (
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setAddressError(null)}>
+                {addressError}
+              </Alert>
+            )}
+
+            {addressLoading ? (
+              <AddressSkeleton />
+            ) : !hasAddresses ? (
+              <Box sx={{ textAlign: 'center', py: 3 }}>
+                <LocationOn sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                <Typography color="text.secondary" sx={{ mb: 2 }}>
+                  No saved addresses. Please add a delivery address to proceed.
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => setShowAddressForm(true)}
+                >
+                  Add Address
+                </Button>
+              </Box>
+            ) : (
+              <RadioGroup
+                value={selectedAddressId || ''}
+                onChange={(e) => setSelectedAddressId(Number(e.target.value))}
+              >
+                {addresses.map((addr) => (
+                  <FormControlLabel
+                    key={addr.id}
+                    value={addr.id}
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ py: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography fontWeight={600} variant="body2">
+                            {addr.fullName}
+                          </Typography>
+                          {addr.isDefault && (
+                            <Chip label="Default" color="primary" size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                          )}
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {addr.street}
+                          {addr.addressLine2 ? `, ${addr.addressLine2}` : ''}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {addr.city}, {addr.state} - {addr.pincode}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Phone: {addr.phone}
+                        </Typography>
+                      </Box>
+                    }
+                    sx={{
+                      mb: 1,
+                      alignItems: 'flex-start',
+                      border: '1px solid',
+                      borderColor: selectedAddressId === addr.id ? 'primary.main' : 'divider',
+                      borderRadius: 1,
+                      mx: 0,
+                      px: 1,
+                      transition: 'border-color 0.2s ease',
+                    }}
+                  />
+                ))}
+              </RadioGroup>
+            )}
+          </Card>
+
+          {/* Cart Items */}
           {cart.items.map((item) => (
             <Card key={item.id} sx={{ mb: 2, p: 2, '&:hover': { transform: 'none' } }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -175,6 +324,21 @@ const CartPage: React.FC = () => {
             <Typography variant="h6" sx={{ mb: 2 }}>
               Order Summary
             </Typography>
+
+            {selectedAddress && (
+              <Box sx={{ mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                  DELIVER TO
+                </Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {selectedAddress.fullName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.pincode}
+                </Typography>
+              </Box>
+            )}
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography color="text.secondary">Items ({cart.totalItems})</Typography>
               <Typography>₹{cart.totalAmount}</Typography>
@@ -195,12 +359,26 @@ const CartPage: React.FC = () => {
               fullWidth
               size="large"
               onClick={() => navigate('/checkout')}
+              disabled={!selectedAddressId || addressLoading}
+              startIcon={addressLoading ? <CircularProgress size={20} color="inherit" /> : undefined}
             >
-              Proceed to Checkout
+              {!hasAddresses ? 'Add Address to Proceed' : 'Proceed to Checkout'}
             </Button>
+            {!hasAddresses && !addressLoading && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+                Please add a delivery address before checkout
+              </Typography>
+            )}
           </Card>
         </Grid>
       </Grid>
+
+      {/* Address Form Dialog for first-time users */}
+      <AddressFormDialog
+        open={showAddressForm}
+        onClose={() => setShowAddressForm(false)}
+        onSaved={handleAddressSaved}
+      />
     </Container>
     </PageTransition>
   );
