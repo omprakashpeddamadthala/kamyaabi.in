@@ -23,7 +23,7 @@ class EmailTemplateEngineTest {
         templateEngine = new EmailTemplateEngine();
 
         user = User.builder()
-                .id(1L).email("test@kamyaabi.in").name("Test User").role(User.Role.USER)
+                .id(1L).email("test@kamyaabi.shop").name("Test User").role(User.Role.USER)
                 .build();
 
         Address address = Address.builder()
@@ -150,7 +150,7 @@ class EmailTemplateEngineTest {
     void renderAdminEmail_shouldContainAdminDetails() {
         String html = templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order);
         assertThat(html).contains("Admin");
-        assertThat(html).contains("test@kamyaabi.in");
+        assertThat(html).contains("test@kamyaabi.shop");
         assertThat(html).contains("Test User");
         assertThat(html).contains("#100");
     }

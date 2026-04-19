@@ -3,6 +3,7 @@ import { Box, Container, Typography, Grid, TextField, Button } from '@mui/materi
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { SUPPORT_EMAIL } from '../config/brand';
 
 const ContactPage: React.FC = () => {
   return (
@@ -40,7 +41,7 @@ const ContactPage: React.FC = () => {
                   <EmailIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Email</Typography>
-                    <Typography variant="body2" sx={{ color: '#666' }}>support@kamyaabi.in</Typography>
+                    <Typography variant="body2" sx={{ color: '#666' }}>{SUPPORT_EMAIL}</Typography>
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

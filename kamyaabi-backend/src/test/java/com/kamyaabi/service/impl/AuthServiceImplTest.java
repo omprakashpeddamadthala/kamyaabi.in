@@ -48,7 +48,7 @@ class AuthServiceImplTest {
     void setUp() {
         user = User.builder()
                 .id(1L)
-                .email("test@kamyaabi.in")
+                .email("test@kamyaabi.shop")
                 .name("Test User")
                 .avatarUrl("http://avatar.url")
                 .googleId("google-123")
@@ -57,7 +57,7 @@ class AuthServiceImplTest {
 
         userResponse = UserResponse.builder()
                 .id(1L)
-                .email("test@kamyaabi.in")
+                .email("test@kamyaabi.shop")
                 .name("Test User")
                 .avatarUrl("http://avatar.url")
                 .role("USER")
@@ -88,12 +88,12 @@ class AuthServiceImplTest {
     @Test
     void processGoogleUser_existingUser_shouldReturnAuthResponse() {
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("email", "test@kamyaabi.in");
+        userInfo.put("email", "test@kamyaabi.shop");
         userInfo.put("name", "Test User");
         userInfo.put("picture", "http://avatar.url");
         userInfo.put("sub", "google-123");
 
-        when(userRepository.findByEmail("test@kamyaabi.in")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@kamyaabi.shop")).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyString())).thenReturn("jwt-token");
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
@@ -102,18 +102,18 @@ class AuthServiceImplTest {
 
         assertThat(response.getToken()).isEqualTo("jwt-token");
         assertThat(response.getUser()).isEqualTo(userResponse);
-        verify(userRepository).findByEmail("test@kamyaabi.in");
+        verify(userRepository).findByEmail("test@kamyaabi.shop");
     }
 
     @Test
     void processGoogleUser_newUser_shouldCreateAndReturnAuthResponse() {
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("email", "new@kamyaabi.in");
+        userInfo.put("email", "new@kamyaabi.shop");
         userInfo.put("name", "New User");
         userInfo.put("picture", "http://new-avatar.url");
         userInfo.put("sub", "google-new");
 
-        when(userRepository.findByEmail("new@kamyaabi.in")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("new@kamyaabi.shop")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyString())).thenReturn("jwt-token");
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
@@ -127,12 +127,12 @@ class AuthServiceImplTest {
     @Test
     void processGoogleUser_existingUserWithUpdatedInfo_shouldUpdateUser() {
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("email", "test@kamyaabi.in");
+        userInfo.put("email", "test@kamyaabi.shop");
         userInfo.put("name", "Updated Name");
         userInfo.put("picture", "http://new-avatar.url");
         userInfo.put("sub", "new-google-id");
 
-        when(userRepository.findByEmail("test@kamyaabi.in")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@kamyaabi.shop")).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyString())).thenReturn("jwt-token");
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
@@ -149,7 +149,7 @@ class AuthServiceImplTest {
 
         UserResponse response = authService.getCurrentUser(1L);
 
-        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.in");
+        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.shop");
     }
 
     @Test

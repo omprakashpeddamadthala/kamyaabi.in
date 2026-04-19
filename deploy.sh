@@ -12,6 +12,15 @@ COMPOSE_FILE="docker-compose.prod.yml"
 BACKEND_TAG="latest"
 FRONTEND_TAG="latest"
 
+# Load DOMAIN (and other env vars) from .env so status output matches the
+# actual deployed domain. Defaults to kamyaabi.shop if .env or DOMAIN is
+# missing; change DOMAIN in .env to switch domains (e.g. back to kamyaabi.in).
+if [ -f .env ]; then
+    # shellcheck disable=SC2046
+    export $(grep -v '^#' .env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | xargs) || true
+fi
+DOMAIN="${DOMAIN:-kamyaabi.shop}"
+
 # --- Parse arguments ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -113,4 +122,4 @@ echo "Frontend: omprakashornold/kamyaabi-frontend:${FRONTEND_IMAGE_TAG}"
 echo ""
 echo "Verify:"
 echo "  docker compose -f $COMPOSE_FILE logs -f"
-echo "  curl -I https://nextnotepad.com"
+echo "  curl -I https://${DOMAIN}"

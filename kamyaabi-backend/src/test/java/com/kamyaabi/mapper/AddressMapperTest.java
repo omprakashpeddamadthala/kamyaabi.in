@@ -48,7 +48,7 @@ class AddressMapperTest {
 
     @Test
     void toEntity_shouldMapAllFields() {
-        User user = User.builder().id(1L).email("test@kamyaabi.in").build();
+        User user = User.builder().id(1L).email("test@kamyaabi.shop").build();
         AddressRequest request = AddressRequest.builder()
                 .fullName("Test User").phone("9876543210")
                 .street("123 Main St").addressLine2("Apt 4").city("Mumbai")

@@ -42,7 +42,7 @@ class ProfileServiceImplTest {
 
         user = User.builder()
                 .id(1L)
-                .email("test@kamyaabi.in")
+                .email("test@kamyaabi.shop")
                 .name("Test User")
                 .firstName("Test")
                 .lastName("User")
@@ -60,7 +60,7 @@ class ProfileServiceImplTest {
         ProfileResponse response = profileService.getProfile(1L);
 
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.in");
+        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.shop");
         assertThat(response.getFirstName()).isEqualTo("Test");
         assertThat(response.getLastName()).isEqualTo("User");
         assertThat(response.getRole()).isEqualTo("USER");

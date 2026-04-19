@@ -25,7 +25,7 @@ class OrderMapperTest {
 
     @Test
     void toResponse_shouldMapAllFields() {
-        User user = User.builder().id(1L).email("test@kamyaabi.in").build();
+        User user = User.builder().id(1L).email("test@kamyaabi.shop").build();
         Address address = Address.builder().id(1L).user(user).fullName("Test").phone("123")
                 .street("St").city("City").state("State").pincode("123456").isDefault(false).build();
         Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url").build();
