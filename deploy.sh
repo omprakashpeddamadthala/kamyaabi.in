@@ -15,9 +15,16 @@ FRONTEND_TAG="latest"
 # Load DOMAIN (and other env vars) from .env so status output matches the
 # actual deployed domain. Defaults to kamyaabi.shop if .env or DOMAIN is
 # missing; change DOMAIN in .env to switch domains (e.g. back to kamyaabi.in).
+#
+# Use `source` (with `set -a` so every assignment is exported) rather than
+# `xargs`, because values with spaces, inline comments, or apostrophes (e.g.
+# "# Set to 1 for Let's Encrypt staging") break xargs and silently drop the
+# remaining variables.
 if [ -f .env ]; then
-    # shellcheck disable=SC2046
-    export $(grep -v '^#' .env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' | xargs) || true
+    set -a
+    # shellcheck disable=SC1091
+    source .env
+    set +a
 fi
 DOMAIN="${DOMAIN:-kamyaabi.shop}"
 
