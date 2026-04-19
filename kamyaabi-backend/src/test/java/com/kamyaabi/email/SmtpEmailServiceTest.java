@@ -27,7 +27,7 @@ class SmtpEmailServiceTest {
     @BeforeEach
     void setUp() {
         emailProperties = new EmailProperties();
-        emailProperties.setFromEmail("noreply@kamyaabi.in");
+        emailProperties.setFromEmail("noreply@kamyaabi.shop");
         emailProperties.setFromName("Kamyaabi");
 
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);

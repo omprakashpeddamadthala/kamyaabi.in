@@ -54,7 +54,7 @@ class OrderServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
+        user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
         address = Address.builder().id(1L).user(user).fullName("Test").phone("123").street("St")
                 .city("City").state("State").pincode("123456").build();
         product = Product.builder().id(1L).name("Cashews").price(new BigDecimal("899.00"))

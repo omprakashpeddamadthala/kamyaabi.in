@@ -18,8 +18,8 @@ if [ -f .env ]; then
 fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-DOMAIN="${DOMAIN:-nextnotepad.com}"
-EMAIL="${CERTBOT_EMAIL:-admin@nextnotepad.com}"
+DOMAIN="${DOMAIN:-kamyaabi.shop}"
+EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.shop}"
 STAGING="${CERTBOT_STAGING:-0}"  # Set to 1 to use Let's Encrypt staging (avoids rate limits)
 NGINX_CONF_SRC="./nginx/vm/kamyaabi.conf"
 NGINX_CONF_DEST="/etc/nginx/sites-available/kamyaabi.conf"
@@ -119,7 +119,7 @@ echo "### Step 7: Installing production Nginx config with SSL ..."
 if [ -f "$NGINX_CONF_SRC" ]; then
     cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
     # Replace default domain with actual $DOMAIN from .env
-    sed -i "s/nextnotepad\.com/$DOMAIN/g" "$NGINX_CONF_DEST"
+    sed -i "s/kamyaabi\.shop/$DOMAIN/g" "$NGINX_CONF_DEST"
     echo "  Copied from $NGINX_CONF_SRC (domain set to $DOMAIN)"
 else
     echo "  WARNING: $NGINX_CONF_SRC not found, generating config inline ..."
@@ -127,24 +127,24 @@ else
 server {
     listen 80;
     listen [::]:80;
-    server_name nextnotepad.com www.nextnotepad.com;
+    server_name kamyaabi.shop www.kamyaabi.shop;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
     location / {
-        return 301 https://nextnotepad.com$request_uri;
+        return 301 https://kamyaabi.shop$request_uri;
     }
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name nextnotepad.com www.nextnotepad.com;
+    server_name kamyaabi.shop www.kamyaabi.shop;
 
-    ssl_certificate /etc/letsencrypt/live/nextnotepad.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/nextnotepad.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/kamyaabi.shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/kamyaabi.shop/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
@@ -228,7 +228,7 @@ server {
 }
 NGINXEOF
     # Replace default domain with actual $DOMAIN from .env
-    sed -i "s/nextnotepad\.com/$DOMAIN/g" "$NGINX_CONF_DEST"
+    sed -i "s/kamyaabi\.shop/$DOMAIN/g" "$NGINX_CONF_DEST"
     echo "  Domain set to $DOMAIN"
 fi
 

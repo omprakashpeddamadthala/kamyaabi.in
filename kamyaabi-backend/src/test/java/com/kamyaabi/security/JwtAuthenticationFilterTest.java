@@ -46,7 +46,7 @@ class JwtAuthenticationFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Bearer valid-token");
 
-        User user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
+        User user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
 
         when(tokenProvider.validateToken("valid-token")).thenReturn(true);
         when(tokenProvider.getUserIdFromToken("valid-token")).thenReturn(1L);
@@ -118,7 +118,7 @@ class JwtAuthenticationFilterTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         request.addHeader("Authorization", "Bearer admin-token");
 
-        User admin = User.builder().id(1L).email("admin@kamyaabi.in").name("Admin").role(User.Role.ADMIN).build();
+        User admin = User.builder().id(1L).email("admin@kamyaabi.shop").name("Admin").role(User.Role.ADMIN).build();
 
         when(tokenProvider.validateToken("admin-token")).thenReturn(true);
         when(tokenProvider.getUserIdFromToken("admin-token")).thenReturn(1L);

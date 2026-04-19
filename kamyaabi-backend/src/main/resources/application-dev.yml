@@ -47,12 +47,16 @@ app:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
 
+  support:
+    email: ${APP_SUPPORT_EMAIL:support@kamyaabi.shop}
+    url: ${APP_SUPPORT_URL:https://kamyaabi.shop}
+
   email:
     enabled: true
-    from-email: ${EMAIL_FROM:noreply@nextnotepad.com}
+    from-email: ${EMAIL_FROM:noreply@kamyaabi.shop}
     from-name: Kamyaabi
     admin-emails:
-      - ${ADMIN_EMAIL:admin@nextnotepad.com}
+      - ${ADMIN_EMAIL:admin@kamyaabi.shop}
     sendgrid:
       api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key}
     smtp:
