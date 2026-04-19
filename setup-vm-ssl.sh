@@ -13,8 +13,15 @@
 set -euo pipefail
 
 # ─── Load .env if present ────────────────────────────────────────────────────
+# Use `source` (with `set -a` so every assignment is exported) rather than
+# `xargs`, because values with spaces, inline comments, or apostrophes (e.g.
+# "# Set to 1 for Let's Encrypt staging") break xargs and silently drop the
+# remaining variables.
 if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs) || true
+    set -a
+    # shellcheck disable=SC1091
+    source .env
+    set +a
 fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
