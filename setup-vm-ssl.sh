@@ -120,6 +120,54 @@ certbot certonly \
 echo "Done."
 echo ""
 
+# ─── 6b. Ensure Certbot's recommended SSL snippet and DH params exist ───────
+# These files are referenced by the production Nginx config. Certbot only
+# drops them automatically when it's run with the --nginx plugin (which we
+# deliberately avoid — we issue certificates via --webroot). On fresh VMs
+# that means `/etc/letsencrypt/options-ssl-nginx.conf` and
+# `/etc/letsencrypt/ssl-dhparams.pem` are missing and `nginx -t` fails with:
+#     open() "/etc/letsencrypt/options-ssl-nginx.conf" failed (2: No such file)
+# Create them here with Mozilla-intermediate recommended values if they are
+# not already provided by the certbot-nginx package.
+echo "### Step 6b: Ensuring Certbot SSL snippet & DH params exist ..."
+SSL_OPTS_FILE="/etc/letsencrypt/options-ssl-nginx.conf"
+SSL_DHPARAMS_FILE="/etc/letsencrypt/ssl-dhparams.pem"
+CERTBOT_NGINX_TLS_TMPL="/usr/lib/python3/dist-packages/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf"
+
+if [ ! -f "$SSL_OPTS_FILE" ]; then
+    if [ -f "$CERTBOT_NGINX_TLS_TMPL" ]; then
+        cp "$CERTBOT_NGINX_TLS_TMPL" "$SSL_OPTS_FILE"
+        echo "  Installed $SSL_OPTS_FILE from certbot-nginx template."
+    else
+        cat > "$SSL_OPTS_FILE" <<'SSLEOF'
+# Managed by kamyaabi setup-vm-ssl.sh — Mozilla "Intermediate" TLS config.
+# (Kept in sync with certbot-nginx's shipped options-ssl-nginx.conf.)
+ssl_session_cache shared:le_nginx_SSL:10m;
+ssl_session_timeout 1440m;
+ssl_session_tickets off;
+
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_prefer_server_ciphers off;
+
+ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384";
+SSLEOF
+        echo "  Wrote Mozilla-intermediate $SSL_OPTS_FILE (certbot template not found)."
+    fi
+else
+    echo "  $SSL_OPTS_FILE already present, leaving it untouched."
+fi
+
+if [ ! -f "$SSL_DHPARAMS_FILE" ]; then
+    echo "  Generating 2048-bit DH parameters at $SSL_DHPARAMS_FILE (one-time, ~15-30s) ..."
+    openssl dhparam -out "$SSL_DHPARAMS_FILE" 2048 2>/dev/null
+    chmod 644 "$SSL_DHPARAMS_FILE"
+    echo "  DH params generated."
+else
+    echo "  $SSL_DHPARAMS_FILE already present, leaving it untouched."
+fi
+echo "Done."
+echo ""
+
 # ─── 7. Install full Nginx config with SSL ──────────────────────────────────
 echo "### Step 7: Installing production Nginx config with SSL ..."
 
