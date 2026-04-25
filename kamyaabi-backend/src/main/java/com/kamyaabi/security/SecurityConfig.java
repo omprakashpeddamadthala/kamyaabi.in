@@ -52,8 +52,11 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // H2 Console
                         .requestMatchers("/h2-console/**").permitAll()
-                        // Actuator
-                        .requestMatchers("/actuator/**").permitAll()
+                        // Actuator: /health and /info are public (LB probes + build metadata);
+                        // every other actuator endpoint is admin-only.
+                        .requestMatchers("/actuator/health", "/actuator/health/**",
+                                "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Authenticated endpoints

@@ -47,3 +47,38 @@ logging:
     root: INFO
     org.springframework: INFO
     org.hibernate: WARN
+
+# -----------------------------------------------------------------------------
+# Spring Boot Actuator
+# -----------------------------------------------------------------------------
+# Endpoints used in production are exposed here; access is gated in SecurityConfig
+# (ROLE_ADMIN for sensitive endpoints, anonymous only for /health and /info).
+# Use /actuator/loggers at runtime to adjust log levels without a redeploy —
+# see docs/LOGGING.md for the curl recipe.
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,loggers,env
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+      probes:
+        enabled: true
+    loggers:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    git:
+      enabled: true
+    build:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: @project.version@
+    description: "Kamyaabi — Premium Dry Fruits eCommerce Backend API"
