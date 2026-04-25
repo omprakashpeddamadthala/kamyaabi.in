@@ -15,6 +15,9 @@ spring:
       ddl-auto: create-drop
     show-sql: false
 
+  flyway:
+    enabled: false
+
   security:
     oauth2:
       client:
