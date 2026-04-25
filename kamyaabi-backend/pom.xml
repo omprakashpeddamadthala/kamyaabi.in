@@ -101,6 +101,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Flyway for versioned schema migrations on PostgreSQL.
+             Spring Boot 3.2 manages Flyway 9.x where PostgreSQL support ships
+             inside flyway-core, so a separate flyway-database-postgresql is
+             not required. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <!-- H2 for dev/test -->
         <dependency>
             <groupId>com.h2database</groupId>
