@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
+
 import { store } from './store/store';
 import theme from './theme/theme';
 import AppRoutes from './routes/AppRoutes';
@@ -9,6 +10,8 @@ import { FlyToCartProvider } from './components/common/FlyToCartAnimation';
 import Loading from './components/common/Loading';
 import GlobalLoadingBar from './components/common/GlobalLoadingBar';
 import SessionManager from './components/common/SessionManager';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import ApiErrorNotifier from './components/common/ApiErrorNotifier';
 
 const App: React.FC = () => {
   return (
@@ -17,13 +20,16 @@ const App: React.FC = () => {
         <CssBaseline />
         <GlobalLoadingBar />
         <SessionManager />
-        <BrowserRouter>
-          <Suspense fallback={<Loading message="Loading page..." />}>
-            <FlyToCartProvider>
-              <AppRoutes />
-            </FlyToCartProvider>
-          </Suspense>
-        </BrowserRouter>
+        <ApiErrorNotifier />
+        <ErrorBoundary>
+          <BrowserRouter>
+            <Suspense fallback={<Loading message="Loading page..." />}>
+              <FlyToCartProvider>
+                <AppRoutes />
+              </FlyToCartProvider>
+            </Suspense>
+          </BrowserRouter>
+        </ErrorBoundary>
       </ThemeProvider>
     </Provider>
   );

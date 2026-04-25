@@ -34,7 +34,7 @@ class AuthControllerTest {
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
                 .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
-        when(authService.googleLogin("valid-google-id-token")).thenReturn(authResponse);
+        when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
 
@@ -51,7 +51,7 @@ class AuthControllerTest {
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
                 .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
-        when(authService.processGoogleUser(request)).thenReturn(authResponse);
+        when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
 
@@ -65,7 +65,7 @@ class AuthControllerTest {
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
                 .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
-        when(authService.processGoogleUser(request)).thenReturn(authResponse);
+        when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
 

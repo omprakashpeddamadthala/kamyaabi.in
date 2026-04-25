@@ -276,3 +276,61 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id
 - **Docker Support** — Full containerization with Docker Compose
 - **CI/CD** — Automated testing and builds with GitHub Actions
 - **80%+ Code Coverage** — Comprehensive JUnit/Mockito test suite with JaCoCo
+- **Production-grade observability** — correlation id on every request, structured logs
+  with 10-day rolling retention, Actuator health/metrics/loggers
+
+## Environment variables
+
+All secrets come from environment variables. Nothing secret is checked in.
+
+### Backend
+
+| Variable                   | Required | Default                     | Description                                              |
+|----------------------------|----------|-----------------------------|----------------------------------------------------------|
+| `DATABASE_URL`             | prod     | `jdbc:h2:mem:kamyaabidb`    | JDBC URL for the app database                            |
+| `DATABASE_USERNAME`        | prod     | `sa`                        | Database username                                        |
+| `DATABASE_PASSWORD`        | prod     | _(empty in dev)_            | Database password                                        |
+| `JWT_SECRET`               | yes      | _(none — fails startup)_    | HS256 signing secret (≥32 bytes)                         |
+| `JWT_EXPIRATION_MS`        | no       | `7200000` (2 h)             | JWT lifetime in ms                                       |
+| `GOOGLE_CLIENT_ID`         | yes      | _(none)_                    | Google OAuth web client id                               |
+| `GOOGLE_CLIENT_SECRET`     | yes      | _(none)_                    | Google OAuth client secret                               |
+| `CORS_ALLOWED_ORIGINS`     | yes      | _(none)_                    | Comma-separated frontend origins                         |
+| `RAZORPAY_KEY_ID`          | yes      | _(none)_                    | Razorpay public key id                                   |
+| `RAZORPAY_KEY_SECRET`      | yes      | _(none)_                    | Razorpay secret key                                      |
+| `SENDGRID_API_KEY`         | no       | _(empty → falls back to SMTP)_ | SendGrid API key                                      |
+| `SMTP_HOST/PORT/USER/PASS` | no       | _(empty → no-op email)_     | SMTP fallback for transactional email                    |
+
+### Frontend
+
+| Variable                 | Required | Description                                             |
+|--------------------------|----------|---------------------------------------------------------|
+| `VITE_API_BASE_URL`      | no       | Backend base URL. Blank = same-origin (behind Nginx).   |
+| `VITE_GOOGLE_CLIENT_ID`  | yes (prod) | Google OAuth web client id (same as backend)          |
+| `VITE_BRAND_DOMAIN`      | no       | Public brand domain; default `kamyaabi.shop`            |
+| `VITE_SUPPORT_EMAIL`     | no       | Support email rendered in UI                            |
+
+Frontend env vars are consumed via `src/config/index.ts`, which throws in
+production builds if a required var is missing — preventing broken deploys.
+
+## Scripts cheat-sheet
+
+| Scope    | Command                                   | What it does                         |
+|----------|-------------------------------------------|--------------------------------------|
+| Backend  | `mvn -pl kamyaabi-backend spring-boot:run`| Run locally with dev profile         |
+| Backend  | `mvn -pl kamyaabi-backend test`           | Run all unit tests                   |
+| Backend  | `mvn -pl kamyaabi-backend verify`         | Tests + JaCoCo coverage gate         |
+| Frontend | `npm -C kamyaabi-frontend run dev`        | Vite dev server on :3000             |
+| Frontend | `npm -C kamyaabi-frontend run build`      | Type-check (tsc -b) + Vite prod build|
+| Frontend | `npm -C kamyaabi-frontend run lint`       | ESLint                               |
+| Stack    | `docker compose up --build`               | Build + run frontend + backend       |
+
+## Additional documentation
+
+- [`ANALYSIS.md`](./ANALYSIS.md) — Phase 1 audit of the pre-refactor codebase.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — branch naming, commit conventions, PR checklist.
+- [`CHANGELOG.md`](./CHANGELOG.md) — Keep-a-Changelog formatted history.
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — layered architecture + data flow.
+- [`docs/API.md`](./docs/API.md) — REST endpoints, auth flow, error shape.
+- [`docs/LOGGING.md`](./docs/LOGGING.md) — log levels, rotation, correlation id,
+  runtime `/actuator/loggers` toggle.
+- [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) — VM provisioning, TLS/Nginx, CI/CD.

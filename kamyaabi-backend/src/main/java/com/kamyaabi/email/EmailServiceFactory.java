@@ -16,6 +16,9 @@ public class EmailServiceFactory {
 
     private final EmailService emailService;
 
+    // @Autowired is kept on this constructor to disambiguate from the package-private
+    // test constructor below; without it Spring sees two constructors on the bean and
+    // can't decide which one to use.
     @Autowired
     public EmailServiceFactory(EmailProperties emailProperties, JavaMailSender mailSender) {
         if (emailProperties.isSendGridConfigured()) {

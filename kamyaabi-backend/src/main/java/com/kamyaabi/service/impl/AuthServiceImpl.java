@@ -66,6 +66,24 @@ public class AuthServiceImpl implements AuthService {
         return cachedVerifier;
     }
 
+    /**
+     * Dispatches a Google login request based on the payload shape. Prefers the
+     * modern ID-token flow; falls back to the legacy user-info map only when the
+     * {@code idToken} key is absent/blank (logged as a deprecation warning).
+     *
+     * <p>This was previously handled by branching inside {@code AuthController};
+     * centralising it here keeps controllers free of business logic.
+     */
+    @Override
+    public AuthResponse googleLoginFromRequest(Map<String, Object> request) {
+        String idToken = (String) request.get("idToken");
+        if (idToken != null && !idToken.trim().isEmpty()) {
+            return googleLogin(idToken);
+        }
+        log.warn("Using legacy Google login format (no idToken key). Clients should migrate to ID-token verification.");
+        return processGoogleUser(request);
+    }
+
     @Override
     public AuthResponse googleLogin(String idToken) {
         log.info("Processing Google login with ID token verification");

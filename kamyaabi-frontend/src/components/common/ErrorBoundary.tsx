@@ -1,0 +1,68 @@
+import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { Box, Button, Container, Typography } from '@mui/material';
+
+import { logger } from '../../utils/logger';
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+/**
+ * Top-level React error boundary. Catches render-time exceptions from its children,
+ * logs them through the app logger, and shows a safe fallback UI so the whole app
+ * doesn't unmount on a single bad render.
+ *
+ * Must stay a class component — React still requires class components for error
+ * boundaries as of React 18.
+ */
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    logger.error('Render-time exception caught by ErrorBoundary', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: info.componentStack,
+    });
+  }
+
+  private readonly handleReload = (): void => {
+    window.location.href = '/';
+  };
+
+  render(): ReactNode {
+    if (!this.state.hasError) return this.props.children;
+    if (this.props.fallback) return this.props.fallback;
+    return (
+      <Container maxWidth="sm" sx={{ py: 8, textAlign: 'center' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            Something went wrong
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            An unexpected error occurred while rendering this page. Please try again;
+            if the problem persists, contact support.
+          </Typography>
+          <Button variant="contained" color="primary" onClick={this.handleReload}>
+            Go back home
+          </Button>
+        </Box>
+      </Container>
+    );
+  }
+}
+
+export default ErrorBoundary;
