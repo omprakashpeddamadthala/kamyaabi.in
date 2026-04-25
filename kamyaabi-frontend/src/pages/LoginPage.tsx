@@ -12,6 +12,8 @@ import {
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { googleLogin } from '../features/auth/authSlice';
+import { config } from '../config';
+import { logger } from '../utils/logger';
 
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,7 +21,7 @@ const LoginPage: React.FC = () => {
   const { error, loading } = useAppSelector((state) => state.auth);
   const [loginAttempted, setLoginAttempted] = React.useState(false);
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const clientId = config.googleClientId;
 
   const handleGoogleSuccess = React.useCallback(
     (credentialResponse: { credential?: string }) => {
@@ -91,7 +93,7 @@ const LoginPage: React.FC = () => {
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => {
-                  console.error('Google Login Failed - check OAuth configuration');
+                  logger.error('Google Login failed', { reason: 'OAuth callback onError' });
                 }}
                 useOneTap
                 auto_select

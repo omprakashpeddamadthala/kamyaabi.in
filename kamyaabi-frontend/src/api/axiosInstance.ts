@@ -1,12 +1,13 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { config } from '../config';
+import { logger } from '../utils/logger';
 
-// Session timeout: 2 hours of inactivity (in milliseconds)
+/** Session inactivity timeout. 2 hours. */
 const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const LAST_ACTIVITY_KEY = 'lastActivity';
 
-const updateLastActivity = () => {
+const updateLastActivity = (): void => {
   localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
 };
 
@@ -16,49 +17,88 @@ const isSessionExpired = (): boolean => {
   return Date.now() - parseInt(lastActivity, 10) > SESSION_TIMEOUT_MS;
 };
 
-const clearSession = () => {
+const clearSession = (): void => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem(LAST_ACTIVITY_KEY);
 };
 
+interface ApiErrorBody {
+  timestamp?: string;
+  status?: number;
+  error?: string;
+  message?: string;
+  path?: string;
+  traceId?: string;
+  fieldErrors?: Record<string, string>;
+}
+
+/**
+ * Extracts the backend-assigned correlation id from either the response header
+ * set by CorrelationIdFilter or the {@code traceId} field on the error body.
+ */
+export const extractTraceId = (error: AxiosError): string | undefined => {
+  const headerId = error.response?.headers?.['x-correlation-id'];
+  if (typeof headerId === 'string' && headerId.length > 0) return headerId;
+  const body = error.response?.data as ApiErrorBody | undefined;
+  return body?.traceId;
+};
+
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: config.apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 axiosInstance.interceptors.request.use(
-  (config) => {
+  (requestConfig) => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Check for session inactivity timeout before making requests
       if (isSessionExpired()) {
         clearSession();
         window.location.href = '/login';
         return Promise.reject(new axios.Cancel('Session expired due to inactivity'));
       }
-      config.headers.Authorization = `Bearer ${token}`;
+      requestConfig.headers.Authorization = `Bearer ${token}`;
       updateLastActivity();
     }
-    return config;
+    return requestConfig;
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 );
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (error: AxiosError) => {
+    const status = error.response?.status;
+    const url = error.config?.url ?? '<unknown>';
+    const traceId = extractTraceId(error);
+
+    if (status === 401) {
+      logger.warn('Authentication expired / invalid token; clearing session', { url, traceId });
       clearSession();
       window.location.href = '/login';
+    } else if (status === 403) {
+      logger.warn('Access denied by server', { url, traceId });
+      // Page-level surface: dispatch a window event so UI (toasts, banners) can react without
+      // coupling axios to any particular notification library.
+      window.dispatchEvent(
+        new CustomEvent('api:forbidden', { detail: { url, traceId } })
+      );
+    } else if (status !== undefined && status >= 500) {
+      logger.error('Server error', { status, url, traceId });
+      window.dispatchEvent(
+        new CustomEvent('api:server-error', { detail: { url, status, traceId } })
+      );
+    } else if (!error.response) {
+      logger.error('Network / transport error', { url, message: error.message });
     }
+
     return Promise.reject(error);
   }
 );
 
-// Initialize last activity on module load if user is logged in
 if (localStorage.getItem('token')) {
   updateLastActivity();
 }
