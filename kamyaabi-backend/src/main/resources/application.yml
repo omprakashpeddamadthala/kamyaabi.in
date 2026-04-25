@@ -38,9 +38,12 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
 
+# NOTE: appenders, rolling policy, and log format live in src/main/resources/logback-spring.xml
+# so profile-aware rolling files and correlationId MDC rendering can be configured properly.
+# Root/framework log levels are still tunable here and can be changed at runtime via the
+# /actuator/loggers endpoint.
 logging:
   level:
     root: INFO
-    com.kamyaabi: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    org.springframework: INFO
+    org.hibernate: WARN
