@@ -1,7 +1,10 @@
 import React, { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
-import { useAppSelector } from '../hooks/useAppDispatch';
+import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
+import { isSessionExpired, clearSession } from '../api/axiosInstance';
+import { logout } from '../features/auth/authSlice';
+import { clearCart } from '../features/cart/cartSlice';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const ProductsPage = lazy(() => import('../pages/ProductsPage'));
@@ -18,14 +21,34 @@ const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  if (!user) return <Navigate to="/login" replace />;
+  const dispatch = useAppDispatch();
+  const { user, token } = useAppSelector((state) => state.auth);
+
+  if (!user || !token) return <Navigate to="/login" replace />;
+
+  if (isSessionExpired()) {
+    clearSession(true);
+    dispatch(logout());
+    dispatch(clearCart());
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  if (!user) return <Navigate to="/login" replace />;
+  const dispatch = useAppDispatch();
+  const { user, token } = useAppSelector((state) => state.auth);
+
+  if (!user || !token) return <Navigate to="/login" replace />;
+
+  if (isSessionExpired()) {
+    clearSession(true);
+    dispatch(logout());
+    dispatch(clearCart());
+    return <Navigate to="/login" replace />;
+  }
+
   if (user.role !== 'ADMIN') return <Navigate to="/" replace />;
   return <>{children}</>;
 };

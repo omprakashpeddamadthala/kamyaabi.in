@@ -3,24 +3,34 @@ import axios, { AxiosError } from 'axios';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
-/** Session inactivity timeout. 4 hours. */
-const SESSION_TIMEOUT_MS = 4 * 60 * 60 * 1000;
-const LAST_ACTIVITY_KEY = 'lastActivity';
+/** Absolute session lifetime — must match the backend JWT expiration. */
+const SESSION_LIFETIME_MS = 2 * 60 * 60 * 1000;
+const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
-const updateLastActivity = (): void => {
-  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+/**
+ * Persist the absolute expiry timestamp when a new token is obtained.
+ * Called once at login time — not on every user interaction.
+ */
+const setTokenExpiry = (): void => {
+  localStorage.setItem(TOKEN_EXPIRY_KEY, (Date.now() + SESSION_LIFETIME_MS).toString());
 };
 
+/**
+ * Check whether the current session has exceeded the absolute 2-hour lifetime.
+ * Returns true when the token is known to be expired (or when no expiry was
+ * recorded, which means the token predates this fix and should be treated as
+ * expired).
+ */
 const isSessionExpired = (): boolean => {
-  const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
-  if (!lastActivity) return false;
-  return Date.now() - parseInt(lastActivity, 10) > SESSION_TIMEOUT_MS;
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  if (!expiry) return true;
+  return Date.now() >= parseInt(expiry, 10);
 };
 
 const clearSession = (sessionExpired = false): void => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  localStorage.removeItem(LAST_ACTIVITY_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
   if (sessionExpired) {
     sessionStorage.setItem('sessionExpired', 'true');
   } else {
@@ -63,10 +73,9 @@ axiosInstance.interceptors.request.use(
       if (isSessionExpired()) {
         clearSession(true);
         window.location.href = '/login';
-        return Promise.reject(new axios.Cancel('Session expired due to inactivity'));
+        return Promise.reject(new axios.Cancel('Session expired'));
       }
       requestConfig.headers.Authorization = `Bearer ${token}`;
-      updateLastActivity();
     }
     return requestConfig;
   },
@@ -86,8 +95,6 @@ axiosInstance.interceptors.response.use(
       window.location.href = '/login';
     } else if (status === 403) {
       logger.warn('Access denied by server', { url, traceId });
-      // Page-level surface: dispatch a window event so UI (toasts, banners) can react without
-      // coupling axios to any particular notification library.
       window.dispatchEvent(
         new CustomEvent('api:forbidden', { detail: { url, traceId } })
       );
@@ -104,9 +111,5 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-if (localStorage.getItem('token')) {
-  updateLastActivity();
-}
-
-export { updateLastActivity, isSessionExpired, clearSession, SESSION_TIMEOUT_MS };
+export { setTokenExpiry, isSessionExpired, clearSession, SESSION_LIFETIME_MS };
 export default axiosInstance;
