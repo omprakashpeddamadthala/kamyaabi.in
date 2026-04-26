@@ -29,12 +29,17 @@ import {
   Pagination,
   Paper,
 } from '@mui/material';
-import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, CurrencyRupee, Warning } from '@mui/icons-material';
+import { Edit, Delete, Add, Inventory, ShoppingCart as CartIcon, CurrencyRupee, Warning, CloudUpload, Star, StarBorder } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProducts, fetchCategories } from '../features/product/productSlice';
 import { adminApi, ProductRequest, CategoryRequest } from '../api/adminApi';
-import { Order } from '../types';
+import { Order, Product, ProductImage } from '../types';
 import Loading from '../components/common/Loading';
+import { withCloudinaryTransform } from '../utils/cloudinary';
+
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGES_PER_PRODUCT = 5;
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -70,6 +75,13 @@ const AdminPage: React.FC = () => {
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
   const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
+  const [pendingMainIndex, setPendingMainIndex] = useState<number>(0);
+  const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
+  const [selectedExistingMainId, setSelectedExistingMainId] = useState<number | null>(null);
+  const [imageValidationError, setImageValidationError] = useState<string | null>(null);
+  const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
 
   const [productForm, setProductForm] = useState<ProductRequest>({
     name: '',
@@ -113,6 +125,61 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const validateImageFiles = (files: File[]): string | null => {
+    if (files.some((f) => !ACCEPTED_IMAGE_TYPES.includes(f.type))) {
+      return 'Only JPG, PNG, or WEBP images are allowed';
+    }
+    if (files.some((f) => f.size > MAX_IMAGE_SIZE_BYTES)) {
+      return 'Each image must be 5MB or smaller';
+    }
+    return null;
+  };
+
+  const handleImageFilesSelected = (files: File[]) => {
+    const totalAfter = existingImages.length + pendingImages.length + files.length;
+    if (totalAfter > MAX_IMAGES_PER_PRODUCT) {
+      setImageValidationError(`You can attach at most ${MAX_IMAGES_PER_PRODUCT} images per product`);
+      return;
+    }
+    const validationError = validateImageFiles(files);
+    if (validationError) {
+      setImageValidationError(validationError);
+      return;
+    }
+    setImageValidationError(null);
+    const nextPreviews = files.map((f) => URL.createObjectURL(f));
+    setPendingImages((prev) => [...prev, ...files]);
+    setPendingPreviews((prev) => [...prev, ...nextPreviews]);
+  };
+
+  const handleRemovePendingImage = (idx: number) => {
+    URL.revokeObjectURL(pendingPreviews[idx]);
+    setPendingImages((prev) => prev.filter((_, i) => i !== idx));
+    setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
+    if (pendingMainIndex === idx) setPendingMainIndex(0);
+    else if (pendingMainIndex > idx) setPendingMainIndex((v) => v - 1);
+  };
+
+  const handleDeleteExistingImage = async (productId: number, imageId: number) => {
+    if (!window.confirm('Remove this image from the product?')) return;
+    setDeletingImageId(imageId);
+    try {
+      await adminApi.deleteProductImage(productId, imageId);
+      const remaining = existingImages.filter((img) => img.id !== imageId);
+      setExistingImages(remaining);
+      if (selectedExistingMainId === imageId) {
+        const newMain = remaining.find((i) => i.isMain) || remaining[0];
+        setSelectedExistingMainId(newMain ? newMain.id : null);
+      }
+      setSuccess('Image removed');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError?.response?.data?.message || 'Failed to remove image');
+    } finally {
+      setDeletingImageId(null);
+    }
+  };
+
   const handleSaveProduct = async () => {
     if (productForm.price <= 0) {
       setError('Price (MRP) must be greater than zero');
@@ -122,6 +189,15 @@ const AdminPage: React.FC = () => {
       setError('Discount Price (Selling Price) must be less than the original Price (MRP)');
       return;
     }
+    if (!editingProductId && pendingImages.length === 0) {
+      setError('At least one image is required');
+      return;
+    }
+    const totalImages = existingImages.length + pendingImages.length;
+    if (totalImages > MAX_IMAGES_PER_PRODUCT) {
+      setError(`A product can have at most ${MAX_IMAGES_PER_PRODUCT} images`);
+      return;
+    }
     setSavingProduct(true);
     try {
       const payload = {
@@ -129,10 +205,10 @@ const AdminPage: React.FC = () => {
         discountPrice: productForm.discountPrice && productForm.discountPrice > 0 ? productForm.discountPrice : undefined,
       };
       if (editingProductId) {
-        await adminApi.updateProduct(editingProductId, payload);
+        await adminApi.updateProduct(editingProductId, payload, pendingImages, selectedExistingMainId);
         setSuccess('Product updated successfully');
       } else {
-        await adminApi.createProduct(payload);
+        await adminApi.createProduct(payload, pendingImages, pendingMainIndex);
         setSuccess('Product created successfully');
       }
       setShowProductDialog(false);
@@ -215,6 +291,13 @@ const AdminPage: React.FC = () => {
   const resetProductForm = () => {
     setProductForm({ name: '', description: '', price: 0, discountPrice: 0, imageUrl: '', categoryId: 0, stock: 0, weight: '', unit: 'g', active: true });
     setEditingProductId(null);
+    pendingPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setPendingImages([]);
+    setPendingPreviews([]);
+    setPendingMainIndex(0);
+    setExistingImages([]);
+    setSelectedExistingMainId(null);
+    setImageValidationError(null);
   };
 
   const resetCategoryForm = () => {
@@ -222,7 +305,7 @@ const AdminPage: React.FC = () => {
     setEditingCategoryId(null);
   };
 
-  const openEditProduct = (product: { id: number; name: string; description: string; price: number; discountPrice: number | null; imageUrl: string; categoryId: number; stock: number; weight: string; unit: string; active: boolean }) => {
+  const openEditProduct = (product: Product) => {
     setProductForm({
       name: product.name,
       description: product.description,
@@ -236,6 +319,14 @@ const AdminPage: React.FC = () => {
       active: product.active,
     });
     setEditingProductId(product.id);
+    pendingPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setPendingImages([]);
+    setPendingPreviews([]);
+    setPendingMainIndex(0);
+    setExistingImages(product.images ?? []);
+    const mainImg = (product.images ?? []).find((i) => i.isMain);
+    setSelectedExistingMainId(mainImg ? mainImg.id : (product.images?.[0]?.id ?? null));
+    setImageValidationError(null);
     setShowProductDialog(true);
   };
 
@@ -521,7 +612,109 @@ const AdminPage: React.FC = () => {
                 Discount: {Math.round(((productForm.price - productForm.discountPrice) / productForm.price) * 100)}% OFF — Customer pays ₹{productForm.discountPrice} instead of ₹{productForm.price}
               </Alert>
             )}
-            <TextField label="Image URL" value={productForm.imageUrl} onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })} fullWidth />
+            <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 1, p: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Product Images ({existingImages.length + pendingImages.length}/{MAX_IMAGES_PER_PRODUCT})
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                JPG, PNG, or WEBP up to 5MB each. At least one image is required. Click a thumbnail to make it the main image.
+              </Typography>
+              {existingImages.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
+                  {existingImages.map((img) => (
+                    <Box key={img.id} sx={{ position: 'relative' }}>
+                      <Box
+                        component="img"
+                        src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
+                        alt="product"
+                        onClick={() => setSelectedExistingMainId(img.id)}
+                        sx={{
+                          width: 88,
+                          height: 88,
+                          objectFit: 'cover',
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                          border: '2px solid',
+                          borderColor: selectedExistingMainId === img.id ? 'primary.main' : 'transparent',
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        sx={{ position: 'absolute', top: -6, right: -6, bgcolor: 'background.paper' }}
+                        onClick={() => editingProductId && handleDeleteExistingImage(editingProductId, img.id)}
+                        disabled={deletingImageId === img.id}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                      <Box sx={{ position: 'absolute', bottom: 4, left: 4, bgcolor: 'background.paper', borderRadius: '50%' }}>
+                        {selectedExistingMainId === img.id ? <Star fontSize="small" color="primary" /> : <StarBorder fontSize="small" />}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {pendingImages.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
+                  {pendingPreviews.map((preview, idx) => (
+                    <Box key={preview} sx={{ position: 'relative' }}>
+                      <Box
+                        component="img"
+                        src={preview}
+                        alt="preview"
+                        onClick={() => { if (!editingProductId) setPendingMainIndex(idx); }}
+                        sx={{
+                          width: 88,
+                          height: 88,
+                          objectFit: 'cover',
+                          borderRadius: 1,
+                          cursor: editingProductId ? 'default' : 'pointer',
+                          border: '2px solid',
+                          borderColor: !editingProductId && pendingMainIndex === idx ? 'primary.main' : 'transparent',
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        sx={{ position: 'absolute', top: -6, right: -6, bgcolor: 'background.paper' }}
+                        onClick={() => handleRemovePendingImage(idx)}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                      {!editingProductId && (
+                        <Box sx={{ position: 'absolute', bottom: 4, left: 4, bgcolor: 'background.paper', borderRadius: '50%' }}>
+                          {pendingMainIndex === idx ? <Star fontSize="small" color="primary" /> : <StarBorder fontSize="small" />}
+                        </Box>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+                startIcon={<CloudUpload />}
+                disabled={existingImages.length + pendingImages.length >= MAX_IMAGES_PER_PRODUCT}
+              >
+                Upload Images
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleImageFilesSelected(Array.from(e.target.files));
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </Button>
+              {imageValidationError && (
+                <Alert severity="error" sx={{ mt: 1 }} onClose={() => setImageValidationError(null)}>
+                  {imageValidationError}
+                </Alert>
+              )}
+            </Box>
             <Grid container spacing={2}>
               <Grid item xs={4}>
                 <FormControl fullWidth>

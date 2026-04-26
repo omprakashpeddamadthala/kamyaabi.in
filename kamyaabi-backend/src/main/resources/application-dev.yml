@@ -69,3 +69,12 @@ app:
       password: ${SMTP_PASSWORD:}
       starttls-enabled: true
       auth: true
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dev-placeholder}
+  api-key: ${CLOUDINARY_API_KEY:dev-placeholder}
+  api-secret: ${CLOUDINARY_API_SECRET:dev-placeholder}
+
+product:
+  image:
+    max-count: ${PRODUCT_IMAGE_MAX_COUNT:5}

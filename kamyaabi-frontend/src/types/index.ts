@@ -14,6 +14,14 @@ export interface Category {
   productCount: number;
 }
 
+export interface ProductImage {
+  id: number;
+  imageUrl: string;
+  publicId: string;
+  isMain: boolean;
+  displayOrder: number;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -21,6 +29,8 @@ export interface Product {
   price: number;
   discountPrice: number | null;
   imageUrl: string;
+  mainImageUrl: string | null;
+  images: ProductImage[];
   categoryId: number;
   categoryName: string;
   stock: number;

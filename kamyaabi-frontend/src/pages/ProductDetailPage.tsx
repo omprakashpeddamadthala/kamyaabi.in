@@ -21,6 +21,7 @@ import { fetchProductById, clearSelectedProduct } from '../features/product/prod
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
+import { withCloudinaryTransform } from '../utils/cloudinary';
 
 const ProductDetailSkeleton: React.FC = () => (
   <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -53,6 +54,7 @@ const ProductDetailPage: React.FC = () => {
   const { addingProductIds } = useAppSelector((state) => state.cart);
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -61,11 +63,21 @@ const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchProductById(Number(id)));
+      setSelectedImageIdx(0);
     }
     return () => {
       dispatch(clearSelectedProduct());
     };
   }, [dispatch, id]);
+
+  const orderedImages = product?.images ?? [];
+  const galleryImages = orderedImages.length > 0
+    ? orderedImages
+    : product?.imageUrl
+      ? [{ id: -1, imageUrl: product.imageUrl, publicId: '', isMain: true, displayOrder: 0 }]
+      : [];
+  const activeImage = galleryImages[Math.min(selectedImageIdx, Math.max(galleryImages.length - 1, 0))];
+  const primaryImageSource = activeImage?.imageUrl || product?.mainImageUrl || product?.imageUrl || '';
 
   const handleAddToCart = () => {
     if (!user) {
@@ -79,7 +91,7 @@ const ProductDetailPage: React.FC = () => {
       dispatch(optimisticAddToCart({
         productId: product.id,
         productName: product.name,
-        productImageUrl: product.imageUrl || '',
+        productImageUrl: primaryImageSource,
         productPrice: product.price,
         productDiscountPrice: product.discountPrice,
         quantity,
@@ -87,7 +99,7 @@ const ProductDetailPage: React.FC = () => {
 
       if (imageRef.current) {
         triggerFlyToCart(
-          product.imageUrl || 'https://via.placeholder.com/50',
+          primaryImageSource || 'https://via.placeholder.com/50',
           imageRef.current
         );
       }
@@ -132,12 +144,35 @@ const ProductDetailPage: React.FC = () => {
               <Box
                 component="img"
                 ref={imageRef}
-                src={product.imageUrl || 'https://via.placeholder.com/600x500?text=Product'}
+                src={primaryImageSource || 'https://via.placeholder.com/600x500?text=Product'}
                 alt={product.name}
                 sx={{ width: '100%', height: 'auto', maxHeight: 500, objectFit: 'cover' }}
                 loading="lazy"
               />
             </Box>
+            {galleryImages.length > 1 && (
+              <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
+                {galleryImages.map((img, idx) => (
+                  <Box
+                    key={img.id ?? idx}
+                    component="img"
+                    src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
+                    alt={`${product.name} ${idx + 1}`}
+                    onClick={() => setSelectedImageIdx(idx)}
+                    sx={{
+                      width: 72,
+                      height: 72,
+                      objectFit: 'cover',
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      border: '2px solid',
+                      borderColor: idx === selectedImageIdx ? 'primary.main' : 'transparent',
+                      transition: 'border-color 0.2s ease',
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
           </Grid>
 
           <Grid item xs={12} md={6}>

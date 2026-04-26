@@ -15,8 +15,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -37,21 +42,31 @@ public class AdminController {
     }
 
     // Product Management
-    @PostMapping("/products")
-    @Operation(summary = "Create product", description = "Create a new product (Admin only)")
+    @PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Create product",
+            description = "Create a new product with one or more uploaded images (Admin only). "
+                    + "Send a `product` JSON part plus one or more `images` file parts.")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
-            @Valid @RequestBody ProductRequest request) {
-        ProductResponse product = productService.createProduct(request);
+            @Valid @RequestPart("product") ProductRequest request,
+            @RequestPart("images") List<MultipartFile> images,
+            @RequestParam(value = "mainImageIndex", defaultValue = "0") int mainImageIndex) {
+        ProductResponse product = productService.createProduct(request, images, mainImageIndex);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Product created", product));
     }
 
-    @PutMapping("/products/{id}")
-    @Operation(summary = "Update product", description = "Update an existing product (Admin only)")
+    @PutMapping(value = "/products/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update product",
+            description = "Update an existing product (Admin only). "
+                    + "Send a `product` JSON part; optionally include new `images` file parts "
+                    + "and a `mainImageId` to change which existing image is the main one.")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequest request) {
-        ProductResponse product = productService.updateProduct(id, request);
+            @Valid @RequestPart("product") ProductRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> newImages,
+            @RequestParam(value = "mainImageId", required = false) Long mainImageId) {
+        ProductResponse product = productService.updateProduct(
+                id, request, newImages == null ? Collections.emptyList() : newImages, mainImageId);
         return ResponseEntity.ok(ApiResponse.success("Product updated", product));
     }
 
@@ -60,6 +75,17 @@ public class AdminController {
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok(ApiResponse.success("Product deleted", null));
+    }
+
+    @DeleteMapping("/products/{id}/images/{imageId}")
+    @Operation(summary = "Delete product image",
+            description = "Remove a single image from a product (Admin only). "
+                    + "Deletes the asset from Cloudinary and the DB record.")
+    public ResponseEntity<ApiResponse<Void>> deleteProductImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId) {
+        productService.deleteProductImage(id, imageId);
+        return ResponseEntity.ok(ApiResponse.success("Image deleted", null));
     }
 
     // Category Management

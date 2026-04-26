@@ -62,3 +62,4 @@ public class AppProperties {
         private String keySecret;
     }
 }
+
