@@ -30,11 +30,13 @@ export const fetchCart = createAsyncThunk('cart/fetch', async (_, { rejectWithVa
 
 export const addToCart = createAsyncThunk(
   'cart/addItem',
-  async ({ productId, quantity }: { productId: number; quantity: number }, { rejectWithValue }) => {
+  async ({ productId, quantity }: { productId: number; quantity: number }, { rejectWithValue, dispatch }) => {
     try {
       const response = await cartApi.addItem(productId, quantity);
       return response.data.data;
     } catch (error: unknown) {
+      // Revert optimistic update by re-fetching the real cart state
+      dispatch(fetchCart());
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Failed to add to cart');
     }
@@ -76,6 +78,55 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.cart = null;
     },
+
+    /**
+     * Phase 7 — Optimistic Add-to-Cart.
+     * Dispatched BEFORE the addToCart async thunk so the cart badge and item
+     * list update within <100ms of the button click (no API wait).
+     * On API failure, fetchCart() reverts to the server-authoritative state.
+     */
+    optimisticAddToCart: (
+      state,
+      action: PayloadAction<{
+        productId: number;
+        productName: string;
+        productImageUrl: string;
+        productPrice: number;
+        productDiscountPrice: number | null;
+        quantity: number;
+      }>
+    ) => {
+      const { productId, productName, productImageUrl, productPrice, productDiscountPrice, quantity } = action.payload;
+      const price = productDiscountPrice != null && productDiscountPrice > 0
+        ? productDiscountPrice
+        : productPrice;
+
+      if (!state.cart) {
+        // Create a temporary cart shell so the badge shows immediately
+        state.cart = { id: -1, items: [], totalAmount: 0, totalItems: 0 };
+      }
+
+      const existing = state.cart.items.find(i => i.productId === productId);
+      if (existing) {
+        existing.quantity += quantity;
+        existing.subtotal = price * existing.quantity;
+      } else {
+        state.cart.items.push({
+          id: -(Date.now()),   // temporary negative id; replaced when API responds
+          productId,
+          productName,
+          productImageUrl,
+          productPrice,
+          productDiscountPrice,
+          quantity,
+          subtotal: price * quantity,
+        });
+      }
+
+      state.cart.totalItems = state.cart.items.reduce((sum, i) => sum + i.quantity, 0);
+      state.cart.totalAmount = state.cart.items.reduce((sum, i) => sum + i.subtotal, 0);
+    },
+
     optimisticUpdateQuantity: (state, action: PayloadAction<{ itemId: number; quantity: number }>) => {
       if (state.cart) {
         const item = state.cart.items.find(i => i.id === action.payload.itemId);
@@ -104,12 +155,14 @@ const cartSlice = createSlice({
         state.addingProductIds = [...state.addingProductIds, action.meta.arg.productId];
       })
       .addCase(addToCart.fulfilled, (state, action) => {
+        // API responded — replace optimistic state with server-authoritative data
         state.cart = action.payload;
         state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
         state.error = action.payload as string;
+        // fetchCart() was dispatched in the thunk to revert optimistic state
       })
       .addCase(updateCartItem.pending, (state, action) => {
         state.updatingItemIds = [...state.updatingItemIds, action.meta.arg.itemId];
@@ -127,5 +180,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { clearCart, optimisticUpdateQuantity } = cartSlice.actions;
+export const { clearCart, optimisticAddToCart, optimisticUpdateQuantity } = cartSlice.actions;
 export default cartSlice.reducer;

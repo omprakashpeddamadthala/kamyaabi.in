@@ -3,8 +3,8 @@ import axios, { AxiosError } from 'axios';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
-/** Session inactivity timeout. 2 hours. */
-const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+/** Session inactivity timeout. 4 hours. */
+const SESSION_TIMEOUT_MS = 4 * 60 * 60 * 1000;
 const LAST_ACTIVITY_KEY = 'lastActivity';
 
 const updateLastActivity = (): void => {
@@ -17,10 +17,15 @@ const isSessionExpired = (): boolean => {
   return Date.now() - parseInt(lastActivity, 10) > SESSION_TIMEOUT_MS;
 };
 
-const clearSession = (): void => {
+const clearSession = (sessionExpired = false): void => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem(LAST_ACTIVITY_KEY);
+  if (sessionExpired) {
+    sessionStorage.setItem('sessionExpired', 'true');
+  } else {
+    sessionStorage.removeItem('sessionExpired');
+  }
 };
 
 interface ApiErrorBody {
@@ -56,7 +61,7 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       if (isSessionExpired()) {
-        clearSession();
+        clearSession(true);
         window.location.href = '/login';
         return Promise.reject(new axios.Cancel('Session expired due to inactivity'));
       }
@@ -77,7 +82,7 @@ axiosInstance.interceptors.response.use(
 
     if (status === 401) {
       logger.warn('Authentication expired / invalid token; clearing session', { url, traceId });
-      clearSession();
+      clearSession(true);
       window.location.href = '/login';
     } else if (status === 403) {
       logger.warn('Access denied by server', { url, traceId });

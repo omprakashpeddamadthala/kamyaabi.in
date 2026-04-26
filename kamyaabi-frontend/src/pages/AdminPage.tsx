@@ -420,6 +420,7 @@ const AdminPage: React.FC = () => {
                     <TableCell>Order ID</TableCell>
                     <TableCell>Date</TableCell>
                     <TableCell>Items</TableCell>
+                    <TableCell>Shipping Address</TableCell>
                     <TableCell>Total</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>Action</TableCell>
@@ -430,7 +431,28 @@ const AdminPage: React.FC = () => {
                     <TableRow key={o.id}>
                       <TableCell>#{o.id}</TableCell>
                       <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                      <TableCell>{o.items.length}</TableCell>
+                      <TableCell>
+                        {o.items.length === 0 ? '—' : (
+                          <Box component="ul" sx={{ m: 0, pl: 2, listStyle: 'disc' }}>
+                            {o.items.map((item) => (
+                              <Box component="li" key={item.id} sx={{ fontSize: '0.8rem', lineHeight: 1.5 }}>
+                                {item.productName} × {item.quantity}
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.8rem', minWidth: 140 }}>
+                        {o.shippingAddress ? (
+                          <Box>
+                            <Box sx={{ fontWeight: 600 }}>{o.shippingAddress.fullName}</Box>
+                            <Box>{o.shippingAddress.street}</Box>
+                            <Box>{o.shippingAddress.city}, {o.shippingAddress.state}</Box>
+                            <Box>{o.shippingAddress.pincode}</Box>
+                            {o.shippingAddress.phone && <Box>📞 {o.shippingAddress.phone}</Box>}
+                          </Box>
+                        ) : '—'}
+                      </TableCell>
                       <TableCell>₹{o.totalAmount}</TableCell>
                       <TableCell><Chip label={o.status} size="small" /></TableCell>
                       <TableCell>

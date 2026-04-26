@@ -103,10 +103,8 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
             totalAmount = totalAmount.add(effectivePrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-
-            // Reduce stock
-            product.setStock(product.getStock() - cartItem.getQuantity());
-            productRepository.save(product);
+            // NOTE: Stock is NOT deducted here on order placement.
+            // Stock deduction happens when admin sets status to CONFIRMED.
         }
 
         order.setItems(orderItems);
@@ -165,6 +163,25 @@ public class OrderServiceImpl implements OrderService {
 
         Order.OrderStatus previousStatus = order.getStatus();
         order.setStatus(status);
+
+        // Phase 6: Deduct stock ONLY when admin confirms the order
+        if (status == Order.OrderStatus.CONFIRMED && previousStatus != Order.OrderStatus.CONFIRMED) {
+            log.info("Order {} confirmed by admin — deducting stock for {} items", orderId, order.getItems().size());
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProduct();
+                int newStock = product.getStock() - item.getQuantity();
+                if (newStock < 0) {
+                    log.warn("Stock would go negative for product {} (current: {}, ordered: {}) — clamping to 0",
+                            product.getId(), product.getStock(), item.getQuantity());
+                    newStock = 0;
+                }
+                product.setStock(newStock);
+                productRepository.save(product);
+                log.debug("Deducted {} units from product {} '{}'; remaining stock: {}",
+                        item.getQuantity(), product.getId(), product.getName(), newStock);
+            }
+        }
+
         Order saved = orderRepository.save(order);
         log.info("Order {} status updated from {} to {}", orderId, previousStatus, status);
 

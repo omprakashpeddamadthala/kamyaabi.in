@@ -16,7 +16,15 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
+import { paymentApi } from '../api/paymentApi';
 import Loading from '../components/common/Loading';
+import { Alert, Button, CircularProgress } from '@mui/material';
+
+declare global {
+  interface Window {
+    Razorpay: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
 
 const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 
@@ -24,10 +32,66 @@ const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { selectedOrder: order, loading } = useAppSelector((state) => state.orders);
+  const { user } = useAppSelector((state) => state.auth);
+  const [paymentProcessing, setPaymentProcessing] = React.useState(false);
+  const [paymentError, setPaymentError] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (id) dispatch(fetchOrderById(Number(id)));
   }, [dispatch, id]);
+
+  const handleRetryPayment = async () => {
+    if (!order) return;
+    setPaymentProcessing(true);
+    setPaymentError(null);
+    try {
+      const paymentRes = await paymentApi.createOrder(order.id);
+      const razorpayOrder = paymentRes.data.data;
+
+      const options = {
+        key: razorpayOrder.keyId,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: 'Kamyaabi',
+        description: `Order #${order.id}`,
+        order_id: razorpayOrder.razorpayOrderId,
+        handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            await paymentApi.verify({
+              orderId: order.id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            // Refresh order details to show completed payment
+            dispatch(fetchOrderById(order.id));
+          } catch {
+            setPaymentError('Payment verification failed.');
+          } finally {
+            setPaymentProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentProcessing(false);
+            setPaymentError('Payment was cancelled.');
+          },
+        },
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: order.shippingAddress?.phone,
+        },
+        theme: { color: '#8B6914' },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch {
+      setPaymentError('Failed to initiate payment retry. Please try again.');
+      setPaymentProcessing(false);
+    }
+  };
 
   if (loading || !order) return <Loading />;
 
@@ -45,6 +109,12 @@ const OrderDetailPage: React.FC = () => {
         <Typography variant="h3">Order #{order.id}</Typography>
         <Chip label={order.status} color="primary" />
       </Box>
+
+      {paymentError && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setPaymentError(null)}>
+          {paymentError}
+        </Alert>
+      )}
 
       {/* Order Progress */}
       {order.status !== 'CANCELLED' && (
@@ -131,6 +201,21 @@ const OrderDetailPage: React.FC = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Payment ID</Typography>
                   <Typography variant="body2">{order.payment.razorpayPaymentId}</Typography>
+                </Box>
+              )}
+
+              {(order.payment.status === 'PENDING' || order.payment.status === 'FAILED') && order.status !== 'CANCELLED' && (
+                <Box sx={{ mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    color="primary"
+                    onClick={handleRetryPayment}
+                    disabled={paymentProcessing}
+                    startIcon={paymentProcessing ? <CircularProgress size={20} color="inherit" /> : null}
+                  >
+                    {paymentProcessing ? 'Processing...' : 'Retry Payment'}
+                  </Button>
                 </Box>
               )}
             </Card>
