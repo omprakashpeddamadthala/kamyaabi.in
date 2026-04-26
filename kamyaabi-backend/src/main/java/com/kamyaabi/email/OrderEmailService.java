@@ -3,9 +3,11 @@ package com.kamyaabi.email;
 import com.kamyaabi.config.EmailProperties;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.event.OrderEventType;
+import com.kamyaabi.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Orchestrates email notifications for order events.
@@ -18,16 +20,20 @@ public class OrderEmailService {
     private final EmailServiceFactory emailServiceFactory;
     private final EmailTemplateEngine templateEngine;
     private final EmailProperties emailProperties;
+    private final OrderRepository orderRepository;
 
     public OrderEmailService(EmailServiceFactory emailServiceFactory,
                              EmailTemplateEngine templateEngine,
-                             EmailProperties emailProperties) {
+                             EmailProperties emailProperties,
+                             OrderRepository orderRepository) {
         this.emailServiceFactory = emailServiceFactory;
         this.templateEngine = templateEngine;
         this.emailProperties = emailProperties;
+        this.orderRepository = orderRepository;
     }
 
     @Async("emailTaskExecutor")
+    @Transactional(readOnly = true)
     public void sendOrderNotification(Order order, OrderEventType eventType) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
@@ -40,12 +46,18 @@ public class OrderEmailService {
             return;
         }
 
-        // Customer always gets notified for actionable events
-        sendCustomerEmail(order, eventType);
+        Order freshOrder = orderRepository.findByIdWithUser(order.getId())
+                .orElse(null);
+        if (freshOrder == null) {
+            log.error("Order {} not found when sending email for event: {}", order.getId(), eventType);
+            return;
+        }
+
+        sendCustomerEmail(freshOrder, eventType);
 
         // Admin only gets notified on payment success (confirmed revenue)
         if (eventType == OrderEventType.PAYMENT_SUCCESS) {
-            sendAdminEmails(order, eventType);
+            sendAdminEmails(freshOrder, eventType);
         } else {
             log.debug("Skipping admin email for event: {} order: {} — admin notified only on payment success", eventType, order.getId());
         }
