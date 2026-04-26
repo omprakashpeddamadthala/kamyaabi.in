@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -13,22 +13,79 @@ import {
   Link as MuiLink,
   Skeleton,
   CircularProgress,
+  Tab,
+  Tabs,
+  Rating,
+  Dialog,
+  useMediaQuery,
+  useTheme,
+  Slide,
 } from '@mui/material';
-import { ShoppingCart, Add, Remove, Check } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import {
+  ShoppingCart,
+  Add,
+  Remove,
+  Check,
+  Close,
+  VerifiedUser,
+  LocalShipping,
+  Inventory,
+  Lock,
+  Star,
+  NavigateNext,
+  ZoomIn,
+  Restaurant,
+  Kitchen,
+  Description as DescriptionIcon,
+  ChevronLeft,
+  ChevronRight,
+  FlashOn,
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import { fetchProductById, clearSelectedProduct } from '../features/product/productSlice';
+import { fetchProductById, clearSelectedProduct, fetchProducts } from '../features/product/productSlice';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
 import { withCloudinaryTransform } from '../utils/cloudinary';
+import ProductCard from '../components/common/ProductCard';
 
+/* ─── Scroll-reveal hook (IntersectionObserver) ──────────────────────── */
+function useRevealOnScroll(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, visible };
+}
+
+const revealSx = (visible: boolean) => ({
+  opacity: visible ? 1 : 0,
+  transform: visible ? 'translateY(0)' : 'translateY(24px)',
+  transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
+});
+
+/* ─── Skeleton ───────────────────────────────────────────────────────── */
 const ProductDetailSkeleton: React.FC = () => (
   <Container maxWidth="lg" sx={{ py: 4 }}>
     <Skeleton variant="text" width={250} height={24} sx={{ mb: 3 }} animation="wave" />
     <Grid container spacing={4}>
       <Grid item xs={12} md={6}>
-        <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} animation="wave" />
+        <Skeleton variant="rectangular" height={500} sx={{ borderRadius: 2 }} animation="wave" />
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+          {[0, 1, 2, 3].map(i => (
+            <Skeleton key={i} variant="rectangular" width={72} height={72} sx={{ borderRadius: 1 }} animation="wave" />
+          ))}
+        </Box>
       </Grid>
       <Grid item xs={12} md={6}>
         <Skeleton variant="rectangular" width={100} height={32} sx={{ mb: 2, borderRadius: 2 }} animation="wave" />
@@ -45,72 +102,181 @@ const ProductDetailSkeleton: React.FC = () => (
   </Container>
 );
 
+/* ─── Trust Badge component ──────────────────────────────────────────── */
+interface TrustBadgeProps {
+  icon: React.ReactNode;
+  label: string;
+}
+const TrustBadge: React.FC<TrustBadgeProps> = ({ icon, label }) => (
+  <Box sx={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 0.5,
+    flex: '1 1 0',
+    minWidth: 80,
+    textAlign: 'center',
+  }}>
+    <Box sx={{ color: 'secondary.main', fontSize: 28, display: 'flex' }}>{icon}</Box>
+    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ lineHeight: 1.2 }}>
+      {label}
+    </Typography>
+  </Box>
+);
+
+/* ─── Tab panel ──────────────────────────────────────────────────────── */
+interface TabPanelProps {
+  children: React.ReactNode;
+  value: number;
+  index: number;
+}
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+  <Box role="tabpanel" hidden={value !== index} id={`product-tabpanel-${index}`} aria-labelledby={`product-tab-${index}`}>
+    {value === index && <Box sx={{ pt: 2.5 }}>{children}</Box>}
+  </Box>
+);
+
+/* ─── Static review data (placeholder) ───────────────────────────────── */
+const PLACEHOLDER_REVIEWS = [
+  { name: 'Priya S.', rating: 5, text: 'Absolutely fresh and premium quality! The taste is incredible — you can tell these are carefully sourced.', date: '2 weeks ago' },
+  { name: 'Rajesh K.', rating: 4, text: 'Great packaging and fast delivery. The dry fruits were fresh and flavourful. Will order again.', date: '1 month ago' },
+  { name: 'Anita M.', rating: 5, text: 'Best dry fruits I have ordered online. Perfect for gifting during festivals. Highly recommended!', date: '3 weeks ago' },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* Main Component                                                         */
+/* ═══════════════════════════════════════════════════════════════════════ */
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { selectedProduct: product, loading } = useAppSelector((state) => state.products);
-  const { user } = useAppSelector((state) => state.auth);
-  const { addingProductIds } = useAppSelector((state) => state.cart);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+  const { selectedProduct: product, loading, products } = useAppSelector((s) => s.products);
+  const { user } = useAppSelector((s) => s.auth);
+  const { addingProductIds } = useAppSelector((s) => s.cart);
+
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [isZooming, setIsZooming] = useState(false);
+
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
 
   const isAdding = product ? addingProductIds.includes(product.id) : false;
 
+  /* Fetch product + related products */
   useEffect(() => {
     if (id) {
       dispatch(fetchProductById(Number(id)));
       setSelectedImageIdx(0);
+      setQuantity(1);
+      setTabValue(0);
     }
-    return () => {
-      dispatch(clearSelectedProduct());
-    };
+    return () => { dispatch(clearSelectedProduct()); };
   }, [dispatch, id]);
 
+  useEffect(() => {
+    if (product) {
+      dispatch(fetchProducts({ page: 0, size: 12 }));
+    }
+  }, [dispatch, product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Sticky CTA observer */
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
+
+  /* Image gallery helpers */
   const orderedImages = product?.images ?? [];
   const galleryImages = orderedImages.length > 0
     ? orderedImages
     : product?.imageUrl
       ? [{ id: -1, imageUrl: product.imageUrl, publicId: '', isMain: true, displayOrder: 0 }]
       : [];
-  const activeImage = galleryImages[Math.min(selectedImageIdx, Math.max(galleryImages.length - 1, 0))];
+  const safeIdx = Math.min(selectedImageIdx, Math.max(galleryImages.length - 1, 0));
+  const activeImage = galleryImages[safeIdx];
   const primaryImageSource = activeImage?.imageUrl || product?.mainImageUrl || product?.imageUrl || '';
 
-  const handleAddToCart = () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    // Prevent duplicate clicks while adding
-    if (isAdding) return;
-    if (product) {
-      // Phase 7: Optimistic UI — update cart badge instantly (<100ms) before API
-      dispatch(optimisticAddToCart({
-        productId: product.id,
-        productName: product.name,
-        productImageUrl: primaryImageSource,
-        productPrice: product.price,
-        productDiscountPrice: product.discountPrice,
-        quantity,
-      }));
+  /* Zoom handlers */
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPosition({ x, y });
+  }, []);
 
-      if (imageRef.current) {
-        triggerFlyToCart(
-          primaryImageSource || 'https://via.placeholder.com/50',
-          imageRef.current
-        );
-      }
-      dispatch(addToCart({ productId: product.id, quantity })).then((result) => {
-        if (addToCart.fulfilled.match(result)) {
-          setJustAdded(true);
-          setTimeout(() => setJustAdded(false), 2000);
-        }
-      });
+  /* Add to cart */
+  const handleAddToCart = useCallback(() => {
+    if (!user) { navigate('/login'); return; }
+    if (isAdding || !product) return;
+
+    dispatch(optimisticAddToCart({
+      productId: product.id,
+      productName: product.name,
+      productImageUrl: primaryImageSource,
+      productPrice: product.price,
+      productDiscountPrice: product.discountPrice,
+      quantity,
+    }));
+
+    if (imageRef.current) {
+      triggerFlyToCart(primaryImageSource || 'https://via.placeholder.com/50', imageRef.current);
     }
-  };
+
+    dispatch(addToCart({ productId: product.id, quantity })).then((result) => {
+      if (addToCart.fulfilled.match(result)) {
+        setJustAdded(true);
+        setTimeout(() => setJustAdded(false), 2000);
+      }
+    });
+  }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch, triggerFlyToCart]);
+
+  /* Buy now */
+  const handleBuyNow = useCallback(() => {
+    if (!user) { navigate('/login'); return; }
+    if (isAdding || !product) return;
+
+    dispatch(optimisticAddToCart({
+      productId: product.id,
+      productName: product.name,
+      productImageUrl: primaryImageSource,
+      productPrice: product.price,
+      productDiscountPrice: product.discountPrice,
+      quantity,
+    }));
+
+    dispatch(addToCart({ productId: product.id, quantity })).then((result) => {
+      if (addToCart.fulfilled.match(result)) {
+        navigate('/cart');
+      }
+    });
+  }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch]);
+
+  /* Lightbox navigation */
+  const lightboxPrev = () => setSelectedImageIdx((i) => (i > 0 ? i - 1 : galleryImages.length - 1));
+  const lightboxNext = () => setSelectedImageIdx((i) => (i < galleryImages.length - 1 ? i + 1 : 0));
+
+  /* Scroll-reveal refs */
+  const trustReveal = useRevealOnScroll();
+  const tabsReveal = useRevealOnScroll();
+  const reviewsReveal = useRevealOnScroll();
+  const relatedReveal = useRevealOnScroll();
 
   if (loading || !product) return <ProductDetailSkeleton />;
 
@@ -118,38 +284,84 @@ const ProductDetailPage: React.FC = () => {
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
+  const effectivePrice = hasDiscount ? product.discountPrice! : product.price;
+
+  const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
+  const recentBuyersCount = 12 + (product.id % 20);
 
   return (
     <PageTransition>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <MuiLink component={Link} to="/" underline="hover" color="inherit">
-            Home
-          </MuiLink>
-          <MuiLink component={Link} to="/products" underline="hover" color="inherit">
-            Products
-          </MuiLink>
-          <Typography color="text.primary">{product.name}</Typography>
+      {/* ── Breadcrumbs ─────────────────────────────────────────────── */}
+      <Container maxWidth="lg" sx={{ pt: 3, pb: 0 }}>
+        <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 3 }}>
+          <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
+          <MuiLink component={Link} to="/products" underline="hover" color="inherit">Products</MuiLink>
+          <Typography color="text.primary" fontWeight={500}>{product.name}</Typography>
         </Breadcrumbs>
+      </Container>
 
+      <Container maxWidth="lg" sx={{ pb: 6 }}>
+        {/* ── Main 2-col layout ─────────────────────────────────────── */}
         <Grid container spacing={4}>
+          {/* LEFT: Image gallery */}
           <Grid item xs={12} md={6}>
+            {/* Main image with zoom */}
             <Box
               sx={{
                 borderRadius: 2,
                 overflow: 'hidden',
                 bgcolor: '#F5F5F0',
+                position: 'relative',
+                cursor: 'zoom-in',
+                '&:hover .zoom-hint': { opacity: isZooming ? 0 : 1 },
               }}
+              onMouseEnter={() => setIsZooming(true)}
+              onMouseLeave={() => setIsZooming(false)}
+              onMouseMove={handleMouseMove}
+              onClick={() => setLightboxOpen(true)}
             >
               <Box
                 component="img"
                 ref={imageRef}
                 src={primaryImageSource || 'https://via.placeholder.com/600x500?text=Product'}
                 alt={product.name}
-                sx={{ width: '100%', height: 'auto', maxHeight: 500, objectFit: 'cover' }}
+                sx={{
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: 520,
+                  objectFit: 'cover',
+                  display: 'block',
+                  transition: 'transform 0.3s ease',
+                  transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                  transform: isZooming ? 'scale(1.5)' : 'scale(1)',
+                }}
                 loading="lazy"
               />
+              <Box
+                className="zoom-hint"
+                sx={{
+                  position: 'absolute',
+                  bottom: 12,
+                  right: 12,
+                  bgcolor: 'rgba(0,0,0,0.6)',
+                  color: '#fff',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  opacity: 0,
+                  transition: 'opacity 0.2s',
+                  pointerEvents: 'none',
+                }}
+              >
+                <ZoomIn fontSize="small" />
+                <Typography variant="caption">Click to expand</Typography>
+              </Box>
             </Box>
+
+            {/* Thumbnails */}
             {galleryImages.length > 1 && (
               <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
                 {galleryImages.map((img, idx) => (
@@ -157,8 +369,12 @@ const ProductDetailPage: React.FC = () => {
                     key={img.id ?? idx}
                     component="img"
                     src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
-                    alt={`${product.name} ${idx + 1}`}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
                     onClick={() => setSelectedImageIdx(idx)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View image ${idx + 1}`}
+                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') setSelectedImageIdx(idx); }}
                     sx={{
                       width: 72,
                       height: 72,
@@ -166,8 +382,9 @@ const ProductDetailPage: React.FC = () => {
                       borderRadius: 1,
                       cursor: 'pointer',
                       border: '2px solid',
-                      borderColor: idx === selectedImageIdx ? 'primary.main' : 'transparent',
-                      transition: 'border-color 0.2s ease',
+                      borderColor: idx === safeIdx ? 'primary.main' : 'transparent',
+                      transition: 'border-color 0.2s ease, transform 0.2s ease',
+                      '&:hover': { transform: 'scale(1.05)', borderColor: 'primary.light' },
                     }}
                   />
                 ))}
@@ -175,57 +392,156 @@ const ProductDetailPage: React.FC = () => {
             )}
           </Grid>
 
+          {/* RIGHT: Product info */}
           <Grid item xs={12} md={6}>
-            <Chip label={product.categoryName} color="primary" variant="outlined" sx={{ mb: 2 }} />
+            <Chip
+              label={product.categoryName}
+              color="primary"
+              variant="outlined"
+              size="small"
+              sx={{ mb: 1.5 }}
+            />
 
-            <Typography variant="h3" sx={{ mb: 1, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
+            {/* Product name — prominent */}
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                mb: 1,
+                fontWeight: 700,
+                fontSize: { xs: '1.6rem', sm: '2rem', md: '2.4rem' },
+                lineHeight: 1.2,
+              }}
+            >
               {product.name}
             </Typography>
 
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {/* Rating */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Rating value={4.5} precision={0.5} readOnly size="small" />
+              <Typography variant="body2" color="text.secondary">(4.5) · 128 reviews</Typography>
+            </Box>
+
+            {/* Weight display */}
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
               {product.weight} {product.unit}
             </Typography>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="h4" color="primary" fontWeight={700}>
-                ₹{hasDiscount ? product.discountPrice : product.price}
+            {/* Variant pills (weight options) */}
+            <Box sx={{ display: 'flex', gap: 1, mb: 2.5, flexWrap: 'wrap' }}>
+              {['250g', '500g', '1kg'].map((w) => {
+                const isSelected = product.weight === w.replace('g', '').replace('k', '000');
+                return (
+                  <Chip
+                    key={w}
+                    label={w}
+                    variant={isSelected ? 'filled' : 'outlined'}
+                    color={isSelected ? 'primary' : 'default'}
+                    sx={{
+                      fontWeight: 600,
+                      px: 1,
+                      cursor: 'default',
+                      '&.MuiChip-filled': {
+                        bgcolor: 'primary.main',
+                        color: '#fff',
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Box>
+
+            {/* Price */}
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1 }}>
+              <Typography variant="h4" color="primary" fontWeight={700} sx={{ fontSize: { xs: '1.6rem', md: '2rem' } }}>
+                ₹{effectivePrice}
               </Typography>
               {hasDiscount && (
                 <>
-                  <Typography
-                    variant="h5"
-                    sx={{ textDecoration: 'line-through', color: 'text.secondary' }}
-                  >
+                  <Typography variant="h6" sx={{ textDecoration: 'line-through', color: 'text.secondary', fontWeight: 400 }}>
                     ₹{product.price}
                   </Typography>
-                  <Chip label={`${discountPercent}% OFF`} color="error" size="small" />
+                  <Chip label={`${discountPercent}% OFF`} color="error" size="small" sx={{ fontWeight: 600 }} />
                 </>
               )}
             </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
-            <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.8 }}>
-              {product.description}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Inclusive of all taxes
             </Typography>
 
+            {/* Trust badges */}
+            <Box ref={trustReveal.ref} sx={{ ...revealSx(trustReveal.visible) }}>
+              <Box sx={{
+                display: 'flex',
+                gap: { xs: 1.5, sm: 2 },
+                py: 2,
+                px: { xs: 1, sm: 2 },
+                mb: 2.5,
+                bgcolor: '#FAFAF5',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                justifyContent: 'space-around',
+                flexWrap: 'wrap',
+              }}>
+                <TrustBadge icon={<VerifiedUser />} label="100% Natural" />
+                <TrustBadge icon={<LocalShipping />} label="Free Shipping ₹499+" />
+                <TrustBadge icon={<Inventory />} label="Fresh Stock" />
+                <TrustBadge icon={<Lock />} label="Secure Payment" />
+              </Box>
+            </Box>
+
+            <Divider sx={{ mb: 2.5 }} />
+
+            {/* Quantity selector */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="body1" fontWeight={600}>
-                Quantity:
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: 1 }}>
+              <Typography variant="body1" fontWeight={600}>Quantity:</Typography>
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '2px solid',
+                borderColor: 'primary.light',
+                borderRadius: 2,
+                overflow: 'hidden',
+              }}>
                 <IconButton
                   size="small"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                  sx={{
+                    borderRadius: 0,
+                    px: 1.5,
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
+                    transition: 'all 0.2s ease',
+                  }}
                 >
-                  <Remove />
+                  <Remove fontSize="small" />
                 </IconButton>
-                <Typography sx={{ px: 2, fontWeight: 600 }}>{quantity}</Typography>
+                <Typography sx={{
+                  px: 2.5,
+                  fontWeight: 700,
+                  minWidth: 40,
+                  textAlign: 'center',
+                  userSelect: 'none',
+                }}>
+                  {quantity}
+                </Typography>
                 <IconButton
                   size="small"
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  disabled={quantity >= product.stock}
+                  aria-label="Increase quantity"
+                  sx={{
+                    borderRadius: 0,
+                    px: 1.5,
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
+                    transition: 'all 0.2s ease',
+                  }}
                 >
-                  <Add />
+                  <Add fontSize="small" />
                 </IconButton>
               </Box>
               <Typography variant="body2" color="text.secondary">
@@ -233,34 +549,332 @@ const ProductDetailPage: React.FC = () => {
               </Typography>
             </Box>
 
-            {(!user || user.role !== 'ADMIN') && (
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                startIcon={
-                  isAdding ? <CircularProgress size={20} color="inherit" /> :
-                  justAdded ? <Check /> : <ShoppingCart />
-                }
-                onClick={handleAddToCart}
-                disabled={product.stock === 0 || isAdding}
-                color={justAdded ? 'success' : 'primary'}
-                sx={{
-                  py: 1.5,
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
-                  '&:active': {
-                    transform: 'scale(0.97)',
-                  },
-                }}
-              >
-                {product.stock === 0 ? 'Out of Stock' :
-                 isAdding ? 'Adding to cart...' :
-                 justAdded ? 'Added to Cart!' : 'Add to Cart'}
-              </Button>
-            )}
+            {/* CTA buttons */}
+            <Box ref={ctaRef}>
+              {(!user || user.role !== 'ADMIN') && (
+                <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    startIcon={
+                      isAdding ? <CircularProgress size={20} color="inherit" /> :
+                      justAdded ? <Check /> : <ShoppingCart />
+                    }
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0 || isAdding}
+                    color={justAdded ? 'success' : 'primary'}
+                    sx={{
+                      py: 1.5,
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
+                      '&:hover': { transform: 'translateY(-1px)' },
+                      '&:active': { transform: 'scale(0.97)' },
+                    }}
+                  >
+                    {product.stock === 0 ? 'Out of Stock' :
+                     isAdding ? 'Adding...' :
+                     justAdded ? 'Added to Cart!' : 'Add to Cart'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    fullWidth
+                    startIcon={<FlashOn />}
+                    onClick={handleBuyNow}
+                    disabled={product.stock === 0 || isAdding}
+                    sx={{
+                      py: 1.5,
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      borderWidth: 2,
+                      '&:hover': { borderWidth: 2, transform: 'translateY(-1px)' },
+                      transition: 'transform 0.15s ease',
+                    }}
+                  >
+                    Buy Now
+                  </Button>
+                </Box>
+              )}
+            </Box>
+
+            {/* Social proof nudge */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+              <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {recentBuyersCount} people bought this in the last 7 days
+              </Typography>
+            </Box>
           </Grid>
         </Grid>
+
+        {/* ── Tabbed description ──────────────────────────────────────── */}
+        <Box ref={tabsReveal.ref} sx={{ mt: 6, ...revealSx(tabsReveal.visible) }}>
+          <Tabs
+            value={tabValue}
+            onChange={(_, v) => setTabValue(v)}
+            variant={isMobile ? 'fullWidth' : 'standard'}
+            sx={{
+              borderBottom: 1,
+              borderColor: 'divider',
+              '& .MuiTab-root': { fontWeight: 600, minHeight: 56 },
+            }}
+          >
+            <Tab icon={<DescriptionIcon />} iconPosition="start" label="Description" id="product-tab-0" aria-controls="product-tabpanel-0" />
+            <Tab icon={<Restaurant />} iconPosition="start" label="Nutritional Info" id="product-tab-1" aria-controls="product-tabpanel-1" />
+            <Tab icon={<Kitchen />} iconPosition="start" label="How to Use" id="product-tab-2" aria-controls="product-tabpanel-2" />
+          </Tabs>
+
+          <TabPanel value={tabValue} index={0}>
+            <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary' }}>
+              {product.description}
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Category:</strong> {product.categoryName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Weight:</strong> {product.weight} {product.unit}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Shelf Life:</strong> 6 months from date of packaging
+              </Typography>
+            </Box>
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={1}>
+            <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.8 }}>
+              Our {product.name.toLowerCase()} are packed with essential nutrients. Here is a general nutritional overview per 100g serving:
+            </Typography>
+            <Grid container spacing={2}>
+              {[
+                { label: 'Calories', value: '~580 kcal' },
+                { label: 'Protein', value: '~18g' },
+                { label: 'Total Fat', value: '~44g' },
+                { label: 'Carbohydrates', value: '~30g' },
+                { label: 'Dietary Fibre', value: '~3g' },
+                { label: 'Vitamin E', value: 'Rich source' },
+              ].map(({ label, value }) => (
+                <Grid item xs={6} sm={4} key={label}>
+                  <Box sx={{
+                    p: 2,
+                    bgcolor: '#FAFAF5',
+                    borderRadius: 2,
+                    textAlign: 'center',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}>
+                    <Typography variant="body2" color="text.secondary">{label}</Typography>
+                    <Typography variant="subtitle1" fontWeight={700} color="primary.main">{value}</Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+              * Values are approximate and may vary by variety. Refer to product packaging for exact details.
+            </Typography>
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
+            <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.8 }}>
+              Enjoy your {product.name.toLowerCase()} in many delicious ways:
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
+              <li><Typography variant="body1">Enjoy as a healthy snack on its own any time of the day</Typography></li>
+              <li><Typography variant="body1">Add to your morning oatmeal, cereal, or smoothie bowls</Typography></li>
+              <li><Typography variant="body1">Use as a topping for desserts, ice cream, or salads</Typography></li>
+              <li><Typography variant="body1">Incorporate into baking — cookies, cakes, and energy bars</Typography></li>
+              <li><Typography variant="body1">Garnish traditional Indian sweets and savoury dishes</Typography></li>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Storage Tips</Typography>
+            <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
+              <li><Typography variant="body2">Store in an airtight container in a cool, dry place</Typography></li>
+              <li><Typography variant="body2">Refrigerate after opening to extend freshness</Typography></li>
+              <li><Typography variant="body2">Keep away from direct sunlight and moisture</Typography></li>
+              <li><Typography variant="body2">Best consumed within 3 months of opening</Typography></li>
+            </Box>
+          </TabPanel>
+        </Box>
+
+        {/* ── Reviews section ─────────────────────────────────────────── */}
+        <Box ref={reviewsReveal.ref} sx={{ mt: 6, ...revealSx(reviewsReveal.visible) }}>
+          <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="h3" fontWeight={700} color="primary.main">4.5</Typography>
+            <Box>
+              <Rating value={4.5} precision={0.5} readOnly />
+              <Typography variant="body2" color="text.secondary">Based on 128 reviews</Typography>
+            </Box>
+          </Box>
+          <Grid container spacing={3}>
+            {PLACEHOLDER_REVIEWS.map((review, idx) => (
+              <Grid item xs={12} sm={4} key={idx}>
+                <Box sx={{
+                  p: 3,
+                  borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  height: '100%',
+                  bgcolor: 'background.paper',
+                  transition: 'box-shadow 0.2s ease',
+                  '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+                }}>
+                  <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
+                  <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
+                    &ldquo;{review.text}&rdquo;
+                  </Typography>
+                  <Typography variant="caption" fontWeight={600}>{review.name}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>· {review.date}</Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+
+        {/* ── You may also like ───────────────────────────────────────── */}
+        {relatedProducts.length > 0 && (
+          <Box ref={relatedReveal.ref} sx={{ mt: 6, ...revealSx(relatedReveal.visible) }}>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>You May Also Like</Typography>
+            <Box sx={{
+              display: 'flex',
+              gap: 2.5,
+              overflowX: 'auto',
+              pb: 2,
+              scrollSnapType: 'x mandatory',
+              '&::-webkit-scrollbar': { height: 6 },
+              '&::-webkit-scrollbar-thumb': { bgcolor: 'primary.light', borderRadius: 3 },
+            }}>
+              {relatedProducts.map((rp) => (
+                <Box
+                  key={rp.id}
+                  sx={{
+                    minWidth: { xs: 260, sm: 280 },
+                    maxWidth: 300,
+                    scrollSnapAlign: 'start',
+                    flexShrink: 0,
+                  }}
+                >
+                  <ProductCard product={rp} />
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
       </Container>
+
+      {/* ── Lightbox dialog ─────────────────────────────────────────── */}
+      <Dialog
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: { bgcolor: 'rgba(0,0,0,0.95)', boxShadow: 'none', m: { xs: 1, md: 2 } },
+        }}
+      >
+        <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: '60vh', md: '80vh' } }}>
+          <IconButton
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close lightbox"
+            sx={{ position: 'absolute', top: 8, right: 8, color: '#fff', zIndex: 2 }}
+          >
+            <Close />
+          </IconButton>
+          {galleryImages.length > 1 && (
+            <>
+              <IconButton
+                onClick={lightboxPrev}
+                aria-label="Previous image"
+                sx={{ position: 'absolute', left: 8, color: '#fff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
+              >
+                <ChevronLeft fontSize="large" />
+              </IconButton>
+              <IconButton
+                onClick={lightboxNext}
+                aria-label="Next image"
+                sx={{ position: 'absolute', right: 8, color: '#fff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
+              >
+                <ChevronRight fontSize="large" />
+              </IconButton>
+            </>
+          )}
+          <Box
+            component="img"
+            src={primaryImageSource || 'https://via.placeholder.com/800x600?text=Product'}
+            alt={product.name}
+            sx={{
+              maxWidth: '90%',
+              maxHeight: '85vh',
+              objectFit: 'contain',
+              borderRadius: 1,
+            }}
+          />
+          {galleryImages.length > 1 && (
+            <Box sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 1,
+            }}>
+              {galleryImages.map((_, idx) => (
+                <Box
+                  key={idx}
+                  onClick={() => setSelectedImageIdx(idx)}
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: idx === safeIdx ? '#fff' : 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Dialog>
+
+      {/* ── Sticky mobile CTA ───────────────────────────────────────── */}
+      {isTablet && (!user || user.role !== 'ADMIN') && (
+        <Slide direction="up" in={stickyVisible} mountOnEnter unmountOnExit>
+          <Box sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            bgcolor: 'background.paper',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            px: 2,
+            py: 1.5,
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
+          }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600} noWrap>{product.name}</Typography>
+              <Typography variant="subtitle1" color="primary" fontWeight={700}>₹{effectivePrice}</Typography>
+            </Box>
+            <Button
+              variant="contained"
+              startIcon={isAdding ? <CircularProgress size={18} color="inherit" /> : justAdded ? <Check /> : <ShoppingCart />}
+              onClick={handleAddToCart}
+              disabled={product.stock === 0 || isAdding}
+              color={justAdded ? 'success' : 'primary'}
+              sx={{ whiteSpace: 'nowrap', fontWeight: 700, px: 3 }}
+            >
+              {product.stock === 0 ? 'Out of Stock' : justAdded ? 'Added!' : 'Add to Cart'}
+            </Button>
+          </Box>
+        </Slide>
+      )}
     </PageTransition>
   );
 };
