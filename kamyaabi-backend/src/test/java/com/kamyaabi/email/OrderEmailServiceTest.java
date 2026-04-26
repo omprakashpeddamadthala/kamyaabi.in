@@ -3,6 +3,7 @@ package com.kamyaabi.email;
 import com.kamyaabi.config.EmailProperties;
 import com.kamyaabi.entity.*;
 import com.kamyaabi.event.OrderEventType;
+import com.kamyaabi.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -29,6 +31,9 @@ class OrderEmailServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private OrderRepository orderRepository;
+
     private EmailProperties emailProperties;
     private OrderEmailService orderEmailService;
     private Order order;
@@ -39,7 +44,7 @@ class OrderEmailServiceTest {
         emailProperties.setEnabled(true);
         emailProperties.setAdminEmails(new ArrayList<>(List.of("admin@kamyaabi.shop")));
 
-        orderEmailService = new OrderEmailService(emailServiceFactory, templateEngine, emailProperties);
+        orderEmailService = new OrderEmailService(emailServiceFactory, templateEngine, emailProperties, orderRepository);
 
         User user = User.builder()
                 .id(1L).email("customer@test.com").name("Test Customer").role(User.Role.USER)
@@ -55,6 +60,7 @@ class OrderEmailServiceTest {
 
     @Test
     void sendOrderNotification_paymentSuccess_shouldSendCustomerAndAdminEmails() {
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
@@ -88,6 +94,7 @@ class OrderEmailServiceTest {
     @Test
     void sendOrderNotification_noAdminEmails_shouldOnlySendCustomerEmail() {
         emailProperties.setAdminEmails(new ArrayList<>());
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
@@ -100,6 +107,7 @@ class OrderEmailServiceTest {
 
     @Test
     void sendOrderNotification_customerEmailFails_shouldStillSendAdminEmail() {
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenThrow(new RuntimeException("Template error"));
@@ -114,6 +122,7 @@ class OrderEmailServiceTest {
     @Test
     void sendOrderNotification_multipleAdminEmails_shouldSendToAll() {
         emailProperties.setAdminEmails(new ArrayList<>(List.of("admin1@kamyaabi.shop", "admin2@kamyaabi.shop")));
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Subject");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
@@ -128,6 +137,7 @@ class OrderEmailServiceTest {
 
     @Test
     void sendOrderNotification_adminEmailFails_shouldNotBreak() {
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Subject");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
@@ -144,6 +154,7 @@ class OrderEmailServiceTest {
 
     @Test
     void sendOrderNotification_nonPaymentEvent_shouldOnlySendCustomerEmail() {
+        when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.ORDER_CONFIRMED, order)).thenReturn("Order Confirmed");
         when(templateEngine.renderCustomerEmail(OrderEventType.ORDER_CONFIRMED, order)).thenReturn("<p>Confirmed</p>");
