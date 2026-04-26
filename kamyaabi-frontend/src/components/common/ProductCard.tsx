@@ -15,6 +15,7 @@ import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
 import { useFlyToCart } from './FlyToCartAnimation';
+import { withCloudinaryTransform } from '../../utils/cloudinary';
 
 interface ProductCardProps {
   product: Product;
@@ -36,6 +37,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
 
+  const cardImageSource = product.mainImageUrl || product.imageUrl || '';
+  const cardImageUrl = withCloudinaryTransform(cardImageSource);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
@@ -49,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     dispatch(optimisticAddToCart({
       productId: product.id,
       productName: product.name,
-      productImageUrl: product.imageUrl || '',
+      productImageUrl: cardImageSource,
       productPrice: product.price,
       productDiscountPrice: product.discountPrice,
       quantity: 1,
@@ -57,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (imageRef.current) {
       triggerFlyToCart(
-        product.imageUrl || 'https://via.placeholder.com/50',
+        cardImageUrl || 'https://via.placeholder.com/50',
         imageRef.current
       );
     }
@@ -92,7 +96,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           component="img"
           ref={imageRef}
           height="220"
-          image={product.imageUrl || 'https://via.placeholder.com/300x220?text=Product'}
+          image={cardImageUrl || 'https://via.placeholder.com/300x220?text=Product'}
           alt={product.name}
           sx={{ objectFit: 'cover' }}
           loading="lazy"
