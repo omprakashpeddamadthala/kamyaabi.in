@@ -13,7 +13,7 @@ import {
 import { ShoppingCart, Check } from '@mui/icons-material';
 import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
-import { addToCart } from '../../features/cart/cartSlice';
+import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
 import { useFlyToCart } from './FlyToCartAnimation';
 
 interface ProductCardProps {
@@ -44,6 +44,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
     // Prevent duplicate clicks while adding
     if (isAdding) return;
+
+    // Phase 7: Optimistic UI — update cart badge instantly before API responds
+    dispatch(optimisticAddToCart({
+      productId: product.id,
+      productName: product.name,
+      productImageUrl: product.imageUrl || '',
+      productPrice: product.price,
+      productDiscountPrice: product.discountPrice,
+      quantity: 1,
+    }));
+
     if (imageRef.current) {
       triggerFlyToCart(
         product.imageUrl || 'https://via.placeholder.com/50',

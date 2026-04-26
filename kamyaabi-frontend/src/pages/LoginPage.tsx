@@ -20,6 +20,16 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { error, loading } = useAppSelector((state) => state.auth);
   const [loginAttempted, setLoginAttempted] = React.useState(false);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = React.useState<string | null>(
+    () => {
+      const flag = sessionStorage.getItem('sessionExpired');
+      if (flag) {
+        sessionStorage.removeItem('sessionExpired');
+        return 'Your session has expired after 4 hours of inactivity. Please sign in again.';
+      }
+      return null;
+    }
+  );
 
   const clientId = config.googleClientId;
 
@@ -68,6 +78,12 @@ const LoginPage: React.FC = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
             Sign in to continue shopping
           </Typography>
+
+          {sessionExpiredMsg && (
+            <Alert severity="warning" sx={{ mb: 3 }} onClose={() => setSessionExpiredMsg(null)}>
+              {sessionExpiredMsg}
+            </Alert>
+          )}
 
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>

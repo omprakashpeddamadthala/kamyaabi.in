@@ -18,7 +18,7 @@ import { ShoppingCart, Add, Remove, Check } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchProductById, clearSelectedProduct } from '../features/product/productSlice';
-import { addToCart } from '../features/cart/cartSlice';
+import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
 
@@ -75,6 +75,16 @@ const ProductDetailPage: React.FC = () => {
     // Prevent duplicate clicks while adding
     if (isAdding) return;
     if (product) {
+      // Phase 7: Optimistic UI — update cart badge instantly (<100ms) before API
+      dispatch(optimisticAddToCart({
+        productId: product.id,
+        productName: product.name,
+        productImageUrl: product.imageUrl || '',
+        productPrice: product.price,
+        productDiscountPrice: product.discountPrice,
+        quantity,
+      }));
+
       if (imageRef.current) {
         triggerFlyToCart(
           product.imageUrl || 'https://via.placeholder.com/50',
