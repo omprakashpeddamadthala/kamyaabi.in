@@ -71,13 +71,46 @@ class PaymentServiceImplTest {
 
     @Test
     void createRazorpayOrder_orderAlreadyPaid_shouldThrowException() {
-        order.setPayment(payment);
         payment.setStatus(Payment.PaymentStatus.COMPLETED);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrderId(1L)).thenReturn(Optional.of(payment));
 
         assertThatThrownBy(() -> paymentService.createRazorpayOrder(1L))
                 .isInstanceOf(PaymentException.class)
-                .hasMessageContaining("already completed");
+                .hasMessageContaining("already been processed");
+    }
+
+    @Test
+    void createRazorpayOrder_existingPendingPayment_shouldReturnExistingWithoutCallingRazorpay() {
+        payment.setStatus(Payment.PaymentStatus.PENDING);
+        AppProperties.Razorpay razorpayProps = new AppProperties.Razorpay();
+        razorpayProps.setKeyId("rzp_test_key");
+        razorpayProps.setKeySecret("rzp_test_secret");
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrderId(1L)).thenReturn(Optional.of(payment));
+        when(appProperties.getRazorpay()).thenReturn(razorpayProps);
+
+        RazorpayOrderResponse response = paymentService.createRazorpayOrder(1L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getRazorpayOrderId()).isEqualTo("order_123");
+        assertThat(response.getOrderId()).isEqualTo(1L);
+        assertThat(response.getAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.getKeyId()).isEqualTo("rzp_test_key");
+        verify(paymentRepository, never()).save(any());
+    }
+
+    @Test
+    void createRazorpayOrder_existingFailedPayment_shouldThrowException() {
+        payment.setStatus(Payment.PaymentStatus.FAILED);
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrderId(1L)).thenReturn(Optional.of(payment));
+
+        assertThatThrownBy(() -> paymentService.createRazorpayOrder(1L))
+                .isInstanceOf(PaymentException.class)
+                .hasMessageContaining("already been processed");
+        verify(paymentRepository, never()).save(any());
     }
 
     @Test

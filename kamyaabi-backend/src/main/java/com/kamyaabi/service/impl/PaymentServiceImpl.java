@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -54,8 +55,29 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
-        if (order.getPayment() != null && order.getPayment().getStatus() == Payment.PaymentStatus.COMPLETED) {
-            throw new PaymentException("Payment already completed for this order");
+        // Idempotency: a payment row already exists for this order_id (the column is UNIQUE).
+        // Re-issuing a Razorpay order would either duplicate the row (DB error) or waste
+        // Razorpay quota with an orphaned order. Reuse the existing record instead.
+        Optional<Payment> existing = paymentRepository.findByOrderId(orderId);
+        if (existing.isPresent()) {
+            Payment existingPayment = existing.get();
+            Payment.PaymentStatus status = existingPayment.getStatus();
+
+            if (status == Payment.PaymentStatus.PENDING) {
+                log.info("Reusing existing PENDING Razorpay order {} for order {}",
+                        existingPayment.getRazorpayOrderId(), orderId);
+                return RazorpayOrderResponse.builder()
+                        .razorpayOrderId(existingPayment.getRazorpayOrderId())
+                        .amount(existingPayment.getAmount())
+                        .currency("INR")
+                        .orderId(orderId)
+                        .keyId(appProperties.getRazorpay().getKeyId())
+                        .build();
+            }
+
+            // COMPLETED / FAILED / REFUNDED — terminal from this endpoint's perspective.
+            throw new PaymentException(
+                    "Payment for order " + orderId + " has already been processed (status=" + status + ")");
         }
 
         try {

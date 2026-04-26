@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -81,6 +82,20 @@ public class GlobalExceptionHandler {
                                                           HttpServletRequest request) {
         log.error("Payment error: {}", ex.getMessage(), ex);
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
+    }
+
+    /**
+     * Safety net for unique-constraint violations that slip past application-level checks
+     * (e.g. concurrent duplicate POSTs racing on a UNIQUE column). Returns 409 Conflict
+     * instead of a generic 500 so clients can retry/inspect cleanly.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
+                                                                         HttpServletRequest request) {
+        log.warn("Data integrity violation on {}: {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT,
+                "Resource already exists or violates a database constraint",
+                request, null);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
