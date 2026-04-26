@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
       const flag = sessionStorage.getItem('sessionExpired');
       if (flag) {
         sessionStorage.removeItem('sessionExpired');
-        return 'Your session has expired after 4 hours of inactivity. Please sign in again.';
+        return 'Your session has expired. Please sign in again.';
       }
       return null;
     }

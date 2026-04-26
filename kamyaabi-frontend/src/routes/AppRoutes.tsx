@@ -1,7 +1,10 @@
-import React, { lazy } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
-import { useAppSelector } from '../hooks/useAppDispatch';
+import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
+import { isSessionExpired, clearSession } from '../api/axiosInstance';
+import { logout } from '../features/auth/authSlice';
+import { clearCart } from '../features/cart/cartSlice';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const ProductsPage = lazy(() => import('../pages/ProductsPage'));
@@ -17,16 +20,34 @@ const ServicePage = lazy(() => import('../pages/ServicePage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 
+function useSessionGuard(): { authenticated: boolean } {
+  const dispatch = useAppDispatch();
+  const { user, token } = useAppSelector((state) => state.auth);
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    if (user && token && isSessionExpired()) {
+      clearSession(true);
+      dispatch(logout());
+      dispatch(clearCart());
+      setExpired(true);
+    }
+  }, [user, token, dispatch]);
+
+  return { authenticated: Boolean(user && token && !expired) };
+}
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAppSelector((state) => state.auth);
-  if (!user) return <Navigate to="/login" replace />;
+  const { authenticated } = useSessionGuard();
+  if (!authenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAppSelector((state) => state.auth);
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== 'ADMIN') return <Navigate to="/" replace />;
+  const { authenticated } = useSessionGuard();
+  if (!authenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== 'ADMIN') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
