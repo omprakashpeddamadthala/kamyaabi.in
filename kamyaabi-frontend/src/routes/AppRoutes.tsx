@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
@@ -20,36 +20,34 @@ const ServicePage = lazy(() => import('../pages/ServicePage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+function useSessionGuard(): { authenticated: boolean } {
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
+  const [expired, setExpired] = useState(false);
 
-  if (!user || !token) return <Navigate to="/login" replace />;
+  useEffect(() => {
+    if (user && token && isSessionExpired()) {
+      clearSession(true);
+      dispatch(logout());
+      dispatch(clearCart());
+      setExpired(true);
+    }
+  }, [user, token, dispatch]);
 
-  if (isSessionExpired()) {
-    clearSession(true);
-    dispatch(logout());
-    dispatch(clearCart());
-    return <Navigate to="/login" replace />;
-  }
+  return { authenticated: Boolean(user && token && !expired) };
+}
 
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { authenticated } = useSessionGuard();
+  if (!authenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const dispatch = useAppDispatch();
-  const { user, token } = useAppSelector((state) => state.auth);
-
-  if (!user || !token) return <Navigate to="/login" replace />;
-
-  if (isSessionExpired()) {
-    clearSession(true);
-    dispatch(logout());
-    dispatch(clearCart());
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user.role !== 'ADMIN') return <Navigate to="/" replace />;
+  const { user } = useAppSelector((state) => state.auth);
+  const { authenticated } = useSessionGuard();
+  if (!authenticated) return <Navigate to="/login" replace />;
+  if (user?.role !== 'ADMIN') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
