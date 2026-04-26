@@ -163,6 +163,13 @@
             <version>1.4.6</version>
         </dependency>
 
+        <!-- Cloudinary (image upload / delete) -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.37.0</version>
+        </dependency>
+
         <!-- Email -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -4,6 +4,7 @@ import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,7 +14,36 @@ public interface ProductService {
     Page<ProductResponse> searchProducts(String keyword, Pageable pageable);
     ProductResponse getProductById(Long id);
     List<ProductResponse> getFeaturedProducts();
-    ProductResponse createProduct(ProductRequest request);
-    ProductResponse updateProduct(Long id, ProductRequest request);
+
+    /**
+     * Create a product and upload its image(s) to Cloudinary.
+     *
+     * @param request        product field values
+     * @param images         uploaded image files — must contain at least one entry and at most the configured max
+     * @param mainImageIndex 0-based index into {@code images} for the image flagged as main (clamped to range)
+     */
+    ProductResponse createProduct(ProductRequest request, List<MultipartFile> images, int mainImageIndex);
+
+    /**
+     * Update a product; optionally append new image uploads and/or change which
+     * existing image is the main one. Existing images are preserved unless
+     * removed via {@link #deleteProductImage(Long, Long)}.
+     *
+     * @param id           product id
+     * @param request      new product field values
+     * @param newImages    optional freshly uploaded images to append
+     * @param mainImageId  optional — id of an existing image to set as main
+     */
+    ProductResponse updateProduct(Long id,
+                                  ProductRequest request,
+                                  List<MultipartFile> newImages,
+                                  Long mainImageId);
+
     void deleteProduct(Long id);
+
+    /**
+     * Remove a single image from a product: deletes the asset from Cloudinary
+     * (best-effort — logs warning on failure) and the DB record.
+     */
+    void deleteProductImage(Long productId, Long imageId);
 }

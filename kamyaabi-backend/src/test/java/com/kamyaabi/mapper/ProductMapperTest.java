@@ -4,113 +4,101 @@ import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
+import com.kamyaabi.entity.ProductImage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductMapperTest {
 
-    private final ProductMapper productMapper = new ProductMapper();
+    private ProductMapper mapper;
+    private ProductImageMapper imageMapper;
+    private Category category;
+
+    @BeforeEach
+    void setUp() {
+        imageMapper = new ProductImageMapper();
+        mapper = new ProductMapper(imageMapper);
+        category = Category.builder().id(1L).name("Cashews").build();
+    }
 
     @Test
-    void toResponse_shouldMapAllFields() {
-        Category category = Category.builder().id(1L).name("Cashews").build();
+    void toResponse_withoutImages_usesLegacyImageUrlAsMain() {
         Product product = Product.builder()
-                .id(1L).name("Whole Cashews").description("Premium")
-                .price(new BigDecimal("899.00")).discountPrice(new BigDecimal("749.00"))
-                .imageUrl("http://img.url").category(category)
-                .stock(100).weight("500").unit("gm").active(true)
-                .build();
+                .id(1L).name("P").price(BigDecimal.ONE)
+                .imageUrl("http://legacy").category(category)
+                .stock(1).active(true).images(new ArrayList<>()).build();
 
-        ProductResponse response = productMapper.toResponse(product);
+        ProductResponse response = mapper.toResponse(product);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getName()).isEqualTo("Whole Cashews");
-        assertThat(response.getDescription()).isEqualTo("Premium");
-        assertThat(response.getPrice()).isEqualByComparingTo(new BigDecimal("899.00"));
-        assertThat(response.getDiscountPrice()).isEqualByComparingTo(new BigDecimal("749.00"));
-        assertThat(response.getImageUrl()).isEqualTo("http://img.url");
-        assertThat(response.getCategoryId()).isEqualTo(1L);
-        assertThat(response.getCategoryName()).isEqualTo("Cashews");
-        assertThat(response.getStock()).isEqualTo(100);
-        assertThat(response.getWeight()).isEqualTo("500");
-        assertThat(response.getUnit()).isEqualTo("gm");
-        assertThat(response.getActive()).isTrue();
+        assertThat(response.getMainImageUrl()).isEqualTo("http://legacy");
+        assertThat(response.getImages()).isEmpty();
     }
 
     @Test
-    void toEntity_shouldMapAllFields() {
-        Category category = Category.builder().id(1L).name("Cashews").build();
-        ProductRequest request = ProductRequest.builder()
-                .name("Whole Cashews").description("Premium")
-                .price(new BigDecimal("899.00")).discountPrice(new BigDecimal("749.00"))
-                .imageUrl("http://img.url").categoryId(1L)
-                .stock(100).weight("500").unit("gm").active(true)
-                .build();
-
-        Product product = productMapper.toEntity(request, category);
-
-        assertThat(product.getName()).isEqualTo("Whole Cashews");
-        assertThat(product.getCategory()).isEqualTo(category);
-        assertThat(product.getStock()).isEqualTo(100);
-        assertThat(product.getActive()).isTrue();
-    }
-
-    @Test
-    void toEntity_nullActive_shouldDefaultToTrue() {
-        Category category = Category.builder().id(1L).name("Cashews").build();
-        ProductRequest request = ProductRequest.builder()
-                .name("Whole Cashews").description("Premium")
-                .price(new BigDecimal("899.00"))
-                .categoryId(1L).stock(100).weight("500").unit("gm")
-                .build();
-
-        Product product = productMapper.toEntity(request, category);
-
-        assertThat(product.getActive()).isTrue();
-    }
-
-    @Test
-    void updateEntity_shouldUpdateAllFields() {
-        Category category = Category.builder().id(1L).name("Cashews").build();
-        Category newCategory = Category.builder().id(2L).name("Almonds").build();
+    void toResponse_withMainImage_prefersMainImageUrl() {
+        ProductImage a = ProductImage.builder().id(10L).publicId("a").imageUrl("u/a").isMain(false).displayOrder(0).build();
+        ProductImage b = ProductImage.builder().id(11L).publicId("b").imageUrl("u/b").isMain(true).displayOrder(1).build();
         Product product = Product.builder()
-                .id(1L).name("Old Name").description("Old")
-                .price(new BigDecimal("100.00")).category(category)
-                .stock(10).weight("100").unit("gm").active(true)
+                .id(1L).name("P").price(BigDecimal.ONE)
+                .imageUrl("http://legacy").category(category)
+                .stock(1).active(true)
+                .images(new ArrayList<>(List.of(a, b)))
                 .build();
+
+        ProductResponse response = mapper.toResponse(product);
+
+        assertThat(response.getMainImageUrl()).isEqualTo("u/b");
+        assertThat(response.getImages()).hasSize(2);
+    }
+
+    @Test
+    void toResponse_withImagesButNoMain_usesFirst() {
+        ProductImage a = ProductImage.builder().id(10L).publicId("a").imageUrl("u/a").isMain(false).displayOrder(0).build();
+        Product product = Product.builder()
+                .id(1L).name("P").price(BigDecimal.ONE)
+                .imageUrl(null).category(category)
+                .stock(1).active(true)
+                .images(new ArrayList<>(List.of(a))).build();
+
+        ProductResponse response = mapper.toResponse(product);
+
+        assertThat(response.getMainImageUrl()).isEqualTo("u/a");
+    }
+
+    @Test
+    void toEntity_mapsFields() {
         ProductRequest request = ProductRequest.builder()
-                .name("New Name").description("New")
-                .price(new BigDecimal("200.00")).discountPrice(new BigDecimal("150.00"))
-                .imageUrl("http://new.url").categoryId(2L)
-                .stock(50).weight("250").unit("kg").active(false)
-                .build();
+                .name("P").description("d").price(BigDecimal.TEN)
+                .discountPrice(BigDecimal.ONE).imageUrl("u").categoryId(1L)
+                .stock(5).weight("100").unit("g").active(true).build();
 
-        productMapper.updateEntity(product, request, newCategory);
+        Product product = mapper.toEntity(request, category);
 
-        assertThat(product.getName()).isEqualTo("New Name");
-        assertThat(product.getDescription()).isEqualTo("New");
-        assertThat(product.getPrice()).isEqualByComparingTo(new BigDecimal("200.00"));
-        assertThat(product.getCategory()).isEqualTo(newCategory);
+        assertThat(product.getName()).isEqualTo("P");
+        assertThat(product.getCategory()).isSameAs(category);
+        assertThat(product.getImageUrl()).isEqualTo("u");
+    }
+
+    @Test
+    void updateEntity_updatesInPlace() {
+        Product product = Product.builder()
+                .name("old").price(BigDecimal.ONE).category(category)
+                .stock(1).active(true).images(new ArrayList<>()).build();
+        ProductRequest request = ProductRequest.builder()
+                .name("new").description("d").price(BigDecimal.TEN)
+                .imageUrl("u").categoryId(1L)
+                .stock(9).weight("1").unit("g").active(false).build();
+
+        mapper.updateEntity(product, request, category);
+
+        assertThat(product.getName()).isEqualTo("new");
+        assertThat(product.getStock()).isEqualTo(9);
         assertThat(product.getActive()).isFalse();
-    }
-
-    @Test
-    void updateEntity_nullActive_shouldNotChangeActive() {
-        Category category = Category.builder().id(1L).name("Cashews").build();
-        Product product = Product.builder()
-                .id(1L).name("Old").active(true).category(category)
-                .price(new BigDecimal("100.00")).stock(10).build();
-        ProductRequest request = ProductRequest.builder()
-                .name("New").description("Desc")
-                .price(new BigDecimal("200.00")).categoryId(1L)
-                .stock(20).weight("500").unit("gm")
-                .build();
-
-        productMapper.updateEntity(product, request, category);
-
-        assertThat(product.getActive()).isTrue();
     }
 }

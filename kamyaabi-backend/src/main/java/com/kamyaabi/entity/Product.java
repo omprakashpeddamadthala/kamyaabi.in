@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products", indexes = {
@@ -60,4 +62,29 @@ public class Product {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    /**
+     * Cloudinary-hosted images for this product. The collection is owned by the
+     * product side of the relationship — deleting a product cascades to its
+     * images (the remote Cloudinary assets are removed by the service layer
+     * before the entity is deleted).
+     */
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC")
+    @Builder.Default
+    private List<ProductImage> images = new ArrayList<>();
+
+    /**
+     * Convenience accessor — attaches the image to this product and adds it to
+     * the collection, keeping both sides of the relationship in sync.
+     */
+    public void addImage(ProductImage image) {
+        image.setProduct(this);
+        this.images.add(image);
+    }
+
+    public void removeImage(ProductImage image) {
+        this.images.remove(image);
+        image.setProduct(null);
+    }
 }

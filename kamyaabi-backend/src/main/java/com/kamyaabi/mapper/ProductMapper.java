@@ -1,15 +1,33 @@
 package com.kamyaabi.mapper;
 
 import com.kamyaabi.dto.request.ProductRequest;
+import com.kamyaabi.dto.response.ProductImageResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
+import com.kamyaabi.entity.ProductImage;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class ProductMapper {
 
+    private final ProductImageMapper productImageMapper;
+
+    public ProductMapper(ProductImageMapper productImageMapper) {
+        this.productImageMapper = productImageMapper;
+    }
+
     public ProductResponse toResponse(Product product) {
+        List<ProductImage> images = product.getImages() == null
+                ? Collections.emptyList()
+                : product.getImages();
+        List<ProductImageResponse> imageResponses = images.stream()
+                .map(productImageMapper::toResponse)
+                .toList();
+        String mainImageUrl = resolveMainImageUrl(images, product.getImageUrl());
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -17,6 +35,8 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .discountPrice(product.getDiscountPrice())
                 .imageUrl(product.getImageUrl())
+                .mainImageUrl(mainImageUrl)
+                .images(imageResponses)
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
                 .stock(product.getStock())
@@ -25,6 +45,17 @@ public class ProductMapper {
                 .active(product.getActive())
                 .createdAt(product.getCreatedAt())
                 .build();
+    }
+
+    private String resolveMainImageUrl(List<ProductImage> images, String legacyImageUrl) {
+        if (images == null || images.isEmpty()) {
+            return legacyImageUrl;
+        }
+        return images.stream()
+                .filter(i -> Boolean.TRUE.equals(i.getIsMain()))
+                .map(ProductImage::getImageUrl)
+                .findFirst()
+                .orElseGet(() -> images.get(0).getImageUrl());
     }
 
     public Product toEntity(ProductRequest request, Category category) {

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,7 +19,12 @@ public class ProductResponse {
     private String description;
     private BigDecimal price;
     private BigDecimal discountPrice;
+    /** Legacy single-image URL field, retained for backward compatibility with seed data and older clients. */
     private String imageUrl;
+    /** Resolved URL of the main product image: main-flagged image, else first image, else {@code imageUrl}. */
+    private String mainImageUrl;
+    /** All images associated with the product, ordered by {@code displayOrder}. */
+    private List<ProductImageResponse> images;
     private Long categoryId;
     private String categoryName;
     private Integer stock;
