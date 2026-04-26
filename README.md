@@ -324,13 +324,3 @@ production builds if a required var is missing — preventing broken deploys.
 | Frontend | `npm -C kamyaabi-frontend run lint`       | ESLint                               |
 | Stack    | `docker compose up --build`               | Build + run frontend + backend       |
 
-## Additional documentation
-
-- [`ANALYSIS.md`](./ANALYSIS.md) — Phase 1 audit of the pre-refactor codebase.
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — branch naming, commit conventions, PR checklist.
-- [`CHANGELOG.md`](./CHANGELOG.md) — Keep-a-Changelog formatted history.
-- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — layered architecture + data flow.
-- [`docs/API.md`](./docs/API.md) — REST endpoints, auth flow, error shape.
-- [`docs/LOGGING.md`](./docs/LOGGING.md) — log levels, rotation, correlation id,
-  runtime `/actuator/loggers` toggle.
-- [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) — VM provisioning, TLS/Nginx, CI/CD.
