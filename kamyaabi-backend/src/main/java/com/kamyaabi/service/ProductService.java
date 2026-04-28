@@ -46,4 +46,20 @@ public interface ProductService {
      * (best-effort — logs warning on failure) and the DB record.
      */
     void deleteProductImage(Long productId, Long imageId);
+
+    /**
+     * Admin-side paginated search that includes soft-deleted (inactive)
+     * products. {@code keyword}, {@code categoryId}, and {@code active} are all
+     * optional — pass {@code null} (or empty keyword) to drop a filter.
+     */
+    Page<ProductResponse> searchAdminProducts(String keyword,
+                                              Long categoryId,
+                                              Boolean active,
+                                              Pageable pageable);
+
+    /** Admin fetch by id; returns the product even if it is soft-deleted. */
+    ProductResponse getAdminProductById(Long id);
+
+    /** Re-activate a soft-deleted product. */
+    ProductResponse restoreProduct(Long id);
 }

@@ -27,4 +27,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.active = true AND p.discountPrice IS NOT NULL " +
            "AND p.discountPrice < p.price ORDER BY p.createdAt DESC")
     List<Product> findDiscountedProducts();
+
+    /**
+     * Admin-side search across all products (active and soft-deleted).
+     *
+     * <p>{@code keyword} is matched case-insensitively against name + description;
+     * pass an empty string to skip the keyword filter. {@code categoryId} and
+     * {@code active} are nullable — when null, that filter is dropped.
+     */
+    @Query("SELECT p FROM Product p WHERE " +
+           "(:keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+           "(:active IS NULL OR p.active = :active)")
+    Page<Product> searchAdmin(@Param("keyword") String keyword,
+                              @Param("categoryId") Long categoryId,
+                              @Param("active") Boolean active,
+                              Pageable pageable);
+
+    long countByCategoryId(Long categoryId);
 }

@@ -17,13 +17,14 @@ import java.util.Set;
 @Service
 public class CloudinaryServiceImpl implements CloudinaryService {
 
-    /** Accepted MIME types for product images. */
+    /**
+     * Accepted MIME types for product images. Includes the common web formats
+     * the storefront can render. Anything else is rejected at the API edge so
+     * the asset never reaches Cloudinary.
+     */
     static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp"
+            "image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"
     );
-
-    /** Maximum upload size per image in bytes (5 MB). */
-    static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
 
     /** Cloudinary folder used for all product images. */
     static final String PRODUCTS_FOLDER = "kamyaabi/products";
@@ -97,11 +98,10 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
             throw new BadRequestException(
                     "Unsupported image type: " + contentType
-                            + ". Accepted: image/jpeg, image/png, image/webp");
+                            + ". Accepted: image/jpeg, image/png, image/webp, image/gif, image/avif");
         }
-        if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-            throw new BadRequestException(
-                    "Image exceeds maximum size of " + (MAX_FILE_SIZE_BYTES / (1024 * 1024)) + "MB");
-        }
+        // Intentionally no per-file byte cap: the API accepts arbitrarily large
+        // images. Spring's multipart limits in application.yml are also disabled
+        // (-1) so the parser does not reject the request before this point.
     }
 }

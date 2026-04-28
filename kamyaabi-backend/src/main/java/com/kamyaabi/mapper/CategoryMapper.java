@@ -9,11 +9,15 @@ import org.springframework.stereotype.Component;
 public class CategoryMapper {
 
     public CategoryResponse toResponse(Category category) {
+        Category parent = category.getParent();
         return CategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
+                .slug(category.getSlug())
                 .description(category.getDescription())
                 .imageUrl(category.getImageUrl())
+                .parentId(parent != null ? parent.getId() : null)
+                .parentName(parent != null ? parent.getName() : null)
                 .productCount(category.getProducts() != null ? category.getProducts().size() : 0)
                 .build();
     }
@@ -21,6 +25,7 @@ public class CategoryMapper {
     public Category toEntity(CategoryRequest request) {
         return Category.builder()
                 .name(request.getName())
+                .slug(request.getSlug())
                 .description(request.getDescription())
                 .imageUrl(request.getImageUrl())
                 .build();

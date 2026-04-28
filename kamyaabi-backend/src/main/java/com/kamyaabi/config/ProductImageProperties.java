@@ -20,5 +20,5 @@ public class ProductImageProperties {
 
     /** Maximum number of images allowed per product. */
     @Min(1)
-    private int maxCount = 5;
+    private int maxCount = 100;
 }

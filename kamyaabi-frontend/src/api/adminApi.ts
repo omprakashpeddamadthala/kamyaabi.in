@@ -16,8 +16,20 @@ export interface ProductRequest {
 
 export interface CategoryRequest {
   name: string;
-  description: string;
-  imageUrl: string;
+  slug?: string;
+  description?: string;
+  imageUrl?: string;
+  parentId?: number | null;
+}
+
+export interface AdminProductFilters {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  q?: string;
+  categoryId?: number;
+  active?: boolean;
 }
 
 const buildProductFormData = (data: ProductRequest, images: File[]) => {
@@ -28,13 +40,44 @@ const buildProductFormData = (data: ProductRequest, images: File[]) => {
   return formData;
 };
 
+/**
+ * Per-file upload progress callback. The handler is invoked with a value in
+ * `[0, 1]` reflecting the cumulative bytes uploaded for the request.
+ */
+export type UploadProgressHandler = (fraction: number) => void;
+
 export const adminApi = {
-  // Products
-  createProduct: (data: ProductRequest, images: File[], mainImageIndex = 0) => {
+  // Products — admin list/detail use the `/api/admin/products` endpoints so
+  // soft-deleted (inactive) products are visible and editable.
+  getProducts: (filters: AdminProductFilters = {}) =>
+    axiosInstance.get<ApiResponse<PageResponse<Product>>>('/api/admin/products', {
+      params: {
+        page: filters.page ?? 0,
+        size: filters.size ?? 10,
+        sortBy: filters.sortBy ?? 'createdAt',
+        sortDir: filters.sortDir ?? 'desc',
+        ...(filters.q ? { q: filters.q } : {}),
+        ...(filters.categoryId != null ? { categoryId: filters.categoryId } : {}),
+        ...(filters.active != null ? { active: filters.active } : {}),
+      },
+    }),
+
+  getProductById: (id: number) =>
+    axiosInstance.get<ApiResponse<Product>>(`/api/admin/products/${id}`),
+
+  createProduct: (
+    data: ProductRequest,
+    images: File[],
+    mainImageIndex = 0,
+    onUploadProgress?: UploadProgressHandler,
+  ) => {
     const formData = buildProductFormData(data, images);
     return axiosInstance.post<ApiResponse<Product>>('/api/admin/products', formData, {
       params: { mainImageIndex },
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onUploadProgress
+        ? (e) => onUploadProgress(e.total ? e.loaded / e.total : 0)
+        : undefined,
     });
   },
 
@@ -43,16 +86,23 @@ export const adminApi = {
     data: ProductRequest,
     images: File[] = [],
     mainImageId?: number | null,
+    onUploadProgress?: UploadProgressHandler,
   ) => {
     const formData = buildProductFormData(data, images);
     return axiosInstance.put<ApiResponse<Product>>(`/api/admin/products/${id}`, formData, {
       params: mainImageId != null ? { mainImageId } : undefined,
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onUploadProgress
+        ? (e) => onUploadProgress(e.total ? e.loaded / e.total : 0)
+        : undefined,
     });
   },
 
   deleteProduct: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/products/${id}`),
+
+  restoreProduct: (id: number) =>
+    axiosInstance.post<ApiResponse<Product>>(`/api/admin/products/${id}/restore`),
 
   deleteProductImage: (productId: number, imageId: number) =>
     axiosInstance.delete<ApiResponse<void>>(

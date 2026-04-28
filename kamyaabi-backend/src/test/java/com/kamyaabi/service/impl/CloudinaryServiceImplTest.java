@@ -63,17 +63,47 @@ class CloudinaryServiceImplTest {
 
     @Test
     void uploadImage_unsupportedType_throwsBadRequest() {
-        MultipartFile file = new MockMultipartFile("images", "a.gif", "image/gif", new byte[] {1});
+        MultipartFile file = new MockMultipartFile("images", "a.bmp", "image/bmp", new byte[] {1});
         assertThatThrownBy(() -> service.uploadImage(file))
                 .isInstanceOf(BadRequestException.class);
     }
 
     @Test
-    void uploadImage_tooLarge_throwsBadRequest() {
-        byte[] big = new byte[(int) (CloudinaryServiceImpl.MAX_FILE_SIZE_BYTES + 1)];
+    void uploadImage_gifIsAccepted() throws IOException {
+        MultipartFile file = new MockMultipartFile("images", "a.gif", "image/gif", new byte[] {1});
+        when(uploader.upload(any(byte[].class), any()))
+                .thenReturn(Map.of(
+                        "secure_url", "https://res.cloudinary.com/x/image/upload/v1/a.gif",
+                        "public_id", "kamyaabi/products/abc"
+                ));
+
+        assertThat(service.uploadImage(file).publicId()).isEqualTo("kamyaabi/products/abc");
+    }
+
+    @Test
+    void uploadImage_avifIsAccepted() throws IOException {
+        MultipartFile file = new MockMultipartFile("images", "a.avif", "image/avif", new byte[] {1});
+        when(uploader.upload(any(byte[].class), any()))
+                .thenReturn(Map.of(
+                        "secure_url", "https://res.cloudinary.com/x/image/upload/v1/a.avif",
+                        "public_id", "kamyaabi/products/avif"
+                ));
+
+        assertThat(service.uploadImage(file).publicId()).isEqualTo("kamyaabi/products/avif");
+    }
+
+    @Test
+    void uploadImage_largeFileIsAccepted() throws IOException {
+        // No per-file size cap is enforced; uploads of any size must reach Cloudinary.
+        byte[] big = new byte[10 * 1024 * 1024 + 1]; // 10 MB + 1 byte
         MultipartFile file = new MockMultipartFile("images", "big.jpg", "image/jpeg", big);
-        assertThatThrownBy(() -> service.uploadImage(file))
-                .isInstanceOf(BadRequestException.class);
+        when(uploader.upload(any(byte[].class), any()))
+                .thenReturn(Map.of(
+                        "secure_url", "https://res.cloudinary.com/x/image/upload/v1/big.jpg",
+                        "public_id", "kamyaabi/products/big"
+                ));
+
+        assertThat(service.uploadImage(file).publicId()).isEqualTo("kamyaabi/products/big");
     }
 
     @Test

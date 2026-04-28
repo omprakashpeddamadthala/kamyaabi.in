@@ -42,6 +42,41 @@ public class AdminController {
     }
 
     // Product Management
+    @GetMapping("/products")
+    @Operation(summary = "List products (admin)",
+            description = "Paginated product list including soft-deleted items. "
+                    + "Supports optional `q` (search), `categoryId`, and `active` filters.")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> listProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean active) {
+        org.springframework.data.domain.Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? org.springframework.data.domain.Sort.by(sortBy).ascending()
+                : org.springframework.data.domain.Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<ProductResponse> products = productService.searchAdminProducts(q, categoryId, active, pageable);
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
+    @GetMapping("/products/{id}")
+    @Operation(summary = "Get product by id (admin)",
+            description = "Returns a single product (active or soft-deleted).")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProduct(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(productService.getAdminProductById(id)));
+    }
+
+    @PostMapping("/products/{id}/restore")
+    @Operation(summary = "Restore product",
+            description = "Re-activate a soft-deleted product (Admin only)")
+    public ResponseEntity<ApiResponse<ProductResponse>> restoreProduct(@PathVariable Long id) {
+        ProductResponse product = productService.restoreProduct(id);
+        return ResponseEntity.ok(ApiResponse.success("Product restored", product));
+    }
+
     @PostMapping(value = "/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create product",
             description = "Create a new product with one or more uploaded images (Admin only). "

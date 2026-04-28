@@ -12,6 +12,7 @@ import GlobalLoadingBar from './components/common/GlobalLoadingBar';
 import SessionManager from './components/common/SessionManager';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ApiErrorNotifier from './components/common/ApiErrorNotifier';
+import { ToastProvider } from './components/common/ToastProvider';
 
 const App: React.FC = () => {
   return (
@@ -22,13 +23,15 @@ const App: React.FC = () => {
         <SessionManager />
         <ApiErrorNotifier />
         <ErrorBoundary>
-          <BrowserRouter>
-            <Suspense fallback={<Loading message="Loading page..." />}>
-              <FlyToCartProvider>
-                <AppRoutes />
-              </FlyToCartProvider>
-            </Suspense>
-          </BrowserRouter>
+          <ToastProvider>
+            <BrowserRouter>
+              <Suspense fallback={<Loading message="Loading page..." />}>
+                <FlyToCartProvider>
+                  <AppRoutes />
+                </FlyToCartProvider>
+              </Suspense>
+            </BrowserRouter>
+          </ToastProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </Provider>
