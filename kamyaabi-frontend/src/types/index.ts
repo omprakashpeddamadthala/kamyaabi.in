@@ -9,8 +9,11 @@ export interface User {
 export interface Category {
   id: number;
   name: string;
+  slug: string;
   description: string;
   imageUrl: string;
+  parentId: number | null;
+  parentName: string | null;
   productCount: number;
 }
 
@@ -104,6 +107,21 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string | null;
   data: T;
+}
+
+/**
+ * Mirrors {@code com.kamyaabi.dto.response.ApiErrorResponse} on the backend.
+ * Used by admin forms to display per-field validation errors and surface a
+ * traceId to the user when something goes wrong.
+ */
+export interface ApiErrorResponse {
+  status: number;
+  error: string;
+  message: string;
+  path?: string;
+  traceId?: string;
+  fieldErrors?: Record<string, string>;
+  timestamp?: string;
 }
 
 export interface PageResponse<T> {

@@ -79,4 +79,4 @@ cloudinary:
 
 product:
   image:
-    max-count: ${PRODUCT_IMAGE_MAX_COUNT:5}
+    max-count: ${PRODUCT_IMAGE_MAX_COUNT:100}

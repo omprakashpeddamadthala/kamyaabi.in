@@ -241,6 +241,38 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchAdminProducts(String keyword,
+                                                     Long categoryId,
+                                                     Boolean active,
+                                                     Pageable pageable) {
+        String kw = keyword == null ? "" : keyword.trim();
+        log.debug("Admin product search: keyword='{}' categoryId={} active={}", kw, categoryId, active);
+        return productRepository.searchAdmin(kw, categoryId, active, pageable)
+                .map(productMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductResponse getAdminProductById(Long id) {
+        log.debug("Admin fetch product by id: {}", id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+        return productMapper.toResponse(product);
+    }
+
+    @Override
+    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    public ProductResponse restoreProduct(Long id) {
+        log.info("Restoring product: {}", id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+        product.setActive(true);
+        Product saved = productRepository.save(product);
+        return productMapper.toResponse(saved);
+    }
+
+    @Override
     @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProductImage(Long productId, Long imageId) {
         log.info("Deleting image {} from product {}", imageId, productId);
