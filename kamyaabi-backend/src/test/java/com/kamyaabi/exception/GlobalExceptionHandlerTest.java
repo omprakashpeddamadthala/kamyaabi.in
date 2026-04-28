@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.io.IOException;
 
@@ -137,6 +138,19 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleClientAbort_shouldNotThrow() {
         handler.handleClientAbort(new ClientAbortException(new IOException("Broken pipe")));
+    }
+
+    @Test
+    void handleMaxUploadSize_shouldReturn413WithStableMessage() {
+        ResponseEntity<ApiErrorResponse> response = handler.handleMaxUploadSize(
+                new MaxUploadSizeExceededException(10L * 1024 * 1024), request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        ApiErrorResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getStatus()).isEqualTo(413);
+        assertThat(body.getMessage()).isEqualTo("Uploaded file exceeds the configured size limit");
+        assertThat(body.getTraceId()).isEqualTo("test-trace-id");
     }
 
     @Test
