@@ -175,6 +175,6 @@ export const adminApi = {
   updateUserRole: (id: number, role: 'USER' | 'ADMIN') =>
     axiosInstance.patch<ApiResponse<AdminUser>>(`/api/admin/users/${id}/role`, { role }),
 
-  updateUserStatus: (id: number, status: 'ACTIVE' | 'BLOCKED') =>
+  updateUserStatus: (id: number, status: 'ACTIVE' | 'BLOCKED' | 'REMOVED') =>
     axiosInstance.patch<ApiResponse<AdminUser>>(`/api/admin/users/${id}/status`, { status }),
 };

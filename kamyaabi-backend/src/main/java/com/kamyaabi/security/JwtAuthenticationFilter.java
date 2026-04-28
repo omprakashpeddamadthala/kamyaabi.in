@@ -42,9 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null) {
-                    if (user.getStatus() == User.Status.BLOCKED) {
-                        log.warn("Rejected request from blocked user: {}", user.getEmail());
-                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Account blocked");
+                    if (user.getStatus() == User.Status.BLOCKED
+                            || user.getStatus() == User.Status.REMOVED) {
+                        log.warn("Rejected request from {} user: {}",
+                                user.getStatus(), user.getEmail());
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                                user.getStatus() == User.Status.REMOVED
+                                        ? "Account removed"
+                                        : "Account blocked");
                         return;
                     }
 

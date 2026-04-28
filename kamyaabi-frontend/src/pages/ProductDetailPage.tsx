@@ -26,6 +26,7 @@ import {
   Add,
   Remove,
   Check,
+  CheckCircle,
   Close,
   VerifiedUser,
   LocalShipping,
@@ -138,6 +139,30 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
     {value === index && <Box sx={{ pt: 2.5 }}>{children}</Box>}
   </Box>
 );
+
+/* ─── Description parser ─────────────────────────────────────────────
+ * Parses a free-form product description into scannable bullet points.
+ * Rules:
+ * - Explicit newlines or existing `-` / `•` / `*` markers win.
+ * - Otherwise fall back to sentence splitting so a single paragraph still
+ *   renders as a structured list.
+ * Short fragments (< 3 chars) are dropped to avoid stray "a." bullets.
+ */
+function parseDescriptionBullets(raw: string): string[] {
+  if (!raw) return [];
+  const trimmed = raw.trim();
+  const explicit = trimmed
+    .split(/\r?\n|(?:^|\s)[-•*]\s+/gm)
+    .map((s) => s.replace(/^[-•*]\s*/, '').trim())
+    .filter((s) => s.length > 2);
+  if (explicit.length > 1) return explicit;
+  // Sentence split: ". ", "! ", "? " — keeping things simple and punctuation-safe.
+  const sentences = trimmed
+    .split(/(?<=[.!?])\s+(?=[A-Z(\"'])/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 2);
+  return sentences.length > 0 ? sentences : [trimmed];
+}
 
 /* ─── Relative date helper ───────────────────────────────────────────── */
 function formatRelativeDate(iso: string): string {
@@ -325,6 +350,32 @@ const ProductDetailPage: React.FC = () => {
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
   const effectivePrice = hasDiscount ? product.discountPrice! : product.price;
+
+  // Parsed bullet points rendered inside the "Description" tab.
+  const descriptionBullets = parseDescriptionBullets(product.description);
+
+  // Rows rendered inside the "Additional Information" card grid. Optional
+  // fields are suppressed so the section only surfaces what the backend
+  // actually has for this product.
+  const additionalInfoRows: Array<{ label: string; value: string }> = [];
+  if (product.weight || product.unit) {
+    additionalInfoRows.push({
+      label: 'Weight',
+      value: [product.weight, product.unit].filter(Boolean).join(' '),
+    });
+  }
+  if (product.categoryName) {
+    additionalInfoRows.push({ label: 'Category', value: product.categoryName });
+  }
+  if (product.shelfLife) {
+    additionalInfoRows.push({ label: 'Shelf Life', value: product.shelfLife });
+  }
+  if (typeof product.stock === 'number') {
+    additionalInfoRows.push({
+      label: 'Availability',
+      value: product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock',
+    });
+  }
 
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
@@ -693,24 +744,99 @@ const ProductDetailPage: React.FC = () => {
               <TabPanel key={key} value={safeTabValue} index={idx}>
                 {key === 'description' && (
                   <>
-                    <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}>
-                      {product.description}
-                    </Typography>
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Category:</strong> {product.categoryName}
+                    {/* Bullet list: each sentence/line rendered as a styled
+                        checkmark row so dense copy becomes scannable. */}
+                    {descriptionBullets.length > 0 ? (
+                      <Box
+                        component="ul"
+                        sx={{
+                          listStyle: 'none',
+                          p: 0,
+                          m: 0,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 1.25,
+                        }}
+                      >
+                        {descriptionBullets.map((point, i) => (
+                          <Box
+                            key={i}
+                            component="li"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 1.25,
+                              p: 1.25,
+                              borderRadius: 2,
+                              bgcolor: '#FAFAF5',
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              transition: 'background-color 0.2s',
+                              '&:hover': { bgcolor: '#F4F1E6' },
+                            }}
+                          >
+                            <CheckCircle
+                              fontSize="small"
+                              sx={{ color: 'secondary.main', mt: '3px', flexShrink: 0 }}
+                            />
+                            <Typography variant="body1" sx={{ lineHeight: 1.7, color: 'text.primary' }}>
+                              {point}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+                        {product.description}
                       </Typography>
-                      {(product.weight || product.unit) && (
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Weight:</strong> {product.weight} {product.unit}
+                    )}
+
+                    {/* Additional Information ── surfaces weight/dimensions/
+                        shelf-life/category/stock metadata as a clean card grid. */}
+                    {additionalInfoRows.length > 0 && (
+                      <Box sx={{ mt: 4 }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight={700}
+                          sx={{
+                            mb: 2,
+                            fontFamily: '"Playfair Display", serif',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                          }}
+                        >
+                          <DescriptionIcon fontSize="small" color="primary" />
+                          Additional Information
                         </Typography>
-                      )}
-                      {product.shelfLife && (
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Shelf Life:</strong> {product.shelfLife}
-                        </Typography>
-                      )}
-                    </Box>
+                        <Grid container spacing={1.5}>
+                          {additionalInfoRows.map(({ label, value }) => (
+                            <Grid item xs={12} sm={6} key={label}>
+                              <Box
+                                sx={{
+                                  p: 1.75,
+                                  borderRadius: 2,
+                                  border: '1px solid',
+                                  borderColor: 'divider',
+                                  bgcolor: '#fff',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  gap: 2,
+                                }}
+                              >
+                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                  {label}
+                                </Typography>
+                                <Typography variant="body2" fontWeight={700} sx={{ textAlign: 'right' }}>
+                                  {value}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </Box>
+                    )}
                   </>
                 )}
 

@@ -68,6 +68,6 @@ public class User {
     }
 
     public enum Status {
-        ACTIVE, BLOCKED
+        ACTIVE, BLOCKED, REMOVED
     }
 }

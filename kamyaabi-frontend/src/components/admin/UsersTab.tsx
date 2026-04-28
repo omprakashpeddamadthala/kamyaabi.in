@@ -24,8 +24,10 @@ import {
   AdminPanelSettings,
   Block,
   CheckCircle,
+  DoNotDisturbOn,
   LockOpen,
   PersonOutline,
+  RestoreFromTrash,
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
@@ -50,7 +52,8 @@ interface ConfirmState {
   onConfirm: (() => Promise<void>) | (() => void);
 }
 
-const PAGE_SIZE = 20;
+// Requirement: 10 users per page on the admin Users tab.
+const PAGE_SIZE = 10;
 
 const closedConfirm: ConfirmState = {
   open: false,
@@ -163,6 +166,9 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
   const handleToggleStatus = useCallback(
     (user: AdminUser) => {
       if (user.id === currentUserId) return;
+      // Removed users must be restored before they can be re-blocked; the
+      // Block button is disabled client-side in that case so this branch is
+      // only ever reached with ACTIVE or BLOCKED users.
       const nextStatus: 'ACTIVE' | 'BLOCKED' = user.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED';
       const verb = nextStatus === 'BLOCKED' ? 'block' : 'unblock';
       setConfirm({
@@ -179,6 +185,47 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
             const updated = response.data.data;
             setUsers((prev) => prev.map((u) => (u.id === user.id ? updated : u)));
             showSuccess(`${user.email} is now ${nextStatus.toLowerCase()}`);
+            closeConfirm();
+          } catch (error) {
+            showError(parseApiError(error, 'Failed to update status').message);
+            setConfirm((prev) => ({ ...prev, loading: false }));
+          } finally {
+            setRowLoadingId(null);
+          }
+        },
+      });
+    },
+    [closeConfirm, currentUserId, showError, showSuccess],
+  );
+
+  // Soft-remove: mark the user as REMOVED (or restore from REMOVED → ACTIVE).
+  // The row stays in the list and is clearly badged so it's obvious the user
+  // was deactivated rather than hard-deleted.
+  const handleToggleRemoval = useCallback(
+    (user: AdminUser) => {
+      if (user.id === currentUserId) return;
+      const nextStatus: 'ACTIVE' | 'REMOVED' = user.status === 'REMOVED' ? 'ACTIVE' : 'REMOVED';
+      const verb = nextStatus === 'REMOVED' ? 'remove' : 'restore';
+      setConfirm({
+        open: true,
+        loading: false,
+        title: verb === 'remove' ? 'Remove user?' : 'Restore user?',
+        message: verb === 'remove'
+          ? `Mark ${user.name || user.email} as removed? They will lose access immediately, `
+            + 'but their record will be kept for history and can be restored later.'
+          : `Restore ${user.name || user.email} to active status? They will regain access immediately.`,
+        onConfirm: async () => {
+          setConfirm((prev) => ({ ...prev, loading: true }));
+          setRowLoadingId(user.id);
+          try {
+            const response = await adminApi.updateUserStatus(user.id, nextStatus);
+            const updated = response.data.data;
+            setUsers((prev) => prev.map((u) => (u.id === user.id ? updated : u)));
+            showSuccess(
+              verb === 'remove'
+                ? `${user.email} has been removed`
+                : `${user.email} has been restored`,
+            );
             closeConfirm();
           } catch (error) {
             showError(parseApiError(error, 'Failed to update status').message);
@@ -261,20 +308,46 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
               users.map((user) => {
                 const isSelf = user.id === currentUserId;
                 const rowBusy = rowLoadingId === user.id;
+                const isRemoved = user.status === 'REMOVED';
+                // Dim removed rows and strike through identifying copy so admins
+                // can spot them at a glance without the record leaving the list.
+                const removedRowSx = isRemoved
+                  ? {
+                      bgcolor: 'action.hover',
+                      opacity: 0.6,
+                      '& .removable-text': { textDecoration: 'line-through' },
+                    }
+                  : undefined;
                 return (
-                  <TableRow key={user.id} hover>
-                    <TableCell>#{user.id}</TableCell>
+                  <TableRow key={user.id} hover sx={removedRowSx}>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.75} alignItems="center">
+                        {isRemoved && (
+                          <DoNotDisturbOn
+                            fontSize="small"
+                            color="error"
+                            aria-label="Removed user"
+                          />
+                        )}
+                        <span className="removable-text">#{user.id}</span>
+                      </Stack>
+                    </TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={1.5} alignItems="center">
                         <Avatar
                           src={user.avatarUrl ?? undefined}
                           alt={user.name}
-                          sx={{ width: 32, height: 32, fontSize: 14 }}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            fontSize: 14,
+                            filter: isRemoved ? 'grayscale(1)' : undefined,
+                          }}
                         >
                           {initial(user.name, user.email)}
                         </Avatar>
                         <Box>
-                          <Typography variant="body2" fontWeight={600}>
+                          <Typography variant="body2" fontWeight={600} className="removable-text">
                             {user.name || '—'}
                           </Typography>
                           {isSelf && (
@@ -285,7 +358,9 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                         </Box>
                       </Stack>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <span className="removable-text">{user.email}</span>
+                    </TableCell>
                     <TableCell>
                       <Chip
                         size="small"
@@ -296,13 +371,26 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        size="small"
-                        icon={user.status === 'BLOCKED' ? <Block /> : <CheckCircle />}
-                        label={user.status === 'BLOCKED' ? 'Blocked' : 'Active'}
-                        color={user.status === 'BLOCKED' ? 'error' : 'success'}
-                        variant="outlined"
-                      />
+                      {user.status === 'REMOVED' ? (
+                        <Tooltip title="This user has been removed. Their record is retained but they cannot sign in.">
+                          <Chip
+                            size="small"
+                            icon={<DoNotDisturbOn />}
+                            label="Removed"
+                            color="error"
+                            variant="filled"
+                            sx={{ fontWeight: 700 }}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <Chip
+                          size="small"
+                          icon={user.status === 'BLOCKED' ? <Block /> : <CheckCircle />}
+                          label={user.status === 'BLOCKED' ? 'Blocked' : 'Active'}
+                          color={user.status === 'BLOCKED' ? 'error' : 'success'}
+                          variant="outlined"
+                        />
+                      )}
                     </TableCell>
                     <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell align="right">
@@ -325,18 +413,46 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                           </span>
                         </Tooltip>
                         <Tooltip
-                          title={isSelf ? 'You cannot block your own account' : ''}
-                          disableHoverListener={!isSelf}
+                          title={
+                            isSelf
+                              ? 'You cannot block your own account'
+                              : isRemoved
+                                ? 'Restore this user before blocking'
+                                : user.status === 'BLOCKED'
+                                  ? 'Unblock user'
+                                  : 'Block user'
+                          }
                         >
                           <span>
                             <IconButton
                               size="small"
                               color={user.status === 'BLOCKED' ? 'success' : 'error'}
-                              disabled={isSelf || rowBusy}
+                              disabled={isSelf || rowBusy || isRemoved}
                               onClick={() => handleToggleStatus(user)}
                               aria-label={user.status === 'BLOCKED' ? 'Unblock user' : 'Block user'}
                             >
                               {user.status === 'BLOCKED' ? <LockOpen /> : <Block />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip
+                          title={
+                            isSelf
+                              ? 'You cannot remove your own account'
+                              : isRemoved
+                                ? 'Restore user'
+                                : 'Remove user (soft delete)'
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              color={isRemoved ? 'success' : 'warning'}
+                              disabled={isSelf || rowBusy}
+                              onClick={() => handleToggleRemoval(user)}
+                              aria-label={isRemoved ? 'Restore user' : 'Remove user'}
+                            >
+                              {isRemoved ? <RestoreFromTrash /> : <DoNotDisturbOn />}
                             </IconButton>
                           </span>
                         </Tooltip>
