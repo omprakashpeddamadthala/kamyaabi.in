@@ -62,4 +62,10 @@ public interface ProductService {
 
     /** Re-activate a soft-deleted product. */
     ProductResponse restoreProduct(Long id);
+
+    /**
+     * Flip the {@code active} flag on a product without re-uploading images or
+     * re-validating the full request. Used by the admin inline status toggle.
+     */
+    ProductResponse setProductActive(Long id, boolean active);
 }

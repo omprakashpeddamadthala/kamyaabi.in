@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -31,6 +32,7 @@ import {
   LinearProgress,
   Stack,
   InputAdornment,
+  Switch,
 } from '@mui/material';
 import {
   Edit,
@@ -43,7 +45,6 @@ import {
   CloudUpload,
   Star,
   StarBorder,
-  Restore,
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
@@ -54,7 +55,15 @@ import {
   CategoryRequest,
   ProductRequest,
 } from '../api/adminApi';
-import { Order, PageResponse, Product, ProductImage } from '../types';
+import {
+  Category,
+  DashboardStats,
+  Order,
+  PageResponse,
+  Product,
+  ProductImage,
+} from '../types';
+import AnalyticsTab from '../components/admin/AnalyticsTab';
 import { withCloudinaryTransform } from '../utils/cloudinary';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
@@ -130,7 +139,8 @@ const initialCategoryForm: CategoryRequest = {
   parentId: null,
 };
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 const ORDER_STATUSES = [
   'PAID',
   'CONFIRMED',
@@ -142,34 +152,104 @@ const ORDER_STATUSES = [
   'PENDING',
 ] as const;
 
+/**
+ * Tab id <-> index mapping. Using stable string keys in the URL lets us
+ * reorder or add tabs without breaking bookmarks.
+ */
+const TAB_IDS = ['products', 'categories', 'orders', 'analytics'] as const;
+type TabId = (typeof TAB_IDS)[number];
+
+const tabIndexOf = (id: string | null | undefined): number => {
+  const idx = TAB_IDS.indexOf((id ?? 'products') as TabId);
+  return idx >= 0 ? idx : 0;
+};
+
+const clampLimit = (raw: string | null): number => {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_PAGE_SIZE;
+  return PAGE_SIZE_OPTIONS.includes(n) ? n : DEFAULT_PAGE_SIZE;
+};
+
+const clampPage = (raw: string | null): number => {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+};
+
 const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { showSuccess, showError } = useToast();
   const { categories } = useAppSelector((state) => state.products);
 
-  // Tab state
-  const [tabValue, setTabValue] = useState(0);
+  // URL-driven pagination state. `tab`, `page`, and `limit` all flow through
+  // the query string so deep links / back-forward restore the exact view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabId = (searchParams.get('tab') as TabId | null) ?? 'products';
+  const tabValue = tabIndexOf(tabId);
+  const pageParam = clampPage(searchParams.get('page'));
+  const limitParam = clampLimit(searchParams.get('limit'));
+
+  // Per-tab page index (0-based). The URL `page` is 1-based for humans; we
+  // translate here so the backend + MUI Pagination stay consistent.
+  const productPage = tabId === 'products' ? pageParam - 1 : 0;
+  const ordersPage = tabId === 'orders' ? pageParam - 1 : 0;
+  const categoryPage = tabId === 'categories' ? pageParam - 1 : 0;
+  const currentLimit = limitParam;
+
+  const updateUrlParams = useCallback(
+    (patch: Partial<{ tab: TabId; page: number; limit: number }>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (patch.tab !== undefined) next.set('tab', patch.tab);
+          if (patch.page !== undefined) {
+            if (patch.page <= 1) next.delete('page');
+            else next.set('page', String(patch.page));
+          }
+          if (patch.limit !== undefined) {
+            if (patch.limit === DEFAULT_PAGE_SIZE) next.delete('limit');
+            else next.set('limit', String(patch.limit));
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Admin product list state (independent of public Redux slice — the admin
   // page must surface soft-deleted products).
   const [adminProducts, setAdminProducts] = useState<Product[]>([]);
   const [adminProductsLoading, setAdminProductsLoading] = useState(true);
-  const [productPage, setProductPage] = useState(0);
   const [productTotalPages, setProductTotalPages] = useState(0);
   const [productTotalElements, setProductTotalElements] = useState(0);
   const [productSearch, setProductSearch] = useState('');
   const [productSearchInput, setProductSearchInput] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState<number | ''>('');
   const [productActiveFilter, setProductActiveFilter] = useState<'' | 'active' | 'inactive'>('');
+  // Per-row toggle spinner — prevents double-clicks and lets us disable the
+  // switch while the PATCH is in flight.
+  const [togglingProductId, setTogglingProductId] = useState<number | null>(null);
+
+  // Categories tab — now paginated server-side.
+  const [categoryRows, setCategoryRows] = useState<Category[]>([]);
+  const [categoryRowsLoading, setCategoryRowsLoading] = useState(true);
+  const [categoryTotalPages, setCategoryTotalPages] = useState(0);
+  const [categoryTotalElements, setCategoryTotalElements] = useState(0);
 
   // Orders state
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
   const [ordersTotalElements, setOrdersTotalElements] = useState(0);
-  const [ordersTotalRevenue, setOrdersTotalRevenue] = useState(0);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+
+  // Dashboard summary cards — fetched from the backend so admins see true
+  // totals, not just whatever happens to be on the current page.
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Dialog state
   const [showProductDialog, setShowProductDialog] = useState(false);
@@ -189,7 +269,6 @@ const AdminPage: React.FC = () => {
   // In-flight markers
   const [savingProduct, setSavingProduct] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
-  const [restoringProductId, setRestoringProductId] = useState<number | null>(null);
   const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
 
   // Image uploader state
@@ -220,7 +299,7 @@ const AdminPage: React.FC = () => {
       try {
         const res = await adminApi.getProducts({
           page: productPage,
-          size: PAGE_SIZE,
+          size: currentLimit,
           q: productSearch || undefined,
           categoryId: productCategoryFilter === '' ? undefined : productCategoryFilter,
           active:
@@ -240,19 +319,25 @@ const AdminPage: React.FC = () => {
         setAdminProductsLoading(false);
       }
     },
-    [productActiveFilter, productCategoryFilter, productPage, productSearch, showError],
+    [
+      productActiveFilter,
+      productCategoryFilter,
+      productPage,
+      productSearch,
+      currentLimit,
+      showError,
+    ],
   );
 
   const loadOrders = useCallback(
-    async (page: number, status?: string) => {
+    async (page: number, size: number, status?: string) => {
       setOrdersLoading(true);
       try {
-        const res = await adminApi.getAllOrders(page, PAGE_SIZE, status || undefined);
+        const res = await adminApi.getAllOrders(page, size, status || undefined);
         const data = res.data.data;
         setOrders(data.content);
         setOrdersTotalPages(data.totalPages);
         setOrdersTotalElements(data.totalElements);
-        setOrdersTotalRevenue(data.content.reduce((sum, o) => sum + o.totalAmount, 0));
       } catch (err) {
         const parsed = parseApiError(err, 'Failed to load orders');
         showError(parsed.message);
@@ -263,15 +348,57 @@ const AdminPage: React.FC = () => {
     [showError],
   );
 
-  // Initial data load
+  const loadCategoryRows = useCallback(
+    async (page: number, size: number) => {
+      setCategoryRowsLoading(true);
+      try {
+        const res = await adminApi.getCategoriesPaged(page, size);
+        const data = res.data.data;
+        setCategoryRows(data.content);
+        setCategoryTotalPages(data.totalPages);
+        setCategoryTotalElements(data.totalElements);
+      } catch (err) {
+        const parsed = parseApiError(err, 'Failed to load categories');
+        showError(parsed.message);
+      } finally {
+        setCategoryRowsLoading(false);
+      }
+    },
+    [showError],
+  );
+
+  const loadDashboardStats = useCallback(async () => {
+    setStatsLoading(true);
+    try {
+      const res = await adminApi.getDashboardStats();
+      setDashboardStats(res.data.data);
+    } catch (err) {
+      const parsed = parseApiError(err, 'Failed to load dashboard stats');
+      showError(parsed.message);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [showError]);
+
+  // Initial data load — categories for the Redux slice (product form),
+  // plus paginated categories + dashboard stats. The tab-specific effects
+  // below take care of products / orders.
   useEffect(() => {
     dispatch(fetchCategories());
-    loadOrders(0);
-  }, [dispatch, loadOrders]);
+    loadDashboardStats();
+  }, [dispatch, loadDashboardStats]);
 
   useEffect(() => {
-    loadAdminProducts();
-  }, [loadAdminProducts]);
+    if (tabId === 'products') loadAdminProducts();
+  }, [loadAdminProducts, tabId]);
+
+  useEffect(() => {
+    if (tabId === 'orders') loadOrders(ordersPage, currentLimit, orderStatusFilter);
+  }, [tabId, ordersPage, currentLimit, orderStatusFilter, loadOrders]);
+
+  useEffect(() => {
+    if (tabId === 'categories') loadCategoryRows(categoryPage, currentLimit);
+  }, [tabId, categoryPage, currentLimit, loadCategoryRows]);
 
   // -- Image uploader helpers ---------------------------------------------
 
@@ -383,6 +510,7 @@ const AdminPage: React.FC = () => {
       setShowProductDialog(false);
       resetProductForm();
       loadAdminProducts();
+      loadDashboardStats();
     } catch (err) {
       const parsed = parseApiError(err, 'Failed to save product');
       // Map server-side field errors back onto the form.
@@ -412,6 +540,7 @@ const AdminPage: React.FC = () => {
           await adminApi.deleteProduct(id);
           showSuccess('Product deleted');
           loadAdminProducts();
+          loadDashboardStats();
         } catch (err) {
           const parsed = parseApiError(err, 'Failed to delete product');
           showError(parsed.message);
@@ -420,20 +549,6 @@ const AdminPage: React.FC = () => {
         }
       },
     });
-  };
-
-  const handleRestoreProduct = async (id: number) => {
-    setRestoringProductId(id);
-    try {
-      await adminApi.restoreProduct(id);
-      showSuccess('Product restored');
-      loadAdminProducts();
-    } catch (err) {
-      const parsed = parseApiError(err, 'Failed to restore product');
-      showError(parsed.message);
-    } finally {
-      setRestoringProductId(null);
-    }
   };
 
   // -- Category form ------------------------------------------------------
@@ -467,6 +582,8 @@ const AdminPage: React.FC = () => {
       setShowCategoryDialog(false);
       resetCategoryForm();
       dispatch(fetchCategories());
+      loadCategoryRows(categoryPage, currentLimit);
+      loadDashboardStats();
     } catch (err) {
       const parsed = parseApiError(err, 'Failed to save category');
       if (Object.keys(parsed.fieldErrors).length > 0) {
@@ -501,7 +618,9 @@ const AdminPage: React.FC = () => {
           await adminApi.deleteCategory(id);
           showSuccess('Category deleted');
           dispatch(fetchCategories());
+          loadCategoryRows(categoryPage, currentLimit);
           loadAdminProducts();
+          loadDashboardStats();
         } catch (err) {
           const parsed = parseApiError(err, 'Failed to delete category');
           showError(parsed.message);
@@ -520,7 +639,8 @@ const AdminPage: React.FC = () => {
     try {
       await adminApi.updateOrderStatus(orderId, status);
       showSuccess('Order status updated');
-      loadOrders(0, orderStatusFilter);
+      loadOrders(ordersPage, currentLimit, orderStatusFilter);
+      loadDashboardStats();
     } catch (err) {
       const parsed = parseApiError(err, 'Failed to update order status');
       showError(parsed.message);
@@ -606,12 +726,38 @@ const AdminPage: React.FC = () => {
     }));
   };
 
+  // -- Status toggle -------------------------------------------------------
+
+  /**
+   * Optimistic inline toggle: flip the row immediately, call PATCH, and on
+   * failure roll the row back + refresh from the server so the UI can’t
+   * diverge from the true state.
+   */
+  const handleToggleProductStatus = async (product: Product, nextActive: boolean) => {
+    if (togglingProductId === product.id) return;
+    setTogglingProductId(product.id);
+    setAdminProducts((rows) =>
+      rows.map((r) => (r.id === product.id ? { ...r, active: nextActive } : r)),
+    );
+    try {
+      await adminApi.setProductStatus(product.id, nextActive);
+      showSuccess(nextActive ? 'Product activated' : 'Product deactivated');
+      loadDashboardStats();
+    } catch (err) {
+      // Roll back and reload from source of truth.
+      setAdminProducts((rows) =>
+        rows.map((r) => (r.id === product.id ? { ...r, active: !nextActive } : r)),
+      );
+      const parsed = parseApiError(err, 'Failed to update product status');
+      showError(parsed.message);
+      loadAdminProducts();
+    } finally {
+      setTogglingProductId(null);
+    }
+  };
+
   // -- Render -------------------------------------------------------------
 
-  const lowStockCount = useMemo(
-    () => adminProducts.filter((p) => p.stock < 10).length,
-    [adminProducts],
-  );
   const parentCategoryOptions = useMemo(
     () => categories.filter((c) => c.id !== editingCategoryId && !c.parentId),
     [categories, editingCategoryId],
@@ -629,7 +775,7 @@ const AdminPage: React.FC = () => {
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <Inventory sx={{ fontSize: 36, color: 'primary.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {productTotalElements}
+              {statsLoading ? '—' : (dashboardStats?.totalProducts ?? 0).toLocaleString('en-IN')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total Products
@@ -640,7 +786,7 @@ const AdminPage: React.FC = () => {
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <CartIcon sx={{ fontSize: 36, color: 'info.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {ordersTotalElements}
+              {statsLoading ? '—' : (dashboardStats?.totalOrders ?? 0).toLocaleString('en-IN')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total Orders
@@ -651,7 +797,9 @@ const AdminPage: React.FC = () => {
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <CurrencyRupee sx={{ fontSize: 36, color: 'success.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              ₹{ordersTotalRevenue.toLocaleString('en-IN')}
+              {statsLoading
+                ? '—'
+                : `₹${(dashboardStats?.totalRevenue ?? 0).toLocaleString('en-IN')}`}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Total Revenue
@@ -662,7 +810,7 @@ const AdminPage: React.FC = () => {
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
             <Warning sx={{ fontSize: 36, color: 'warning.main', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {lowStockCount}
+              {statsLoading ? '—' : (dashboardStats?.lowStockCount ?? 0).toLocaleString('en-IN')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Low Stock Alerts
@@ -672,10 +820,14 @@ const AdminPage: React.FC = () => {
       </Grid>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, v) => updateUrlParams({ tab: TAB_IDS[v], page: 1 })}
+        >
           <Tab label="Products" />
           <Tab label="Categories" />
           <Tab label="Orders" />
+          <Tab label="Analytics" />
         </Tabs>
       </Box>
 
@@ -693,7 +845,7 @@ const AdminPage: React.FC = () => {
             onChange={(e) => setProductSearchInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                setProductPage(0);
+                updateUrlParams({ page: 1 });
                 setProductSearch(productSearchInput.trim());
               }
             }}
@@ -712,7 +864,7 @@ const AdminPage: React.FC = () => {
               label="Category"
               value={productCategoryFilter}
               onChange={(e) => {
-                setProductPage(0);
+                updateUrlParams({ page: 1 });
                 setProductCategoryFilter(e.target.value === '' ? '' : Number(e.target.value));
               }}
             >
@@ -730,7 +882,7 @@ const AdminPage: React.FC = () => {
               label="Status"
               value={productActiveFilter}
               onChange={(e) => {
-                setProductPage(0);
+                updateUrlParams({ page: 1 });
                 setProductActiveFilter(e.target.value as '' | 'active' | 'inactive');
               }}
             >
@@ -807,11 +959,22 @@ const AdminPage: React.FC = () => {
                       <TableCell>{p.discountPrice ? `₹${p.discountPrice}` : '—'}</TableCell>
                       <TableCell>{p.stock}</TableCell>
                       <TableCell>
-                        <Chip
-                          label={p.active ? 'Active' : 'Inactive'}
-                          color={p.active ? 'success' : 'default'}
-                          size="small"
-                        />
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Switch
+                            size="small"
+                            checked={!!p.active}
+                            disabled={togglingProductId === p.id}
+                            onChange={(e) => handleToggleProductStatus(p, e.target.checked)}
+                            inputProps={{
+                              'aria-label': `Toggle status for ${p.name}`,
+                            }}
+                          />
+                          <Chip
+                            label={p.active ? 'Active' : 'Inactive'}
+                            color={p.active ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </Stack>
                       </TableCell>
                       <TableCell>
                         <IconButton
@@ -821,26 +984,15 @@ const AdminPage: React.FC = () => {
                         >
                           <Edit />
                         </IconButton>
-                        {p.active ? (
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => requestDeleteProduct(p.id, p.name)}
-                            aria-label={`Delete ${p.name}`}
-                          >
-                            <Delete />
-                          </IconButton>
-                        ) : (
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleRestoreProduct(p.id)}
-                            disabled={restoringProductId === p.id}
-                            aria-label={`Restore ${p.name}`}
-                          >
-                            <Restore />
-                          </IconButton>
-                        )}
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => requestDeleteProduct(p.id, p.name)}
+                          aria-label={`Delete ${p.name}`}
+                          disabled={!p.active}
+                        >
+                          <Delete />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   );
@@ -849,13 +1001,43 @@ const AdminPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {productTotalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Pagination
-              count={productTotalPages}
-              page={productPage + 1}
-              onChange={(_, p) => setProductPage(p - 1)}
-            />
+        {(productTotalPages > 1 || productTotalElements > 0) && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 2,
+              flexWrap: 'wrap',
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {productTotalElements} product{productTotalElements === 1 ? '' : 's'}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>Per page</InputLabel>
+                <Select
+                  label="Per page"
+                  value={currentLimit}
+                  onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {productTotalPages > 1 && (
+                <Pagination
+                  count={productTotalPages}
+                  page={productPage + 1}
+                  onChange={(_, p) => updateUrlParams({ page: p })}
+                />
+              )}
+            </Box>
           </Box>
         )}
       </TabPanel>
@@ -886,7 +1068,9 @@ const AdminPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {categories.length === 0 ? (
+              {categoryRowsLoading ? (
+                <TableSkeleton rows={5} columns={5} />
+              ) : categoryRows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                     <Typography variant="body2" color="text.secondary">
@@ -895,7 +1079,7 @@ const AdminPage: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                categories.map((c) => (
+                categoryRows.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>{c.name}</TableCell>
                     <TableCell>
@@ -928,6 +1112,45 @@ const AdminPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        {(categoryTotalPages > 1 || categoryTotalElements > 0) && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 2,
+              flexWrap: 'wrap',
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {categoryTotalElements} categor{categoryTotalElements === 1 ? 'y' : 'ies'}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>Per page</InputLabel>
+                <Select
+                  label="Per page"
+                  value={currentLimit}
+                  onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {categoryTotalPages > 1 && (
+                <Pagination
+                  count={categoryTotalPages}
+                  page={categoryPage + 1}
+                  onChange={(_, p) => updateUrlParams({ page: p })}
+                />
+              )}
+            </Box>
+          </Box>
+        )}
       </TabPanel>
 
       {/* Orders Tab */}
@@ -941,7 +1164,7 @@ const AdminPage: React.FC = () => {
               onChange={(e) => {
                 const val = e.target.value;
                 setOrderStatusFilter(val);
-                loadOrders(0, val);
+                updateUrlParams({ page: 1 });
               }}
             >
               <MenuItem value="">All Orders</MenuItem>
@@ -1048,14 +1271,50 @@ const AdminPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {ordersTotalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Pagination
-              count={ordersTotalPages}
-              onChange={(_, p) => loadOrders(p - 1, orderStatusFilter)}
-            />
+        {(ordersTotalPages > 1 || ordersTotalElements > 0) && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 2,
+              flexWrap: 'wrap',
+              gap: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {ordersTotalElements} order{ordersTotalElements === 1 ? '' : 's'}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>Per page</InputLabel>
+                <Select
+                  label="Per page"
+                  value={currentLimit}
+                  onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <MenuItem key={n} value={n}>
+                      {n}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {ordersTotalPages > 1 && (
+                <Pagination
+                  count={ordersTotalPages}
+                  page={ordersPage + 1}
+                  onChange={(_, p) => updateUrlParams({ page: p })}
+                />
+              )}
+            </Box>
           </Box>
         )}
+      </TabPanel>
+
+      {/* Analytics Tab */}
+      <TabPanel value={tabValue} index={3}>
+        <AnalyticsTab active={tabId === 'analytics'} />
       </TabPanel>
 
       {/* Product Dialog */}

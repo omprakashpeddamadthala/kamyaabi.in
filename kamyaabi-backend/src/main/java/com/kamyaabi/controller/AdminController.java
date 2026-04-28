@@ -3,8 +3,10 @@ package com.kamyaabi.controller;
 import com.kamyaabi.dto.request.CategoryRequest;
 import com.kamyaabi.dto.request.OrderStatusRequest;
 import com.kamyaabi.dto.request.ProductRequest;
+import com.kamyaabi.dto.request.ProductStatusRequest;
 import com.kamyaabi.dto.response.*;
 import com.kamyaabi.service.CategoryService;
+import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,8 +22,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Slf4j
 @RestController
@@ -32,13 +37,36 @@ public class AdminController {
     private final ProductService productService;
     private final CategoryService categoryService;
     private final OrderService orderService;
+    private final DashboardService dashboardService;
 
     public AdminController(ProductService productService,
                            CategoryService categoryService,
-                           OrderService orderService) {
+                           OrderService orderService,
+                           DashboardService dashboardService) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.orderService = orderService;
+        this.dashboardService = dashboardService;
+    }
+
+    // Dashboard
+    @GetMapping("/dashboard/stats")
+    @Operation(summary = "Dashboard stats",
+            description = "Returns summary counts/revenue used on the admin dashboard header.")
+    public ResponseEntity<ApiResponse<DashboardStatsResponse>> getDashboardStats() {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getStats()));
+    }
+
+    @GetMapping("/analytics")
+    @Operation(summary = "Orders + revenue analytics",
+            description = "Daily orders and revenue series for the inclusive range [startDate, endDate]. "
+                    + "Both parameters are optional and default to the last 7 days.")
+    public ResponseEntity<ApiResponse<AnalyticsResponse>> getAnalytics(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(ApiResponse.success(dashboardService.getAnalytics(startDate, endDate)));
     }
 
     // Product Management
@@ -112,6 +140,16 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Product deleted", null));
     }
 
+    @PatchMapping("/products/{id}/status")
+    @Operation(summary = "Toggle product status",
+            description = "Flip a product's active flag without re-validating images or other fields (Admin only).")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProductStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductStatusRequest request) {
+        ProductResponse product = productService.setProductActive(id, request.getActive());
+        return ResponseEntity.ok(ApiResponse.success("Product status updated", product));
+    }
+
     @DeleteMapping("/products/{id}/images/{imageId}")
     @Operation(summary = "Delete product image",
             description = "Remove a single image from a product (Admin only). "
@@ -124,6 +162,17 @@ public class AdminController {
     }
 
     // Category Management
+    @GetMapping("/categories")
+    @Operation(summary = "List categories (paginated, admin)",
+            description = "Paginated list of categories for admin tables. "
+                    + "Parameters mirror the public endpoint but add pagination.")
+    public ResponseEntity<ApiResponse<Page<CategoryResponse>>> listCategories(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getCategoriesPaged(pageable)));
+    }
+
     @PostMapping("/categories")
     @Operation(summary = "Create category", description = "Create a new category (Admin only)")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(

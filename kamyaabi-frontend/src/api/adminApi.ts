@@ -1,5 +1,13 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse, Product, Category, Order, PageResponse } from '../types';
+import {
+  ApiResponse,
+  Product,
+  Category,
+  Order,
+  PageResponse,
+  DashboardStats,
+  AnalyticsResponse,
+} from '../types';
 
 export interface ProductRequest {
   name: string;
@@ -109,7 +117,18 @@ export const adminApi = {
       `/api/admin/products/${productId}/images/${imageId}`,
     ),
 
+  // Toggle product active flag inline (optimistic UI on the admin table).
+  setProductStatus: (id: number, active: boolean) =>
+    axiosInstance.patch<ApiResponse<Product>>(`/api/admin/products/${id}/status`, {
+      active,
+    }),
+
   // Categories
+  getCategoriesPaged: (page = 0, size = 10) =>
+    axiosInstance.get<ApiResponse<PageResponse<Category>>>('/api/admin/categories', {
+      params: { page, size },
+    }),
+
   createCategory: (data: CategoryRequest) =>
     axiosInstance.post<ApiResponse<Category>>('/api/admin/categories', data),
 
@@ -127,4 +146,16 @@ export const adminApi = {
 
   updateOrderStatus: (id: number, status: string) =>
     axiosInstance.put<ApiResponse<Order>>(`/api/admin/orders/${id}/status`, { status }),
+
+  // Dashboard / analytics
+  getDashboardStats: () =>
+    axiosInstance.get<ApiResponse<DashboardStats>>('/api/admin/dashboard/stats'),
+
+  getAnalytics: (startDate?: string, endDate?: string) =>
+    axiosInstance.get<ApiResponse<AnalyticsResponse>>('/api/admin/analytics', {
+      params: {
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      },
+    }),
 };
