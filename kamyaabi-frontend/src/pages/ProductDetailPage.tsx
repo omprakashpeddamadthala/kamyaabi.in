@@ -343,17 +343,17 @@ const ProductDetailPage: React.FC = () => {
   return (
     <PageTransition>
       {/* ── Breadcrumbs ─────────────────────────────────────────────── */}
-      <Container maxWidth="lg" sx={{ pt: 3, pb: 0 }}>
-        <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 3 }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 3 }, pb: 0 }}>
+        <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
           <MuiLink component={Link} to="/products" underline="hover" color="inherit">Products</MuiLink>
           <Typography color="text.primary" fontWeight={500}>{product.name}</Typography>
         </Breadcrumbs>
       </Container>
 
-      <Container maxWidth="lg" sx={{ pb: 6 }}>
+      <Container maxWidth="lg" sx={{ pb: { xs: 4, md: 6 } }}>
         {/* ── Main 2-col layout ─────────────────────────────────────── */}
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 3, md: 4 }} alignItems="flex-start">
           {/* LEFT: Image gallery */}
           <Grid item xs={12} md={6}>
             {/* Main image with zoom */}
@@ -659,7 +659,7 @@ const ProductDetailPage: React.FC = () => {
              the description, the row is suppressed entirely so we don't
              reserve empty layout below the fold. */}
         {(tabKeys.length > 1 || product.description) && (
-          <Box ref={tabsReveal.ref} sx={{ mt: 6, ...revealSx(tabsReveal.visible) }}>
+          <Box ref={tabsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(tabsReveal.visible) }}>
             <Tabs
               value={safeTabValue}
               onChange={(_, v) => setTabValue(v)}
@@ -770,7 +770,7 @@ const ProductDetailPage: React.FC = () => {
              don't render an empty header floating above the related-products
              carousel. */}
         {!reviewsLoading && reviews.length > 0 && reviewSummary && (
-          <Box ref={reviewsReveal.ref} sx={{ mt: 6, ...revealSx(reviewsReveal.visible) }}>
+          <Box ref={reviewsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(reviewsReveal.visible) }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
               <Typography variant="h3" fontWeight={700} color="primary.main">
@@ -816,7 +816,7 @@ const ProductDetailPage: React.FC = () => {
 
         {/* ── You may also like ───────────────────────────────────────── */}
         {relatedProducts.length > 0 && (
-          <Box ref={relatedReveal.ref} sx={{ mt: 6, ...revealSx(relatedReveal.visible) }}>
+          <Box ref={relatedReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(relatedReveal.visible) }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>You May Also Like</Typography>
             <Box sx={{
               display: 'flex',

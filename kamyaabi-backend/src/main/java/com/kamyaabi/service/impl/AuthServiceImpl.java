@@ -175,6 +175,11 @@ public class AuthServiceImpl implements AuthService {
         }
         userRepository.save(user);
 
+        if (user.getStatus() == User.Status.BLOCKED) {
+            log.warn("Blocked user attempted login: {}", email);
+            throw new UnauthorizedException("Your account has been blocked. Please contact support.");
+        }
+
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
 
         return AuthResponse.builder()

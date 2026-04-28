@@ -45,7 +45,8 @@ const getActiveStep = (status: string): number => {
 const OrdersPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { orders, totalPages, loading } = useAppSelector((state) => state.orders);
+  const { orders, totalPages, totalElements, currentPage, pageSize, loading } =
+    useAppSelector((state) => state.orders);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ const OrdersPage: React.FC = () => {
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     dispatch(fetchOrders({ page: page - 1 }));
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleExpand = (orderId: number, e: React.MouseEvent) => {
@@ -82,9 +84,16 @@ const OrdersPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4 }}>
+      <Typography variant="h3" sx={{ mb: 1 }}>
         My Orders
       </Typography>
+      {totalElements > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Showing {currentPage * pageSize + 1}
+          –{Math.min((currentPage + 1) * pageSize, totalElements)} of {totalElements}
+          {' '}{totalElements === 1 ? 'order' : 'orders'}
+        </Typography>
+      )}
 
       {orders.map((order) => (
         <Card
@@ -219,7 +228,14 @@ const OrdersPage: React.FC = () => {
 
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Pagination count={totalPages} onChange={handlePageChange} color="primary" />
+          <Pagination
+            count={totalPages}
+            page={currentPage + 1}
+            onChange={handlePageChange}
+            color="primary"
+            showFirstButton
+            showLastButton
+          />
         </Box>
       )}
     </Container>

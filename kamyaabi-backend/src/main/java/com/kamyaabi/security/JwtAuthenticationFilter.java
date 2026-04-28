@@ -42,6 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 User user = userRepository.findById(userId).orElse(null);
 
                 if (user != null) {
+                    if (user.getStatus() == User.Status.BLOCKED) {
+                        log.warn("Rejected request from blocked user: {}", user.getEmail());
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Account blocked");
+                        return;
+                    }
+
                     List<SimpleGrantedAuthority> authorities = List.of(
                             new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
 

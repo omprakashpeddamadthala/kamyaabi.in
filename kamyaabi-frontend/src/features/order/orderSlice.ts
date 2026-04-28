@@ -6,6 +6,9 @@ interface OrderState {
   orders: Order[];
   selectedOrder: Order | null;
   totalPages: number;
+  totalElements: number;
+  currentPage: number;
+  pageSize: number;
   loading: boolean;
   error: string | null;
 }
@@ -14,6 +17,9 @@ const initialState: OrderState = {
   orders: [],
   selectedOrder: null,
   totalPages: 0,
+  totalElements: 0,
+  currentPage: 0,
+  pageSize: 10,
   loading: false,
   error: null,
 };
@@ -77,6 +83,9 @@ const orderSlice = createSlice({
         state.loading = false;
         state.orders = action.payload.content;
         state.totalPages = action.payload.totalPages;
+        state.totalElements = action.payload.totalElements;
+        state.currentPage = action.payload.number;
+        state.pageSize = action.payload.size;
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.loading = false;

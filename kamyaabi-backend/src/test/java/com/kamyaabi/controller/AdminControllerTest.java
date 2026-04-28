@@ -4,6 +4,9 @@ import com.kamyaabi.dto.request.CategoryRequest;
 import com.kamyaabi.dto.request.OrderStatusRequest;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.request.ProductStatusRequest;
+import com.kamyaabi.dto.request.UpdateUserRoleRequest;
+import com.kamyaabi.dto.request.UpdateUserStatusRequest;
+import com.kamyaabi.dto.response.AdminUserResponse;
 import com.kamyaabi.dto.response.AnalyticsPointResponse;
 import com.kamyaabi.dto.response.AnalyticsResponse;
 import com.kamyaabi.dto.response.ApiResponse;
@@ -12,6 +15,9 @@ import com.kamyaabi.dto.response.DashboardStatsResponse;
 import com.kamyaabi.dto.response.OrderResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Order;
+import com.kamyaabi.entity.User;
+import com.kamyaabi.security.CurrentUser;
+import com.kamyaabi.service.AdminUserService;
 import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.OrderService;
@@ -46,6 +52,8 @@ class AdminControllerTest {
     @Mock private CategoryService categoryService;
     @Mock private OrderService orderService;
     @Mock private DashboardService dashboardService;
+    @Mock private AdminUserService adminUserService;
+    @Mock private CurrentUser currentUser;
 
     @InjectMocks private AdminController adminController;
 
@@ -231,5 +239,54 @@ class AdminControllerTest {
         ResponseEntity<?> response = adminController.updateOrderStatus(1L, request);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void listUsers_shouldDelegateToServiceAndReturnPage() {
+        AdminUserResponse u = AdminUserResponse.builder().id(1L).email("a@b.c").role("USER").status("ACTIVE").build();
+        Page<AdminUserResponse> page = new PageImpl<>(List.of(u));
+        when(adminUserService.getAllUsers(eq(null), any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = adminController.listUsers(0, 20, "createdAt", "desc", null);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(adminUserService).getAllUsers(eq(null), any(Pageable.class));
+    }
+
+    @Test
+    void listUsers_withSearchAndAscSort_shouldDelegate() {
+        Page<AdminUserResponse> page = new PageImpl<>(List.of());
+        when(adminUserService.getAllUsers(eq("admin"), any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = adminController.listUsers(1, 5, "name", "asc", "admin");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(adminUserService).getAllUsers(eq("admin"), any(Pageable.class));
+    }
+
+    @Test
+    void updateUserRole_shouldReturn200() {
+        UpdateUserRoleRequest request = UpdateUserRoleRequest.builder().role(User.Role.ADMIN).build();
+        AdminUserResponse u = AdminUserResponse.builder().id(2L).role("ADMIN").build();
+        when(currentUser.getUserId()).thenReturn(1L);
+        when(adminUserService.updateUserRole(2L, 1L, User.Role.ADMIN)).thenReturn(u);
+
+        ResponseEntity<?> response = adminController.updateUserRole(2L, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(adminUserService).updateUserRole(2L, 1L, User.Role.ADMIN);
+    }
+
+    @Test
+    void updateUserStatus_shouldReturn200() {
+        UpdateUserStatusRequest request = UpdateUserStatusRequest.builder().status(User.Status.BLOCKED).build();
+        AdminUserResponse u = AdminUserResponse.builder().id(2L).status("BLOCKED").build();
+        when(currentUser.getUserId()).thenReturn(1L);
+        when(adminUserService.updateUserStatus(2L, 1L, User.Status.BLOCKED)).thenReturn(u);
+
+        ResponseEntity<?> response = adminController.updateUserStatus(2L, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(adminUserService).updateUserStatus(2L, 1L, User.Status.BLOCKED);
     }
 }

@@ -4,7 +4,11 @@ import com.kamyaabi.dto.request.CategoryRequest;
 import com.kamyaabi.dto.request.OrderStatusRequest;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.request.ProductStatusRequest;
+import com.kamyaabi.dto.request.UpdateUserRoleRequest;
+import com.kamyaabi.dto.request.UpdateUserStatusRequest;
 import com.kamyaabi.dto.response.*;
+import com.kamyaabi.security.CurrentUser;
+import com.kamyaabi.service.AdminUserService;
 import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.OrderService;
@@ -38,15 +42,21 @@ public class AdminController {
     private final CategoryService categoryService;
     private final OrderService orderService;
     private final DashboardService dashboardService;
+    private final AdminUserService adminUserService;
+    private final CurrentUser currentUser;
 
     public AdminController(ProductService productService,
                            CategoryService categoryService,
                            OrderService orderService,
-                           DashboardService dashboardService) {
+                           DashboardService dashboardService,
+                           AdminUserService adminUserService,
+                           CurrentUser currentUser) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.orderService = orderService;
         this.dashboardService = dashboardService;
+        this.adminUserService = adminUserService;
+        this.currentUser = currentUser;
     }
 
     // Dashboard
@@ -228,5 +238,44 @@ public class AdminController {
             @Valid @RequestBody OrderStatusRequest request) {
         OrderResponse order = orderService.updateOrderStatus(id, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Order status updated", order));
+    }
+
+    // User Management
+    @GetMapping("/users")
+    @Operation(summary = "List users (admin)",
+            description = "Paginated list of users for the /admin/users table. Supports optional `q` search "
+                    + "across email and name.")
+    public ResponseEntity<ApiResponse<Page<AdminUserResponse>>> listUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            @RequestParam(required = false) String q) {
+        org.springframework.data.domain.Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? org.springframework.data.domain.Sort.by(sortBy).ascending()
+                : org.springframework.data.domain.Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(ApiResponse.success(adminUserService.getAllUsers(q, pageable)));
+    }
+
+    @PatchMapping("/users/{id}/role")
+    @Operation(summary = "Update user role",
+            description = "Promote or demote a user between USER and ADMIN. Admins cannot change their own role.")
+    public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRoleRequest request) {
+        AdminUserResponse user = adminUserService.updateUserRole(id, currentUser.getUserId(), request.getRole());
+        return ResponseEntity.ok(ApiResponse.success("User role updated", user));
+    }
+
+    @PatchMapping("/users/{id}/status")
+    @Operation(summary = "Update user status",
+            description = "Block or unblock a user account. Blocked users are denied login and "
+                    + "all subsequent API calls. Admins cannot block themselves.")
+    public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserStatusRequest request) {
+        AdminUserResponse user = adminUserService.updateUserStatus(id, currentUser.getUserId(), request.getStatus());
+        return ResponseEntity.ok(ApiResponse.success("User status updated", user));
     }
 }

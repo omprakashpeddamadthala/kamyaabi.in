@@ -29,9 +29,8 @@ import PageTransition from '../components/common/PageTransition';
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { products, categories, totalPages, currentPage, loading } = useAppSelector(
-    (state) => state.products
-  );
+  const { products, categories, totalPages, totalElements, currentPage, pageSize, loading } =
+    useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
   const isAdmin = user?.role === 'ADMIN';
 
@@ -64,6 +63,7 @@ const ProductsPage: React.FC = () => {
     } else {
       dispatch(fetchProducts({ page: zeroBasedPage, sortBy, sortDir }));
     }
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -177,6 +177,14 @@ const ProductsPage: React.FC = () => {
         </Box>
       ) : (
         <>
+          {totalElements > 0 && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Showing {currentPage * pageSize + 1}
+              –{Math.min(currentPage * pageSize + products.length, totalElements)} of {totalElements}
+              {' '}{totalElements === 1 ? 'product' : 'products'}
+            </Typography>
+          )}
+
           <Grid container spacing={3}>
             {products.map((product) => (
               <Grid item xs={6} sm={4} md={3} key={product.id}>
@@ -193,6 +201,8 @@ const ProductsPage: React.FC = () => {
                 onChange={handlePageChange}
                 color="primary"
                 size="large"
+                showFirstButton
+                showLastButton
               />
             </Box>
           )}

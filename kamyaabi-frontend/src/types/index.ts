@@ -4,6 +4,22 @@ export interface User {
   name: string;
   avatarUrl: string | null;
   role: 'USER' | 'ADMIN';
+  status?: 'ACTIVE' | 'BLOCKED';
+}
+
+/**
+ * Row used in the admin user-management table. Mirrors backend
+ * `AdminUserResponse` and includes metadata (createdAt) only safe to
+ * surface to admin users.
+ */
+export interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+  role: 'USER' | 'ADMIN';
+  status: 'ACTIVE' | 'BLOCKED';
+  createdAt: string;
 }
 
 export interface Category {
