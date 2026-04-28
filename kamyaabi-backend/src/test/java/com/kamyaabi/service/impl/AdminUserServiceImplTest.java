@@ -166,6 +166,30 @@ class AdminUserServiceImplTest {
     }
 
     @Test
+    void updateUserStatus_softRemovesUser() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.REMOVED);
+
+        assertThat(response.getStatus()).isEqualTo("REMOVED");
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(User.Status.REMOVED);
+    }
+
+    @Test
+    void updateUserStatus_restoresRemovedUser() {
+        user.setStatus(User.Status.REMOVED);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.ACTIVE);
+
+        assertThat(response.getStatus()).isEqualTo("ACTIVE");
+    }
+
+    @Test
     void updateUserStatus_actorEqualsTarget_throws() {
         assertThatThrownBy(() -> service.updateUserStatus(1L, 1L, User.Status.BLOCKED))
                 .isInstanceOf(BadRequestException.class)

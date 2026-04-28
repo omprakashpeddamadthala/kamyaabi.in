@@ -4,7 +4,7 @@ export interface User {
   name: string;
   avatarUrl: string | null;
   role: 'USER' | 'ADMIN';
-  status?: 'ACTIVE' | 'BLOCKED';
+  status?: 'ACTIVE' | 'BLOCKED' | 'REMOVED';
 }
 
 /**
@@ -18,7 +18,7 @@ export interface AdminUser {
   name: string;
   avatarUrl: string | null;
   role: 'USER' | 'ADMIN';
-  status: 'ACTIVE' | 'BLOCKED';
+  status: 'ACTIVE' | 'BLOCKED' | 'REMOVED';
   createdAt: string;
 }
 

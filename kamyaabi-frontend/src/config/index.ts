@@ -12,6 +12,8 @@
 import { logger } from '../utils/logger';
 
 const DEFAULT_BRAND_DOMAIN = 'kamyaabi.shop';
+const DEFAULT_SUPPORT_EMAIL = 'sm.enterprises0121@gmail.com';
+const DEFAULT_SUPPORT_PHONE = '9848999072';
 
 interface AppConfig {
   /** Backend API base URL; blank means "same origin". */
@@ -22,6 +24,14 @@ interface AppConfig {
   readonly brandDomain: string;
   /** Support email address rendered in the UI. */
   readonly supportEmail: string;
+  /** Support / WhatsApp phone number rendered in the UI (digits only). */
+  readonly supportPhone: string;
+  /** Pretty-formatted support phone (e.g. "+91 98489 99072"). */
+  readonly supportPhoneDisplay: string;
+  /** `tel:` href for the support phone. */
+  readonly supportPhoneTel: string;
+  /** `https://wa.me/...` link for WhatsApp. */
+  readonly whatsappUrl: string;
   /** Convenience: full https URL for the brand domain. */
   readonly brandSiteUrl: string;
   /** Convenience: true when running a production build. */
@@ -45,13 +55,29 @@ function requireString(key: string, fallback: string): string {
 }
 
 const brandDomain = readString('VITE_BRAND_DOMAIN', DEFAULT_BRAND_DOMAIN);
-const supportEmail = readString('VITE_SUPPORT_EMAIL', `support@${brandDomain}`);
+const supportEmail = readString('VITE_SUPPORT_EMAIL', DEFAULT_SUPPORT_EMAIL);
+const supportPhoneRaw = readString('VITE_SUPPORT_PHONE', DEFAULT_SUPPORT_PHONE);
+
+// Normalize to digits only so tel:/wa.me links stay well-formed regardless of
+// how the env var is entered (with or without country code, spaces, dashes).
+const supportPhone = supportPhoneRaw.replace(/\D+/g, '');
+// Presentation string: "+91 XXXXX XXXXX" when it's a 10-digit Indian number;
+// otherwise fall back to the raw value so non-IN numbers are unaffected.
+const supportPhoneDisplay = supportPhone.length === 10
+  ? `+91 ${supportPhone.slice(0, 5)} ${supportPhone.slice(5)}`
+  : supportPhoneRaw;
+const supportPhoneE164 = supportPhone.length === 10 ? `+91${supportPhone}` : `+${supportPhone}`;
+const whatsappDigits = supportPhone.length === 10 ? `91${supportPhone}` : supportPhone;
 
 export const config: AppConfig = Object.freeze({
   apiBaseUrl: readString('VITE_API_BASE_URL', ''),
   googleClientId: requireString('VITE_GOOGLE_CLIENT_ID', 'missing-google-client-id'),
   brandDomain,
   supportEmail,
+  supportPhone,
+  supportPhoneDisplay,
+  supportPhoneTel: `tel:${supportPhoneE164}`,
+  whatsappUrl: `https://wa.me/${whatsappDigits}`,
   brandSiteUrl: `https://${brandDomain}`,
   isProd: Boolean(import.meta.env.PROD),
 });

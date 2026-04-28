@@ -175,9 +175,13 @@ public class AuthServiceImpl implements AuthService {
         }
         userRepository.save(user);
 
-        if (user.getStatus() == User.Status.BLOCKED) {
-            log.warn("Blocked user attempted login: {}", email);
-            throw new UnauthorizedException("Your account has been blocked. Please contact support.");
+        if (user.getStatus() == User.Status.BLOCKED
+                || user.getStatus() == User.Status.REMOVED) {
+            log.warn("{} user attempted login: {}", user.getStatus(), email);
+            String reason = user.getStatus() == User.Status.REMOVED
+                    ? "Your account has been removed. Please contact support."
+                    : "Your account has been blocked. Please contact support.";
+            throw new UnauthorizedException(reason);
         }
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());

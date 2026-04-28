@@ -1,9 +1,14 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, TextField, Button } from '@mui/material';
+import { Box, Container, Typography, Grid, TextField, Button, Link as MuiLink } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { SUPPORT_EMAIL } from '../config/brand';
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_TEL,
+  WHATSAPP_URL,
+} from '../config/brand';
 
 const ContactPage: React.FC = () => {
   return (
@@ -34,21 +39,34 @@ const ContactPage: React.FC = () => {
                   <PhoneIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Phone</Typography>
-                    <Typography variant="body2" sx={{ color: '#666' }}>+91 8985858888</Typography>
+                    <MuiLink href={SUPPORT_PHONE_TEL} variant="body2" underline="hover" sx={{ color: '#666' }}>
+                      {SUPPORT_PHONE_DISPLAY}
+                    </MuiLink>
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <EmailIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Email</Typography>
-                    <Typography variant="body2" sx={{ color: '#666' }}>{SUPPORT_EMAIL}</Typography>
+                    <MuiLink href={`mailto:${SUPPORT_EMAIL}`} variant="body2" underline="hover" sx={{ color: '#666' }}>
+                      {SUPPORT_EMAIL}
+                    </MuiLink>
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <LocationOnIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>WhatsApp</Typography>
-                    <Typography variant="body2" sx={{ color: '#666' }}>+91 8985858888</Typography>
+                    <MuiLink
+                      href={WHATSAPP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="body2"
+                      underline="hover"
+                      sx={{ color: '#666' }}
+                    >
+                      {SUPPORT_PHONE_DISPLAY}
+                    </MuiLink>
                   </Box>
                 </Box>
               </Box>

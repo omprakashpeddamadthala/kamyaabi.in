@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Box, Container, Typography, Link as MuiLink, Grid, Divider, TextField, Button, Alert } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { SUPPORT_EMAIL } from '../../config/brand';
+import {
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE_DISPLAY,
+  SUPPORT_PHONE_TEL,
+  WHATSAPP_URL,
+} from '../../config/brand';
 
 const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -54,9 +59,24 @@ const Footer: React.FC = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontSize: '1rem' }}>Contact Us</Typography>
-            <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>Email: {SUPPORT_EMAIL}</Typography>
-            <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>Phone: +91 8985858888</Typography>
-            <Typography variant="body2" sx={{ color: '#AAA' }}>WhatsApp: +91 8985858888</Typography>
+            <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>
+              Email:{' '}
+              <MuiLink href={`mailto:${SUPPORT_EMAIL}`} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {SUPPORT_EMAIL}
+              </MuiLink>
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>
+              Phone:{' '}
+              <MuiLink href={SUPPORT_PHONE_TEL} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {SUPPORT_PHONE_DISPLAY}
+              </MuiLink>
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#AAA' }}>
+              WhatsApp:{' '}
+              <MuiLink href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {SUPPORT_PHONE_DISPLAY}
+              </MuiLink>
+            </Typography>
           </Grid>
 
           <Grid item xs={12} md={3}>
