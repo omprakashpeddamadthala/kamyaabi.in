@@ -30,6 +30,14 @@ public class ProductResponse {
     private Integer stock;
     private String weight;
     private String unit;
+    /** Optional shelf-life copy. {@code null} when not configured. */
+    private String shelfLife;
+    /** Optional ordered map of nutritional label → value. {@code null} when not configured. */
+    private java.util.Map<String, String> nutritionalInfo;
+    /** Optional list of "how to use" bullets. {@code null} when not configured. */
+    private List<String> howToUse;
+    /** Optional list of "storage tips" bullets. {@code null} when not configured. */
+    private List<String> storageTips;
     private Boolean active;
     private LocalDateTime createdAt;
 }

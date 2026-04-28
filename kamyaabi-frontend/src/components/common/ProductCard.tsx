@@ -16,6 +16,7 @@ import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
 import { useFlyToCart } from './FlyToCartAnimation';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
 
 interface ProductCardProps {
   product: Product;
@@ -61,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
     if (imageRef.current) {
       triggerFlyToCart(
-        cardImageUrl || 'https://via.placeholder.com/50',
+        cardImageUrl || PRODUCT_PLACEHOLDER_IMAGE,
         imageRef.current
       );
     }
@@ -96,7 +97,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           component="img"
           ref={imageRef}
           height="220"
-          image={cardImageUrl || 'https://via.placeholder.com/300x220?text=Product'}
+          image={cardImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
           alt={product.name}
           sx={{ objectFit: 'cover' }}
           loading="lazy"

@@ -1,5 +1,6 @@
 package com.kamyaabi.mapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
@@ -23,7 +24,7 @@ class ProductMapperTest {
     @BeforeEach
     void setUp() {
         imageMapper = new ProductImageMapper();
-        mapper = new ProductMapper(imageMapper);
+        mapper = new ProductMapper(imageMapper, new ObjectMapper());
         category = Category.builder().id(1L).name("Cashews").build();
     }
 

@@ -18,6 +18,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
 import { paymentApi } from '../api/paymentApi';
 import Loading from '../components/common/Loading';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { Alert, Button, CircularProgress } from '@mui/material';
 
 declare global {
@@ -139,7 +140,7 @@ const OrderDetailPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 2, py: 2, alignItems: 'center' }}>
                   <Box
                     component="img"
-                    src={item.productImageUrl || 'https://via.placeholder.com/80'}
+                    src={item.productImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
                     alt={item.productName}
                     sx={{ width: 80, height: 80, borderRadius: 1, objectFit: 'cover' }}
                   />

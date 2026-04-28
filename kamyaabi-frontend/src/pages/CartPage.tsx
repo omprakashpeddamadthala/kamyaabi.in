@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart, updateCartItem, removeFromCart, optimisticUpdateQuantity } from '../features/cart/cartSlice';
 import { addressApi } from '../api/addressApi';
 import { Address } from '../types';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import AddressFormDialog from '../components/common/AddressFormDialog';
 import PageTransition from '../components/common/PageTransition';
 
@@ -270,7 +271,7 @@ const CartPage: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                 <CardMedia
                   component="img"
-                  image={item.productImageUrl || 'https://via.placeholder.com/100'}
+                  image={item.productImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
                   alt={item.productName}
                   sx={{ width: 100, height: 100, borderRadius: 1, objectFit: 'cover' }}
                 />

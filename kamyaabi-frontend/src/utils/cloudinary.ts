@@ -15,3 +15,20 @@ export const withCloudinaryTransform = (
   if (idx === -1) return url;
   return url.slice(0, idx + UPLOAD_SEGMENT.length) + transform + '/' + url.slice(idx + UPLOAD_SEGMENT.length);
 };
+
+/**
+ * Build a responsive `srcSet` for a Cloudinary upload URL across the given
+ * pixel widths. Each variant uses `c_limit` so we never upscale beyond the
+ * original asset. Returns an empty string when the URL isn't a Cloudinary
+ * upload URL — call sites can omit `srcSet` in that case.
+ */
+export const cloudinarySrcSet = (
+  url: string | null | undefined,
+  widths: readonly number[] = [400, 600, 800, 1200],
+): string => {
+  if (!url) return '';
+  if (url.indexOf(UPLOAD_SEGMENT) === -1) return '';
+  return widths
+    .map((w) => `${withCloudinaryTransform(url, `w_${w},c_limit,q_auto,f_auto`)} ${w}w`)
+    .join(', ');
+};

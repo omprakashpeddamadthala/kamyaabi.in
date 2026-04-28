@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useCallback, useRef, useState } from 'react';
 import { Box } from '@mui/material';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
 
 interface FlyingItem {
   id: number;
@@ -100,7 +101,7 @@ const FlyingImage: React.FC<{ item: FlyingItem }> = ({ item }) => {
     >
       <Box
         component="img"
-        src={item.imageUrl || 'https://via.placeholder.com/50'}
+        src={item.imageUrl || PRODUCT_PLACEHOLDER_IMAGE}
         alt=""
         sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />
