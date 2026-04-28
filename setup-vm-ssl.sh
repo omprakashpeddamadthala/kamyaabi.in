@@ -219,7 +219,8 @@ server {
                application/xml application/xml+rss text/javascript image/svg+xml
                application/x-font-ttf font/opentype;
 
-    client_max_body_size 20M;
+    # 500M practical cap for admin product image uploads.
+    client_max_body_size 500M;
 
     location /api/ {
         proxy_pass http://127.0.0.1:8080;

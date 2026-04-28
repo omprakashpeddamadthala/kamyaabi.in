@@ -4,14 +4,23 @@ server:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
     min-response-size: 1024
+  # No size limit on uploads — images are validated at the service layer (content
+  # type only). Spring's multipart parser AND embedded Tomcat's form / swallow
+  # caps must all be disabled so the product image upload endpoint accepts files
+  # of any size. Operators must size the upstream proxy (e.g. Nginx
+  # client_max_body_size) accordingly.
   servlet:
-    # Multipart limits are intentionally disabled (-1 = unlimited) so admin
-    # product image uploads accept files of any size. Per-file validation is
-    # done at the service layer (content type only); operators must size the
-    # upstream proxy (e.g. Nginx client_max_body_size) accordingly.
     multipart:
       max-file-size: -1
       max-request-size: -1
+  tomcat:
+    # Disable Tomcat's application/x-www-form-urlencoded size cap (default 2MB).
+    # Not strictly needed for multipart, but kept at -1 so no Tomcat-level form
+    # limit can surface a MaxUploadSizeExceededException for any body type.
+    max-http-form-post-size: -1
+    # Disable Tomcat's swallow limit so oversize rejected bodies (if any) are
+    # drained without aborting the connection. -1 = unlimited.
+    max-swallow-size: -1
 
 spring:
   application:

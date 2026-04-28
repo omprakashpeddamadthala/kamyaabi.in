@@ -15,6 +15,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -116,6 +117,24 @@ public class GlobalExceptionHandler {
         });
         log.warn("Validation failed on {}: {}", request.getRequestURI(), fieldErrors);
         return build(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrors);
+    }
+
+    /**
+     * Defensive handler for multipart size breaches. The app is configured with
+     * unlimited multipart / Tomcat form / swallow caps (-1) so uploads of any
+     * size are accepted and validated at the service layer. This handler exists
+     * only as a safety net — e.g. if a future operator overrides the caps, or
+     * an upstream proxy is still enforcing a limit and Spring surfaces it as
+     * this exception. Clients get a clean 413 with a stable error body rather
+     * than the generic 500.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex,
+                                                                HttpServletRequest request) {
+        log.warn("Upload rejected — size limit exceeded on {}: {}", request.getRequestURI(), ex.getMessage());
+        return build(HttpStatus.PAYLOAD_TOO_LARGE,
+                "Uploaded file exceeds the configured size limit",
+                request, null);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
