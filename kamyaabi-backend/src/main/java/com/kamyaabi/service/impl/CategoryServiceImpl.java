@@ -13,6 +13,8 @@ import com.kamyaabi.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,14 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CategoryResponse> getCategoriesPaged(Pageable pageable) {
+        log.debug("Fetching paginated categories: {}", pageable);
+        return categoryRepository.findAllByOrderByNameAsc(pageable)
+                .map(categoryMapper::toResponse);
     }
 
     @Override

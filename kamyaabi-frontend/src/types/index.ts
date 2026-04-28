@@ -134,6 +134,27 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
+export interface DashboardStats {
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+  lowStockCount: number;
+}
+
+export interface AnalyticsPoint {
+  date: string;
+  orders: number;
+  revenue: number;
+}
+
+export interface AnalyticsResponse {
+  startDate: string;
+  endDate: string;
+  totalOrders: number;
+  totalRevenue: number;
+  points: AnalyticsPoint[];
+}
+
 export interface RazorpayOrder {
   razorpayOrderId: string;
   amount: number;

@@ -3,11 +3,17 @@ package com.kamyaabi.controller;
 import com.kamyaabi.dto.request.CategoryRequest;
 import com.kamyaabi.dto.request.OrderStatusRequest;
 import com.kamyaabi.dto.request.ProductRequest;
+import com.kamyaabi.dto.request.ProductStatusRequest;
+import com.kamyaabi.dto.response.AnalyticsPointResponse;
+import com.kamyaabi.dto.response.AnalyticsResponse;
+import com.kamyaabi.dto.response.ApiResponse;
 import com.kamyaabi.dto.response.CategoryResponse;
+import com.kamyaabi.dto.response.DashboardStatsResponse;
 import com.kamyaabi.dto.response.OrderResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.service.CategoryService;
+import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ProductService;
 import org.junit.jupiter.api.Test;
@@ -23,6 +29,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +45,7 @@ class AdminControllerTest {
     @Mock private ProductService productService;
     @Mock private CategoryService categoryService;
     @Mock private OrderService orderService;
+    @Mock private DashboardService dashboardService;
 
     @InjectMocks private AdminController adminController;
 
@@ -156,6 +164,61 @@ class AdminControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(orderService).getAllOrders(any(Pageable.class));
+    }
+
+    @Test
+    void updateProductStatus_shouldReturn200AndCallService() {
+        ProductStatusRequest request = new ProductStatusRequest(false);
+        ProductResponse productResponse = ProductResponse.builder().id(1L).active(false).build();
+        when(productService.setProductActive(1L, false)).thenReturn(productResponse);
+
+        ResponseEntity<?> response = adminController.updateProductStatus(1L, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(productService).setProductActive(1L, false);
+    }
+
+    @Test
+    void listCategories_shouldReturnPage() {
+        Page<CategoryResponse> page = new PageImpl<>(List.of(CategoryResponse.builder().id(1L).build()));
+        when(categoryService.getCategoriesPaged(any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = adminController.listCategories(0, 10);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(categoryService).getCategoriesPaged(any(Pageable.class));
+    }
+
+    @Test
+    void getDashboardStats_shouldReturn200() {
+        DashboardStatsResponse stats = DashboardStatsResponse.builder()
+                .totalProducts(5L).totalOrders(3L)
+                .totalRevenue(new BigDecimal("1000")).lowStockCount(1L).build();
+        when(dashboardService.getStats()).thenReturn(stats);
+
+        ResponseEntity<ApiResponse<DashboardStatsResponse>> response = adminController.getDashboardStats();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getData().getTotalProducts()).isEqualTo(5);
+    }
+
+    @Test
+    void getAnalytics_shouldDelegateToService() {
+        LocalDate start = LocalDate.of(2026, 4, 20);
+        LocalDate end = LocalDate.of(2026, 4, 27);
+        AnalyticsResponse analytics = AnalyticsResponse.builder()
+                .startDate(start).endDate(end).totalOrders(0L)
+                .totalRevenue(BigDecimal.ZERO)
+                .points(List.of(AnalyticsPointResponse.builder()
+                        .date(start).orders(0L).revenue(BigDecimal.ZERO).build()))
+                .build();
+        when(dashboardService.getAnalytics(start, end)).thenReturn(analytics);
+
+        ResponseEntity<?> response = adminController.getAnalytics(start, end);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dashboardService).getAnalytics(start, end);
     }
 
     @Test

@@ -46,4 +46,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                               Pageable pageable);
 
     long countByCategoryId(Long categoryId);
+
+    /** Number of active products whose stock is strictly below the threshold. */
+    long countByActiveTrueAndStockLessThan(int threshold);
 }

@@ -274,6 +274,17 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    public ProductResponse setProductActive(Long id, boolean active) {
+        log.info("Toggling product {} active -> {}", id, active);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+        product.setActive(active);
+        Product saved = productRepository.save(product);
+        return productMapper.toResponse(saved);
+    }
+
+    @Override
+    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProductImage(Long productId, Long imageId) {
         log.info("Deleting image {} from product {}", imageId, productId);
         ProductImage image = productImageRepository.findByIdAndProductId(imageId, productId)
