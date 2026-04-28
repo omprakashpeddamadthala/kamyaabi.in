@@ -9,6 +9,29 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    target: 'es2020',
+    cssCodeSplit: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        // Split heavy vendor groups so a route that only needs router or
+        // forms doesn't have to download MUI + charts + redux up front.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('@mui/icons-material')) return 'mui-icons';
+          if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('@reduxjs') || id.includes('react-redux') || id.includes('redux')) return 'redux';
+          if (id.includes('recharts') || id.includes('d3-')) return 'charts';
+          if (id.includes('axios')) return 'axios';
+          if (id.includes('date-fns')) return 'date-fns';
+          return 'vendor';
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {

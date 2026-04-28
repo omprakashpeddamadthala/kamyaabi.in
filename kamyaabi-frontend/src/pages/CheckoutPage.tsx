@@ -113,6 +113,8 @@ const CheckoutPage: React.FC = () => {
         theme: { color: '#8B6914' },
       };
 
+      const { loadRazorpay } = await import('../utils/loadRazorpay');
+      await loadRazorpay();
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch {

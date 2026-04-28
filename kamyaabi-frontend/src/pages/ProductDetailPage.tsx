@@ -46,8 +46,11 @@ import { fetchProductById, clearSelectedProduct, fetchProducts } from '../featur
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
-import { withCloudinaryTransform } from '../utils/cloudinary';
+import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
 import ProductCard from '../components/common/ProductCard';
+import { reviewApi } from '../api/reviewApi';
+import type { Review, ReviewSummary } from '../types';
+import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 
 /* ─── Scroll-reveal hook (IntersectionObserver) ──────────────────────── */
 function useRevealOnScroll(threshold = 0.15) {
@@ -136,12 +139,18 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </Box>
 );
 
-/* ─── Static review data (placeholder) ───────────────────────────────── */
-const PLACEHOLDER_REVIEWS = [
-  { name: 'Priya S.', rating: 5, text: 'Absolutely fresh and premium quality! The taste is incredible — you can tell these are carefully sourced.', date: '2 weeks ago' },
-  { name: 'Rajesh K.', rating: 4, text: 'Great packaging and fast delivery. The dry fruits were fresh and flavourful. Will order again.', date: '1 month ago' },
-  { name: 'Anita M.', rating: 5, text: 'Best dry fruits I have ordered online. Perfect for gifting during festivals. Highly recommended!', date: '3 weeks ago' },
-];
+/* ─── Relative date helper ───────────────────────────────────────────── */
+function formatRelativeDate(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diff = Date.now() - then;
+  const day = 86_400_000;
+  if (diff < day) return 'today';
+  if (diff < day * 2) return 'yesterday';
+  if (diff < day * 30) return `${Math.floor(diff / day)} days ago`;
+  if (diff < day * 365) return `${Math.floor(diff / (day * 30))} months ago`;
+  return `${Math.floor(diff / (day * 365))} years ago`;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /* Main Component                                                         */
@@ -154,7 +163,7 @@ const ProductDetailPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  const { selectedProduct: product, loading, products } = useAppSelector((s) => s.products);
+  const { selectedProduct: product, products } = useAppSelector((s) => s.products);
   const { user } = useAppSelector((s) => s.auth);
   const { addingProductIds } = useAppSelector((s) => s.cart);
 
@@ -166,6 +175,11 @@ const ProductDetailPage: React.FC = () => {
   const [stickyVisible, setStickyVisible] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+
+  /* Reviews + summary loaded from the backend; null until the API resolves. */
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -189,6 +203,28 @@ const ProductDetailPage: React.FC = () => {
       dispatch(fetchProducts({ page: 0, size: 12 }));
     }
   }, [dispatch, product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Pull real reviews + aggregated rating + recent-buyer count from backend. */
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setReviewsLoading(true);
+    Promise.all([reviewApi.list(Number(id), 0, 6), reviewApi.summary(Number(id))])
+      .then(([listRes, sumRes]) => {
+        if (cancelled) return;
+        setReviews(listRes.data.data?.content ?? []);
+        setReviewSummary(sumRes.data.data ?? null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setReviews([]);
+        setReviewSummary(null);
+      })
+      .finally(() => {
+        if (!cancelled) setReviewsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [id]);
 
   /* Sticky CTA observer */
   useEffect(() => {
@@ -236,7 +272,7 @@ const ProductDetailPage: React.FC = () => {
     }));
 
     if (imageRef.current) {
-      triggerFlyToCart(primaryImageSource || 'https://via.placeholder.com/50', imageRef.current);
+      triggerFlyToCart(primaryImageSource || PRODUCT_PLACEHOLDER_IMAGE, imageRef.current);
     }
 
     dispatch(addToCart({ productId: product.id, quantity })).then((result) => {
@@ -278,7 +314,11 @@ const ProductDetailPage: React.FC = () => {
   const reviewsReveal = useRevealOnScroll();
   const relatedReveal = useRevealOnScroll();
 
-  if (loading || !product) return <ProductDetailSkeleton />;
+  // Only show the skeleton when we genuinely have no product yet. Previously
+  // any subsequent dispatch (e.g. fetching related products) would flip
+  // `loading` back to true and revert the page to a skeleton, producing a
+  // visible flash and an empty band of whitespace below the fold.
+  if (!product) return <ProductDetailSkeleton />;
 
   const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
@@ -287,7 +327,18 @@ const ProductDetailPage: React.FC = () => {
   const effectivePrice = hasDiscount ? product.discountPrice! : product.price;
 
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
-  const recentBuyersCount = 12 + (product.id % 20);
+  const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
+  const hasNutrition = !!product.nutritionalInfo && Object.keys(product.nutritionalInfo).length > 0;
+  const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;
+  const hasStorageTips = !!product.storageTips && product.storageTips.length > 0;
+  const hasUsageTab = hasHowToUse || hasStorageTips;
+  // Tabs are dynamic: every tab below corresponds to a `tabKeys` entry. We
+  // skip Nutrition/How-to-Use entirely when the backend has no data for the
+  // current product, which keeps `tabValue` from pointing at a missing panel.
+  const tabKeys: Array<'description' | 'nutrition' | 'usage'> = ['description'];
+  if (hasNutrition) tabKeys.push('nutrition');
+  if (hasUsageTab) tabKeys.push('usage');
+  const safeTabValue = Math.min(tabValue, tabKeys.length - 1);
 
   return (
     <PageTransition>
@@ -323,19 +374,26 @@ const ProductDetailPage: React.FC = () => {
               <Box
                 component="img"
                 ref={imageRef}
-                src={primaryImageSource || 'https://via.placeholder.com/600x500?text=Product'}
+                src={withCloudinaryTransform(primaryImageSource, 'w_800,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
+                srcSet={cloudinarySrcSet(primaryImageSource) || undefined}
+                sizes="(max-width: 900px) 100vw, 600px"
+                width={800}
+                height={520}
                 alt={product.name}
                 sx={{
                   width: '100%',
                   height: 'auto',
                   maxHeight: 520,
+                  aspectRatio: '4 / 3',
                   objectFit: 'cover',
                   display: 'block',
-                  transition: 'transform 0.3s ease',
+                  transition: 'transform 0.3s ease, opacity 0.3s ease',
                   transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
                   transform: isZooming ? 'scale(1.5)' : 'scale(1)',
                 }}
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
               />
               <Box
                 className="zoom-hint"
@@ -416,40 +474,23 @@ const ProductDetailPage: React.FC = () => {
               {product.name}
             </Typography>
 
-            {/* Rating */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <Rating value={4.5} precision={0.5} readOnly size="small" />
-              <Typography variant="body2" color="text.secondary">(4.5) · 128 reviews</Typography>
-            </Box>
+            {/* Rating — only rendered once we have at least one real review */}
+            {hasRating && reviewSummary && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <Rating value={reviewSummary.averageRating} precision={0.5} readOnly size="small" />
+                <Typography variant="body2" color="text.secondary">
+                  ({reviewSummary.averageRating.toFixed(1)}) · {reviewSummary.totalReviews}
+                  {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
+                </Typography>
+              </Box>
+            )}
 
             {/* Weight display */}
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              {product.weight} {product.unit}
-            </Typography>
-
-            {/* Variant pills (weight options) */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 2.5, flexWrap: 'wrap' }}>
-              {['250g', '500g', '1kg'].map((w) => {
-                const isSelected = product.weight === w.replace('g', '').replace('k', '000');
-                return (
-                  <Chip
-                    key={w}
-                    label={w}
-                    variant={isSelected ? 'filled' : 'outlined'}
-                    color={isSelected ? 'primary' : 'default'}
-                    sx={{
-                      fontWeight: 600,
-                      px: 1,
-                      cursor: 'default',
-                      '&.MuiChip-filled': {
-                        bgcolor: 'primary.main',
-                        color: '#fff',
-                      },
-                    }}
-                  />
-                );
-              })}
-            </Box>
+            {(product.weight || product.unit) && (
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                {product.weight} {product.unit}
+              </Typography>
+            )}
 
             {/* Price */}
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1 }}>
@@ -599,139 +640,179 @@ const ProductDetailPage: React.FC = () => {
               )}
             </Box>
 
-            {/* Social proof nudge */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
-              <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
-              <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                {recentBuyersCount} people bought this in the last 7 days
-              </Typography>
-            </Box>
+            {/* Social-proof nudge — only when real recent-buyer data exists */}
+            {reviewSummary && reviewSummary.recentBuyersCount > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+                <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
+                <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                  {reviewSummary.recentBuyersCount}
+                  {' '}{reviewSummary.recentBuyersCount === 1 ? 'person bought' : 'people bought'}
+                  {' '}this in the last 7 days
+                </Typography>
+              </Box>
+            )}
           </Grid>
         </Grid>
 
-        {/* ── Tabbed description ──────────────────────────────────────── */}
-        <Box ref={tabsReveal.ref} sx={{ mt: 6, ...revealSx(tabsReveal.visible) }}>
-          <Tabs
-            value={tabValue}
-            onChange={(_, v) => setTabValue(v)}
-            variant={isMobile ? 'fullWidth' : 'standard'}
-            sx={{
-              borderBottom: 1,
-              borderColor: 'divider',
-              '& .MuiTab-root': { fontWeight: 600, minHeight: 56 },
-            }}
-          >
-            <Tab icon={<DescriptionIcon />} iconPosition="start" label="Description" id="product-tab-0" aria-controls="product-tabpanel-0" />
-            <Tab icon={<Restaurant />} iconPosition="start" label="Nutritional Info" id="product-tab-1" aria-controls="product-tabpanel-1" />
-            <Tab icon={<Kitchen />} iconPosition="start" label="How to Use" id="product-tab-2" aria-controls="product-tabpanel-2" />
-          </Tabs>
+        {/* ── Tabbed description ── each tab is rendered only when the
+             backend actually has data for it. With nothing to show beyond
+             the description, the row is suppressed entirely so we don't
+             reserve empty layout below the fold. */}
+        {(tabKeys.length > 1 || product.description) && (
+          <Box ref={tabsReveal.ref} sx={{ mt: 6, ...revealSx(tabsReveal.visible) }}>
+            <Tabs
+              value={safeTabValue}
+              onChange={(_, v) => setTabValue(v)}
+              variant={isMobile ? 'fullWidth' : 'standard'}
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiTab-root': { fontWeight: 600, minHeight: 56 },
+              }}
+            >
+              {tabKeys.map((key, idx) => {
+                const meta = key === 'description'
+                  ? { icon: <DescriptionIcon />, label: 'Description' }
+                  : key === 'nutrition'
+                    ? { icon: <Restaurant />, label: 'Nutritional Info' }
+                    : { icon: <Kitchen />, label: 'How to Use' };
+                return (
+                  <Tab
+                    key={key}
+                    icon={meta.icon}
+                    iconPosition="start"
+                    label={meta.label}
+                    id={`product-tab-${idx}`}
+                    aria-controls={`product-tabpanel-${idx}`}
+                  />
+                );
+              })}
+            </Tabs>
 
-          <TabPanel value={tabValue} index={0}>
-            <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary' }}>
-              {product.description}
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Category:</strong> {product.categoryName}
+            {tabKeys.map((key, idx) => (
+              <TabPanel key={key} value={safeTabValue} index={idx}>
+                {key === 'description' && (
+                  <>
+                    <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}>
+                      {product.description}
+                    </Typography>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Category:</strong> {product.categoryName}
+                      </Typography>
+                      {(product.weight || product.unit) && (
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Weight:</strong> {product.weight} {product.unit}
+                        </Typography>
+                      )}
+                      {product.shelfLife && (
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Shelf Life:</strong> {product.shelfLife}
+                        </Typography>
+                      )}
+                    </Box>
+                  </>
+                )}
+
+                {key === 'nutrition' && product.nutritionalInfo && (
+                  <>
+                    <Grid container spacing={2}>
+                      {Object.entries(product.nutritionalInfo).map(([label, value]) => (
+                        <Grid item xs={6} sm={4} key={label}>
+                          <Box sx={{
+                            p: 2,
+                            bgcolor: '#FAFAF5',
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                          }}>
+                            <Typography variant="body2" color="text.secondary">{label}</Typography>
+                            <Typography variant="subtitle1" fontWeight={700} color="primary.main">{value}</Typography>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+                      * Values per 100g serving. Refer to product packaging for exact details.
+                    </Typography>
+                  </>
+                )}
+
+                {key === 'usage' && (
+                  <>
+                    {hasHowToUse && product.howToUse && (
+                      <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
+                        {product.howToUse.map((line, i) => (
+                          <li key={i}><Typography variant="body1">{line}</Typography></li>
+                        ))}
+                      </Box>
+                    )}
+                    {hasStorageTips && product.storageTips && (
+                      <>
+                        {hasHowToUse && <Divider sx={{ my: 2 }} />}
+                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Storage Tips</Typography>
+                        <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
+                          {product.storageTips.map((line, i) => (
+                            <li key={i}><Typography variant="body2">{line}</Typography></li>
+                          ))}
+                        </Box>
+                      </>
+                    )}
+                  </>
+                )}
+              </TabPanel>
+            ))}
+          </Box>
+        )}
+
+        {/* ── Reviews section ── hidden when there are zero reviews so we
+             don't render an empty header floating above the related-products
+             carousel. */}
+        {!reviewsLoading && reviews.length > 0 && reviewSummary && (
+          <Box ref={reviewsReveal.ref} sx={{ mt: 6, ...revealSx(reviewsReveal.visible) }}>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Typography variant="h3" fontWeight={700} color="primary.main">
+                {reviewSummary.averageRating.toFixed(1)}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Weight:</strong> {product.weight} {product.unit}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <strong>Shelf Life:</strong> 6 months from date of packaging
-              </Typography>
+              <Box>
+                <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
+                <Typography variant="body2" color="text.secondary">
+                  Based on {reviewSummary.totalReviews}
+                  {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
+                </Typography>
+              </Box>
             </Box>
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={1}>
-            <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.8 }}>
-              Our {product.name.toLowerCase()} are packed with essential nutrients. Here is a general nutritional overview per 100g serving:
-            </Typography>
-            <Grid container spacing={2}>
-              {[
-                { label: 'Calories', value: '~580 kcal' },
-                { label: 'Protein', value: '~18g' },
-                { label: 'Total Fat', value: '~44g' },
-                { label: 'Carbohydrates', value: '~30g' },
-                { label: 'Dietary Fibre', value: '~3g' },
-                { label: 'Vitamin E', value: 'Rich source' },
-              ].map(({ label, value }) => (
-                <Grid item xs={6} sm={4} key={label}>
+            <Grid container spacing={3}>
+              {reviews.map((review) => (
+                <Grid item xs={12} sm={6} md={4} key={review.id}>
                   <Box sx={{
-                    p: 2,
-                    bgcolor: '#FAFAF5',
+                    p: 3,
                     borderRadius: 2,
-                    textAlign: 'center',
                     border: '1px solid',
                     borderColor: 'divider',
+                    height: '100%',
+                    bgcolor: 'background.paper',
+                    transition: 'box-shadow 0.2s ease',
+                    '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
                   }}>
-                    <Typography variant="body2" color="text.secondary">{label}</Typography>
-                    <Typography variant="subtitle1" fontWeight={700} color="primary.main">{value}</Typography>
+                    <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
+                    {review.text && (
+                      <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
+                        &ldquo;{review.text}&rdquo;
+                      </Typography>
+                    )}
+                    <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                      · {formatRelativeDate(review.createdAt)}
+                    </Typography>
                   </Box>
                 </Grid>
               ))}
             </Grid>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-              * Values are approximate and may vary by variety. Refer to product packaging for exact details.
-            </Typography>
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={2}>
-            <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.8 }}>
-              Enjoy your {product.name.toLowerCase()} in many delicious ways:
-            </Typography>
-            <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
-              <li><Typography variant="body1">Enjoy as a healthy snack on its own any time of the day</Typography></li>
-              <li><Typography variant="body1">Add to your morning oatmeal, cereal, or smoothie bowls</Typography></li>
-              <li><Typography variant="body1">Use as a topping for desserts, ice cream, or salads</Typography></li>
-              <li><Typography variant="body1">Incorporate into baking — cookies, cakes, and energy bars</Typography></li>
-              <li><Typography variant="body1">Garnish traditional Indian sweets and savoury dishes</Typography></li>
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Storage Tips</Typography>
-            <Box component="ul" sx={{ pl: 2.5, '& li': { mb: 1 } }}>
-              <li><Typography variant="body2">Store in an airtight container in a cool, dry place</Typography></li>
-              <li><Typography variant="body2">Refrigerate after opening to extend freshness</Typography></li>
-              <li><Typography variant="body2">Keep away from direct sunlight and moisture</Typography></li>
-              <li><Typography variant="body2">Best consumed within 3 months of opening</Typography></li>
-            </Box>
-          </TabPanel>
-        </Box>
-
-        {/* ── Reviews section ─────────────────────────────────────────── */}
-        <Box ref={reviewsReveal.ref} sx={{ mt: 6, ...revealSx(reviewsReveal.visible) }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            <Typography variant="h3" fontWeight={700} color="primary.main">4.5</Typography>
-            <Box>
-              <Rating value={4.5} precision={0.5} readOnly />
-              <Typography variant="body2" color="text.secondary">Based on 128 reviews</Typography>
-            </Box>
           </Box>
-          <Grid container spacing={3}>
-            {PLACEHOLDER_REVIEWS.map((review, idx) => (
-              <Grid item xs={12} sm={4} key={idx}>
-                <Box sx={{
-                  p: 3,
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  height: '100%',
-                  bgcolor: 'background.paper',
-                  transition: 'box-shadow 0.2s ease',
-                  '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-                }}>
-                  <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
-                  <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
-                    &ldquo;{review.text}&rdquo;
-                  </Typography>
-                  <Typography variant="caption" fontWeight={600}>{review.name}</Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>· {review.date}</Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
+        )}
 
         {/* ── You may also like ───────────────────────────────────────── */}
         {relatedProducts.length > 0 && (
@@ -802,8 +883,9 @@ const ProductDetailPage: React.FC = () => {
           )}
           <Box
             component="img"
-            src={primaryImageSource || 'https://via.placeholder.com/800x600?text=Product'}
+            src={withCloudinaryTransform(primaryImageSource, 'w_1600,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
             alt={product.name}
+            decoding="async"
             sx={{
               maxWidth: '90%',
               maxHeight: '85vh',

@@ -39,8 +39,30 @@ export interface Product {
   stock: number;
   weight: string;
   unit: string;
+  /** Optional copy from backend; null when not configured. UI hides the row. */
+  shelfLife?: string | null;
+  /** Optional ordered map of nutritional label -> value. */
+  nutritionalInfo?: Record<string, string> | null;
+  /** Optional list of "how to use" bullets. */
+  howToUse?: string[] | null;
+  /** Optional list of "storage tips" bullets. */
+  storageTips?: string[] | null;
   active: boolean;
   createdAt: string;
+}
+
+export interface Review {
+  id: number;
+  authorName: string;
+  rating: number;
+  text: string | null;
+  createdAt: string;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  recentBuyersCount: number;
 }
 
 export interface CartItem {

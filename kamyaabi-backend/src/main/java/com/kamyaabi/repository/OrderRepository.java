@@ -47,4 +47,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Object[]> aggregateDaily(@Param("from") LocalDateTime from,
                                   @Param("to") LocalDateTime to,
                                   @Param("excluded") List<Order.OrderStatus> excluded);
+
+    /**
+     * Distinct customers who ordered the given product within the trailing window.
+     * Excludes cancelled / payment-failed / pending orders so the count reflects
+     * real purchases only.
+     */
+    @Query("SELECT COUNT(DISTINCT o.user.id) FROM Order o JOIN o.items i "
+            + "WHERE i.product.id = :productId "
+            + "AND o.createdAt >= :since "
+            + "AND o.status NOT IN :excluded")
+    long countDistinctRecentBuyersForProduct(@Param("productId") Long productId,
+                                             @Param("since") LocalDateTime since,
+                                             @Param("excluded") List<Order.OrderStatus> excluded);
 }

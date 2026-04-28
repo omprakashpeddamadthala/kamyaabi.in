@@ -53,6 +53,25 @@ public class Product {
 
     private String unit;
 
+    /** Optional shelf-life copy shown on the product page (e.g. "6 months"). */
+    private String shelfLife;
+
+    /**
+     * Optional JSON-encoded nutritional facts: a mapping of label → value
+     * (e.g. {@code {"Calories":"580 kcal","Protein":"18g"}}). Null when the
+     * product has no nutritional data — the UI hides the section in that case.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String nutritionalInfoJson;
+
+    /** Optional JSON-encoded list of "How to Use" bullet points. */
+    @Column(columnDefinition = "TEXT")
+    private String howToUseJson;
+
+    /** Optional JSON-encoded list of "Storage Tips" bullet points. */
+    @Column(columnDefinition = "TEXT")
+    private String storageTipsJson;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
