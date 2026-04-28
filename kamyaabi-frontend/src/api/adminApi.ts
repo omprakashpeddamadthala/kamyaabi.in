@@ -7,6 +7,7 @@ import {
   PageResponse,
   DashboardStats,
   AnalyticsResponse,
+  AdminUser,
 } from '../types';
 
 export interface ProductRequest {
@@ -158,4 +159,22 @@ export const adminApi = {
         ...(endDate ? { endDate } : {}),
       },
     }),
+
+  // Users — admin-only management endpoints used by /admin?tab=users.
+  getUsers: (page = 0, size = 20, q?: string) =>
+    axiosInstance.get<ApiResponse<PageResponse<AdminUser>>>('/api/admin/users', {
+      params: {
+        page,
+        size,
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        ...(q ? { q } : {}),
+      },
+    }),
+
+  updateUserRole: (id: number, role: 'USER' | 'ADMIN') =>
+    axiosInstance.patch<ApiResponse<AdminUser>>(`/api/admin/users/${id}/role`, { role }),
+
+  updateUserStatus: (id: number, status: 'ACTIVE' | 'BLOCKED') =>
+    axiosInstance.patch<ApiResponse<AdminUser>>(`/api/admin/users/${id}/status`, { status }),
 };

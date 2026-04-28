@@ -14,6 +14,7 @@ public class UserMapper {
                 .name(user.getName())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
+                .status(user.getStatus() != null ? user.getStatus().name() : User.Status.ACTIVE.name())
                 .build();
     }
 }

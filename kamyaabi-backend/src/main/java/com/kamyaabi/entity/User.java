@@ -41,6 +41,11 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Status status = Status.ACTIVE;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Address> addresses = new ArrayList<>();
@@ -60,5 +65,9 @@ public class User {
 
     public enum Role {
         USER, ADMIN
+    }
+
+    public enum Status {
+        ACTIVE, BLOCKED
     }
 }

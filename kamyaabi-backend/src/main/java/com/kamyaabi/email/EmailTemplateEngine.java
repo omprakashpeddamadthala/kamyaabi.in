@@ -1,5 +1,6 @@
 package com.kamyaabi.email;
 
+import com.kamyaabi.config.AppProperties;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.entity.OrderItem;
 import com.kamyaabi.event.OrderEventType;
@@ -17,6 +18,12 @@ import java.util.stream.Collectors;
 public class EmailTemplateEngine {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
+
+    private final AppProperties appProperties;
+
+    public EmailTemplateEngine(AppProperties appProperties) {
+        this.appProperties = appProperties;
+    }
 
     public String getSubject(OrderEventType eventType, Order order) {
         return switch (eventType) {
@@ -73,6 +80,7 @@ public class EmailTemplateEngine {
                 + renderOrderDetailsSection(order)
                 + renderItemsTable(order)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
                 + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">We'll send you another email once your payment is confirmed.</p>"
         );
     }
@@ -86,6 +94,7 @@ public class EmailTemplateEngine {
                 + renderOrderDetailsSection(order)
                 + renderItemsTable(order)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
                 + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">Your order will be processed and shipped soon. We'll keep you updated!</p>"
         );
     }
@@ -99,6 +108,7 @@ public class EmailTemplateEngine {
                 + renderOrderDetailsSection(order)
                 + renderStatusBadge(statusLabel, color)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
         );
     }
 
@@ -111,6 +121,7 @@ public class EmailTemplateEngine {
                 + renderOrderDetailsSection(order)
                 + renderItemsTable(order)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
                 + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">Your order will be processed and shipped soon. We'll keep you updated!</p>"
         );
     }
@@ -123,6 +134,7 @@ public class EmailTemplateEngine {
                 + "<p style=\"font-size:15px;color:#555;\">Unfortunately, your payment could not be processed. Please try again or use a different payment method.</p>"
                 + renderOrderDetailsSection(order)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
                 + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">If you were charged, a refund will be processed automatically within 5-7 business days.</p>"
         );
     }
@@ -135,6 +147,7 @@ public class EmailTemplateEngine {
                 + "<p style=\"font-size:15px;color:#555;\">Unfortunately, there was an issue processing your order. Please try again or contact our support team.</p>"
                 + renderOrderDetailsSection(order)
                 + renderTotalSection(order)
+                + renderOrderStatusButton(order)
                 + "<p style=\"font-size:14px;color:#777;margin-top:20px;\">If you were charged, a refund will be processed automatically within 5-7 business days.</p>"
         );
     }
@@ -206,6 +219,37 @@ public class EmailTemplateEngine {
         return "<div style=\"text-align:right;margin:15px 0;padding:15px;background:#f8f9fa;border-radius:8px;\">"
                 + "<span style=\"font-size:18px;font-weight:bold;color:#333;\">Total: " + formatCurrency(order.getTotalAmount()) + "</span>"
                 + "</div>";
+    }
+
+    /**
+     * Renders a centered "View Order Status" CTA that deep-links to the
+     * customer-facing order details page. The button is included in every
+     * order-related email so recipients can jump straight from any
+     * notification to the live status view.
+     */
+    private String renderOrderStatusButton(Order order) {
+        String orderUrl = buildOrderStatusUrl(order);
+        return "<div style=\"text-align:center;margin:24px 0;\">"
+                + "<a href=\"" + orderUrl + "\" "
+                + "style=\"display:inline-block;padding:12px 32px;background:#388E3C;color:#ffffff;"
+                + "text-decoration:none;border-radius:6px;font-size:15px;font-weight:600;"
+                + "font-family:Arial,Helvetica,sans-serif;\" target=\"_blank\" rel=\"noopener\">"
+                + "View Order Status"
+                + "</a>"
+                + "<p style=\"font-size:12px;color:#999;margin:10px 0 0;\">"
+                + "Or copy this link: <a href=\"" + orderUrl + "\" style=\"color:#388E3C;\">" + orderUrl + "</a>"
+                + "</p>"
+                + "</div>";
+    }
+
+    private String buildOrderStatusUrl(Order order) {
+        String base = appProperties != null && appProperties.getFrontendUrl() != null
+                ? appProperties.getFrontendUrl()
+                : "";
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return base + "/orders/" + order.getId();
     }
 
     private String renderStatusBadge(String status, String color) {

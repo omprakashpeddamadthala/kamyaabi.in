@@ -30,6 +30,12 @@ public class AppProperties {
     @Valid
     private Razorpay razorpay = new Razorpay();
 
+    /**
+     * Public URL of the customer-facing frontend (no trailing slash). Used to
+     * build deep links in transactional emails (e.g. View Order Status).
+     */
+    private String frontendUrl = "https://kamyaabi.shop";
+
     @Getter
     @Setter
     public static class Jwt {

@@ -11,6 +11,7 @@ interface ProductState {
   totalPages: number;
   totalElements: number;
   currentPage: number;
+  pageSize: number;
   loading: boolean;
   error: string | null;
 }
@@ -23,6 +24,7 @@ const initialState: ProductState = {
   totalPages: 0,
   totalElements: 0,
   currentPage: 0,
+  pageSize: 12,
   loading: false,
   error: null,
 };
@@ -122,6 +124,7 @@ const productSlice = createSlice({
         state.totalPages = action.payload.totalPages;
         state.totalElements = action.payload.totalElements;
         state.currentPage = action.payload.number;
+        state.pageSize = action.payload.size;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -134,6 +137,7 @@ const productSlice = createSlice({
         state.totalPages = action.payload.totalPages;
         state.totalElements = action.payload.totalElements;
         state.currentPage = action.payload.number;
+        state.pageSize = action.payload.size;
       })
       .addCase(fetchProductsByCategory.rejected, (state, action) => {
         state.loading = false;
@@ -145,6 +149,7 @@ const productSlice = createSlice({
         state.totalPages = action.payload.totalPages;
         state.totalElements = action.payload.totalElements;
         state.currentPage = action.payload.number;
+        state.pageSize = action.payload.size;
       })
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
         state.featuredProducts = action.payload;

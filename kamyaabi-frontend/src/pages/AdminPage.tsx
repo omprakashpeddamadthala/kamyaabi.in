@@ -64,6 +64,7 @@ import {
   ProductImage,
 } from '../types';
 import AnalyticsTab from '../components/admin/AnalyticsTab';
+import UsersTab from '../components/admin/UsersTab';
 import { withCloudinaryTransform } from '../utils/cloudinary';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
@@ -156,7 +157,7 @@ const ORDER_STATUSES = [
  * Tab id <-> index mapping. Using stable string keys in the URL lets us
  * reorder or add tabs without breaking bookmarks.
  */
-const TAB_IDS = ['products', 'categories', 'orders', 'analytics'] as const;
+const TAB_IDS = ['products', 'categories', 'orders', 'users', 'analytics'] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const tabIndexOf = (id: string | null | undefined): number => {
@@ -180,6 +181,7 @@ const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { showSuccess, showError } = useToast();
   const { categories } = useAppSelector((state) => state.products);
+  const currentUser = useAppSelector((state) => state.auth.user);
 
   // URL-driven pagination state. `tab`, `page`, and `limit` all flow through
   // the query string so deep links / back-forward restore the exact view.
@@ -827,6 +829,7 @@ const AdminPage: React.FC = () => {
           <Tab label="Products" />
           <Tab label="Categories" />
           <Tab label="Orders" />
+          <Tab label="Users" />
           <Tab label="Analytics" />
         </Tabs>
       </Box>
@@ -1312,8 +1315,13 @@ const AdminPage: React.FC = () => {
         )}
       </TabPanel>
 
-      {/* Analytics Tab */}
+      {/* Users Tab */}
       <TabPanel value={tabValue} index={3}>
+        <UsersTab active={tabId === 'users'} currentUserId={currentUser?.id} />
+      </TabPanel>
+
+      {/* Analytics Tab */}
+      <TabPanel value={tabValue} index={4}>
         <AnalyticsTab active={tabId === 'analytics'} />
       </TabPanel>
 

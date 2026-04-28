@@ -1,5 +1,6 @@
 package com.kamyaabi.email;
 
+import com.kamyaabi.config.AppProperties;
 import com.kamyaabi.entity.*;
 import com.kamyaabi.event.OrderEventType;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,9 @@ class EmailTemplateEngineTest {
 
     @BeforeEach
     void setUp() {
-        templateEngine = new EmailTemplateEngine();
+        AppProperties appProperties = new AppProperties();
+        appProperties.setFrontendUrl("https://kamyaabi.shop");
+        templateEngine = new EmailTemplateEngine(appProperties);
 
         user = User.builder()
                 .id(1L).email("test@kamyaabi.shop").name("Test User").role(User.Role.USER)
@@ -238,6 +241,39 @@ class EmailTemplateEngineTest {
         String html = templateEngine.renderCustomerEmail(OrderEventType.ORDER_PLACED, order);
         assertThat(html).startsWith("<!DOCTYPE html>");
         assertThat(html).contains("</html>");
+    }
+
+    @Test
+    void renderCustomerEmail_allOrderEvents_shouldContainViewOrderStatusLink() {
+        OrderEventType[] events = {
+                OrderEventType.ORDER_PLACED,
+                OrderEventType.ORDER_CONFIRMED,
+                OrderEventType.ORDER_PROCESSING,
+                OrderEventType.ORDER_SHIPPED,
+                OrderEventType.ORDER_DELIVERED,
+                OrderEventType.ORDER_CANCELLED,
+                OrderEventType.ORDER_FAILED,
+                OrderEventType.PAYMENT_SUCCESS,
+                OrderEventType.PAYMENT_PENDING,
+                OrderEventType.PAYMENT_FAILED,
+        };
+        for (OrderEventType event : events) {
+            String html = templateEngine.renderCustomerEmail(event, order);
+            assertThat(html)
+                    .as("event %s should include the deep link to /orders/{id}", event)
+                    .contains("View Order Status")
+                    .contains("https://kamyaabi.shop/orders/100");
+        }
+    }
+
+    @Test
+    void renderCustomerEmail_frontendUrlWithTrailingSlash_shouldNormalize() {
+        AppProperties props = new AppProperties();
+        props.setFrontendUrl("https://kamyaabi.shop/");
+        EmailTemplateEngine engine = new EmailTemplateEngine(props);
+        String html = engine.renderCustomerEmail(OrderEventType.ORDER_SHIPPED, order);
+        assertThat(html).contains("https://kamyaabi.shop/orders/100");
+        assertThat(html).doesNotContain("kamyaabi.shop//orders");
     }
 
     @Test
