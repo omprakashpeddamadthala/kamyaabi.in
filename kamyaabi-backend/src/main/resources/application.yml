@@ -9,10 +9,14 @@ server:
   # caps must all be disabled so the product image upload endpoint accepts files
   # of any size. Operators must size the upstream proxy (e.g. Nginx
   # client_max_body_size) accordingly.
+  #
+  # NOTE: An explicit MultipartConfigElement bean in
+  # com.kamyaabi.config.MultipartConfig is the authoritative override — these
+  # YAML keys are kept for documentation / belt-and-braces only.
   servlet:
     multipart:
-      max-file-size: -1
-      max-request-size: -1
+      max-file-size: -1B
+      max-request-size: -1B
   tomcat:
     # Disable Tomcat's application/x-www-form-urlencoded size cap (default 2MB).
     # Not strictly needed for multipart, but kept at -1 so no Tomcat-level form
