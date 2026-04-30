@@ -13,6 +13,19 @@ public interface ProductService {
     Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable);
     Page<ProductResponse> searchProducts(String keyword, Pageable pageable);
     ProductResponse getProductById(Long id);
+
+    /**
+     * Fetch an active product by its URL slug. Used by the customer-facing
+     * {@code /products/:slug} route so database ids are not exposed in URLs.
+     */
+    ProductResponse getProductBySlug(String slug);
+
+    /**
+     * Return the slug for a product id — used by the {@code /products/:id}
+     * redirect endpoint to build the canonical slug URL.
+     */
+    String getSlugForId(Long id);
+
     List<ProductResponse> getFeaturedProducts();
 
     /**

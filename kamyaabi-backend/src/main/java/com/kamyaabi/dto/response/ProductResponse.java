@@ -16,6 +16,8 @@ import java.util.List;
 public class ProductResponse {
     private Long id;
     private String name;
+    /** URL-safe slug used in product-detail routes (e.g. {@code /products/:slug}). */
+    private String slug;
     private String description;
     private BigDecimal price;
     private BigDecimal discountPrice;

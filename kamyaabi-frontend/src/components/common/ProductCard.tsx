@@ -90,7 +90,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card
       sx={{ cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column' }}
-      onClick={() => navigate(`/products/${product.id}`)}
+      onClick={() => navigate(`/products/${product.slug ?? product.id}`)}
     >
       <Box sx={{ position: 'relative' }}>
         <CardMedia

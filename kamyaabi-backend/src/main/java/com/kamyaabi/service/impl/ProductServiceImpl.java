@@ -24,14 +24,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService {
+
+    private static final Pattern NON_ALPHANUM = Pattern.compile("[^a-z0-9]+");
+    private static final Pattern EDGES = Pattern.compile("(^-|-$)");
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -92,6 +98,32 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "productBySlug", key = "#slug")
+    public ProductResponse getProductBySlug(String slug) {
+        log.debug("Fetching product by slug: {}", slug);
+        Product product = productRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with slug '" + slug + "' not found"));
+        return productMapper.toResponse(product);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSlugForId(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+        String slug = product.getSlug();
+        if (slug == null || slug.isBlank()) {
+            // Existing row from before slugs existed — generate + persist so
+            // the redirect has a stable URL to point to.
+            slug = resolveSlug(null, product.getName(), product.getId());
+            product.setSlug(slug);
+            productRepository.save(product);
+        }
+        return slug;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = "featuredProducts")
     public List<ProductResponse> getFeaturedProducts() {
         log.debug("Fetching featured products");
@@ -127,6 +159,7 @@ public class ProductServiceImpl implements ProductService {
                 uploaded.add(cloudinaryService.uploadImage(file));
             }
             Product product = productMapper.toEntity(request, category);
+            product.setSlug(resolveSlug(null, request.getName(), null));
             for (int i = 0; i < uploaded.size(); i++) {
                 CloudinaryService.UploadResult ur = uploaded.get(i);
                 ProductImage img = ProductImage.builder()
@@ -166,7 +199,14 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId()));
+        String previousName = product.getName();
         productMapper.updateEntity(product, request, category);
+        // Regenerate slug when the name changes so URLs stay meaningful, while
+        // leaving an existing slug untouched when the name is unchanged.
+        if (product.getSlug() == null || product.getSlug().isBlank()
+                || (previousName != null && !previousName.equals(request.getName()))) {
+            product.setSlug(resolveSlug(null, request.getName(), product.getId()));
+        }
 
         List<MultipartFile> toUpload = newImages == null ? Collections.emptyList() : newImages;
         int existingCount = product.getImages() == null ? 0 : product.getImages().size();
@@ -309,5 +349,41 @@ public class ProductServiceImpl implements ProductService {
                 productImageRepository.save(newMain);
             }
         }
+    }
+
+    /**
+     * Resolve the slug to persist for a product. Generates a slug from the
+     * name when no override is supplied and appends {@code -2}, {@code -3},
+     * ... to disambiguate against existing rows.
+     */
+    String resolveSlug(String requested, String name, Long currentId) {
+        String base = (requested != null && !requested.isBlank())
+                ? requested.trim().toLowerCase(Locale.ROOT)
+                : slugify(name);
+        if (base.isEmpty()) {
+            throw new BadRequestException("Unable to derive slug from product name");
+        }
+        String candidate = base;
+        int suffix = 2;
+        while (slugTaken(candidate, currentId)) {
+            candidate = base + "-" + suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean slugTaken(String slug, Long currentId) {
+        return currentId == null
+                ? productRepository.existsBySlug(slug)
+                : productRepository.existsBySlugAndIdNot(slug, currentId);
+    }
+
+    /** Lowercase, ASCII-fold and hyphenate a product name into a URL-safe slug. */
+    public static String slugify(String name) {
+        if (name == null) return "";
+        String normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .toLowerCase(Locale.ROOT);
+        String dashed = NON_ALPHANUM.matcher(normalized).replaceAll("-");
+        return EDGES.matcher(dashed).replaceAll("");
     }
 }
