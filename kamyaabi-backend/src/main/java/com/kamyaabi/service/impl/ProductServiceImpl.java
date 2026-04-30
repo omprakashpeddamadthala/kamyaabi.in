@@ -188,7 +188,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
     public ProductResponse updateProduct(Long id,
                                          ProductRequest request,
                                          List<MultipartFile> newImages,
@@ -270,7 +270,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProduct(Long id) {
         log.info("Deleting product: {}", id);
         Product product = productRepository.findById(id)
@@ -302,7 +302,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
     public ProductResponse restoreProduct(Long id) {
         log.info("Restoring product: {}", id);
         Product product = productRepository.findById(id)
@@ -313,7 +313,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
     public ProductResponse setProductActive(Long id, boolean active) {
         log.info("Toggling product {} active -> {}", id, active);
         Product product = productRepository.findById(id)
@@ -324,7 +324,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProductImage(Long productId, Long imageId) {
         log.info("Deleting image {} from product {}", imageId, productId);
         ProductImage image = productImageRepository.findByIdAndProductId(imageId, productId)
