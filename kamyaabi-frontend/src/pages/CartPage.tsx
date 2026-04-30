@@ -290,15 +290,27 @@ const CartPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <IconButton
                     size="small"
-                    onClick={() =>
-                      handleQuantityChange(item.id, Math.max(1, item.quantity - 1))
-                    }
+                    aria-label={item.quantity === 1 ? 'Remove item from cart' : 'Decrease quantity'}
+                    onClick={() => {
+                      // Decrementing past 1 should remove the item entirely so the
+                      // user doesn't have to chase the explicit Delete icon.
+                      if (item.quantity <= 1) {
+                        if (debounceTimers.current[item.id]) {
+                          clearTimeout(debounceTimers.current[item.id]);
+                          delete debounceTimers.current[item.id];
+                        }
+                        dispatch(removeFromCart(item.id));
+                        return;
+                      }
+                      handleQuantityChange(item.id, item.quantity - 1);
+                    }}
                   >
                     <Remove />
                   </IconButton>
                   <Typography fontWeight={600}>{item.quantity}</Typography>
                   <IconButton
                     size="small"
+                    aria-label="Increase quantity"
                     onClick={() =>
                       handleQuantityChange(item.id, item.quantity + 1)
                     }
