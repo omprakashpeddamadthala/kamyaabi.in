@@ -22,6 +22,12 @@ public class EmailProperties {
     private String fromEmail = "omprakashornold@gmail.com";
     private String fromName = "Kamyaabi";
     private List<String> adminEmails = new ArrayList<>();
+    /**
+     * Developer recipients for unhandled-error alert emails (frontend + backend).
+     * Sourced from the {@code DEVELOPER_EMAILS} env variable as a comma-separated
+     * list and exposed under {@code app.email.developer-emails} in YAML.
+     */
+    private List<String> developerEmails = new ArrayList<>();
 
     private SendGrid sendgrid = new SendGrid();
     private Smtp smtp = new Smtp();

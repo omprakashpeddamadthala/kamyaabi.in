@@ -46,6 +46,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        // Frontend error sink — must be reachable from anonymous
+                        // sessions because client-side errors can fire before
+                        // (or after) auth state is established.
+                        .requestMatchers(HttpMethod.POST, "/api/errors/report").permitAll()
                         // OAuth2 endpoints
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
                         // Swagger

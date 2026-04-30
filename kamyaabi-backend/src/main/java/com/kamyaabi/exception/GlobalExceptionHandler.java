@@ -2,10 +2,12 @@ package com.kamyaabi.exception;
 
 import com.kamyaabi.config.CorrelationIdFilter;
 import com.kamyaabi.dto.response.ApiErrorResponse;
+import com.kamyaabi.email.ErrorAlertService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,18 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Optional collaborator — kept setter-injected so the handler is still
+     * usable in lightweight tests that don't wire an {@code ErrorAlertService}
+     * bean. When absent (e.g. older test contexts) the alert is simply skipped.
+     */
+    private ErrorAlertService errorAlertService;
+
+    @Autowired(required = false)
+    public void setErrorAlertService(ErrorAlertService errorAlertService) {
+        this.errorAlertService = errorAlertService;
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFound(ResourceNotFoundException ex,
@@ -161,6 +175,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex,
                                                           HttpServletRequest request) {
         log.error("Unhandled exception on {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        if (errorAlertService != null) {
+            try {
+                errorAlertService.alertOnBackendException(ex, request);
+            } catch (Exception alertFailure) {
+                // Belt-and-suspenders: the alert pipeline is async and self-contained,
+                // but we still log defensively so a mis-wired alerter can never break
+                // the user-visible 500 response.
+                log.error("Failed to dispatch developer error alert: {}", alertFailure.getMessage());
+            }
+        }
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred. Please cite the traceId when contacting support.",
                 request, null);

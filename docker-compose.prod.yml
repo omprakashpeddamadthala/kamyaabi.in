@@ -24,6 +24,7 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-noreply@kamyaabi.in}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Kamyaabi}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kamyaabi.in}
+      DEVELOPER_EMAILS: ${DEVELOPER_EMAILS:-}
       APP_SUPPORT_EMAIL: ${APP_SUPPORT_EMAIL:-support@kamyaabi.in}
       APP_SUPPORT_URL: ${APP_SUPPORT_URL:-https://kamyaabi.in}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-your-sendgrid-api-key}
