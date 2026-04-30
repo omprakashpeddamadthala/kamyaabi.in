@@ -23,14 +23,14 @@ class JwtTokenProviderTest {
 
     @Test
     void generateToken_shouldReturnValidToken() {
-        String token = jwtTokenProvider.generateToken(1L, "test@kamyaabi.shop", "USER");
+        String token = jwtTokenProvider.generateToken(1L, "test@kamyaabi.in", "USER");
 
         assertThat(token).isNotNull().isNotEmpty();
     }
 
     @Test
     void getUserIdFromToken_shouldReturnUserId() {
-        String token = jwtTokenProvider.generateToken(42L, "test@kamyaabi.shop", "USER");
+        String token = jwtTokenProvider.generateToken(42L, "test@kamyaabi.in", "USER");
 
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
@@ -39,7 +39,7 @@ class JwtTokenProviderTest {
 
     @Test
     void validateToken_validToken_shouldReturnTrue() {
-        String token = jwtTokenProvider.generateToken(1L, "test@kamyaabi.shop", "USER");
+        String token = jwtTokenProvider.generateToken(1L, "test@kamyaabi.in", "USER");
 
         boolean isValid = jwtTokenProvider.validateToken(token);
 
@@ -69,7 +69,7 @@ class JwtTokenProviderTest {
         appProperties.setJwt(jwt);
 
         JwtTokenProvider expiredProvider = new JwtTokenProvider(appProperties);
-        String token = expiredProvider.generateToken(1L, "test@kamyaabi.shop", "USER");
+        String token = expiredProvider.generateToken(1L, "test@kamyaabi.in", "USER");
 
         boolean isValid = expiredProvider.validateToken(token);
 
@@ -78,7 +78,7 @@ class JwtTokenProviderTest {
 
     @Test
     void generateToken_withAdminRole_shouldReturnValidToken() {
-        String token = jwtTokenProvider.generateToken(1L, "admin@kamyaabi.shop", "ADMIN");
+        String token = jwtTokenProvider.generateToken(1L, "admin@kamyaabi.in", "ADMIN");
 
         assertThat(token).isNotNull();
         assertThat(jwtTokenProvider.validateToken(token)).isTrue();

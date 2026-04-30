@@ -24,7 +24,7 @@ const initialState: ProductState = {
   totalPages: 0,
   totalElements: 0,
   currentPage: 0,
-  pageSize: 12,
+  pageSize: 6,
   loading: false,
   error: null,
 };
@@ -86,6 +86,19 @@ export const fetchProductById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await productApi.getById(id);
+      return response.data.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch product');
+    }
+  }
+);
+
+export const fetchProductBySlug = createAsyncThunk(
+  'products/fetchBySlug',
+  async (slug: string, { rejectWithValue }) => {
+    try {
+      const response = await productApi.getBySlug(slug);
       return response.data.data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -160,6 +173,15 @@ const productSlice = createSlice({
         state.selectedProduct = action.payload;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchProductBySlug.pending, (state) => { state.loading = true; })
+      .addCase(fetchProductBySlug.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedProduct = action.payload;
+      })
+      .addCase(fetchProductBySlug.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

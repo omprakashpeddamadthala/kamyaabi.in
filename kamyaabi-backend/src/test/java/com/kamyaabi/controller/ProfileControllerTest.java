@@ -28,7 +28,7 @@ class ProfileControllerTest {
     void getProfile_shouldReturnProfileResponse() {
         ProfileResponse profileResponse = ProfileResponse.builder()
                 .id(1L)
-                .email("test@kamyaabi.shop")
+                .email("test@kamyaabi.in")
                 .name("Test User")
                 .firstName("Test")
                 .lastName("User")
@@ -53,7 +53,7 @@ class ProfileControllerTest {
 
         ProfileResponse profileResponse = ProfileResponse.builder()
                 .id(1L)
-                .email("test@kamyaabi.shop")
+                .email("test@kamyaabi.in")
                 .name("Updated Name")
                 .firstName("Updated")
                 .lastName("Name")

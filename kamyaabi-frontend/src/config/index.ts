@@ -11,7 +11,7 @@
 
 import { logger } from '../utils/logger';
 
-const DEFAULT_BRAND_DOMAIN = 'kamyaabi.shop';
+const DEFAULT_BRAND_DOMAIN = 'kamyaabi.in';
 const DEFAULT_SUPPORT_EMAIL = 'sm.enterprises0121@gmail.com';
 const DEFAULT_SUPPORT_PHONE = '9848999072';
 
@@ -20,7 +20,7 @@ interface AppConfig {
   readonly apiBaseUrl: string;
   /** Google OAuth2 web client id used by the frontend @react-oauth/google provider. */
   readonly googleClientId: string;
-  /** Public brand domain (e.g. kamyaabi.shop) — drives links in footer/email/support copy. */
+  /** Public brand domain (e.g. kamyaabi.in) — drives links in footer/email/support copy. */
   readonly brandDomain: string;
   /** Support email address rendered in the UI. */
   readonly supportEmail: string;

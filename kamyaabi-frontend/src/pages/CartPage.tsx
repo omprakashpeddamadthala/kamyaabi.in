@@ -279,7 +279,7 @@ const CartPage: React.FC = () => {
                   <Typography
                     variant="h6"
                     sx={{ fontSize: '1rem', cursor: 'pointer' }}
-                    onClick={() => navigate(`/products/${item.productId}`)}
+                    onClick={() => navigate(`/products/${item.productId}`)} /* numeric id — ProductDetailPage redirects to canonical slug */
                   >
                     {item.productName}
                   </Typography>

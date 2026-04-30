@@ -22,11 +22,11 @@ class EmailTemplateEngineTest {
     @BeforeEach
     void setUp() {
         AppProperties appProperties = new AppProperties();
-        appProperties.setFrontendUrl("https://kamyaabi.shop");
+        appProperties.setFrontendUrl("https://kamyaabi.in");
         templateEngine = new EmailTemplateEngine(appProperties);
 
         user = User.builder()
-                .id(1L).email("test@kamyaabi.shop").name("Test User").role(User.Role.USER)
+                .id(1L).email("test@kamyaabi.in").name("Test User").role(User.Role.USER)
                 .build();
 
         Address address = Address.builder()
@@ -153,7 +153,7 @@ class EmailTemplateEngineTest {
     void renderAdminEmail_shouldContainAdminDetails() {
         String html = templateEngine.renderAdminEmail(OrderEventType.ORDER_PLACED, order);
         assertThat(html).contains("Admin");
-        assertThat(html).contains("test@kamyaabi.shop");
+        assertThat(html).contains("test@kamyaabi.in");
         assertThat(html).contains("Test User");
         assertThat(html).contains("#100");
     }
@@ -262,18 +262,18 @@ class EmailTemplateEngineTest {
             assertThat(html)
                     .as("event %s should include the deep link to /orders/{id}", event)
                     .contains("View Order Status")
-                    .contains("https://kamyaabi.shop/orders/100");
+                    .contains("https://kamyaabi.in/orders/100");
         }
     }
 
     @Test
     void renderCustomerEmail_frontendUrlWithTrailingSlash_shouldNormalize() {
         AppProperties props = new AppProperties();
-        props.setFrontendUrl("https://kamyaabi.shop/");
+        props.setFrontendUrl("https://kamyaabi.in/");
         EmailTemplateEngine engine = new EmailTemplateEngine(props);
         String html = engine.renderCustomerEmail(OrderEventType.ORDER_SHIPPED, order);
-        assertThat(html).contains("https://kamyaabi.shop/orders/100");
-        assertThat(html).doesNotContain("kamyaabi.shop//orders");
+        assertThat(html).contains("https://kamyaabi.in/orders/100");
+        assertThat(html).doesNotContain("kamyaabi.in//orders");
     }
 
     @Test

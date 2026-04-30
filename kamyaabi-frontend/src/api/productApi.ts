@@ -2,7 +2,7 @@ import axiosInstance from './axiosInstance';
 import { ApiResponse, PageResponse, Product } from '../types';
 
 export const productApi = {
-  getAll: (page = 0, size = 12, sortBy = 'createdAt', sortDir = 'desc') =>
+  getAll: (page = 0, size = 6, sortBy = 'createdAt', sortDir = 'desc') =>
     axiosInstance.get<ApiResponse<PageResponse<Product>>>('/api/products', {
       params: { page, size, sortBy, sortDir },
     }),
@@ -10,12 +10,15 @@ export const productApi = {
   getById: (id: number) =>
     axiosInstance.get<ApiResponse<Product>>(`/api/products/${id}`),
 
-  getByCategory: (categoryId: number, page = 0, size = 12) =>
+  getBySlug: (slug: string) =>
+    axiosInstance.get<ApiResponse<Product>>(`/api/products/slug/${encodeURIComponent(slug)}`),
+
+  getByCategory: (categoryId: number, page = 0, size = 6) =>
     axiosInstance.get<ApiResponse<PageResponse<Product>>>(`/api/products/category/${categoryId}`, {
       params: { page, size },
     }),
 
-  search: (keyword: string, page = 0, size = 12) =>
+  search: (keyword: string, page = 0, size = 6) =>
     axiosInstance.get<ApiResponse<PageResponse<Product>>>('/api/products/search', {
       params: { keyword, page, size },
     }),

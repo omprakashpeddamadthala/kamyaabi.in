@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
-    @Value("${app.support.email:support@kamyaabi.shop}")
+    @Value("${app.support.email:support@kamyaabi.in}")
     private String supportEmail;
 
-    @Value("${app.support.url:https://kamyaabi.shop}")
+    @Value("${app.support.url:https://kamyaabi.in}")
     private String supportUrl;
 
     @Bean

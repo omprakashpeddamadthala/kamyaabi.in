@@ -43,7 +43,12 @@ import {
   FlashOn,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import { fetchProductById, clearSelectedProduct, fetchProducts } from '../features/product/productSlice';
+import {
+  fetchProductById,
+  fetchProductBySlug,
+  clearSelectedProduct,
+  fetchProducts,
+} from '../features/product/productSlice';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
@@ -181,12 +186,18 @@ function formatRelativeDate(iso: string): string {
 /* Main Component                                                         */
 /* ═══════════════════════════════════════════════════════════════════════ */
 const ProductDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+
+  // The route param is called `slug`, but legacy /products/<numeric-id>
+  // links (e.g. from emails or cart items keyed by productId) still resolve
+  // here. Detect that case so we can fetch by id and then redirect the URL
+  // to the canonical slug — the SPA equivalent of a 301 redirect.
+  const paramIsNumericId = !!slugParam && /^\d+$/.test(slugParam);
 
   const { selectedProduct: product, products } = useAppSelector((s) => s.products);
   const { user } = useAppSelector((s) => s.auth);
@@ -214,14 +225,27 @@ const ProductDetailPage: React.FC = () => {
 
   /* Fetch product + related products */
   useEffect(() => {
-    if (id) {
-      dispatch(fetchProductById(Number(id)));
+    if (slugParam) {
+      if (paramIsNumericId) {
+        dispatch(fetchProductById(Number(slugParam)));
+      } else {
+        dispatch(fetchProductBySlug(slugParam));
+      }
       setSelectedImageIdx(0);
       setQuantity(1);
       setTabValue(0);
     }
     return () => { dispatch(clearSelectedProduct()); };
-  }, [dispatch, id]);
+  }, [dispatch, slugParam, paramIsNumericId]);
+
+  /* 301-equivalent: once the product loads after a numeric-id lookup,
+     rewrite the URL to the canonical /products/:slug form so shared
+     links, bookmarks and the back button all use the stable slug. */
+  useEffect(() => {
+    if (paramIsNumericId && product?.slug) {
+      navigate(`/products/${product.slug}`, { replace: true });
+    }
+  }, [paramIsNumericId, product?.slug, navigate]);
 
   useEffect(() => {
     if (product) {
@@ -229,12 +253,15 @@ const ProductDetailPage: React.FC = () => {
     }
   }, [dispatch, product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Pull real reviews + aggregated rating + recent-buyer count from backend. */
+  /* Pull real reviews + aggregated rating + recent-buyer count from backend.
+     Keyed on the resolved product's numeric id (not the URL param) so this
+     works for both slug and legacy numeric lookups. */
   useEffect(() => {
-    if (!id) return;
+    const productId = product?.id;
+    if (!productId) return;
     let cancelled = false;
     setReviewsLoading(true);
-    Promise.all([reviewApi.list(Number(id), 0, 6), reviewApi.summary(Number(id))])
+    Promise.all([reviewApi.list(productId, 0, 6), reviewApi.summary(productId)])
       .then(([listRes, sumRes]) => {
         if (cancelled) return;
         setReviews(listRes.data.data?.content ?? []);
@@ -249,7 +276,7 @@ const ProductDetailPage: React.FC = () => {
         if (!cancelled) setReviewsLoading(false);
       });
     return () => { cancelled = true; };
-  }, [id]);
+  }, [product?.id]);
 
   /* Sticky CTA observer */
   useEffect(() => {
@@ -402,7 +429,7 @@ const ProductDetailPage: React.FC = () => {
         </Breadcrumbs>
       </Container>
 
-      <Container maxWidth="lg" sx={{ pb: { xs: 4, md: 6 } }}>
+      <Container maxWidth="lg" sx={{ pb: { xs: 2, md: 3 } }}>
         {/* ── Main 2-col layout ─────────────────────────────────────── */}
         <Grid container spacing={{ xs: 3, md: 4 }} alignItems="flex-start">
           {/* LEFT: Image gallery */}
@@ -744,15 +771,27 @@ const ProductDetailPage: React.FC = () => {
               <TabPanel key={key} value={safeTabValue} index={idx}>
                 {key === 'description' && (
                   <>
-                    {/* Bullet list: each sentence/line rendered as a styled
-                        checkmark row so dense copy becomes scannable. */}
-                    {descriptionBullets.length > 0 ? (
+                    {/* Render the full product description verbatim —
+                        pre-wrap keeps intentional line breaks and lists
+                        that came back from the API. */}
+                    <Typography
+                      variant="body1"
+                      sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}
+                    >
+                      {product.description}
+                    </Typography>
+
+                    {/* Additional scannable bullet list shown only when the
+                        description cleanly parses into multiple bullet-style
+                        sentences — supplements the raw text, never replaces it. */}
+                    {descriptionBullets.length > 1 && (
                       <Box
                         component="ul"
                         sx={{
                           listStyle: 'none',
                           p: 0,
-                          m: 0,
+                          mt: 3,
+                          mb: 0,
                           display: 'flex',
                           flexDirection: 'column',
                           gap: 1.25,
@@ -785,10 +824,6 @@ const ProductDetailPage: React.FC = () => {
                           </Box>
                         ))}
                       </Box>
-                    ) : (
-                      <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}>
-                        {product.description}
-                      </Typography>
                     )}
 
                     {/* Additional Information ── surfaces weight/dimensions/

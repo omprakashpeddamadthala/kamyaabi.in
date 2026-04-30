@@ -41,7 +41,7 @@ class CartServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
+        user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         cart = Cart.builder().id(1L).user(user).items(new ArrayList<>()).build();
         product = Product.builder().id(1L).name("Cashews").price(new BigDecimal("899.00"))
                 .stock(100).active(true).category(Category.builder().id(1L).name("Cashews").build()).build();

@@ -43,7 +43,7 @@ class AddressServiceImplTest {
     void setUp() {
         addressService = new AddressServiceImpl(addressRepository, userRepository, addressMapper, addressValidator);
 
-        user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
+        user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         address = Address.builder().id(1L).user(user).fullName("Test User").phone("9876543210")
                 .street("123 Main St").addressLine2("Apt 4").city("Mumbai").state("Maharashtra")
                 .pincode("400001").isDefault(false).build();

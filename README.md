@@ -306,7 +306,7 @@ All secrets come from environment variables. Nothing secret is checked in.
 |--------------------------|----------|---------------------------------------------------------|
 | `VITE_API_BASE_URL`      | no       | Backend base URL. Blank = same-origin (behind Nginx).   |
 | `VITE_GOOGLE_CLIENT_ID`  | yes (prod) | Google OAuth web client id (same as backend)          |
-| `VITE_BRAND_DOMAIN`      | no       | Public brand domain; default `kamyaabi.shop`            |
+| `VITE_BRAND_DOMAIN`      | no       | Public brand domain; default `kamyaabi.in`            |
 | `VITE_SUPPORT_EMAIL`     | no       | Support email rendered in UI                            |
 
 Frontend env vars are consumed via `src/config/index.ts`, which throws in

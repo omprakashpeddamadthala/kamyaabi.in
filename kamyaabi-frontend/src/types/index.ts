@@ -44,6 +44,8 @@ export interface ProductImage {
 export interface Product {
   id: number;
   name: string;
+  /** URL-safe slug used in product-detail routes (e.g. `/products/:slug`). */
+  slug: string;
   description: string;
   price: number;
   discountPrice: number | null;

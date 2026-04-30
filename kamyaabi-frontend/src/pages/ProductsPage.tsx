@@ -39,6 +39,24 @@ const ProductsPage: React.FC = () => {
   const [sortDir, setSortDir] = useState('desc');
 
   const categoryId = searchParams.get('category');
+  // URL-based pagination: ?page=N is the source of truth so users can share,
+  // bookmark and use the back button to return to a specific page. N is
+  // 1-indexed in the URL (human-friendly) but 0-indexed for the API.
+  const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
+  const zeroBasedPage = urlPage - 1;
+
+  /** Mutate the search params while preserving any others already in the URL. */
+  const updateParams = (next: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams);
+    Object.entries(next).forEach(([k, v]) => {
+      if (v === null || v === '') {
+        params.delete(k);
+      } else {
+        params.set(k, v);
+      }
+    });
+    setSearchParams(params, { replace: false });
+  };
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -46,31 +64,25 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     if (searchQuery) {
-      dispatch(searchProducts({ keyword: searchQuery, page: 0 }));
-    } else if (categoryId) {
-      dispatch(fetchProductsByCategory({ categoryId: Number(categoryId), page: 0 }));
-    } else {
-      dispatch(fetchProducts({ page: 0, sortBy, sortDir }));
-    }
-  }, [dispatch, categoryId, sortBy, sortDir, searchQuery]);
-
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
-    const zeroBasedPage = page - 1;
-    if (searchQuery) {
       dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage }));
     } else if (categoryId) {
       dispatch(fetchProductsByCategory({ categoryId: Number(categoryId), page: zeroBasedPage }));
     } else {
       dispatch(fetchProducts({ page: zeroBasedPage, sortBy, sortDir }));
     }
+  }, [dispatch, categoryId, sortBy, sortDir, searchQuery, zeroBasedPage]);
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
+    updateParams({ page: page === 1 ? null : String(page) });
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // Reset to page 1 on a new search so the user sees fresh results.
       setSearchParams({});
-      dispatch(searchProducts({ keyword: searchQuery.trim() }));
+      dispatch(searchProducts({ keyword: searchQuery.trim(), page: 0 }));
     }
   };
 
@@ -145,7 +157,12 @@ const ProductsPage: React.FC = () => {
             label={cat.name}
             variant={categoryId === String(cat.id) ? 'filled' : 'outlined'}
             color={categoryId === String(cat.id) ? 'primary' : 'default'}
-            onClick={() => { setSearchParams({ category: String(cat.id) }); setSearchQuery(''); }}
+            onClick={() => {
+              // Switching category resets pagination so the user doesn't land
+              // on a non-existent page for the new filter.
+              setSearchParams({ category: String(cat.id) });
+              setSearchQuery('');
+            }}
           />
         ))}
       </Box>
@@ -158,7 +175,7 @@ const ProductsPage: React.FC = () => {
         </Box>
       ) : loading ? (
         <Grid container spacing={3}>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: pageSize || 6 }).map((_, i) => (
             <Grid item xs={6} sm={4} md={3} key={i}>
               <ProductCardSkeleton />
             </Grid>
@@ -197,7 +214,7 @@ const ProductsPage: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
               <Pagination
                 count={totalPages}
-                page={currentPage + 1}
+                page={Math.min(urlPage, totalPages)}
                 onChange={handlePageChange}
                 color="primary"
                 size="large"

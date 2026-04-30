@@ -51,7 +51,7 @@ class PaymentServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        User user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
+        User user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         order = Order.builder().id(1L).user(user)
                 .totalAmount(new BigDecimal("1498.00")).status(Order.OrderStatus.PENDING)
                 .items(new ArrayList<>()).build();

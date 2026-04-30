@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
-  Button,
   Chip,
   IconButton,
   InputAdornment,
@@ -27,6 +26,7 @@ import {
   DoNotDisturbOn,
   LockOpen,
   PersonOutline,
+  RemoveModerator,
   RestoreFromTrash,
   Search as SearchIcon,
 } from '@mui/icons-material';
@@ -396,20 +396,24 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <Tooltip
-                          title={isSelf ? 'You cannot change your own role' : ''}
-                          disableHoverListener={!isSelf}
+                          title={
+                            isSelf
+                              ? 'You cannot change your own role'
+                              : user.role === 'ADMIN'
+                                ? 'Remove Admin'
+                                : 'Make Admin'
+                          }
                         >
                           <span>
-                            <Button
+                            <IconButton
                               size="small"
-                              variant={user.role === 'ADMIN' ? 'outlined' : 'contained'}
                               color="primary"
                               disabled={isSelf || rowBusy}
                               onClick={() => handleToggleRole(user)}
-                              startIcon={<AdminPanelSettings />}
+                              aria-label={user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
                             >
-                              {user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
-                            </Button>
+                              {user.role === 'ADMIN' ? <RemoveModerator /> : <AdminPanelSettings />}
+                            </IconButton>
                           </span>
                         </Tooltip>
                         <Tooltip

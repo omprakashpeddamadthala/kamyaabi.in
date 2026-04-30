@@ -55,11 +55,25 @@ const theme = createTheme({
     borderRadius: 8,
   },
   components: {
+    // Prevent the viewport from ever scrolling horizontally on narrow
+    // screens — guarantees "no horizontal overflow" for the responsive
+    // audit regardless of which page is mounted.
+    MuiCssBaseline: {
+      styleOverrides: {
+        'html, body': { overflowX: 'hidden' },
+        '#root': { overflowX: 'hidden' },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
           padding: '8px 24px',
+          // Ensure buttons meet the 44x44 accessibility tap-target guideline
+          // on touch devices without bloating desktop layout (padding-only).
+          '@media (pointer: coarse)': {
+            minHeight: 44,
+          },
         },
         contained: {
           boxShadow: 'none',
@@ -88,6 +102,17 @@ const theme = createTheme({
           backgroundColor: '#FFFFFF',
           color: '#1A1A1A',
           boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
+        },
+      },
+    },
+    // Same accessibility guideline for icon buttons on touch devices.
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          '@media (pointer: coarse)': {
+            minWidth: 44,
+            minHeight: 44,
+          },
         },
       },
     },
