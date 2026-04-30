@@ -825,6 +825,9 @@ const AdminPage: React.FC = () => {
         <Tabs
           value={tabValue}
           onChange={(_, v) => updateUrlParams({ tab: TAB_IDS[v], page: 1 })}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
         >
           <Tab label="Products" />
           <Tab label="Categories" />
