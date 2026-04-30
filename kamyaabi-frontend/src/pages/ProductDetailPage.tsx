@@ -58,21 +58,45 @@ import { reviewApi } from '../api/reviewApi';
 import type { Review, ReviewSummary } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 
-/* ─── Scroll-reveal hook (IntersectionObserver) ──────────────────────── */
+/* ─── Scroll-reveal hook (IntersectionObserver) ──────────────────────────
+ * Uses a callback ref so the observer attaches the moment the target node
+ * mounts. With a plain `useRef` + one-shot `useEffect`, the effect ran once
+ * on the initial render — when the component still showed the skeleton and
+ * the box hadn't mounted yet — so the observer was never wired up. After
+ * the product loaded the section stayed at opacity 0 forever, leaving a
+ * tall band of empty whitespace under the description/related products. */
 function useRevealOnScroll(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [threshold]);
+  const ref = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      if (!node) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setVisible(true);
+        },
+        { threshold },
+      );
+      observer.observe(node);
+      observerRef.current = observer;
+    },
+    [threshold],
+  );
+
+  useEffect(
+    () => () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+    },
+    [],
+  );
 
   return { ref, visible };
 }
