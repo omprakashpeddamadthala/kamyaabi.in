@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -7,8 +7,8 @@ import {
   IconButton,
   Badge,
   Box,
-  Menu,
   MenuItem,
+  Paper,
   Avatar,
   Container,
   Drawer,
@@ -58,16 +58,39 @@ const Navbar: React.FC = () => {
   const { cart } = useAppSelector((state) => state.cart);
   const { cartIconRef } = useFlyToCart();
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
+  const avatarWrapRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+  const handleMenuOpen = () => {
+    const el = avatarWrapRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // Estimated menu height; flip up when there isn't enough room below
+      // (e.g. avatar sits near the bottom of the viewport on mobile).
+      setDropUp(spaceBelow < 260 && rect.top > 260);
+    }
+    setMenuOpen(true);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuOpen(false);
   };
+
+  // Close the dropdown when the user clicks anywhere outside of it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (event: MouseEvent) => {
+      const wrap = avatarWrapRef.current;
+      if (wrap && !wrap.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -178,40 +201,57 @@ const Navbar: React.FC = () => {
             )}
 
             {user ? (
-              <>
-                <IconButton onClick={handleMenuOpen}>
+              <Box ref={avatarWrapRef} sx={{ position: 'relative', display: 'inline-flex' }}>
+                <IconButton onClick={handleMenuOpen} aria-label="Open account menu">
                   <Avatar src={user.avatarUrl || undefined} alt={user.name} sx={{ width: 32, height: 32 }}>
                     {user.name.charAt(0)}
                   </Avatar>
                 </IconButton>
-                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                  <MenuItem disabled>
-                    <Typography variant="body2" color="text.secondary">{user.name}</Typography>
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
-                    <ListItemIcon><Person fontSize="small" /></ListItemIcon>
-                    My Profile
-                  </MenuItem>
-                  {user.role !== 'ADMIN' && (
-                    <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
-                      <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>
-                      My Orders
+                {menuOpen && (
+                  <Paper
+                    elevation={6}
+                    sx={{
+                      position: 'absolute',
+                      right: 0,
+                      ...(dropUp
+                        ? { bottom: 'calc(100% + 8px)' }
+                        : { top: 'calc(100% + 8px)' }),
+                      minWidth: 220,
+                      maxWidth: 'calc(100vw - 16px)',
+                      py: 0.5,
+                      zIndex: (t) => t.zIndex.modal,
+                    }}
+                  >
+                    <MenuItem disabled sx={{ opacity: 1 }}>
+                      <Typography variant="body2" color="text.secondary" noWrap>{user.name}</Typography>
                     </MenuItem>
-                  )}
-                  {user.role === 'ADMIN' && (
-                    <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }}>
-                      <ListItemIcon><Dashboard fontSize="small" /></ListItemIcon>
-                      Admin Panel
+                    <Divider />
+                    {user.role !== 'ADMIN' && (
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
+                        <ListItemIcon><Person fontSize="small" /></ListItemIcon>
+                        My Profile
+                      </MenuItem>
+                    )}
+                    {user.role !== 'ADMIN' && (
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
+                        <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>
+                        My Orders
+                      </MenuItem>
+                    )}
+                    {user.role === 'ADMIN' && (
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }}>
+                        <ListItemIcon><Dashboard fontSize="small" /></ListItemIcon>
+                        Admin Panel
+                      </MenuItem>
+                    )}
+                    <Divider />
+                    <MenuItem onClick={handleLogout}>
+                      <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
+                      Logout
                     </MenuItem>
-                  )}
-                  <Divider />
-                  <MenuItem onClick={handleLogout}>
-                    <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
-                    Logout
-                  </MenuItem>
-                </Menu>
-              </>
+                  </Paper>
+                )}
+              </Box>
             ) : (
               <Button
                 component={Link}
