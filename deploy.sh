@@ -13,7 +13,7 @@ BACKEND_TAG="latest"
 FRONTEND_TAG="latest"
 
 # Load DOMAIN (and other env vars) from .env so status output matches the
-# actual deployed domain. Defaults to kamyaabi.shop if .env or DOMAIN is
+# actual deployed domain. Defaults to kamyaabi.in if .env or DOMAIN is
 # missing; change DOMAIN in .env to switch domains (e.g. back to kamyaabi.in).
 #
 # Use `source` (with `set -a` so every assignment is exported) rather than
@@ -26,7 +26,7 @@ if [ -f .env ]; then
     source .env
     set +a
 fi
-DOMAIN="${DOMAIN:-kamyaabi.shop}"
+DOMAIN="${DOMAIN:-kamyaabi.in}"
 
 # --- Parse arguments ---
 while [[ $# -gt 0 ]]; do

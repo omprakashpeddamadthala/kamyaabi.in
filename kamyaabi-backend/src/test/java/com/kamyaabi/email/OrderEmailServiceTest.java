@@ -42,7 +42,7 @@ class OrderEmailServiceTest {
     void setUp() {
         emailProperties = new EmailProperties();
         emailProperties.setEnabled(true);
-        emailProperties.setAdminEmails(new ArrayList<>(List.of("admin@kamyaabi.shop")));
+        emailProperties.setAdminEmails(new ArrayList<>(List.of("admin@kamyaabi.in")));
 
         orderEmailService = new OrderEmailService(emailServiceFactory, templateEngine, emailProperties, orderRepository);
 
@@ -70,7 +70,7 @@ class OrderEmailServiceTest {
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
         verify(emailService).sendEmail("customer@test.com", "Payment Confirmed", "<p>Customer</p>");
-        verify(emailService).sendEmail("admin@kamyaabi.shop", "[Admin] Payment Confirmed", "<p>Admin</p>");
+        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Payment Confirmed", "<p>Admin</p>");
     }
 
     @Test
@@ -116,12 +116,12 @@ class OrderEmailServiceTest {
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail("admin@kamyaabi.shop", "[Admin] Payment Confirmed", "<p>Admin</p>");
+        verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Payment Confirmed", "<p>Admin</p>");
     }
 
     @Test
     void sendOrderNotification_multipleAdminEmails_shouldSendToAll() {
-        emailProperties.setAdminEmails(new ArrayList<>(List.of("admin1@kamyaabi.shop", "admin2@kamyaabi.shop")));
+        emailProperties.setAdminEmails(new ArrayList<>(List.of("admin1@kamyaabi.in", "admin2@kamyaabi.in")));
         when(orderRepository.findByIdWithUser(order.getId())).thenReturn(Optional.of(order));
         when(emailServiceFactory.getEmailService()).thenReturn(emailService);
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Subject");
@@ -131,8 +131,8 @@ class OrderEmailServiceTest {
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail("admin1@kamyaabi.shop", "[Admin] Subject", "<p>A</p>");
-        verify(emailService).sendEmail("admin2@kamyaabi.shop", "[Admin] Subject", "<p>A</p>");
+        verify(emailService).sendEmail("admin1@kamyaabi.in", "[Admin] Subject", "<p>A</p>");
+        verify(emailService).sendEmail("admin2@kamyaabi.in", "[Admin] Subject", "<p>A</p>");
     }
 
     @Test
@@ -144,7 +144,7 @@ class OrderEmailServiceTest {
         when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Subject");
         when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>A</p>");
         doThrow(new RuntimeException("Send failed")).when(emailService)
-                .sendEmail(eq("admin@kamyaabi.shop"), anyString(), anyString());
+                .sendEmail(eq("admin@kamyaabi.in"), anyString(), anyString());
 
         // Should not throw
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);

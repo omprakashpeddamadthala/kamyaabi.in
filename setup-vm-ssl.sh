@@ -25,8 +25,8 @@ if [ -f .env ]; then
 fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-DOMAIN="${DOMAIN:-kamyaabi.shop}"
-EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.shop}"
+DOMAIN="${DOMAIN:-kamyaabi.in}"
+EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.in}"
 STAGING="${CERTBOT_STAGING:-0}"  # Set to 1 to use Let's Encrypt staging (avoids rate limits)
 NGINX_CONF_SRC="./nginx/vm/kamyaabi.conf"
 NGINX_CONF_DEST="/etc/nginx/sites-available/kamyaabi.conf"
@@ -182,24 +182,24 @@ else
 server {
     listen 80;
     listen [::]:80;
-    server_name kamyaabi.shop www.kamyaabi.shop;
+    server_name kamyaabi.in www.kamyaabi.in;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
     location / {
-        return 301 https://kamyaabi.shop$request_uri;
+        return 301 https://kamyaabi.in$request_uri;
     }
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name kamyaabi.shop www.kamyaabi.shop;
+    server_name kamyaabi.in www.kamyaabi.in;
 
-    ssl_certificate /etc/letsencrypt/live/kamyaabi.shop/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/kamyaabi.shop/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/kamyaabi.in/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/kamyaabi.in/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 

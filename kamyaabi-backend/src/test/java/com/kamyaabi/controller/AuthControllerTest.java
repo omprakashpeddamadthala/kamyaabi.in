@@ -33,7 +33,7 @@ class AuthControllerTest {
         request.put("idToken", "valid-google-id-token");
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
-                .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
+                .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
         when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
@@ -44,13 +44,13 @@ class AuthControllerTest {
     @Test
     void googleLogin_withUserInfo_shouldReturnAuthResponse() {
         Map<String, Object> request = new HashMap<>();
-        request.put("email", "test@kamyaabi.shop");
+        request.put("email", "test@kamyaabi.in");
         request.put("name", "Test User");
         request.put("picture", "http://avatar.url");
         request.put("sub", "google-123");
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
-                .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
+                .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
         when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
@@ -61,10 +61,10 @@ class AuthControllerTest {
     @Test
     void googleLogin_missingIdToken_shouldUseUserInfo() {
         Map<String, Object> request = new HashMap<>();
-        request.put("email", "test@kamyaabi.shop");
+        request.put("email", "test@kamyaabi.in");
         
         AuthResponse authResponse = AuthResponse.builder().token("jwt-token")
-                .user(UserResponse.builder().id(1L).email("test@kamyaabi.shop").build()).build();
+                .user(UserResponse.builder().id(1L).email("test@kamyaabi.in").build()).build();
         when(authService.googleLoginFromRequest(request)).thenReturn(authResponse);
 
         ResponseEntity<?> response = authController.googleLogin(request);
@@ -74,7 +74,7 @@ class AuthControllerTest {
 
     @Test
     void getCurrentUser_shouldReturnUserResponse() {
-        UserResponse userResponse = UserResponse.builder().id(1L).email("test@kamyaabi.shop").name("Test").role("USER").build();
+        UserResponse userResponse = UserResponse.builder().id(1L).email("test@kamyaabi.in").name("Test").role("USER").build();
         when(currentUser.getUserId()).thenReturn(1L);
         when(authService.getCurrentUser(1L)).thenReturn(userResponse);
 

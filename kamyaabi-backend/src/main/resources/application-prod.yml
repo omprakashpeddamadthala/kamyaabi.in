@@ -46,24 +46,24 @@ app:
     expiration-ms: 7200000  # 2 hours
 
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://kamyaabi.shop}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://kamyaabi.in}
 
-  frontend-url: ${APP_FRONTEND_URL:https://kamyaabi.shop}
+  frontend-url: ${APP_FRONTEND_URL:https://kamyaabi.in}
 
   razorpay:
     key-id: ${RAZORPAY_KEY_ID}
     key-secret: ${RAZORPAY_KEY_SECRET}
 
   support:
-    email: ${APP_SUPPORT_EMAIL:support@kamyaabi.shop}
-    url: ${APP_SUPPORT_URL:https://kamyaabi.shop}
+    email: ${APP_SUPPORT_EMAIL:support@kamyaabi.in}
+    url: ${APP_SUPPORT_URL:https://kamyaabi.in}
 
   email:
     enabled: ${EMAIL_ENABLED:true}
-    from-email: ${EMAIL_FROM:noreply@kamyaabi.shop}
+    from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
     from-name: ${EMAIL_FROM_NAME:Kamyaabi}
     admin-emails:
-      - ${ADMIN_EMAIL:admin@kamyaabi.shop}
+      - ${ADMIN_EMAIL:admin@kamyaabi.in}
     sendgrid:
       api-key: ${SENDGRID_API_KEY}
     smtp:

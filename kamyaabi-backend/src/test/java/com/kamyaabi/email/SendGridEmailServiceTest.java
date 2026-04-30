@@ -27,7 +27,7 @@ class SendGridEmailServiceTest {
     @BeforeEach
     void setUp() {
         emailProperties = new EmailProperties();
-        emailProperties.setFromEmail("noreply@kamyaabi.shop");
+        emailProperties.setFromEmail("noreply@kamyaabi.in");
         emailProperties.setFromName("Kamyaabi");
         emailProperties.getSendgrid().setApiKey("SG.test-key");
 

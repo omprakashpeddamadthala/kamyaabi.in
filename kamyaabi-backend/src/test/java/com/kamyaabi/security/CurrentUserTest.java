@@ -19,7 +19,7 @@ class CurrentUserTest {
 
     @Test
     void getUser_withAuthenticatedUser_shouldReturnUser() {
-        User user = User.builder().id(1L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
+        User user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null);
         SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -47,7 +47,7 @@ class CurrentUserTest {
 
     @Test
     void getUserId_withAuthenticatedUser_shouldReturnId() {
-        User user = User.builder().id(42L).email("test@kamyaabi.shop").name("Test").role(User.Role.USER).build();
+        User user = User.builder().id(42L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null);
         SecurityContextHolder.getContext().setAuthentication(auth);
 

@@ -53,15 +53,15 @@ app:
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
 
   support:
-    email: ${APP_SUPPORT_EMAIL:support@kamyaabi.shop}
-    url: ${APP_SUPPORT_URL:https://kamyaabi.shop}
+    email: ${APP_SUPPORT_EMAIL:support@kamyaabi.in}
+    url: ${APP_SUPPORT_URL:https://kamyaabi.in}
 
   email:
     enabled: true
-    from-email: ${EMAIL_FROM:noreply@kamyaabi.shop}
+    from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
     from-name: Kamyaabi
     admin-emails:
-      - ${ADMIN_EMAIL:admin@kamyaabi.shop}
+      - ${ADMIN_EMAIL:admin@kamyaabi.in}
     sendgrid:
       api-key: ${SENDGRID_API_KEY:your-sendgrid-api-key}
     smtp:
