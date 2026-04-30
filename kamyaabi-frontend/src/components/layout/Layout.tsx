@@ -6,9 +6,13 @@ import Footer from './Footer';
 
 const Layout: React.FC = () => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    // No flexGrow on <main> — the footer sits directly below the last page
+    // section instead of being pushed to the viewport bottom by a spacer,
+    // which previously created a large empty gap on short pages like the
+    // product detail screen.
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <Box component="main" sx={{ flexGrow: 1 }}>
+      <Box component="main">
         <Outlet />
       </Box>
       <Footer />
