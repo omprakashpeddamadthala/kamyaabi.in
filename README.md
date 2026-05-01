@@ -397,7 +397,7 @@ kamyaabi.in/
 ├── .github/workflows/ci.yml         # GitHub Actions: tests + build + image push
 ├── docs/
 │   ├── USER_GUIDE.md                # End-user guide (this PR)
-│   └── screenshots/                 # UI screenshots / mockups referenced by the user guide
+│   └── screenshots/                 # UI screenshots referenced by the user guide
 └── README.md                        # You are here
 ```
 

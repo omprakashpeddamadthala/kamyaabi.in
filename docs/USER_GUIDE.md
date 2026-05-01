@@ -1,9 +1,9 @@
 # User Guide — Kamyaabi
 
-> **Note on screenshots.** The images below are annotated UI mockups generated
-> from the live React + Material UI components and the project's actual MUI
-> theme. They use the same colours, fonts, layouts, and route structure as
-> the running app — but the data shown is illustrative.
+> **About these screenshots.** The images below are real screenshots of
+> Kamyaabi running locally with seeded sample data (H2 in-memory database,
+> dev profile). The product imagery and prices come from the seed dataset
+> and may differ from the live store.
 
 ---
 
@@ -69,7 +69,7 @@ shows a strip of *Featured Products* curated by the team.
 4. Use the **Cart** icon in the top-right to view your shopping cart at
    any time.
 
-![Home page mockup](screenshots/home-page.png)
+![Home page screenshot](screenshots/home-page.png)
 
 **Callouts**
 
@@ -102,7 +102,7 @@ filters, search, sorting, and pagination.
 5. Click any product card to open its detail page.
 6. Use the pagination buttons at the bottom of the grid to navigate pages.
 
-![Products listing mockup](screenshots/products-listing.png)
+![Products listing screenshot](screenshots/products-listing.png)
 
 **Callouts**
 
@@ -136,7 +136,7 @@ cart.
 5. Scroll down and switch between **Description**, **Specifications**, and
    **Reviews** to read more about the product.
 
-![Product detail mockup](screenshots/product-detail.png)
+![Product detail screenshot](screenshots/product-detail.png)
 
 **Callouts**
 
@@ -171,7 +171,7 @@ quantities and remove items before you check out.
    total).
 5. Click **Proceed to Checkout** when you're ready.
 
-![Cart mockup](screenshots/cart.png)
+![Cart screenshot](screenshots/cart.png)
 
 **Callouts**
 
@@ -208,7 +208,7 @@ items, and opens the Razorpay payment popup.
 5. On success you're redirected to the **Order detail** page and the
    stepper jumps to **Paid**.
 
-![Checkout mockup](screenshots/checkout.png)
+![Checkout screenshot](screenshots/checkout.png)
 
 **Callouts**
 
@@ -243,7 +243,7 @@ items, and opens the Razorpay payment popup.
 4. Scroll down to see line items, the shipping address used, and the
    payment status.
 
-![Order tracking mockup](screenshots/order-tracking.png)
+![Order tracking screenshot](screenshots/order-tracking.png)
 
 **Callouts**
 
@@ -276,7 +276,7 @@ password to remember.
 3. Pick the Google account you want to use in the popup.
 4. You'll land back on Kamyaabi, signed in.
 
-![Sign-in mockup](screenshots/login.png)
+![Sign-in screenshot](screenshots/login.png)
 
 **Callouts**
 
@@ -309,7 +309,7 @@ manage multiple shipping addresses.
    non-default card.
 5. Click the small ✏ icon on a card to edit, or 🗑 to delete.
 
-![Profile and addresses mockup](screenshots/profile-addresses.png)
+![Profile and addresses screenshot](screenshots/profile-addresses.png)
 
 **Callouts**
 
@@ -340,7 +340,7 @@ and average order value, plus a sales chart and recent-orders table.
 4. Use the left sidebar to switch between **Dashboard**, **Products**,
    **Categories**, **Orders**, **Users**, and **Analytics**.
 
-![Admin dashboard mockup](screenshots/admin-dashboard.png)
+![Admin dashboard screenshot](screenshots/admin-dashboard.png)
 
 **Callouts**
 
@@ -377,7 +377,7 @@ restore products, including uploading product images.
    (the row becomes **INACTIVE** and is hidden from shoppers — you can
    **Restore** it later).
 
-![Admin product list mockup](screenshots/admin-products.png)
+![Admin product list screenshot](screenshots/admin-products.png)
 
 **Callouts**
 
