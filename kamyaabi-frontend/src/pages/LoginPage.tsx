@@ -5,10 +5,12 @@ import {
   Card,
   Typography,
   Box,
+  Button,
   Divider,
   Alert,
   CircularProgress,
 } from '@mui/material';
+import { AdminPanelSettings, Person } from '@mui/icons-material';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { googleLogin } from '../features/auth/authSlice';
@@ -48,6 +50,26 @@ const LoginPage: React.FC = () => {
           setLoginAttempted(false);
         });
       }
+    },
+    [dispatch, navigate]
+  );
+
+  const handleDevLogin = React.useCallback(
+    (email: string, displayName: string) => {
+      setLoginAttempted(true);
+      dispatch(
+        googleLogin({
+          email,
+          name: displayName,
+          sub: `dev-${email}`,
+          picture: '',
+        })
+      ).then((result) => {
+        if (googleLogin.fulfilled.match(result)) {
+          navigate('/');
+        }
+        setLoginAttempted(false);
+      });
     },
     [dispatch, navigate]
   );
@@ -116,6 +138,39 @@ const LoginPage: React.FC = () => {
               />
             )}
           </Box>
+
+          {config.devLogin.enabled && !(loading || loginAttempted) && (
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <Divider sx={{ mb: 2 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Developer Quick Login
+                </Typography>
+              </Divider>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5 }}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<AdminPanelSettings />}
+                  onClick={() => handleDevLogin(config.devLogin.adminEmail, 'Dev Admin')}
+                >
+                  Login as Admin
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<Person />}
+                  onClick={() => handleDevLogin(config.devLogin.userEmail, 'Dev User')}
+                >
+                  Login as User
+                </Button>
+              </Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, textAlign: 'center' }}>
+                Visible only on localhost. Configure with VITE_DEV_ADMIN_EMAIL / VITE_DEV_USER_EMAIL.
+              </Typography>
+            </Box>
+          )}
 
           <Box sx={{ mt: 4 }}>
             <Typography variant="body2" color="text.secondary">

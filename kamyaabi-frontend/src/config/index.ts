@@ -15,6 +15,15 @@ const DEFAULT_BRAND_DOMAIN = 'kamyaabi.in';
 const DEFAULT_SUPPORT_EMAIL = 'sm.enterprises0121@gmail.com';
 const DEFAULT_SUPPORT_PHONE = '9848999072';
 
+const DEFAULT_DEV_ADMIN_EMAIL = 'omprakashornold@gmail.com';
+const DEFAULT_DEV_USER_EMAIL = 'dev.user@kamyaabi.local';
+
+export interface DevLoginConfig {
+  readonly enabled: boolean;
+  readonly adminEmail: string;
+  readonly userEmail: string;
+}
+
 interface AppConfig {
   /** Backend API base URL; blank means "same origin". */
   readonly apiBaseUrl: string;
@@ -36,6 +45,8 @@ interface AppConfig {
   readonly brandSiteUrl: string;
   /** Convenience: true when running a production build. */
   readonly isProd: boolean;
+  /** Dev-only quick login configuration; never enabled in production builds. */
+  readonly devLogin: DevLoginConfig;
 }
 
 function readString(key: string, fallback: string): string {
@@ -69,6 +80,17 @@ const supportPhoneDisplay = supportPhone.length === 10
 const supportPhoneE164 = supportPhone.length === 10 ? `+91${supportPhone}` : `+${supportPhone}`;
 const whatsappDigits = supportPhone.length === 10 ? `91${supportPhone}` : supportPhone;
 
+const isProdBuild = Boolean(import.meta.env.PROD);
+
+const isLocalHost = typeof window !== 'undefined'
+  && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const devLogin: DevLoginConfig = Object.freeze({
+  enabled: !isProdBuild && isLocalHost,
+  adminEmail: readString('VITE_DEV_ADMIN_EMAIL', DEFAULT_DEV_ADMIN_EMAIL),
+  userEmail: readString('VITE_DEV_USER_EMAIL', DEFAULT_DEV_USER_EMAIL),
+});
+
 export const config: AppConfig = Object.freeze({
   apiBaseUrl: readString('VITE_API_BASE_URL', ''),
   googleClientId: requireString('VITE_GOOGLE_CLIENT_ID', 'missing-google-client-id'),
@@ -79,5 +101,6 @@ export const config: AppConfig = Object.freeze({
   supportPhoneTel: `tel:${supportPhoneE164}`,
   whatsappUrl: `https://wa.me/${whatsappDigits}`,
   brandSiteUrl: `https://${brandDomain}`,
-  isProd: Boolean(import.meta.env.PROD),
+  isProd: isProdBuild,
+  devLogin,
 });
