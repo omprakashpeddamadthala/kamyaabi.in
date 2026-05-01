@@ -8,22 +8,10 @@ export interface ClientErrorReport {
   componentStack?: string;
   url?: string;
   userAgent?: string;
-  /** Origin of the report — e.g. "react-error-boundary", "window.onerror". */
   source: string;
-  /** Optional cross-stack correlation id. */
   traceId?: string;
 }
 
-/**
- * Best-effort POST of a client-side error to the backend error sink. Uses a
- * raw axios call (not the shared instance) so we never trigger the auth
- * interceptor's redirect-on-401 — an error report from the login screen would
- * otherwise bounce the user into a redirect loop.
- *
- * Always resolves; never throws. If reporting fails (network, CORS, anything),
- * we silently drop on the floor — the frontend boundary still renders the
- * fallback UI either way.
- */
 export const errorApi = {
   async report(payload: ClientErrorReport): Promise<void> {
     const baseUrl = config.apiBaseUrl;
@@ -42,12 +30,9 @@ export const errorApi = {
       await axios.post(url, body, {
         timeout: 5000,
         headers: { 'Content-Type': 'application/json' },
-        // Anonymous endpoint; cookies aren't required and would only invite
-        // CORS-preflight friction.
         withCredentials: false,
       });
     } catch {
-      // Swallow: we never want error reporting to break the app it's reporting on.
     }
   },
 };

@@ -8,13 +8,6 @@ interface NotificationState {
   traceId?: string;
 }
 
-/**
- * Bridges the `api:forbidden` / `api:server-error` window events fired by the
- * axios response interceptor into a user-facing MUI Snackbar toast.
- *
- * Intentionally standalone (no external store) so it can be mounted once at the
- * app root without taking on Redux or a toast library as a peer dependency.
- */
 export const ApiErrorNotifier: React.FC = () => {
   const [state, setState] = useState<NotificationState>({
     open: false,

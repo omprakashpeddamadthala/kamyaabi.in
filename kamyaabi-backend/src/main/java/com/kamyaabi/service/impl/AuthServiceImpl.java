@@ -38,7 +38,6 @@ public class AuthServiceImpl implements AuthService {
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     
-    // Reuse verifier instance to avoid cold-start delays in production
     private volatile GoogleIdTokenVerifier cachedVerifier;
 
     public AuthServiceImpl(UserRepository userRepository,
@@ -66,14 +65,6 @@ public class AuthServiceImpl implements AuthService {
         return cachedVerifier;
     }
 
-    /**
-     * Dispatches a Google login request based on the payload shape. Prefers the
-     * modern ID-token flow; falls back to the legacy user-info map only when the
-     * {@code idToken} key is absent/blank (logged as a deprecation warning).
-     *
-     * <p>This was previously handled by branching inside {@code AuthController};
-     * centralising it here keeps controllers free of business logic.
-     */
     @Override
     public AuthResponse googleLoginFromRequest(Map<String, Object> request) {
         String idToken = (String) request.get("idToken");
@@ -88,7 +79,6 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse googleLogin(String idToken) {
         log.info("Processing Google login with ID token verification");
         
-        // Retry logic to handle transient failures (e.g., Google cert fetch on cold start)
         int maxRetries = 2;
         Exception lastException = null;
         
@@ -112,7 +102,6 @@ public class AuthServiceImpl implements AuthService {
                 Object pictureObj = payload.get("picture");
                 String sub = payload.getSubject();
                 
-                // Build user info map with null-safe values
                 java.util.HashMap<String, Object> userInfo = new java.util.HashMap<>();
                 userInfo.put("email", email);
                 userInfo.put("name", nameObj != null ? nameObj : email);
@@ -130,7 +119,6 @@ public class AuthServiceImpl implements AuthService {
             } catch (Exception e) {
                 lastException = e;
                 log.warn("Google ID token verification attempt {} failed: {}", attempt + 1, e.getMessage());
-                // Invalidate cached verifier on failure so it gets rebuilt on retry
                 cachedVerifier = null;
             }
         }
@@ -163,7 +151,6 @@ public class AuthServiceImpl implements AuthService {
                     return userRepository.save(newUser);
                 });
 
-        // Update user info if changed
         if (name != null && !name.equals(user.getName())) {
             user.setName(name);
         }

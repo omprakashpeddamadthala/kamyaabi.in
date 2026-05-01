@@ -5,11 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Guards the no-upload-size-limit contract. The bean must always return
- * {@code -1} for both per-file and total request sizes — operators rely on
- * this to allow arbitrarily large product image uploads.
- */
 class MultipartConfigTest {
 
     @Test

@@ -55,9 +55,6 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
-        // Idempotency: a payment row already exists for this order_id (the column is UNIQUE).
-        // Re-issuing a Razorpay order would either duplicate the row (DB error) or waste
-        // Razorpay quota with an orphaned order. Reuse the existing record instead.
         Optional<Payment> existing = paymentRepository.findByOrderId(orderId);
         if (existing.isPresent()) {
             Payment existingPayment = existing.get();
@@ -75,7 +72,6 @@ public class PaymentServiceImpl implements PaymentService {
                         .build();
             }
 
-            // COMPLETED / FAILED / REFUNDED — terminal from this endpoint's perspective.
             throw new PaymentException(
                     "Payment for order " + orderId + " has already been processed (status=" + status + ")");
         }
@@ -85,7 +81,6 @@ public class PaymentServiceImpl implements PaymentService {
                     appProperties.getRazorpay().getKeyId(),
                     appProperties.getRazorpay().getKeySecret());
 
-            // Razorpay expects amount in paise (smallest currency unit)
             long amountInPaise = order.getTotalAmount().multiply(new BigDecimal("100")).longValue();
 
             JSONObject orderRequest = new JSONObject();
@@ -97,7 +92,6 @@ public class PaymentServiceImpl implements PaymentService {
 
             String razorpayOrderId = razorpayOrder.get("id");
 
-            // Save payment record
             Payment payment = Payment.builder()
                     .order(order)
                     .razorpayOrderId(razorpayOrderId)
@@ -129,14 +123,12 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Razorpay order: " + request.getRazorpayOrderId()));
 
-        // Idempotency: if payment already completed, return existing response
         if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
             log.info("Payment already completed for order: {}, skipping duplicate verification", request.getOrderId());
             return paymentMapper.toResponse(payment);
         }
 
         try {
-            // Verify signature
             JSONObject attributes = new JSONObject();
             attributes.put("razorpay_order_id", request.getRazorpayOrderId());
             attributes.put("razorpay_payment_id", request.getRazorpayPaymentId());
@@ -150,7 +142,6 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setRazorpaySignature(request.getRazorpaySignature());
                 payment.setStatus(Payment.PaymentStatus.COMPLETED);
 
-                // Update order status to PAID on successful payment
                 Order order = payment.getOrder();
                 order.setStatus(Order.OrderStatus.PAID);
                 orderRepository.save(order);
@@ -158,7 +149,6 @@ public class PaymentServiceImpl implements PaymentService {
                 Payment saved = paymentRepository.save(payment);
                 log.info("Payment verified successfully for order: {}", request.getOrderId());
 
-                // Publish payment success event for email notification
                 orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
 
                 return paymentMapper.toResponse(saved);
@@ -166,12 +156,10 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.setStatus(Payment.PaymentStatus.FAILED);
                 paymentRepository.save(payment);
 
-                // Update order status to PAYMENT_FAILED
                 Order order = payment.getOrder();
                 order.setStatus(Order.OrderStatus.PAYMENT_FAILED);
                 orderRepository.save(order);
 
-                // Publish payment failed event for email notification
                 orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_FAILED);
 
                 throw new PaymentException("Payment verification failed - invalid signature");
@@ -181,12 +169,10 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setStatus(Payment.PaymentStatus.FAILED);
             paymentRepository.save(payment);
 
-            // Update order status to PAYMENT_FAILED
             Order order = payment.getOrder();
             order.setStatus(Order.OrderStatus.PAYMENT_FAILED);
             orderRepository.save(order);
 
-            // Publish payment failed event for email notification
             orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_FAILED);
 
             throw new PaymentException("Payment verification failed: " + e.getMessage(), e);

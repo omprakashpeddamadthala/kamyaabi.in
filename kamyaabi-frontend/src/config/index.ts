@@ -1,13 +1,3 @@
-/**
- * Central, type-safe access point for every Vite environment variable.
- *
- * Rules:
- * - Nothing in the app should read `import.meta.env` directly. Import from here instead.
- * - Each variable has an explicit type and a runtime guard. Missing "required" values
- *   are only fatal in production (`import.meta.env.PROD`) so a broken build never ships;
- *   in development they fall back to sensible defaults and log a warning.
- * - Adding a new env var? Add it to both `.env.example` and this file.
- */
 
 import { logger } from '../utils/logger';
 
@@ -25,27 +15,16 @@ export interface DevLoginConfig {
 }
 
 interface AppConfig {
-  /** Backend API base URL; blank means "same origin". */
   readonly apiBaseUrl: string;
-  /** Google OAuth2 web client id used by the frontend @react-oauth/google provider. */
   readonly googleClientId: string;
-  /** Public brand domain (e.g. kamyaabi.in) — drives links in footer/email/support copy. */
   readonly brandDomain: string;
-  /** Support email address rendered in the UI. */
   readonly supportEmail: string;
-  /** Support / WhatsApp phone number rendered in the UI (digits only). */
   readonly supportPhone: string;
-  /** Pretty-formatted support phone (e.g. "+91 98489 99072"). */
   readonly supportPhoneDisplay: string;
-  /** `tel:` href for the support phone. */
   readonly supportPhoneTel: string;
-  /** `https://wa.me/...` link for WhatsApp. */
   readonly whatsappUrl: string;
-  /** Convenience: full https URL for the brand domain. */
   readonly brandSiteUrl: string;
-  /** Convenience: true when running a production build. */
   readonly isProd: boolean;
-  /** Dev-only quick login configuration; never enabled in production builds. */
   readonly devLogin: DevLoginConfig;
 }
 
@@ -69,11 +48,7 @@ const brandDomain = readString('VITE_BRAND_DOMAIN', DEFAULT_BRAND_DOMAIN);
 const supportEmail = readString('VITE_SUPPORT_EMAIL', DEFAULT_SUPPORT_EMAIL);
 const supportPhoneRaw = readString('VITE_SUPPORT_PHONE', DEFAULT_SUPPORT_PHONE);
 
-// Normalize to digits only so tel:/wa.me links stay well-formed regardless of
-// how the env var is entered (with or without country code, spaces, dashes).
 const supportPhone = supportPhoneRaw.replace(/\D+/g, '');
-// Presentation string: "+91 XXXXX XXXXX" when it's a 10-digit Indian number;
-// otherwise fall back to the raw value so non-IN numbers are unaffected.
 const supportPhoneDisplay = supportPhone.length === 10
   ? `+91 ${supportPhone.slice(0, 5)} ${supportPhone.slice(5)}`
   : supportPhoneRaw;

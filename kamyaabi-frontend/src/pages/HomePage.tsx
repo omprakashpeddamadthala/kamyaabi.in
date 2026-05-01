@@ -73,7 +73,7 @@ const HomePage: React.FC = () => {
   return (
     <PageTransition>
     <Box>
-      {/* Hero Section */}
+      {}
       <Box sx={{ bgcolor: '#f0ede6', position: 'relative', overflow: 'hidden' }}>
         <Container maxWidth="lg">
           <Grid container alignItems="center" sx={{ minHeight: { xs: 400, md: 500 } }}>
@@ -100,7 +100,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Product Showcase Cards */}
+      {}
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
           <Grid container spacing={3}>
@@ -120,7 +120,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* About Section */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Our Products */}
+      {}
       {!isAdmin && (
         <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
           <Container maxWidth="lg">
@@ -178,7 +178,7 @@ const HomePage: React.FC = () => {
         </Box>
       )}
 
-      {/* Gallery Collection */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Typography variant="h3" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
@@ -194,7 +194,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Services Section */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -217,7 +217,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Counters Section */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Testimonials & Contact */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6}>
@@ -274,7 +274,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* WhatsApp floating button */}
+      {}
       <Box component="a" href={`${config.whatsappUrl}?text=Hello%20Kamyaabi`} target="_blank" rel="noopener noreferrer"
         sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000, width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', '&:hover': { transform: 'scale(1.1)' }, transition: 'transform 0.3s' }}>
         <img src="/assets/img/wicon.webp" alt="WhatsApp" style={{ width: '100%', height: '100%' }} />

@@ -9,11 +9,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
-/**
- * Strongly-typed binding for the {@code app.*} configuration block.
- * Values are validated at startup via {@link Validated} so a misconfigured
- * deployment fails fast instead of at the first authenticated request.
- */
 @Configuration
 @ConfigurationProperties(prefix = "app")
 @Validated
@@ -30,20 +25,14 @@ public class AppProperties {
     @Valid
     private Razorpay razorpay = new Razorpay();
 
-    /**
-     * Public URL of the customer-facing frontend (no trailing slash). Used to
-     * build deep links in transactional emails (e.g. View Order Status).
-     */
     private String frontendUrl = "https://kamyaabi.in";
 
     @Getter
     @Setter
     public static class Jwt {
-        /** HMAC-SHA256 secret for signing JWTs; must be at least 32 bytes. */
         @NotBlank
         private String secret;
 
-        /** JWT lifetime in milliseconds. */
         @Positive
         private long expirationMs;
     }
@@ -51,7 +40,6 @@ public class AppProperties {
     @Getter
     @Setter
     public static class Cors {
-        /** Comma-separated list of CORS-allowed origins consumed by CorsConfig. */
         @NotBlank
         private String allowedOrigins;
     }
@@ -59,11 +47,9 @@ public class AppProperties {
     @Getter
     @Setter
     public static class Razorpay {
-        /** Razorpay public key id; safe to ship to the frontend. */
         @NotBlank
         private String keyId;
 
-        /** Razorpay secret key; never log or expose via APIs. */
         @NotBlank
         private String keySecret;
     }

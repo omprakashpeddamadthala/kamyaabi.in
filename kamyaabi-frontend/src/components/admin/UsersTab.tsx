@@ -38,9 +38,7 @@ import ConfirmDialog from '../common/ConfirmDialog';
 import TableSkeleton from '../common/TableSkeleton';
 
 interface UsersTabProps {
-  /** Whether the tab is the active one. Avoids fetches while hidden. */
   active: boolean;
-  /** Currently logged-in admin id. Used to disable self-modification. */
   currentUserId: number | undefined;
 }
 
@@ -52,7 +50,6 @@ interface ConfirmState {
   onConfirm: (() => Promise<void>) | (() => void);
 }
 
-// Requirement: 10 users per page on the admin Users tab.
 const PAGE_SIZE = 10;
 
 const closedConfirm: ConfirmState = {
@@ -81,11 +78,6 @@ const initial = (name?: string, email?: string): string => {
   return source.length > 0 ? source.charAt(0).toUpperCase() : '?';
 };
 
-/**
- * Admin user-management table. Allows promoting/demoting users between USER
- * and ADMIN, and blocking/unblocking accounts. Self-modification is disabled
- * client-side (the backend also enforces this).
- */
 const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
   const { showSuccess, showError } = useToast();
 
@@ -117,7 +109,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
     [showError],
   );
 
-  // Debounce search-input → search query so each keystroke doesn't fire a request.
   useEffect(() => {
     const t = window.setTimeout(() => {
       setSearch(searchInput.trim());
@@ -166,9 +157,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
   const handleToggleStatus = useCallback(
     (user: AdminUser) => {
       if (user.id === currentUserId) return;
-      // Removed users must be restored before they can be re-blocked; the
-      // Block button is disabled client-side in that case so this branch is
-      // only ever reached with ACTIVE or BLOCKED users.
       const nextStatus: 'ACTIVE' | 'BLOCKED' = user.status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED';
       const verb = nextStatus === 'BLOCKED' ? 'block' : 'unblock';
       setConfirm({
@@ -198,9 +186,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
     [closeConfirm, currentUserId, showError, showSuccess],
   );
 
-  // Soft-remove: mark the user as REMOVED (or restore from REMOVED → ACTIVE).
-  // The row stays in the list and is clearly badged so it's obvious the user
-  // was deactivated rather than hard-deleted.
   const handleToggleRemoval = useCallback(
     (user: AdminUser) => {
       if (user.id === currentUserId) return;
@@ -309,8 +294,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                 const isSelf = user.id === currentUserId;
                 const rowBusy = rowLoadingId === user.id;
                 const isRemoved = user.status === 'REMOVED';
-                // Dim removed rows and strike through identifying copy so admins
-                // can spot them at a glance without the record leaving the list.
                 const removedRowSx = isRemoved
                   ? {
                       bgcolor: 'action.hover',

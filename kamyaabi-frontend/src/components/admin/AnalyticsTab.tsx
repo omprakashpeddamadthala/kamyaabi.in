@@ -30,7 +30,6 @@ import { useToast } from '../common/ToastProvider';
 
 type Metric = 'revenue' | 'orders';
 
-/** ISO (yyyy-mm-dd) for today in the user's local timezone. */
 const isoToday = (): string => {
   const d = new Date();
   const y = d.getFullYear();
@@ -48,25 +47,18 @@ const isoDaysAgo = (days: number): string => {
   return `${y}-${m}-${day}`;
 };
 
-/** Shorter label (dd MMM) so weekly/monthly charts don't get crowded. */
 const formatAxisLabel = (iso: string): string => {
   const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 };
 
 interface AnalyticsTabProps {
-  /**
-   * Parent passes `active` when the Analytics tab is the currently selected
-   * tab. We only fetch when active so switching between other tabs doesn't
-   * spam the backend.
-   */
   active: boolean;
 }
 
 const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ active }) => {
   const { showError } = useToast();
 
-  // Default: last 7 days (inclusive of today).
   const [startDate, setStartDate] = useState<string>(isoDaysAgo(6));
   const [endDate, setEndDate] = useState<string>(isoToday());
   const [pendingStart, setPendingStart] = useState<string>(isoDaysAgo(6));

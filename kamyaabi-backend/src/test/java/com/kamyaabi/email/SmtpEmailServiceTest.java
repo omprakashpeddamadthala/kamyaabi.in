@@ -46,7 +46,6 @@ class SmtpEmailServiceTest {
     void sendEmail_mailSenderThrows_shouldNotPropagate() {
         doThrow(new RuntimeException("SMTP error")).when(mailSender).send(any(MimeMessage.class));
 
-        // Should not throw - fails gracefully
         smtpEmailService.sendEmail("user@test.com", "Test Subject", "<p>Hello</p>");
 
         verify(mailSender).send(any(MimeMessage.class));

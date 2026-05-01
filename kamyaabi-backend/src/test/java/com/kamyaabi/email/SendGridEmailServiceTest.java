@@ -62,7 +62,6 @@ class SendGridEmailServiceTest {
     void sendEmail_ioException_shouldNotThrow() throws IOException {
         when(sendGrid.api(any(Request.class))).thenThrow(new IOException("Connection failed"));
 
-        // Should not throw - fails gracefully
         sendGridEmailService.sendEmail("user@test.com", "Test Subject", "<p>Hello</p>");
 
         verify(sendGrid).api(any(Request.class));

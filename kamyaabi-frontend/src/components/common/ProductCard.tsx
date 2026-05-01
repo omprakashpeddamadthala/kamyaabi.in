@@ -47,10 +47,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       navigate('/login');
       return;
     }
-    // Prevent duplicate clicks while adding
     if (isAdding) return;
 
-    // Phase 7: Optimistic UI — update cart badge instantly before API responds
     dispatch(optimisticAddToCart({
       productId: product.id,
       productName: product.name,

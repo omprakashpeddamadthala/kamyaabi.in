@@ -19,10 +19,6 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
 
     long countByProductId(Long productId);
 
-    /**
-     * Clear {@code is_main = true} on every image belonging to the given product.
-     * Used before promoting a new image to main so the single-main invariant holds.
-     */
     @Modifying
     @Query("UPDATE ProductImage pi SET pi.isMain = false WHERE pi.product.id = :productId")
     int clearMainFlagForProduct(@Param("productId") Long productId);

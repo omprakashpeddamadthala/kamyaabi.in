@@ -8,11 +8,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * One bucket in the analytics series — one calendar day's orders + revenue.
- * {@code date} is serialized in ISO-8601 {@code yyyy-MM-dd} form so the
- * frontend can format/label it freely.
- */
 @Data
 @Builder
 @NoArgsConstructor

@@ -29,7 +29,7 @@ class EmailServiceFactoryTest {
     @Test
     void shouldCreateSmtpService_whenOnlySmtpConfigured() {
         EmailProperties props = new EmailProperties();
-        props.getSendgrid().setApiKey("your-sendgrid-api-key"); // placeholder = not configured
+        props.getSendgrid().setApiKey("your-sendgrid-api-key");
         props.getSmtp().setHost("smtp.gmail.com");
         props.getSmtp().setUsername("user@gmail.com");
         props.getSmtp().setPassword("password");
@@ -42,8 +42,8 @@ class EmailServiceFactoryTest {
     @Test
     void shouldCreateNoOpService_whenNothingConfigured() {
         EmailProperties props = new EmailProperties();
-        props.getSendgrid().setApiKey("your-sendgrid-api-key"); // placeholder
-        props.getSmtp().setHost("smtp.gmail.com-placeholder"); // placeholder
+        props.getSendgrid().setApiKey("your-sendgrid-api-key");
+        props.getSmtp().setHost("smtp.gmail.com-placeholder");
 
         EmailServiceFactory factory = new EmailServiceFactory(props, mailSender);
 
@@ -64,7 +64,6 @@ class EmailServiceFactoryTest {
     @Test
     void noOpService_shouldLogWithoutError() {
         EmailServiceFactory.NoOpEmailService noOp = new EmailServiceFactory.NoOpEmailService();
-        // Should not throw
         noOp.sendEmail("test@test.com", "Test Subject", "<p>Hello</p>");
     }
 

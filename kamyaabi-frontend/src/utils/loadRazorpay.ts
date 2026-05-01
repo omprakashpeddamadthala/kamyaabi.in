@@ -1,13 +1,3 @@
-/**
- * Lazily injects the Razorpay Checkout script.
- *
- * The script is ~250 KB and is only needed on the checkout page; loading it
- * synchronously from `<head>` (the previous behaviour) parsed it on every
- * page navigation, hurting LCP/FCP for routes that never use it. We now
- * inject it on demand, cache the resulting promise so concurrent checkout
- * attempts share one network request, and skip injection when the script is
- * already on the page.
- */
 const RAZORPAY_CDN = 'https://checkout.razorpay.com/v1/checkout.js';
 let pending: Promise<void> | null = null;
 

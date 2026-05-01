@@ -5,19 +5,6 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-/**
- * Custom actuator health indicator for the transactional email provider.
- *
- * <p>Reports:
- * <ul>
- *   <li>{@code UP} with the resolved provider name when an email service is configured.</li>
- *   <li>{@code UP} with {@code provider=none} when the NoOp fallback is active — the
- *       application is still functional, but admin/order notifications won't leave the box.</li>
- * </ul>
- *
- * <p>Registered under the name {@code email} so it appears as
- * {@code /actuator/health.components.email}.
- */
 @Component("email")
 public class EmailProviderHealthIndicator implements HealthIndicator {
 

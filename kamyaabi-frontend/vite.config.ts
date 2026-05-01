@@ -16,8 +16,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        // Split heavy vendor groups so a route that only needs router or
-        // forms doesn't have to download MUI + charts + redux up front.
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
           if (id.includes('@mui/icons-material')) return 'mui-icons';

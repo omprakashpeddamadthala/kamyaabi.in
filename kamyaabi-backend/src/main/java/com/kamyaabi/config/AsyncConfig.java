@@ -8,9 +8,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
-/**
- * Async configuration for non-blocking email sending.
- */
 @Slf4j
 @Configuration
 @EnableAsync

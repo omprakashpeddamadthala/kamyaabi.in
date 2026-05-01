@@ -61,7 +61,6 @@ class DashboardServiceImplTest {
     void getAnalytics_shouldZeroFillMissingDays() {
         LocalDate start = LocalDate.of(2026, 4, 20);
         LocalDate end = LocalDate.of(2026, 4, 23);
-        // Only day 2026-04-21 has data
         List<Object[]> rows = new java.util.ArrayList<>();
         rows.add(new Object[]{Date.valueOf(LocalDate.of(2026, 4, 21)), 2L, new BigDecimal("500.00")});
         when(orderRepository.aggregateDaily(any(), any(), any())).thenReturn(rows);
@@ -84,7 +83,6 @@ class DashboardServiceImplTest {
 
         AnalyticsResponse result = dashboardService.getAnalytics(null, null);
 
-        // 7 days inclusive = start..end where end - start = 6
         assertThat(result.getPoints()).hasSize(7);
         assertThat(result.getEndDate()).isAfterOrEqualTo(result.getStartDate());
     }

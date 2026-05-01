@@ -70,7 +70,6 @@ const CheckoutPage: React.FC = () => {
     try {
       const orderResult = await dispatch(createOrder(selectedAddressId)).unwrap();
 
-      // Create Razorpay order
       const paymentRes = await paymentApi.createOrder(orderResult.id);
       const razorpayOrder = paymentRes.data.data;
 
@@ -141,7 +140,7 @@ const CheckoutPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          {/* Shipping Address */}
+          {}
           <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Shipping Address</Typography>
@@ -182,7 +181,7 @@ const CheckoutPage: React.FC = () => {
             )}
           </Card>
 
-          {/* Order Items */}
+          {}
           <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Order Items
@@ -231,7 +230,7 @@ const CheckoutPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Add Address Dialog */}
+      {}
       <AddressFormDialog
         open={showAddDialog}
         onClose={() => setShowAddDialog(false)}

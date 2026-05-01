@@ -35,13 +35,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "AND p.discountPrice < p.price ORDER BY p.createdAt DESC")
     List<Product> findDiscountedProducts();
 
-    /**
-     * Admin-side search across all products (active and soft-deleted).
-     *
-     * <p>{@code keyword} is matched case-insensitively against name + description;
-     * pass an empty string to skip the keyword filter. {@code categoryId} and
-     * {@code active} are nullable — when null, that filter is dropped.
-     */
     @Query("SELECT p FROM Product p WHERE " +
            "(:keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
@@ -54,6 +47,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     long countByCategoryId(Long categoryId);
 
-    /** Number of active products whose stock is strictly below the threshold. */
     long countByActiveTrueAndStockLessThan(int threshold);
 }

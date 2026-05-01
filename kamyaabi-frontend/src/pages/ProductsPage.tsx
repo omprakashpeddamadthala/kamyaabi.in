@@ -39,13 +39,9 @@ const ProductsPage: React.FC = () => {
   const [sortDir, setSortDir] = useState('desc');
 
   const categoryId = searchParams.get('category');
-  // URL-based pagination: ?page=N is the source of truth so users can share,
-  // bookmark and use the back button to return to a specific page. N is
-  // 1-indexed in the URL (human-friendly) but 0-indexed for the API.
   const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
   const zeroBasedPage = urlPage - 1;
 
-  /** Mutate the search params while preserving any others already in the URL. */
   const updateParams = (next: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams);
     Object.entries(next).forEach(([k, v]) => {
@@ -80,7 +76,6 @@ const ProductsPage: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Reset to page 1 on a new search so the user sees fresh results.
       setSearchParams({});
       dispatch(searchProducts({ keyword: searchQuery.trim(), page: 0 }));
     }
@@ -98,7 +93,7 @@ const ProductsPage: React.FC = () => {
         {selectedCategory ? selectedCategory.description : 'Browse our premium dry fruits collection'}
       </Typography>
 
-      {/* Filters */}
+      {}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <Box component="form" onSubmit={handleSearchSubmit} sx={{ flex: 1, minWidth: 200 }}>
           <TextField
@@ -143,7 +138,7 @@ const ProductsPage: React.FC = () => {
         </FormControl>
       </Box>
 
-      {/* Category chips */}
+      {}
       <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
         <Chip
           label="All"
@@ -158,8 +153,6 @@ const ProductsPage: React.FC = () => {
             variant={categoryId === String(cat.id) ? 'filled' : 'outlined'}
             color={categoryId === String(cat.id) ? 'primary' : 'default'}
             onClick={() => {
-              // Switching category resets pagination so the user doesn't land
-              // on a non-existent page for the new filter.
               setSearchParams({ category: String(cat.id) });
               setSearchQuery('');
             }}

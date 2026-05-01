@@ -83,7 +83,6 @@ class OrderServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(1L);
         verify(cartService).clearCart(1L);
-        // No email event on order creation — emails sent only after payment verification
         verifyNoInteractions(orderEventPublisher);
     }
 
@@ -239,7 +238,6 @@ class OrderServiceImplTest {
 
         orderService.updateOrderStatus(1L, Order.OrderStatus.PAID);
 
-        // PAID status set by admin skips email — payment verification handles this
         verifyNoInteractions(orderEventPublisher);
     }
 

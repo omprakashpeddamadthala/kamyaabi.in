@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * User row used by the /api/admin/users table. Includes sensitive metadata
- * (creation date, status, role) that is only safe to surface to admins.
- */
 @Data
 @Builder
 @NoArgsConstructor

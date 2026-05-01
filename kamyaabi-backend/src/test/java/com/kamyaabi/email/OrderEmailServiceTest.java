@@ -146,7 +146,6 @@ class OrderEmailServiceTest {
         doThrow(new RuntimeException("Send failed")).when(emailService)
                 .sendEmail(eq("admin@kamyaabi.in"), anyString(), anyString());
 
-        // Should not throw
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
         verify(emailService).sendEmail(eq("customer@test.com"), anyString(), anyString());
@@ -161,7 +160,6 @@ class OrderEmailServiceTest {
 
         orderEmailService.sendOrderNotification(order, OrderEventType.ORDER_CONFIRMED);
 
-        // Only customer gets email for non-payment events
         verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
         verify(emailService).sendEmail("customer@test.com", "Order Confirmed", "<p>Confirmed</p>");
     }

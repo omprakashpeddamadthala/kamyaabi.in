@@ -166,7 +166,7 @@ const OrdersPage: React.FC = () => {
               </Box>
             )}
 
-            {/* Order Items */}
+            {}
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>Items</Typography>
             {order.items.map((item) => (
               <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: '#f9f9f9', borderRadius: 1 }}>
@@ -188,7 +188,7 @@ const OrdersPage: React.FC = () => {
               </Box>
             ))}
 
-            {/* Shipping & Payment Details */}
+            {}
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {order.shippingAddress && (
                 <Grid item xs={12} sm={6}>

@@ -57,13 +57,6 @@ import { reviewApi } from '../api/reviewApi';
 import type { Review, ReviewSummary } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 
-/* ─── Scroll-reveal hook (IntersectionObserver) ──────────────────────────
- * Uses a callback ref so the observer attaches the moment the target node
- * mounts. With a plain `useRef` + one-shot `useEffect`, the effect ran once
- * on the initial render — when the component still showed the skeleton and
- * the box hadn't mounted yet — so the observer was never wired up. After
- * the product loaded the section stayed at opacity 0 forever, leaving a
- * tall band of empty whitespace under the description/related products. */
 function useRevealOnScroll(threshold = 0.15) {
   const [visible, setVisible] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -106,7 +99,6 @@ const revealSx = (visible: boolean) => ({
   transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
 });
 
-/* ─── Skeleton ───────────────────────────────────────────────────────── */
 const ProductDetailSkeleton: React.FC = () => (
   <Container maxWidth="lg" sx={{ py: 4 }}>
     <Skeleton variant="text" width={250} height={24} sx={{ mb: 3 }} animation="wave" />
@@ -134,7 +126,6 @@ const ProductDetailSkeleton: React.FC = () => (
   </Container>
 );
 
-/* ─── Trust Badge component ──────────────────────────────────────────── */
 interface TrustBadgeProps {
   icon: React.ReactNode;
   label: string;
@@ -156,7 +147,6 @@ const TrustBadge: React.FC<TrustBadgeProps> = ({ icon, label }) => (
   </Box>
 );
 
-/* ─── Tab panel ──────────────────────────────────────────────────────── */
 interface TabPanelProps {
   children: React.ReactNode;
   value: number;
@@ -168,14 +158,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </Box>
 );
 
-/* ─── Description parser ─────────────────────────────────────────────
- * Parses a free-form product description into scannable bullet points.
- * Rules:
- * - Explicit newlines or existing `-` / `•` / `*` markers win.
- * - Otherwise fall back to sentence splitting so a single paragraph still
- *   renders as a structured list.
- * Short fragments (< 3 chars) are dropped to avoid stray "a." bullets.
- */
 function parseDescriptionBullets(raw: string): string[] {
   if (!raw) return [];
   const trimmed = raw.trim();
@@ -184,7 +166,6 @@ function parseDescriptionBullets(raw: string): string[] {
     .map((s) => s.replace(/^[-•*]\s*/, '').trim())
     .filter((s) => s.length > 2);
   if (explicit.length > 1) return explicit;
-  // Sentence split: ". ", "! ", "? " — keeping things simple and punctuation-safe.
   const sentences = trimmed
     .split(/(?<=[.!?])\s+(?=[A-Z(\"'])/)
     .map((s) => s.trim())
@@ -192,7 +173,6 @@ function parseDescriptionBullets(raw: string): string[] {
   return sentences.length > 0 ? sentences : [trimmed];
 }
 
-/* ─── Relative date helper ───────────────────────────────────────────── */
 function formatRelativeDate(iso: string): string {
   const then = new Date(iso).getTime();
   if (!Number.isFinite(then)) return '';
@@ -205,9 +185,6 @@ function formatRelativeDate(iso: string): string {
   return `${Math.floor(diff / (day * 365))} years ago`;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════ */
-/* Main Component                                                         */
-/* ═══════════════════════════════════════════════════════════════════════ */
 const ProductDetailPage: React.FC = () => {
   const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -216,10 +193,6 @@ const ProductDetailPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  // The route param is called `slug`, but legacy /products/<numeric-id>
-  // links (e.g. from emails or cart items keyed by productId) still resolve
-  // here. Detect that case so we can fetch by id and then redirect the URL
-  // to the canonical slug — the SPA equivalent of a 301 redirect.
   const paramIsNumericId = !!slugParam && /^\d+$/.test(slugParam);
 
   const { selectedProduct: product, products } = useAppSelector((s) => s.products);
@@ -235,7 +208,6 @@ const ProductDetailPage: React.FC = () => {
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
 
-  /* Reviews + summary loaded from the backend; null until the API resolves. */
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -246,7 +218,6 @@ const ProductDetailPage: React.FC = () => {
 
   const isAdding = product ? addingProductIds.includes(product.id) : false;
 
-  /* Fetch product + related products */
   useEffect(() => {
     if (slugParam) {
       if (paramIsNumericId) {
@@ -261,9 +232,6 @@ const ProductDetailPage: React.FC = () => {
     return () => { dispatch(clearSelectedProduct()); };
   }, [dispatch, slugParam, paramIsNumericId]);
 
-  /* 301-equivalent: once the product loads after a numeric-id lookup,
-     rewrite the URL to the canonical /products/:slug form so shared
-     links, bookmarks and the back button all use the stable slug. */
   useEffect(() => {
     if (paramIsNumericId && product?.slug) {
       navigate(`/products/${product.slug}`, { replace: true });
@@ -274,11 +242,8 @@ const ProductDetailPage: React.FC = () => {
     if (product) {
       dispatch(fetchProducts({ page: 0, size: 12 }));
     }
-  }, [dispatch, product?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dispatch, product?.id]);
 
-  /* Pull real reviews + aggregated rating + recent-buyer count from backend.
-     Keyed on the resolved product's numeric id (not the URL param) so this
-     works for both slug and legacy numeric lookups. */
   useEffect(() => {
     const productId = product?.id;
     if (!productId) return;
@@ -301,7 +266,6 @@ const ProductDetailPage: React.FC = () => {
     return () => { cancelled = true; };
   }, [product?.id]);
 
-  /* Sticky CTA observer */
   useEffect(() => {
     const el = ctaRef.current;
     if (!el) return;
@@ -313,7 +277,6 @@ const ProductDetailPage: React.FC = () => {
     return () => observer.disconnect();
   }, [product]);
 
-  /* Image gallery helpers */
   const orderedImages = product?.images ?? [];
   const galleryImages = orderedImages.length > 0
     ? orderedImages
@@ -324,7 +287,6 @@ const ProductDetailPage: React.FC = () => {
   const activeImage = galleryImages[safeIdx];
   const primaryImageSource = activeImage?.imageUrl || product?.mainImageUrl || product?.imageUrl || '';
 
-  /* Zoom handlers */
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -332,7 +294,6 @@ const ProductDetailPage: React.FC = () => {
     setZoomPosition({ x, y });
   }, []);
 
-  /* Add to cart */
   const handleAddToCart = useCallback(() => {
     if (!user) { navigate('/login'); return; }
     if (isAdding || !product) return;
@@ -358,7 +319,6 @@ const ProductDetailPage: React.FC = () => {
     });
   }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch, triggerFlyToCart]);
 
-  /* Buy now */
   const handleBuyNow = useCallback(() => {
     if (!user) { navigate('/login'); return; }
     if (isAdding || !product) return;
@@ -379,20 +339,14 @@ const ProductDetailPage: React.FC = () => {
     });
   }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch]);
 
-  /* Lightbox navigation */
   const lightboxPrev = () => setSelectedImageIdx((i) => (i > 0 ? i - 1 : galleryImages.length - 1));
   const lightboxNext = () => setSelectedImageIdx((i) => (i < galleryImages.length - 1 ? i + 1 : 0));
 
-  /* Scroll-reveal refs */
   const trustReveal = useRevealOnScroll();
   const tabsReveal = useRevealOnScroll();
   const reviewsReveal = useRevealOnScroll();
   const relatedReveal = useRevealOnScroll();
 
-  // Only show the skeleton when we genuinely have no product yet. Previously
-  // any subsequent dispatch (e.g. fetching related products) would flip
-  // `loading` back to true and revert the page to a skeleton, producing a
-  // visible flash and an empty band of whitespace below the fold.
   if (!product) return <ProductDetailSkeleton />;
 
   const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
@@ -401,12 +355,8 @@ const ProductDetailPage: React.FC = () => {
     : 0;
   const effectivePrice = hasDiscount ? product.discountPrice! : product.price;
 
-  // Parsed bullet points rendered inside the "Description" tab.
   const descriptionBullets = parseDescriptionBullets(product.description);
 
-  // Rows rendered inside the "Additional Information" card grid. Optional
-  // fields are suppressed so the section only surfaces what the backend
-  // actually has for this product.
   const additionalInfoRows: Array<{ label: string; value: string }> = [];
   if (product.weight || product.unit) {
     additionalInfoRows.push({
@@ -433,9 +383,6 @@ const ProductDetailPage: React.FC = () => {
   const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;
   const hasStorageTips = !!product.storageTips && product.storageTips.length > 0;
   const hasUsageTab = hasHowToUse || hasStorageTips;
-  // Tabs are dynamic: every tab below corresponds to a `tabKeys` entry. We
-  // skip Nutrition/How-to-Use entirely when the backend has no data for the
-  // current product, which keeps `tabValue` from pointing at a missing panel.
   const tabKeys: Array<'description' | 'nutrition' | 'usage'> = ['description'];
   if (hasNutrition) tabKeys.push('nutrition');
   if (hasUsageTab) tabKeys.push('usage');
@@ -443,7 +390,7 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <PageTransition>
-      {/* ── Breadcrumbs ─────────────────────────────────────────────── */}
+      {}
       <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 3 }, pb: 0 }}>
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
@@ -453,11 +400,11 @@ const ProductDetailPage: React.FC = () => {
       </Container>
 
       <Container maxWidth="lg" sx={{ pb: { xs: 2, md: 3 } }}>
-        {/* ── Main 2-col layout ─────────────────────────────────────── */}
+        {}
         <Grid container spacing={{ xs: 3, md: 4 }} alignItems="flex-start">
-          {/* LEFT: Image gallery */}
+          {}
           <Grid item xs={12} md={6}>
-            {/* Main image with zoom */}
+            {}
             <Box
               sx={{
                 borderRadius: 2,
@@ -520,7 +467,7 @@ const ProductDetailPage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Thumbnails */}
+            {}
             {galleryImages.length > 1 && (
               <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
                 {galleryImages.map((img, idx) => (
@@ -551,7 +498,7 @@ const ProductDetailPage: React.FC = () => {
             )}
           </Grid>
 
-          {/* RIGHT: Product info */}
+          {}
           <Grid item xs={12} md={6}>
             <Chip
               label={product.categoryName}
@@ -561,7 +508,7 @@ const ProductDetailPage: React.FC = () => {
               sx={{ mb: 1.5 }}
             />
 
-            {/* Product name — prominent */}
+            {}
             <Typography
               variant="h3"
               component="h1"
@@ -575,7 +522,7 @@ const ProductDetailPage: React.FC = () => {
               {product.name}
             </Typography>
 
-            {/* Rating — only rendered once we have at least one real review */}
+            {}
             {hasRating && reviewSummary && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                 <Rating value={reviewSummary.averageRating} precision={0.5} readOnly size="small" />
@@ -586,14 +533,14 @@ const ProductDetailPage: React.FC = () => {
               </Box>
             )}
 
-            {/* Weight display */}
+            {}
             {(product.weight || product.unit) && (
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                 {product.weight} {product.unit}
               </Typography>
             )}
 
-            {/* Price */}
+            {}
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1 }}>
               <Typography variant="h4" color="primary" fontWeight={700} sx={{ fontSize: { xs: '1.6rem', md: '2rem' } }}>
                 ₹{effectivePrice}
@@ -611,7 +558,7 @@ const ProductDetailPage: React.FC = () => {
               Inclusive of all taxes
             </Typography>
 
-            {/* Trust badges */}
+            {}
             <Box ref={trustReveal.ref} sx={{ ...revealSx(trustReveal.visible) }}>
               <Box sx={{
                 display: 'flex',
@@ -634,7 +581,7 @@ const ProductDetailPage: React.FC = () => {
 
             <Divider sx={{ mb: 2.5 }} />
 
-            {/* Quantity selector */}
+            {}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
               <Typography variant="body1" fontWeight={600}>Quantity:</Typography>
               <Box sx={{
@@ -690,7 +637,7 @@ const ProductDetailPage: React.FC = () => {
               </Typography>
             </Box>
 
-            {/* CTA buttons */}
+            {}
             <Box ref={ctaRef}>
               {(!user || user.role !== 'ADMIN') && (
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
@@ -740,7 +687,7 @@ const ProductDetailPage: React.FC = () => {
               )}
             </Box>
 
-            {/* Social-proof nudge — only when real recent-buyer data exists */}
+            {}
             {reviewSummary && reviewSummary.recentBuyersCount > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
                 <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
@@ -754,10 +701,7 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* ── Tabbed description ── each tab is rendered only when the
-             backend actually has data for it. With nothing to show beyond
-             the description, the row is suppressed entirely so we don't
-             reserve empty layout below the fold. */}
+        {}
         {(tabKeys.length > 1 || product.description) && (
           <Box ref={tabsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(tabsReveal.visible) }}>
             <Tabs
@@ -835,8 +779,7 @@ const ProductDetailPage: React.FC = () => {
                       </Box>
                     )}
 
-                    {/* Additional Information ── surfaces weight/dimensions/
-                        shelf-life/category/stock metadata as a clean card grid. */}
+                    {}
                     {additionalInfoRows.length > 0 && (
                       <Box sx={{ mt: 4 }}>
                         <Typography
@@ -936,9 +879,7 @@ const ProductDetailPage: React.FC = () => {
           </Box>
         )}
 
-        {/* ── Reviews section ── hidden when there are zero reviews so we
-             don't render an empty header floating above the related-products
-             carousel. */}
+        {}
         {!reviewsLoading && reviews.length > 0 && reviewSummary && (
           <Box ref={reviewsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(reviewsReveal.visible) }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
@@ -984,7 +925,7 @@ const ProductDetailPage: React.FC = () => {
           </Box>
         )}
 
-        {/* ── You may also like ───────────────────────────────────────── */}
+        {}
         {relatedProducts.length > 0 && (
           <Box ref={relatedReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(relatedReveal.visible) }}>
             <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>You May Also Like</Typography>
@@ -1015,7 +956,7 @@ const ProductDetailPage: React.FC = () => {
         )}
       </Container>
 
-      {/* ── Lightbox dialog ─────────────────────────────────────────── */}
+      {}
       <Dialog
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
@@ -1091,7 +1032,7 @@ const ProductDetailPage: React.FC = () => {
         </Box>
       </Dialog>
 
-      {/* ── Sticky mobile CTA ───────────────────────────────────────── */}
+      {}
       {isTablet && (!user || user.role !== 'ADMIN') && (
         <Slide direction="up" in={stickyVisible} mountOnEnter unmountOnExit>
           <Box sx={{

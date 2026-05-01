@@ -83,7 +83,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </div>
 );
 
-// Slugify mirrors the backend rules in `CategoryServiceImpl.slugify`.
 const slugify = (raw: string): string =>
   raw
     .normalize('NFD')
@@ -153,10 +152,6 @@ const ORDER_STATUSES = [
   'PENDING',
 ] as const;
 
-/**
- * Tab id <-> index mapping. Using stable string keys in the URL lets us
- * reorder or add tabs without breaking bookmarks.
- */
 const TAB_IDS = ['products', 'categories', 'orders', 'users', 'analytics'] as const;
 type TabId = (typeof TAB_IDS)[number];
 
@@ -183,16 +178,12 @@ const AdminPage: React.FC = () => {
   const { categories } = useAppSelector((state) => state.products);
   const currentUser = useAppSelector((state) => state.auth.user);
 
-  // URL-driven pagination state. `tab`, `page`, and `limit` all flow through
-  // the query string so deep links / back-forward restore the exact view.
   const [searchParams, setSearchParams] = useSearchParams();
   const tabId = (searchParams.get('tab') as TabId | null) ?? 'products';
   const tabValue = tabIndexOf(tabId);
   const pageParam = clampPage(searchParams.get('page'));
   const limitParam = clampLimit(searchParams.get('limit'));
 
-  // Per-tab page index (0-based). The URL `page` is 1-based for humans; we
-  // translate here so the backend + MUI Pagination stay consistent.
   const productPage = tabId === 'products' ? pageParam - 1 : 0;
   const ordersPage = tabId === 'orders' ? pageParam - 1 : 0;
   const categoryPage = tabId === 'categories' ? pageParam - 1 : 0;
@@ -220,8 +211,6 @@ const AdminPage: React.FC = () => {
     [setSearchParams],
   );
 
-  // Admin product list state (independent of public Redux slice — the admin
-  // page must surface soft-deleted products).
   const [adminProducts, setAdminProducts] = useState<Product[]>([]);
   const [adminProductsLoading, setAdminProductsLoading] = useState(true);
   const [productTotalPages, setProductTotalPages] = useState(0);
@@ -230,17 +219,13 @@ const AdminPage: React.FC = () => {
   const [productSearchInput, setProductSearchInput] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState<number | ''>('');
   const [productActiveFilter, setProductActiveFilter] = useState<'' | 'active' | 'inactive'>('');
-  // Per-row toggle spinner — prevents double-clicks and lets us disable the
-  // switch while the PATCH is in flight.
   const [togglingProductId, setTogglingProductId] = useState<number | null>(null);
 
-  // Categories tab — now paginated server-side.
   const [categoryRows, setCategoryRows] = useState<Category[]>([]);
   const [categoryRowsLoading, setCategoryRowsLoading] = useState(true);
   const [categoryTotalPages, setCategoryTotalPages] = useState(0);
   const [categoryTotalElements, setCategoryTotalElements] = useState(0);
 
-  // Orders state
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
   const [ordersTotalElements, setOrdersTotalElements] = useState(0);
@@ -248,18 +233,14 @@ const AdminPage: React.FC = () => {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
 
-  // Dashboard summary cards — fetched from the backend so admins see true
-  // totals, not just whatever happens to be on the current page.
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Dialog state
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
 
-  // Confirm dialog (replaces window.confirm)
   const [confirmState, setConfirmState] = useState<ConfirmState>({
     open: false,
     title: '',
@@ -268,12 +249,10 @@ const AdminPage: React.FC = () => {
     onConfirm: () => undefined,
   });
 
-  // In-flight markers
   const [savingProduct, setSavingProduct] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
   const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
 
-  // Image uploader state
   const [pendingImages, setPendingImages] = useState<File[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const [pendingMainIndex, setPendingMainIndex] = useState<number>(0);
@@ -281,14 +260,12 @@ const AdminPage: React.FC = () => {
   const [selectedExistingMainId, setSelectedExistingMainId] = useState<number | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  // Form state
   const [productForm, setProductForm] = useState<ProductRequest>(initialProductForm);
   const [productErrors, setProductErrors] = useState<ProductFormErrors>({});
   const [categoryForm, setCategoryForm] = useState<CategoryRequest>(initialCategoryForm);
   const [categoryErrors, setCategoryErrors] = useState<CategoryFormErrors>({});
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
-  // Refs to track previews to revoke
   const previewsRef = useRef<string[]>([]);
   useEffect(() => {
     previewsRef.current = pendingPreviews;
@@ -382,9 +359,6 @@ const AdminPage: React.FC = () => {
     }
   }, [showError]);
 
-  // Initial data load — categories for the Redux slice (product form),
-  // plus paginated categories + dashboard stats. The tab-specific effects
-  // below take care of products / orders.
   useEffect(() => {
     dispatch(fetchCategories());
     loadDashboardStats();
@@ -402,12 +376,8 @@ const AdminPage: React.FC = () => {
     if (tabId === 'categories') loadCategoryRows(categoryPage, currentLimit);
   }, [tabId, categoryPage, currentLimit, loadCategoryRows]);
 
-  // -- Image uploader helpers ---------------------------------------------
 
   const handleImageFilesSelected = (files: File[]) => {
-    // Per spec: no client-side size cap; trust server validation. We still
-    // require the picked files to be images so we don't ship a non-image
-    // payload that the server will reject.
     const nonImage = files.find((f) => !f.type.startsWith('image/'));
     if (nonImage) {
       setProductErrors((prev) => ({
@@ -459,7 +429,6 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  // -- Product form -------------------------------------------------------
 
   const validateProductForm = (): boolean => {
     const errs: ProductFormErrors = {};
@@ -515,7 +484,6 @@ const AdminPage: React.FC = () => {
       loadDashboardStats();
     } catch (err) {
       const parsed = parseApiError(err, 'Failed to save product');
-      // Map server-side field errors back onto the form.
       if (Object.keys(parsed.fieldErrors).length > 0) {
         const mapped: ProductFormErrors = {};
         for (const [key, value] of Object.entries(parsed.fieldErrors)) {
@@ -553,7 +521,6 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  // -- Category form ------------------------------------------------------
 
   const validateCategoryForm = (): boolean => {
     const errs: CategoryFormErrors = {};
@@ -603,7 +570,6 @@ const AdminPage: React.FC = () => {
 
   const requestDeleteCategory = (id: number, name: string, productCount: number) => {
     if (productCount > 0) {
-      // Surface block immediately without round-trip.
       showError(
         `Cannot delete "${name}" — ${productCount} product(s) are assigned. Reassign or remove them first.`,
       );
@@ -633,7 +599,6 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  // -- Orders -------------------------------------------------------------
 
   const handleUpdateOrderStatus = async (orderId: number, status: string) => {
     if (!status) return;
@@ -651,7 +616,6 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  // -- Form reset / open helpers -----------------------------------------
 
   const resetProductForm = () => {
     setProductForm(initialProductForm);
@@ -716,7 +680,7 @@ const AdminPage: React.FC = () => {
     });
     setEditingCategoryId(category.id);
     setCategoryErrors({});
-    setSlugManuallyEdited(true); // existing slug must not be overwritten on name edits
+    setSlugManuallyEdited(true);
     setShowCategoryDialog(true);
   };
 
@@ -728,13 +692,7 @@ const AdminPage: React.FC = () => {
     }));
   };
 
-  // -- Status toggle -------------------------------------------------------
 
-  /**
-   * Optimistic inline toggle: flip the row immediately, call PATCH, and on
-   * failure roll the row back + refresh from the server so the UI can’t
-   * diverge from the true state.
-   */
   const handleToggleProductStatus = async (product: Product, nextActive: boolean) => {
     if (togglingProductId === product.id) return;
     setTogglingProductId(product.id);
@@ -746,7 +704,6 @@ const AdminPage: React.FC = () => {
       showSuccess(nextActive ? 'Product activated' : 'Product deactivated');
       loadDashboardStats();
     } catch (err) {
-      // Roll back and reload from source of truth.
       setAdminProducts((rows) =>
         rows.map((r) => (r.id === product.id ? { ...r, active: !nextActive } : r)),
       );
@@ -758,7 +715,6 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  // -- Render -------------------------------------------------------------
 
   const parentCategoryOptions = useMemo(
     () => categories.filter((c) => c.id !== editingCategoryId && !c.parentId),
@@ -771,7 +727,7 @@ const AdminPage: React.FC = () => {
         Admin Dashboard
       </Typography>
 
-      {/* Dashboard Stats */}
+      {}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={6} md={3}>
           <Paper sx={{ p: 2.5, textAlign: 'center', borderRadius: 2 }}>
@@ -837,7 +793,7 @@ const AdminPage: React.FC = () => {
         </Tabs>
       </Box>
 
-      {/* Products Tab */}
+      {}
       <TabPanel value={tabValue} index={0}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
@@ -1048,7 +1004,7 @@ const AdminPage: React.FC = () => {
         )}
       </TabPanel>
 
-      {/* Categories Tab */}
+      {}
       <TabPanel value={tabValue} index={1}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <Button
@@ -1159,7 +1115,7 @@ const AdminPage: React.FC = () => {
         )}
       </TabPanel>
 
-      {/* Orders Tab */}
+      {}
       <TabPanel value={tabValue} index={2}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <FormControl size="small" sx={{ minWidth: 180 }} disabled={ordersLoading}>
@@ -1318,17 +1274,17 @@ const AdminPage: React.FC = () => {
         )}
       </TabPanel>
 
-      {/* Users Tab */}
+      {}
       <TabPanel value={tabValue} index={3}>
         <UsersTab active={tabId === 'users'} currentUserId={currentUser?.id} />
       </TabPanel>
 
-      {/* Analytics Tab */}
+      {}
       <TabPanel value={tabValue} index={4}>
         <AnalyticsTab active={tabId === 'analytics'} />
       </TabPanel>
 
-      {/* Product Dialog */}
+      {}
       <Dialog
         open={showProductDialog}
         onClose={() => !savingProduct && setShowProductDialog(false)}
@@ -1609,7 +1565,7 @@ const AdminPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Category Dialog */}
+      {}
       <Dialog
         open={showCategoryDialog}
         onClose={() => !savingCategory && setShowCategoryDialog(false)}

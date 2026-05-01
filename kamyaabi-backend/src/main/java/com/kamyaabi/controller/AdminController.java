@@ -59,7 +59,6 @@ public class AdminController {
         this.currentUser = currentUser;
     }
 
-    // Dashboard
     @GetMapping("/dashboard/stats")
     @Operation(summary = "Dashboard stats",
             description = "Returns summary counts/revenue used on the admin dashboard header.")
@@ -79,7 +78,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getAnalytics(startDate, endDate)));
     }
 
-    // Product Management
     @GetMapping("/products")
     @Operation(summary = "List products (admin)",
             description = "Paginated product list including soft-deleted items. "
@@ -171,7 +169,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Image deleted", null));
     }
 
-    // Category Management
     @GetMapping("/categories")
     @Operation(summary = "List categories (paginated, admin)",
             description = "Paginated list of categories for admin tables. "
@@ -208,7 +205,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Category deleted", null));
     }
 
-    // Order Management
     @GetMapping("/orders")
     @Operation(summary = "Get all orders", description = "Get paginated list of all orders with optional status filter (Admin only)")
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
@@ -240,7 +236,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Order status updated", order));
     }
 
-    // User Management
     @GetMapping("/users")
     @Operation(summary = "List users (admin)",
             description = "Paginated list of users for the /admin/users table. Supports optional `q` search "

@@ -46,7 +46,6 @@ class CartMapperTest {
 
         assertThat(response.getItems()).hasSize(2);
         assertThat(response.getTotalItems()).isEqualTo(3);
-        // 749*2 + 999*1 = 2497
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("2497.00"));
     }
 

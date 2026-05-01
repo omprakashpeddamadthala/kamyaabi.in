@@ -7,7 +7,6 @@ const GlobalLoadingBar: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Show bar immediately when requests start, hide with a slight delay for smooth UX
   useEffect(() => {
     if (activeRequests > 0) {
       if (hideTimerRef.current) {
@@ -16,7 +15,6 @@ const GlobalLoadingBar: React.FC = () => {
       }
       setVisible(true);
     } else {
-      // Brief delay before hiding to prevent flickering on fast sequential requests
       hideTimerRef.current = setTimeout(() => {
         setVisible(false);
       }, 300);

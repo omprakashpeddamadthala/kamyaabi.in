@@ -10,10 +10,6 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
-/**
- * Renders professional HTML email templates for order events.
- * Each event type maps to a different email template with dynamic placeholders.
- */
 @Component
 public class EmailTemplateEngine {
 
@@ -221,12 +217,6 @@ public class EmailTemplateEngine {
                 + "</div>";
     }
 
-    /**
-     * Renders a centered "View Order Status" CTA that deep-links to the
-     * customer-facing order details page. The button is included in every
-     * order-related email so recipients can jump straight from any
-     * notification to the live status view.
-     */
     private String renderOrderStatusButton(Order order) {
         String orderUrl = buildOrderStatusUrl(order);
         return "<div style=\"text-align:center;margin:24px 0;\">"
@@ -267,13 +257,10 @@ public class EmailTemplateEngine {
                 + "<table role=\"presentation\" style=\"width:100%;border-collapse:collapse;\">"
                 + "<tr><td style=\"padding:20px 0;\">"
                 + "<table role=\"presentation\" style=\"max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);\">"
-                // Header
                 + "<tr><td style=\"background:" + headerColor + ";padding:30px;text-align:center;\">"
                 + "<h1 style=\"margin:0;color:#ffffff;font-size:24px;\">" + escapeHtml(title) + "</h1>"
                 + "</td></tr>"
-                // Body
                 + "<tr><td style=\"padding:30px;\">" + bodyContent + "</td></tr>"
-                // Footer
                 + "<tr><td style=\"background:#f8f9fa;padding:20px;text-align:center;border-top:1px solid #eee;\">"
                 + "<p style=\"margin:0 0 5px;color:#999;font-size:12px;\">Kamyaabi - Premium Dry Fruits</p>"
                 + "<p style=\"margin:0;color:#bbb;font-size:11px;\">This is an automated email. Please do not reply directly.</p>"

@@ -8,7 +8,7 @@ import { config } from '../config';
 const ContactPage: React.FC = () => {
   return (
     <Box>
-      {/* Hero */}
+      {}
       <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>Contact Us</Typography>
@@ -21,7 +21,7 @@ const ContactPage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Contact Info + Form */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6}>
