@@ -9,11 +9,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Daily orders + revenue series for the selected date range, plus totals.
- * Buckets are inclusive of both {@code startDate} and {@code endDate} and
- * always include zero-filled days so charts render a continuous axis.
- */
 @Data
 @Builder
 @NoArgsConstructor

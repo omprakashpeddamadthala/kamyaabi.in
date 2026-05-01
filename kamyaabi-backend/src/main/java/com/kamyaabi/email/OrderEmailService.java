@@ -9,10 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Orchestrates email notifications for order events.
- * Sends emails to both the customer and configured admin emails.
- */
 @Slf4j
 @Service
 public class OrderEmailService {
@@ -40,7 +36,6 @@ public class OrderEmailService {
             return;
         }
 
-        // No emails for ORDER_PLACED (payment not yet confirmed) or PAYMENT_PENDING
         if (eventType == OrderEventType.ORDER_PLACED || eventType == OrderEventType.PAYMENT_PENDING) {
             log.info("Skipping email for event: {} order: {} — awaiting payment confirmation", eventType, order.getId());
             return;
@@ -55,7 +50,6 @@ public class OrderEmailService {
 
         sendCustomerEmail(freshOrder, eventType);
 
-        // Admin only gets notified on payment success (confirmed revenue)
         if (eventType == OrderEventType.PAYMENT_SUCCESS) {
             sendAdminEmails(freshOrder, eventType);
         } else {

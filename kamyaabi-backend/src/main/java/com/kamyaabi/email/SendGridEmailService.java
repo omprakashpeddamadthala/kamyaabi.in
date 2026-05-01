@@ -12,9 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
-/**
- * Email service implementation using SendGrid API.
- */
 @Slf4j
 public class SendGridEmailService implements EmailService {
 
@@ -26,7 +23,6 @@ public class SendGridEmailService implements EmailService {
         this.sendGrid = new SendGrid(emailProperties.getSendgrid().getApiKey());
     }
 
-    // Visible for testing
     SendGridEmailService(SendGrid sendGrid, EmailProperties emailProperties) {
         this.sendGrid = sendGrid;
         this.emailProperties = emailProperties;

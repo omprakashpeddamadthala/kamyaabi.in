@@ -21,12 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * REST endpoints for authentication: Google OAuth2 login (modern ID-token
- * flow + legacy user-info fallback), OAuth2 callbacks, and current-user
- * lookup. This controller delegates every operation to {@link AuthService}
- * and holds no business logic.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")

@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ReactNode, ErrorInfo } from 'react';
 import { Box, Button, Container, Typography } from '@mui/material';
 
 import { errorApi } from '../../api/errorApi';
@@ -14,14 +14,6 @@ interface ErrorBoundaryState {
   error?: Error;
 }
 
-/**
- * Top-level React error boundary. Catches render-time exceptions from its children,
- * logs them through the app logger, and shows a safe fallback UI so the whole app
- * doesn't unmount on a single bad render.
- *
- * Must stay a class component — React still requires class components for error
- * boundaries as of React 18.
- */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -38,8 +30,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       stack: error.stack,
       componentStack: info.componentStack,
     });
-    // Fire-and-forget: errorApi.report swallows its own failures so the
-    // fallback UI still renders even if the network is down.
     void errorApi.report({
       message: error.message,
       stack: error.stack,

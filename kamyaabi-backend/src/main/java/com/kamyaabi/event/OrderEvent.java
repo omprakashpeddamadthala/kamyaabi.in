@@ -4,9 +4,6 @@ import com.kamyaabi.entity.Order;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-/**
- * Spring application event published when an order-related action occurs.
- */
 @Getter
 public class OrderEvent extends ApplicationEvent {
 

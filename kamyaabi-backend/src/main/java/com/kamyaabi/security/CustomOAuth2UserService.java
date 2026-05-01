@@ -30,7 +30,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         
         log.info("Processing OAuth2 user: {}", email);
         
-        // Create or update user
         User user = userRepository.findByEmail(email)
                 .orElse(User.builder()
                         .email(email)
@@ -39,7 +38,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .googleId(googleId)
                         .build());
         
-        // Update user info if needed
         if (user.getGoogleId() == null) {
             user.setGoogleId(googleId);
         }

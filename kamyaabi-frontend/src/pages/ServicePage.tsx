@@ -13,7 +13,7 @@ const serviceItems = [
 const ServicePage: React.FC = () => {
   return (
     <Box>
-      {/* Hero */}
+      {}
       <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>Our Services</Typography>
@@ -26,7 +26,7 @@ const ServicePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Services Grid */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={4}>
@@ -50,7 +50,7 @@ const ServicePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Counters */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>

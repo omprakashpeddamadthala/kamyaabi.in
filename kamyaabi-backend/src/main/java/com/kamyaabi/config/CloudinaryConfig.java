@@ -5,11 +5,6 @@ import com.cloudinary.utils.ObjectUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Builds the shared {@link Cloudinary} client from the {@link CloudinaryProperties}
- * binding. Kept separate from {@link CloudinaryProperties} so the client itself
- * can be unit-tested with a fake bean in tests.
- */
 @Configuration
 public class CloudinaryConfig {
 
@@ -27,12 +22,6 @@ public class CloudinaryConfig {
         ));
     }
 
-    /**
-     * Fail fast at context startup if a Cloudinary value still looks like an
-     * unresolved Spring placeholder (e.g. {@code ${CLOUDINARY_CLOUD_NAME}}).
-     * Without this the app starts happily and only fails at the first admin
-     * upload with a cryptic "Illegal character in path" error.
-     */
     private static void assertResolved(String property, String envVar, String value) {
         if (value != null && value.contains("${")) {
             throw new IllegalStateException(

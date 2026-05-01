@@ -3,24 +3,13 @@ import axios, { AxiosError } from 'axios';
 import { config } from '../config';
 import { logger } from '../utils/logger';
 
-/** Absolute session lifetime — must match the backend JWT expiration. */
 const SESSION_LIFETIME_MS = 2 * 60 * 60 * 1000;
 const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 
-/**
- * Persist the absolute expiry timestamp when a new token is obtained.
- * Called once at login time — not on every user interaction.
- */
 const setTokenExpiry = (): void => {
   localStorage.setItem(TOKEN_EXPIRY_KEY, (Date.now() + SESSION_LIFETIME_MS).toString());
 };
 
-/**
- * Check whether the current session has exceeded the absolute 2-hour lifetime.
- * Returns true when the token is known to be expired (or when no expiry was
- * recorded, which means the token predates this fix and should be treated as
- * expired).
- */
 const isSessionExpired = (): boolean => {
   const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
   if (!expiry) return true;
@@ -48,10 +37,6 @@ interface ApiErrorBody {
   fieldErrors?: Record<string, string>;
 }
 
-/**
- * Extracts the backend-assigned correlation id from either the response header
- * set by CorrelationIdFilter or the {@code traceId} field on the error body.
- */
 export const extractTraceId = (error: AxiosError): string | undefined => {
   const headerId = error.response?.headers?.['x-correlation-id'];
   if (typeof headerId === 'string' && headerId.length > 0) return headerId;

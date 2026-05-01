@@ -48,7 +48,6 @@ interface FormErrors {
   lastName?: string;
 }
 
-// Skeleton loader for profile page
 const ProfileSkeleton: React.FC = () => (
   <Container maxWidth="md" sx={{ py: 4 }}>
     <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
@@ -128,7 +127,6 @@ const ProfilePage: React.FC = () => {
       const res = await addressApi.getAll();
       setAddresses(res.data.data);
     } catch {
-      // addresses already loaded from profile
     }
   }, []);
 
@@ -219,7 +217,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
-      {/* Profile Header & Personal Info */}
+      {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <Avatar
@@ -296,7 +294,7 @@ const ProfilePage: React.FC = () => {
         </Box>
       </Paper>
 
-      {/* Shipping Addresses */}
+      {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
         <Box sx={{ 
           display: 'flex', 
@@ -405,7 +403,7 @@ const ProfilePage: React.FC = () => {
         )}
       </Paper>
 
-      {/* Address Form Dialog */}
+      {}
       <AddressFormDialog
         open={addressDialogOpen}
         onClose={() => setAddressDialogOpen(false)}
@@ -413,7 +411,7 @@ const ProfilePage: React.FC = () => {
         editAddress={editingAddress}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {}
       <Dialog open={deleteDialogOpen} onClose={() => !deletingAddress && setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Address</DialogTitle>
         <DialogContent>

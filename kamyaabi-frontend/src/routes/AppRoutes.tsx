@@ -59,9 +59,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/service" element={<ServicePage />} />
         <Route path="/products" element={<ProductsPage />} />
-        {/* :slug matches human-readable slugs like "blue-running-shoes"
-            as well as legacy numeric ids — ProductDetailPage normalizes
-            numeric inputs to the canonical slug URL client-side. */}
+        {}
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />

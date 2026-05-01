@@ -42,28 +42,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        // Frontend error sink — must be reachable from anonymous
-                        // sessions because client-side errors can fire before
-                        // (or after) auth state is established.
                         .requestMatchers(HttpMethod.POST, "/api/errors/report").permitAll()
-                        // OAuth2 endpoints
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
-                        // Swagger
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        // H2 Console
                         .requestMatchers("/h2-console/**").permitAll()
-                        // Actuator: /health and /info are public (LB probes + build metadata);
-                        // every other actuator endpoint is admin-only.
                         .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
-                        // Admin endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Authenticated endpoints
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

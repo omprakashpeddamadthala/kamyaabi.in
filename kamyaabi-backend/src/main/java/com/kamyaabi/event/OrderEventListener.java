@@ -6,11 +6,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.stereotype.Component;
 
-/**
- * Listens for OrderEvent and delegates to OrderEmailService for email notifications.
- * Uses @TransactionalEventListener to process events after the transaction commits,
- * ensuring order status updates succeed even if email notification fails.
- */
 @Slf4j
 @Component
 public class OrderEventListener {

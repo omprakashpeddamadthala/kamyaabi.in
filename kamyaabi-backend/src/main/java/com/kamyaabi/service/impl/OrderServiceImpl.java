@@ -103,8 +103,6 @@ public class OrderServiceImpl implements OrderService {
 
             orderItems.add(orderItem);
             totalAmount = totalAmount.add(effectivePrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())));
-            // NOTE: Stock is NOT deducted here on order placement.
-            // Stock deduction happens when admin sets status to CONFIRMED.
         }
 
         order.setItems(orderItems);
@@ -113,10 +111,8 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
         log.info("Order created with id: {}", savedOrder.getId());
 
-        // Clear the cart
         cartService.clearCart(userId);
 
-        // No email on order creation — emails are sent only after payment verification
         log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
 
         return orderMapper.toResponse(savedOrder);
@@ -164,7 +160,6 @@ public class OrderServiceImpl implements OrderService {
         Order.OrderStatus previousStatus = order.getStatus();
         order.setStatus(status);
 
-        // Phase 6: Deduct stock ONLY when admin confirms the order
         if (status == Order.OrderStatus.CONFIRMED && previousStatus != Order.OrderStatus.CONFIRMED) {
             log.info("Order {} confirmed by admin — deducting stock for {} items", orderId, order.getItems().size());
             for (OrderItem item : order.getItems()) {
@@ -185,7 +180,6 @@ public class OrderServiceImpl implements OrderService {
         Order saved = orderRepository.save(order);
         log.info("Order {} status updated from {} to {}", orderId, previousStatus, status);
 
-        // Skip email for PAID status set by admin — payment verification already handles this
         if (status == Order.OrderStatus.PAID) {
             log.info("Skipping email for admin PAID status update on order {} — payment verification handles this", orderId);
         } else {

@@ -28,11 +28,6 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
-    /**
-     * URL-friendly identifier derived from {@link #name}. Always populated by
-     * {@code CategoryServiceImpl} (auto-generated when blank) and unique across
-     * categories so admins can reference categories in routes/links.
-     */
     @Column(unique = true, length = 160)
     private String slug;
 
@@ -40,11 +35,6 @@ public class Category {
 
     private String imageUrl;
 
-    /**
-     * Optional parent category, supporting a one-level deep hierarchy in the
-     * admin UI (e.g. "Dry Fruits" → "Almonds"). Cycles are prevented in the
-     * service layer.
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;

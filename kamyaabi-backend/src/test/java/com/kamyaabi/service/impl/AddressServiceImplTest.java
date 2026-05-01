@@ -180,7 +180,6 @@ class AddressServiceImplTest {
         when(addressValidator.isValidState("Maharashtra")).thenReturn(true);
         when(addressValidator.isValidCityForState("Maharashtra", "Mumbai")).thenReturn(true);
         when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
-        // Simulate updateEntity actually setting isDefault on the address
         doAnswer(inv -> {
             Address a = inv.getArgument(0);
             AddressRequest r = inv.getArgument(1);

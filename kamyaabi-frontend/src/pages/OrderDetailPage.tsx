@@ -29,7 +29,24 @@ declare global {
   }
 }
 
-const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+const ORDER_STEP_LABELS = ['Placed', 'Paid', 'Processing', 'Shipped', 'Delivered'] as const;
+
+const PAID_STEP_INDEX = 1;
+
+const getActiveStep = (status: string, paymentStatus?: string): number => {
+  if (paymentStatus === 'COMPLETED' && status === 'PENDING') {
+    return PAID_STEP_INDEX + 1;
+  }
+  switch (status) {
+    case 'PENDING': return 0;
+    case 'PAID': return PAID_STEP_INDEX + 1;
+    case 'CONFIRMED':
+    case 'PROCESSING': return 2;
+    case 'SHIPPED': return 3;
+    case 'DELIVERED': return ORDER_STEP_LABELS.length;
+    default: return -1;
+  }
+};
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,9 +56,6 @@ const OrderDetailPage: React.FC = () => {
   const [paymentProcessing, setPaymentProcessing] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
   const theme = useTheme();
-  // Switch the 5-step status timeline to a vertical layout on phones — the
-  // horizontal `alternativeLabel` variant clips its labels at 320–414px
-  // viewports and forces horizontal overflow on the card.
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
@@ -71,7 +85,6 @@ const OrderDetailPage: React.FC = () => {
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             });
-            // Refresh order details to show completed payment
             dispatch(fetchOrderById(order.id));
           } catch {
             setPaymentError('Payment verification failed.');
@@ -103,7 +116,7 @@ const OrderDetailPage: React.FC = () => {
 
   if (loading || !order) return <Loading />;
 
-  const activeStep = ORDER_STATUSES.indexOf(order.status);
+  const activeStep = getActiveStep(order.status, order.payment?.status);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -124,7 +137,7 @@ const OrderDetailPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Order Progress */}
+      {}
       {order.status !== 'CANCELLED' && (
         <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, '&:hover': { transform: 'none' } }}>
           <Stepper
@@ -132,9 +145,9 @@ const OrderDetailPage: React.FC = () => {
             alternativeLabel={!isMobile}
             orientation={isMobile ? 'vertical' : 'horizontal'}
           >
-            {ORDER_STATUSES.map((status) => (
-              <Step key={status}>
-                <StepLabel>{status}</StepLabel>
+            {ORDER_STEP_LABELS.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
               </Step>
             ))}
           </Stepper>
@@ -143,7 +156,7 @@ const OrderDetailPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          {/* Order Items */}
+          {}
           <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Items</Typography>
             {order.items.map((item) => (
@@ -176,7 +189,7 @@ const OrderDetailPage: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          {/* Shipping Address */}
+          {}
           {order.shippingAddress && (
             <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Shipping Address</Typography>
@@ -193,7 +206,7 @@ const OrderDetailPage: React.FC = () => {
             </Card>
           )}
 
-          {/* Payment Info */}
+          {}
           {order.payment && (
             <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Payment</Typography>
@@ -233,7 +246,7 @@ const OrderDetailPage: React.FC = () => {
             </Card>
           )}
 
-          {/* Order Info */}
+          {}
           <Card sx={{ p: 3, mt: 3, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Info</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

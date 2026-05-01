@@ -6,19 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-/**
- * Factory that selects the appropriate EmailService implementation based on configuration.
- * Strategy: If SendGrid API key is configured, use SendGrid; otherwise fallback to SMTP.
- */
 @Slf4j
 @Component
 public class EmailServiceFactory {
 
     private final EmailService emailService;
 
-    // @Autowired is kept on this constructor to disambiguate from the package-private
-    // test constructor below; without it Spring sees two constructors on the bean and
-    // can't decide which one to use.
     @Autowired
     public EmailServiceFactory(EmailProperties emailProperties, JavaMailSender mailSender) {
         if (emailProperties.isSendGridConfigured()) {
@@ -33,7 +26,6 @@ public class EmailServiceFactory {
         }
     }
 
-    // Visible for testing
     EmailServiceFactory(EmailService emailService) {
         this.emailService = emailService;
     }
@@ -42,9 +34,6 @@ public class EmailServiceFactory {
         return emailService;
     }
 
-    /**
-     * No-op implementation used when no email provider is configured.
-     */
     static class NoOpEmailService implements EmailService {
         private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NoOpEmailService.class);
 

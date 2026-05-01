@@ -31,7 +31,6 @@ public class DataInitializer {
 
             log.info("Initializing sample data...");
 
-            // Create default admin user
             if (!userRepo.existsByEmail("omprakashornold@gmail.com")) {
                 User adminUser = User.builder()
                         .email("omprakashornold@gmail.com")
@@ -43,7 +42,6 @@ public class DataInitializer {
                 log.info("Default admin user created: omprakashornold@gmail.com");
             }
 
-            // Create categories
             Category cashews = categoryRepo.save(Category.builder()
                     .name("Cashews")
                     .description("Premium quality cashews sourced from the finest farms")
@@ -68,7 +66,6 @@ public class DataInitializer {
                     .imageUrl("https://images.unsplash.com/photo-1596591868231-05e882e12e21?w=400")
                     .build());
 
-            // Create products
             productRepo.save(Product.builder()
                     .name("Whole Cashews W320")
                     .description("Creamy, Rich, Mild, Buttery, Sweet, Crisp. Our premium whole cashews are carefully selected for their superior quality and taste.")

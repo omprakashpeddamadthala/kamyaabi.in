@@ -14,20 +14,10 @@ import java.io.StringWriter;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Sends developer alert emails when an unhandled exception is intercepted —
- * either by the backend's {@code GlobalExceptionHandler} or by the frontend's
- * {@code ErrorBoundary} via the {@code /api/errors/report} endpoint.
- *
- * <p>The send is dispatched on the {@code emailTaskExecutor} so it never blocks
- * the request thread, and every send is wrapped in a try/catch so a mailer
- * failure can never bubble back into the application response.
- */
 @Slf4j
 @Service
 public class ErrorAlertService {
 
-    /** Cap on the rendered stack trace to keep emails small and prevent unbounded growth. */
     private static final int MAX_STACK_TRACE_CHARS = 8_000;
 
     private final EmailServiceFactory emailServiceFactory;
@@ -42,9 +32,6 @@ public class ErrorAlertService {
         this.activeProfiles = activeProfiles;
     }
 
-    /**
-     * Send a developer alert for a backend exception.
-     */
     @Async("emailTaskExecutor")
     public void alertOnBackendException(Throwable throwable, HttpServletRequest request) {
         if (!shouldSend()) return;
@@ -68,10 +55,6 @@ public class ErrorAlertService {
         sendToDevelopers(subject, htmlContent);
     }
 
-    /**
-     * Send a developer alert for a frontend exception reported by the
-     * {@code ErrorBoundary} or a global window error handler.
-     */
     @Async("emailTaskExecutor")
     public void alertOnFrontendException(String message,
                                          String stack,
@@ -124,7 +107,6 @@ public class ErrorAlertService {
                 service.sendEmail(recipient.trim(), subject, htmlContent);
                 log.info("Developer error alert sent to {}", recipient);
             } catch (Exception sendFailure) {
-                // Never propagate — the originating request must not be impacted.
                 log.error("Failed to deliver developer error alert to {}: {}", recipient, sendFailure.getMessage());
             }
         }

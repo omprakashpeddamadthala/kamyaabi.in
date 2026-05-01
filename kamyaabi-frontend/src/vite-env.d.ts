@@ -6,6 +6,8 @@ interface ImportMetaEnv {
   readonly VITE_BRAND_DOMAIN: string;
   readonly VITE_SUPPORT_EMAIL: string;
   readonly VITE_SUPPORT_PHONE: string;
+  readonly VITE_DEV_ADMIN_EMAIL?: string;
+  readonly VITE_DEV_USER_EMAIL?: string;
 }
 
 interface ImportMeta {

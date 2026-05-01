@@ -8,12 +8,6 @@ export interface ParsedApiError {
   traceId?: string;
 }
 
-/**
- * Normalize an axios/unknown error into a stable shape the admin UI can
- * present. Surfaces field-level validation errors when the backend returned
- * them (HTTP 400/422 from {@code ApiErrorResponse}) and falls back to a
- * generic, user-readable message for network / 5xx failures.
- */
 export const parseApiError = (
   error: unknown,
   fallback = 'Something went wrong. Please try again.',

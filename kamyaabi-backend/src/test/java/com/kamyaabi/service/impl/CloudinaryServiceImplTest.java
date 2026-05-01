@@ -94,8 +94,7 @@ class CloudinaryServiceImplTest {
 
     @Test
     void uploadImage_largeFileIsAccepted() throws IOException {
-        // No per-file size cap is enforced; uploads of any size must reach Cloudinary.
-        byte[] big = new byte[10 * 1024 * 1024 + 1]; // 10 MB + 1 byte
+        byte[] big = new byte[10 * 1024 * 1024 + 1];
         MultipartFile file = new MockMultipartFile("images", "big.jpg", "image/jpeg", big);
         when(uploader.upload(any(byte[].class), any()))
                 .thenReturn(Map.of(

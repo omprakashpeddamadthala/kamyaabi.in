@@ -35,7 +35,6 @@ export const addToCart = createAsyncThunk(
       const response = await cartApi.addItem(productId, quantity);
       return response.data.data;
     } catch (error: unknown) {
-      // Revert optimistic update by re-fetching the real cart state
       dispatch(fetchCart());
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Failed to add to cart');
@@ -50,7 +49,6 @@ export const updateCartItem = createAsyncThunk(
       const response = await cartApi.updateQuantity(itemId, quantity);
       return response.data.data;
     } catch (error: unknown) {
-      // Re-fetch cart to revert optimistic update on failure
       dispatch(fetchCart());
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Failed to update cart');
@@ -79,12 +77,6 @@ const cartSlice = createSlice({
       state.cart = null;
     },
 
-    /**
-     * Phase 7 — Optimistic Add-to-Cart.
-     * Dispatched BEFORE the addToCart async thunk so the cart badge and item
-     * list update within <100ms of the button click (no API wait).
-     * On API failure, fetchCart() reverts to the server-authoritative state.
-     */
     optimisticAddToCart: (
       state,
       action: PayloadAction<{
@@ -102,7 +94,6 @@ const cartSlice = createSlice({
         : productPrice;
 
       if (!state.cart) {
-        // Create a temporary cart shell so the badge shows immediately
         state.cart = { id: -1, items: [], totalAmount: 0, totalItems: 0 };
       }
 
@@ -112,7 +103,7 @@ const cartSlice = createSlice({
         existing.subtotal = price * existing.quantity;
       } else {
         state.cart.items.push({
-          id: -(Date.now()),   // temporary negative id; replaced when API responds
+          id: -(Date.now()),
           productId,
           productName,
           productImageUrl,
@@ -155,14 +146,12 @@ const cartSlice = createSlice({
         state.addingProductIds = [...state.addingProductIds, action.meta.arg.productId];
       })
       .addCase(addToCart.fulfilled, (state, action) => {
-        // API responded — replace optimistic state with server-authoritative data
         state.cart = action.payload;
         state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.addingProductIds = state.addingProductIds.filter(id => id !== action.meta.arg.productId);
         state.error = action.payload as string;
-        // fetchCart() was dispatched in the thunk to revert optimistic state
       })
       .addCase(updateCartItem.pending, (state, action) => {
         state.updatingItemIds = [...state.updatingItemIds, action.meta.arg.itemId];
@@ -174,7 +163,6 @@ const cartSlice = createSlice({
       .addCase(updateCartItem.rejected, (state, action) => {
         state.updatingItemIds = state.updatingItemIds.filter(id => id !== action.meta.arg.itemId);
         state.error = action.payload as string;
-        // fetchCart() is dispatched in the thunk to revert optimistic update
       })
       .addCase(removeFromCart.fulfilled, (state, action) => { state.cart = action.payload; });
   },

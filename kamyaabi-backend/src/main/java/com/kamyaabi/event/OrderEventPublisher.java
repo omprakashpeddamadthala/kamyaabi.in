@@ -5,9 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-/**
- * Publishes order events to Spring's application event system.
- */
 @Slf4j
 @Component
 public class OrderEventPublisher {

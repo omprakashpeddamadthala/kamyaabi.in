@@ -68,8 +68,6 @@ const Navbar: React.FC = () => {
     if (el) {
       const rect = el.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      // Estimated menu height; flip up when there isn't enough room below
-      // (e.g. avatar sits near the bottom of the viewport on mobile).
       setDropUp(spaceBelow < 260 && rect.top > 260);
     }
     setMenuOpen(true);
@@ -79,7 +77,6 @@ const Navbar: React.FC = () => {
     setMenuOpen(false);
   };
 
-  // Close the dropdown when the user clicks anywhere outside of it.
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (event: MouseEvent) => {

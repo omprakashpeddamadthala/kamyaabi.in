@@ -49,15 +49,9 @@ const buildProductFormData = (data: ProductRequest, images: File[]) => {
   return formData;
 };
 
-/**
- * Per-file upload progress callback. The handler is invoked with a value in
- * `[0, 1]` reflecting the cumulative bytes uploaded for the request.
- */
 export type UploadProgressHandler = (fraction: number) => void;
 
 export const adminApi = {
-  // Products — admin list/detail use the `/api/admin/products` endpoints so
-  // soft-deleted (inactive) products are visible and editable.
   getProducts: (filters: AdminProductFilters = {}) =>
     axiosInstance.get<ApiResponse<PageResponse<Product>>>('/api/admin/products', {
       params: {
@@ -118,13 +112,11 @@ export const adminApi = {
       `/api/admin/products/${productId}/images/${imageId}`,
     ),
 
-  // Toggle product active flag inline (optimistic UI on the admin table).
   setProductStatus: (id: number, active: boolean) =>
     axiosInstance.patch<ApiResponse<Product>>(`/api/admin/products/${id}/status`, {
       active,
     }),
 
-  // Categories
   getCategoriesPaged: (page = 0, size = 10) =>
     axiosInstance.get<ApiResponse<PageResponse<Category>>>('/api/admin/categories', {
       params: { page, size },
@@ -139,7 +131,6 @@ export const adminApi = {
   deleteCategory: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/categories/${id}`),
 
-  // Orders
   getAllOrders: (page = 0, size = 10, status?: string) =>
     axiosInstance.get<ApiResponse<PageResponse<Order>>>('/api/admin/orders', {
       params: { page, size, ...(status ? { status } : {}) },
@@ -148,7 +139,6 @@ export const adminApi = {
   updateOrderStatus: (id: number, status: string) =>
     axiosInstance.put<ApiResponse<Order>>(`/api/admin/orders/${id}/status`, { status }),
 
-  // Dashboard / analytics
   getDashboardStats: () =>
     axiosInstance.get<ApiResponse<DashboardStats>>('/api/admin/dashboard/stats'),
 
@@ -160,7 +150,6 @@ export const adminApi = {
       },
     }),
 
-  // Users — admin-only management endpoints used by /admin?tab=users.
   getUsers: (page = 0, size = 20, q?: string) =>
     axiosInstance.get<ApiResponse<PageResponse<AdminUser>>>('/api/admin/users', {
       params: {

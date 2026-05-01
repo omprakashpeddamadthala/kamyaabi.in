@@ -23,33 +23,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Central exception handler for the REST API.
- *
- * <p>Responsibilities:
- * <ul>
- *   <li>Map every known {@link RuntimeException} subtype to an appropriate HTTP status.</li>
- *   <li>Return a uniform {@link ApiErrorResponse} payload — including a correlation
- *       {@code traceId} from MDC — so clients and log aggregators can cite a single
- *       identifier when triaging failures.</li>
- *   <li>Log every exception at an appropriate level using SLF4J, and never expose stack
- *       traces or internal messages over the wire.</li>
- * </ul>
- *
- * <p>Sanitisation: the {@code message} field is only populated from application-owned
- * exceptions (our custom {@code *Exception} classes or validation errors). For the
- * catch-all {@link Exception} handler the message is a fixed, sanitised string; the
- * underlying cause is logged at ERROR with full stack trace for operators.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Optional collaborator — kept setter-injected so the handler is still
-     * usable in lightweight tests that don't wire an {@code ErrorAlertService}
-     * bean. When absent (e.g. older test contexts) the alert is simply skipped.
-     */
     private ErrorAlertService errorAlertService;
 
     @Autowired(required = false)
@@ -99,11 +76,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
-    /**
-     * Safety net for unique-constraint violations that slip past application-level checks
-     * (e.g. concurrent duplicate POSTs racing on a UNIQUE column). Returns 409 Conflict
-     * instead of a generic 500 so clients can retry/inspect cleanly.
-     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex,
                                                                          HttpServletRequest request) {
@@ -133,15 +105,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Validation failed", request, fieldErrors);
     }
 
-    /**
-     * Defensive handler for multipart size breaches. The app is configured with
-     * unlimited multipart / Tomcat form / swallow caps (-1) so uploads of any
-     * size are accepted and validated at the service layer. This handler exists
-     * only as a safety net — e.g. if a future operator overrides the caps, or
-     * an upstream proxy is still enforcing a limit and Spring surfaces it as
-     * this exception. Clients get a clean 413 with a stable error body rather
-     * than the generic 500.
-     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex,
                                                                 HttpServletRequest request) {
@@ -158,19 +121,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Invalid request body", request, null);
     }
 
-    /**
-     * Client disconnected mid-response (broken pipe). Logged at DEBUG only and swallowed —
-     * no response body since the client is already gone.
-     */
     @ExceptionHandler(ClientAbortException.class)
     public void handleClientAbort(ClientAbortException ex) {
         log.debug("Client disconnected (broken pipe): {}", ex.getMessage());
     }
 
-    /**
-     * Catch-all. Full stack trace is logged for operators, but the response exposes only
-     * a sanitised message and the traceId for support.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex,
                                                           HttpServletRequest request) {
@@ -179,9 +134,6 @@ public class GlobalExceptionHandler {
             try {
                 errorAlertService.alertOnBackendException(ex, request);
             } catch (Exception alertFailure) {
-                // Belt-and-suspenders: the alert pipeline is async and self-contained,
-                // but we still log defensively so a mis-wired alerter can never break
-                // the user-visible 500 response.
                 log.error("Failed to dispatch developer error alert: {}", alertFailure.getMessage());
             }
         }
@@ -190,9 +142,6 @@ public class GlobalExceptionHandler {
                 request, null);
     }
 
-    /* ------------------------------------------------------------------ */
-    /* helpers                                                            */
-    /* ------------------------------------------------------------------ */
 
     private static ResponseEntity<ApiErrorResponse> build(HttpStatus status,
                                                           String message,

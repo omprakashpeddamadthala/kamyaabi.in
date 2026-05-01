@@ -55,9 +55,6 @@ const theme = createTheme({
     borderRadius: 8,
   },
   components: {
-    // Prevent the viewport from ever scrolling horizontally on narrow
-    // screens — guarantees "no horizontal overflow" for the responsive
-    // audit regardless of which page is mounted.
     MuiCssBaseline: {
       styleOverrides: {
         'html, body': { overflowX: 'hidden' },
@@ -69,8 +66,6 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           padding: '8px 24px',
-          // Ensure buttons meet the 44x44 accessibility tap-target guideline
-          // on touch devices without bloating desktop layout (padding-only).
           '@media (pointer: coarse)': {
             minHeight: 44,
           },
@@ -105,7 +100,6 @@ const theme = createTheme({
         },
       },
     },
-    // Same accessibility guideline for icon buttons on touch devices.
     MuiIconButton: {
       styleOverrides: {
         root: {

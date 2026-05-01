@@ -7,11 +7,6 @@ export interface User {
   status?: 'ACTIVE' | 'BLOCKED' | 'REMOVED';
 }
 
-/**
- * Row used in the admin user-management table. Mirrors backend
- * `AdminUserResponse` and includes metadata (createdAt) only safe to
- * surface to admin users.
- */
 export interface AdminUser {
   id: number;
   email: string;
@@ -44,7 +39,6 @@ export interface ProductImage {
 export interface Product {
   id: number;
   name: string;
-  /** URL-safe slug used in product-detail routes (e.g. `/products/:slug`). */
   slug: string;
   description: string;
   price: number;
@@ -57,13 +51,9 @@ export interface Product {
   stock: number;
   weight: string;
   unit: string;
-  /** Optional copy from backend; null when not configured. UI hides the row. */
   shelfLife?: string | null;
-  /** Optional ordered map of nutritional label -> value. */
   nutritionalInfo?: Record<string, string> | null;
-  /** Optional list of "how to use" bullets. */
   howToUse?: string[] | null;
-  /** Optional list of "storage tips" bullets. */
   storageTips?: string[] | null;
   active: boolean;
   createdAt: string;
@@ -149,11 +139,6 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-/**
- * Mirrors {@code com.kamyaabi.dto.response.ApiErrorResponse} on the backend.
- * Used by admin forms to display per-field validation errors and surface a
- * traceId to the user when something goes wrong.
- */
 export interface ApiErrorResponse {
   status: number;
   error: string;

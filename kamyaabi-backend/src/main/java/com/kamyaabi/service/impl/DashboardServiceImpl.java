@@ -29,7 +29,6 @@ public class DashboardServiceImpl implements DashboardService {
     private static final int LOW_STOCK_THRESHOLD = 10;
     private static final int MAX_ANALYTICS_RANGE_DAYS = 366;
 
-    /** Statuses excluded from revenue / order-count aggregations. */
     private static final List<Order.OrderStatus> NON_REVENUE_STATUSES = List.of(
             Order.OrderStatus.PENDING,
             Order.OrderStatus.CANCELLED,
@@ -71,7 +70,6 @@ public class DashboardServiceImpl implements DashboardService {
                     "Date range too large: max " + MAX_ANALYTICS_RANGE_DAYS + " days");
         }
 
-        // Half-open [fromTs, toTs) so the whole of `end` is included.
         LocalDateTime fromTs = start.atStartOfDay();
         LocalDateTime toTs = end.plusDays(1).atStartOfDay();
 
@@ -109,11 +107,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-    /**
-     * The aggregate query's first column is expressed as {@code LocalDate} in
-     * JPQL but some providers return {@link java.sql.Date}. Normalize both to
-     * {@link LocalDate}.
-     */
     private static LocalDate coerceToLocalDate(Object raw) {
         if (raw instanceof LocalDate ld) return ld;
         if (raw instanceof java.sql.Date sd) return sd.toLocalDate();

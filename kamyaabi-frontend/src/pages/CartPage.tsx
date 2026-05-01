@@ -175,7 +175,7 @@ const CartPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          {/* Delivery Address Section */}
+          {}
           <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -265,7 +265,7 @@ const CartPage: React.FC = () => {
             )}
           </Card>
 
-          {/* Cart Items */}
+          {}
           {cart.items.map((item) => (
             <Card key={item.id} sx={{ mb: 2, p: 2, '&:hover': { transform: 'none' } }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -279,7 +279,7 @@ const CartPage: React.FC = () => {
                   <Typography
                     variant="h6"
                     sx={{ fontSize: '1rem', cursor: 'pointer' }}
-                    onClick={() => navigate(`/products/${item.productId}`)} /* numeric id — ProductDetailPage redirects to canonical slug */
+                    onClick={() => navigate(`/products/${item.productId}`)}
                   >
                     {item.productName}
                   </Typography>
@@ -292,8 +292,6 @@ const CartPage: React.FC = () => {
                     size="small"
                     aria-label={item.quantity === 1 ? 'Remove item from cart' : 'Decrease quantity'}
                     onClick={() => {
-                      // Decrementing past 1 should remove the item entirely so the
-                      // user doesn't have to chase the explicit Delete icon.
                       if (item.quantity <= 1) {
                         if (debounceTimers.current[item.id]) {
                           clearTimeout(debounceTimers.current[item.id]);
@@ -386,7 +384,7 @@ const CartPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Address Form Dialog for first-time users */}
+      {}
       <AddressFormDialog
         open={showAddressForm}
         onClose={() => setShowAddressForm(false)}

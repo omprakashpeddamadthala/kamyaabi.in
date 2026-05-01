@@ -23,19 +23,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o JOIN FETCH o.user LEFT JOIN FETCH o.items WHERE o.id = :id")
     Optional<Order> findByIdWithUser(@Param("id") Long id);
 
-    /**
-     * Sum of {@code totalAmount} for orders whose status is not in the
-     * excluded set (typically CANCELLED, PAYMENT_FAILED, PENDING). Returns
-     * zero when no rows match, never {@code null}.
-     */
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status NOT IN :excluded")
     BigDecimal sumRevenueExcludingStatuses(@Param("excluded") List<Order.OrderStatus> excluded);
 
-    /**
-     * Count + sum of orders placed inside the half-open window
-     * {@code [from, to)} whose status is not in {@code excluded}. Returned
-     * rows are {@code [LocalDate bucket, long orderCount, BigDecimal revenue]}.
-     */
     @Query("SELECT CAST(o.createdAt AS LocalDate) AS bucket, "
             + "COUNT(o) AS orders, "
             + "COALESCE(SUM(o.totalAmount), 0) AS revenue "
@@ -48,11 +38,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                                   @Param("to") LocalDateTime to,
                                   @Param("excluded") List<Order.OrderStatus> excluded);
 
-    /**
-     * Distinct customers who ordered the given product within the trailing window.
-     * Excludes cancelled / payment-failed / pending orders so the count reflects
-     * real purchases only.
-     */
     @Query("SELECT COUNT(DISTINCT o.user.id) FROM Order o JOIN o.items i "
             + "WHERE i.product.id = :productId "
             + "AND o.createdAt >= :since "

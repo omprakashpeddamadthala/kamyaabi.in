@@ -8,10 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Configuration properties for email notification system.
- * Supports both SendGrid and SMTP providers with automatic fallback.
- */
 @Configuration
 @ConfigurationProperties(prefix = "app.email")
 @Getter
@@ -22,11 +18,6 @@ public class EmailProperties {
     private String fromEmail = "omprakashornold@gmail.com";
     private String fromName = "Kamyaabi";
     private List<String> adminEmails = new ArrayList<>();
-    /**
-     * Developer recipients for unhandled-error alert emails (frontend + backend).
-     * Sourced from the {@code DEVELOPER_EMAILS} env variable as a comma-separated
-     * list and exposed under {@code app.email.developer-emails} in YAML.
-     */
     private List<String> developerEmails = new ArrayList<>();
 
     private SendGrid sendgrid = new SendGrid();
@@ -49,18 +40,12 @@ public class EmailProperties {
         private boolean auth = true;
     }
 
-    /**
-     * Determines if SendGrid is configured and should be used.
-     */
     public boolean isSendGridConfigured() {
         return sendgrid.getApiKey() != null
                 && !sendgrid.getApiKey().isBlank()
                 && !sendgrid.getApiKey().equals("your-sendgrid-api-key");
     }
 
-    /**
-     * Determines if SMTP is configured and should be used as fallback.
-     */
     public boolean isSmtpConfigured() {
         return smtp.getHost() != null
                 && !smtp.getHost().isBlank()

@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Container, Typography, Link as MuiLink, Grid, Divider, TextField, Button, Alert } from '@mui/material';
 import { Link } from 'react-router-dom';
-import {
-  SUPPORT_EMAIL,
-  SUPPORT_PHONE_DISPLAY,
-  SUPPORT_PHONE_TEL,
-  WHATSAPP_URL,
-} from '../../config/brand';
+import { config } from '../../config';
 
 const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -61,20 +56,20 @@ const Footer: React.FC = () => {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontSize: '1rem' }}>Contact Us</Typography>
             <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>
               Email:{' '}
-              <MuiLink href={`mailto:${SUPPORT_EMAIL}`} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
-                {SUPPORT_EMAIL}
+              <MuiLink href={`mailto:${config.supportEmail}`} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {config.supportEmail}
               </MuiLink>
             </Typography>
             <Typography variant="body2" sx={{ color: '#AAA', mb: 1 }}>
               Phone:{' '}
-              <MuiLink href={SUPPORT_PHONE_TEL} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
-                {SUPPORT_PHONE_DISPLAY}
+              <MuiLink href={config.supportPhoneTel} sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {config.supportPhoneDisplay}
               </MuiLink>
             </Typography>
             <Typography variant="body2" sx={{ color: '#AAA' }}>
               WhatsApp:{' '}
-              <MuiLink href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
-                {SUPPORT_PHONE_DISPLAY}
+              <MuiLink href={config.whatsappUrl} target="_blank" rel="noopener noreferrer" sx={{ color: '#AAA', '&:hover': { color: '#fff' } }}>
+                {config.supportPhoneDisplay}
               </MuiLink>
             </Typography>
           </Grid>

@@ -10,7 +10,7 @@ const galleryImages = [
 const AboutPage: React.FC = () => {
   return (
     <Box>
-      {/* Hero */}
+      {}
       <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>About Us</Typography>
@@ -20,7 +20,7 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* About Content */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
@@ -42,7 +42,7 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Values */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
@@ -66,7 +66,7 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Gallery */}
+      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>

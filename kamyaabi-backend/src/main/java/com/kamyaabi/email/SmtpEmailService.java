@@ -7,10 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
-/**
- * Email service implementation using SMTP (e.g., Gmail SMTP).
- * Supports TLS/SSL and authentication.
- */
 @Slf4j
 public class SmtpEmailService implements EmailService {
 

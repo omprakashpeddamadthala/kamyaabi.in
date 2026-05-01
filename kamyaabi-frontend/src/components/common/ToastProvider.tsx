@@ -15,11 +15,6 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
-/**
- * Lightweight global toast surface used by admin forms (and any other feature
- * that needs to confirm/inform without owning its own Snackbar). Stays in-tree
- * with MUI to avoid taking on a new toast dependency.
- */
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<ToastState>({ open: false, message: '', severity: 'success' });
 

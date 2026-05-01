@@ -12,11 +12,6 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-/**
- * Reusable confirm dialog. Replaces native `window.confirm` for destructive
- * admin actions so we can show clearer copy, disable the button while a
- * request is in-flight, and stay consistent with the rest of the MUI UI.
- */
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   title,

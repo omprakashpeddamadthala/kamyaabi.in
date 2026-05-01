@@ -115,7 +115,6 @@ public class CategoryServiceImpl implements CategoryService {
 
         int productCount = category.getProducts() == null ? 0 : category.getProducts().size();
         if (productCount > 0) {
-            // 422 — block delete; admin must reassign or remove products first.
             throw new BusinessException(
                     "Cannot delete category '" + category.getName() + "' — "
                             + productCount + " product(s) are assigned. Reassign or remove them first.");
@@ -124,12 +123,6 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Category deleted: {}", id);
     }
 
-    /**
-     * Resolve the slug to persist. Uses the supplied value when provided
-     * (validated by {@code @Pattern} on the request), otherwise generates one
-     * from the category name. Always disambiguates against existing rows by
-     * appending {@code -2}, {@code -3}, ... when a collision is detected.
-     */
     String resolveSlug(String requested, String name, Long currentId) {
         String base = (requested != null && !requested.isBlank())
                 ? requested.trim().toLowerCase(Locale.ROOT)
@@ -151,9 +144,6 @@ public class CategoryServiceImpl implements CategoryService {
                 : categoryRepository.existsBySlugAndIdNot(slug, currentId);
     }
 
-    /**
-     * Lowercase, ASCII-fold and hyphenate a category name into a URL-safe slug.
-     */
     public static String slugify(String name) {
         if (name == null) return "";
         String normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
@@ -173,7 +163,6 @@ public class CategoryServiceImpl implements CategoryService {
         }
         Category parent = categoryRepository.findById(parentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parent category", parentId));
-        // Single-level hierarchy: a parent must itself be top-level.
         if (parent.getParent() != null) {
             throw new BadRequestException(
                     "Parent category '" + parent.getName() + "' is itself a child; only one level of nesting is allowed");

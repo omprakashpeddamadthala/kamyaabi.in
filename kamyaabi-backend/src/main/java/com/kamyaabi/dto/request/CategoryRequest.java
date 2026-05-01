@@ -18,11 +18,6 @@ public class CategoryRequest {
     @Size(max = 120, message = "Category name must be at most 120 characters")
     private String name;
 
-    /**
-     * URL slug. When blank the service generates one from {@code name};
-     * when supplied it must match the URL-safe pattern below so it can be
-     * embedded in routes without extra encoding.
-     */
     @Pattern(regexp = "^$|^[a-z0-9]+(?:-[a-z0-9]+)*$",
             message = "Slug must be lowercase letters/numbers separated by hyphens")
     @Size(max = 160, message = "Slug must be at most 160 characters")
@@ -33,6 +28,5 @@ public class CategoryRequest {
 
     private String imageUrl;
 
-    /** Optional parent category id; null means top-level. */
     private Long parentId;
 }

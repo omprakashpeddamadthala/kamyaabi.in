@@ -113,8 +113,6 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         String slug = product.getSlug();
         if (slug == null || slug.isBlank()) {
-            // Existing row from before slugs existed — generate + persist so
-            // the redirect has a stable URL to point to.
             slug = resolveSlug(null, product.getName(), product.getId());
             product.setSlug(slug);
             productRepository.save(product);
@@ -171,15 +169,12 @@ public class ProductServiceImpl implements ProductService {
                 product.addImage(img);
             }
             if (product.getImageUrl() == null || product.getImageUrl().isBlank()) {
-                // keep the legacy column populated for older clients that still read it
                 product.setImageUrl(uploaded.get(mainIndex).secureUrl());
             }
             Product saved = productRepository.save(product);
             log.info("Product created with id: {} ({} images)", saved.getId(), uploaded.size());
             return productMapper.toResponse(saved);
         } catch (RuntimeException e) {
-            // Rollback: best-effort delete of any already-uploaded assets so they
-            // don't linger on Cloudinary after a failed DB save.
             for (CloudinaryService.UploadResult ur : uploaded) {
                 cloudinaryService.deleteImage(ur.publicId());
             }
@@ -201,8 +196,6 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId()));
         String previousName = product.getName();
         productMapper.updateEntity(product, request, category);
-        // Regenerate slug when the name changes so URLs stay meaningful, while
-        // leaving an existing slug untouched when the name is unchanged.
         if (product.getSlug() == null || product.getSlug().isBlank()
                 || (previousName != null && !previousName.equals(request.getName()))) {
             product.setSlug(resolveSlug(null, request.getName(), product.getId()));
@@ -235,7 +228,6 @@ public class ProductServiceImpl implements ProductService {
                 promoteMainImage(product, mainImageId);
             } else if (product.getImages() != null && !product.getImages().isEmpty()
                     && product.getImages().stream().noneMatch(i -> Boolean.TRUE.equals(i.getIsMain()))) {
-                // No main yet (e.g. legacy product with only imageUrl just got first image)
                 product.getImages().get(0).setIsMain(true);
             }
 
@@ -335,11 +327,9 @@ public class ProductServiceImpl implements ProductService {
                     "Cannot delete the last image — products must have at least one image");
         }
         boolean wasMain = Boolean.TRUE.equals(image.getIsMain());
-        // Cloudinary delete is best-effort — service already logs + swallows failures
         cloudinaryService.deleteImage(image.getPublicId());
         productImageRepository.delete(image);
         if (wasMain) {
-            // Promote the first remaining image to main
             List<ProductImage> remainingImages =
                     productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
             if (!remainingImages.isEmpty()) {
@@ -351,11 +341,6 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    /**
-     * Resolve the slug to persist for a product. Generates a slug from the
-     * name when no override is supplied and appends {@code -2}, {@code -3},
-     * ... to disambiguate against existing rows.
-     */
     String resolveSlug(String requested, String name, Long currentId) {
         String base = (requested != null && !requested.isBlank())
                 ? requested.trim().toLowerCase(Locale.ROOT)
@@ -377,7 +362,6 @@ public class ProductServiceImpl implements ProductService {
                 : productRepository.existsBySlugAndIdNot(slug, currentId);
     }
 
-    /** Lowercase, ASCII-fold and hyphenate a product name into a URL-safe slug. */
     public static String slugify(String name) {
         if (name == null) return "";
         String normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
