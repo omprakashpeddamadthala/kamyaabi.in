@@ -793,26 +793,13 @@ const ProductDetailPage: React.FC = () => {
               <TabPanel key={key} value={safeTabValue} index={idx}>
                 {key === 'description' && (
                   <>
-                    {/* Render the full product description verbatim —
-                        pre-wrap keeps intentional line breaks and lists
-                        that came back from the API. */}
-                    <Typography
-                      variant="body1"
-                      sx={{ lineHeight: 1.8, color: 'text.primary', whiteSpace: 'pre-wrap' }}
-                    >
-                      {product.description}
-                    </Typography>
-
-                    {/* Additional scannable bullet list shown only when the
-                        description cleanly parses into multiple bullet-style
-                        sentences — supplements the raw text, never replaces it. */}
-                    {descriptionBullets.length > 1 && (
+                    {descriptionBullets.length > 0 && (
                       <Box
                         component="ul"
                         sx={{
                           listStyle: 'none',
                           p: 0,
-                          mt: 3,
+                          mt: 0,
                           mb: 0,
                           display: 'flex',
                           flexDirection: 'column',
