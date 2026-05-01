@@ -19,6 +19,7 @@ const AboutPage = lazy(() => import('../pages/AboutPage'));
 const ServicePage = lazy(() => import('../pages/ServicePage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const RefundPolicyPage = lazy(() => import('../pages/RefundPolicyPage'));
 
 function useSessionGuard(): { authenticated: boolean } {
   const dispatch = useAppDispatch();
@@ -62,6 +63,7 @@ const AppRoutes: React.FC = () => {
         {}
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/cart"
