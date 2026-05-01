@@ -3,9 +3,15 @@
     Kamyaabi backend logging configuration.
 
     - Console appender: always on, used locally and in containers.
-    - Rolling file appender: logs/application.log, daily rotation, 10-day retention.
-    - Error file appender: logs/error.log, same rotation/retention, ERROR-level only.
+    - Rolling file appender: ${LOG_HOME}/application.log, daily rotation,
+      10-day retention (Logback auto-deletes anything older — no cron job needed).
+    - Error file appender: ${LOG_HOME}/error.log, same rotation/retention, ERROR-level only.
     - Profile-based root levels: DEBUG for dev, INFO for prod/docker.
+
+    LOG_HOME is overridable via the LOG_HOME environment variable (default: ./logs).
+    For Docker deployments, /app/logs inside the container is bind-mounted to ./logs
+    on the host (see docker-compose.yml / docker-compose.prod.yml) so operators can
+    `tail -f logs/application.log` directly on the host.
 
     Pattern includes the MDC `correlationId` populated by CorrelationIdFilter so every
     log line can be correlated back to its originating HTTP request. Field is rendered
@@ -15,7 +21,12 @@
 
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="kamyaabi-backend"/>
 
-    <property name="LOG_HOME" value="logs"/>
+    <!--
+         Resolve LOG_HOME from the environment / system property; fall back to the
+         relative `logs` directory (which becomes /app/logs inside Docker because
+         the Dockerfile sets WORKDIR /app, and is bind-mounted to ./logs on the host).
+    -->
+    <property name="LOG_HOME" value="${LOG_HOME:-logs}"/>
     <property name="LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [correlationId=%X{correlationId:--}] [thread=%thread] %logger{40} - %msg%n"/>
 
@@ -29,6 +40,11 @@
     <!-- ===================== ROLLING FILE ====================== -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/application.log</file>
+        <!--
+             10-day retention: archived files older than 10 days are auto-deleted by
+             Logback on rollover (and at startup, via cleanHistoryOnStart). totalSizeCap
+             is a belt-and-braces guard against unexpected log volume spikes.
+        -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_HOME}/application-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>10</maxHistory>
@@ -46,6 +62,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
+        <!-- 10-day retention; older archives auto-deleted by Logback on rollover. -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_HOME}/error-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>10</maxHistory>

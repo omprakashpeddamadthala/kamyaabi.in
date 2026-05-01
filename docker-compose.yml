@@ -38,6 +38,15 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:?CLOUDINARY_API_KEY is required}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:?CLOUDINARY_API_SECRET is required}
       PRODUCT_IMAGE_MAX_COUNT: ${PRODUCT_IMAGE_MAX_COUNT:-5}
+      # Override of the relative `logs` path used in logback-spring.xml. With
+      # WORKDIR=/app the default would already resolve to /app/logs, but we set
+      # it explicitly so the bind-mount target below is unambiguous.
+      LOG_HOME: /app/logs
+    volumes:
+      # Bind-mount the container's log directory to ./logs on the host so
+      # operators can `tail -f logs/application.log` without `docker exec`.
+      # Logback handles daily rotation + 10-day retention inside this directory.
+      - ./logs:/app/logs
     networks:
       - kamyaabi-network
 

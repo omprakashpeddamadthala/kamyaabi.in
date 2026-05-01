@@ -83,6 +83,12 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
+# --- Ensure host log directory exists ---
+# The backend container bind-mounts /app/logs to ./logs on the host (see
+# $COMPOSE_FILE). Pre-creating the directory here means it's owned by the
+# deploying user rather than auto-created by Docker as root.
+mkdir -p logs
+
 # --- Pull latest images ---
 echo "### Pulling images ..."
 docker pull "omprakashornold/kamyaabi-backend:${BACKEND_IMAGE_TAG}"
@@ -129,4 +135,6 @@ echo "Frontend: omprakashornold/kamyaabi-frontend:${FRONTEND_IMAGE_TAG}"
 echo ""
 echo "Verify:"
 echo "  docker compose -f $COMPOSE_FILE logs -f"
+echo "  tail -f logs/application.log         # backend file log (bind-mounted)"
+echo "  tail -f logs/error.log               # ERROR-only log"
 echo "  curl -I https://${DOMAIN}"
