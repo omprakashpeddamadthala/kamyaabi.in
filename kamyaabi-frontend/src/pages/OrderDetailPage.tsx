@@ -29,7 +29,24 @@ declare global {
   }
 }
 
-const ORDER_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
+const ORDER_STEP_LABELS = ['Placed', 'Paid', 'Processing', 'Shipped', 'Delivered'] as const;
+
+const PAID_STEP_INDEX = 1;
+
+const getActiveStep = (status: string, paymentStatus?: string): number => {
+  if (paymentStatus === 'COMPLETED' && status === 'PENDING') {
+    return PAID_STEP_INDEX + 1;
+  }
+  switch (status) {
+    case 'PENDING': return 0;
+    case 'PAID': return PAID_STEP_INDEX + 1;
+    case 'CONFIRMED':
+    case 'PROCESSING': return 2;
+    case 'SHIPPED': return 3;
+    case 'DELIVERED': return ORDER_STEP_LABELS.length;
+    default: return -1;
+  }
+};
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,7 +120,7 @@ const OrderDetailPage: React.FC = () => {
 
   if (loading || !order) return <Loading />;
 
-  const activeStep = ORDER_STATUSES.indexOf(order.status);
+  const activeStep = getActiveStep(order.status, order.payment?.status);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -132,9 +149,9 @@ const OrderDetailPage: React.FC = () => {
             alternativeLabel={!isMobile}
             orientation={isMobile ? 'vertical' : 'horizontal'}
           >
-            {ORDER_STATUSES.map((status) => (
-              <Step key={status}>
-                <StepLabel>{status}</StepLabel>
+            {ORDER_STEP_LABELS.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
               </Step>
             ))}
           </Stepper>

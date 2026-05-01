@@ -22,22 +22,30 @@ import Loading from '../components/common/Loading';
 
 const statusColors: Record<string, 'warning' | 'info' | 'primary' | 'secondary' | 'success' | 'error'> = {
   PENDING: 'warning',
+  PAID: 'info',
   CONFIRMED: 'info',
   PROCESSING: 'primary',
   SHIPPED: 'secondary',
   DELIVERED: 'success',
   CANCELLED: 'error',
+  PAYMENT_FAILED: 'error',
 };
 
-const orderSteps = ['Order Placed', 'Confirmed', 'Shipped', 'Delivered'];
+const ORDER_STEP_LABELS = ['Placed', 'Paid', 'Processing', 'Shipped', 'Delivered'] as const;
 
-const getActiveStep = (status: string): number => {
+const PAID_STEP_INDEX = 1;
+
+const getActiveStep = (status: string, paymentStatus?: string): number => {
+  if (paymentStatus === 'COMPLETED' && status === 'PENDING') {
+    return PAID_STEP_INDEX + 1;
+  }
   switch (status) {
     case 'PENDING': return 0;
+    case 'PAID': return PAID_STEP_INDEX + 1;
     case 'CONFIRMED':
-    case 'PROCESSING': return 1;
-    case 'SHIPPED': return 2;
-    case 'DELIVERED': return 3;
+    case 'PROCESSING': return 2;
+    case 'SHIPPED': return 3;
+    case 'DELIVERED': return ORDER_STEP_LABELS.length;
     default: return -1;
   }
 };
@@ -138,11 +146,13 @@ const OrdersPage: React.FC = () => {
           <Collapse in={expandedOrderId === order.id}>
             <Divider sx={{ my: 2 }} />
 
-            {/* Order Status Tracker */}
             {order.status !== 'CANCELLED' && (
               <Box sx={{ mb: 3 }}>
-                <Stepper activeStep={getActiveStep(order.status)} alternativeLabel>
-                  {orderSteps.map((label) => (
+                <Stepper
+                  activeStep={getActiveStep(order.status, order.payment?.status)}
+                  alternativeLabel
+                >
+                  {ORDER_STEP_LABELS.map((label) => (
                     <Step key={label}>
                       <StepLabel>{label}</StepLabel>
                     </Step>
