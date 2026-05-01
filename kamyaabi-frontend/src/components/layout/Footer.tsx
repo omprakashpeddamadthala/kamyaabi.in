@@ -99,7 +99,7 @@ const Footer: React.FC = () => {
           <Grid item xs={12} md={2}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, fontSize: '1rem' }}>Newsletter</Typography>
             <Typography variant="body2" sx={{ color: '#AAA', mb: 2 }}>Subscribe to get updates on our latest offers.</Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               <TextField
                 placeholder="Your email"
                 variant="outlined"
@@ -107,7 +107,7 @@ const Footer: React.FC = () => {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailError(null); setEmailSuccess(null); }}
                 error={!!emailError}
-                sx={{ flex: 1, '& .MuiOutlinedInput-root': { color: '#fff', '& fieldset': { borderColor: emailError ? '#f44336' : '#555' }, '&:hover fieldset': { borderColor: emailError ? '#f44336' : '#888' } } }}
+                sx={{ flex: '1 1 140px', minWidth: 140, '& .MuiOutlinedInput-root': { color: '#fff', '& fieldset': { borderColor: emailError ? '#f44336' : '#555' }, '&:hover fieldset': { borderColor: emailError ? '#f44336' : '#888' } } }}
               />
               <Button variant="contained" size="small" onClick={handleSubscribe} sx={{ bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' } }}>Subscribe</Button>
             </Box>
