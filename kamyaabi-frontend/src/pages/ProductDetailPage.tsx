@@ -29,7 +29,6 @@ import {
   CheckCircle,
   Close,
   VerifiedUser,
-  LocalShipping,
   Inventory,
   Lock,
   Star,
@@ -628,7 +627,6 @@ const ProductDetailPage: React.FC = () => {
                 flexWrap: 'wrap',
               }}>
                 <TrustBadge icon={<VerifiedUser />} label="100% Natural" />
-                <TrustBadge icon={<LocalShipping />} label="Free Shipping ₹499+" />
                 <TrustBadge icon={<Inventory />} label="Fresh Stock" />
                 <TrustBadge icon={<Lock />} label="Secure Payment" />
               </Box>
