@@ -1,4 +1,3 @@
-
 type LogContext = Record<string, unknown> | undefined;
 
 const isProd = Boolean(import.meta.env.PROD);
