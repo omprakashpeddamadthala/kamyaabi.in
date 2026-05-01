@@ -1,326 +1,651 @@
-# Kamyaabi - Premium Dry Fruits eCommerce
+# Kamyaabi
 
-A full-stack eCommerce web application for premium dry fruits, built with Spring Boot and React.
+> Premium dry-fruits eCommerce platform — browse, order, and pay online with Google Sign-In and Razorpay.
+
+## Overview
+
+**Kamyaabi** is a full-stack online store for premium dry fruits. Customers can
+browse a curated catalog, search and filter by category, add items to a
+shopping cart, sign in with Google, manage shipping addresses, pay securely
+through Razorpay, and track each order through a step-by-step status timeline.
+
+The platform is built for two audiences: **shoppers** who want a fast,
+mobile-first storefront, and **store administrators** who need a single place
+to manage products, categories, customers, orders, and basic sales analytics.
+A role-based admin dashboard lives at `/admin` and is gated to users seeded
+with the `ADMIN` role.
+
+This repository hosts the entire stack — a Spring Boot REST API
+(`kamyaabi-backend/`), a React + TypeScript single-page app
+(`kamyaabi-frontend/`), Nginx and Certbot configuration for SSL termination,
+and Docker Compose files that orchestrate the stack in development and
+production. Production-grade observability (correlation IDs, structured
+rolling logs with 10-day retention, Spring Boot Actuator health/metrics) is
+wired in by default.
 
 ## Tech Stack
 
 ### Backend
-- Java 17, Spring Boot 3.2.5
-- Spring Security + OAuth2 (Google Login)
-- JWT Authentication
-- JPA/Hibernate with H2 (dev) / PostgreSQL (prod, external)
-- Razorpay Payment Integration
-- Caffeine Caching
-- Swagger/OpenAPI Documentation
-- Lombok, SLF4J Logging
-- JUnit 5 + Mockito (Testing)
-- JaCoCo (Code Coverage)
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Java | 17 | Language runtime |
+| Spring Boot | 3.2.5 | Web framework, auto-config |
+| Spring Security + OAuth2 Client | 3.2.x | Authentication, JWT, Google OAuth |
+| Spring Data JPA / Hibernate | 3.2.x | ORM and repositories |
+| PostgreSQL | 14+ (prod) | Primary database |
+| H2 | runtime | In-memory database for local dev |
+| Flyway | 9.x (via Boot) | Versioned schema migrations (prod) |
+| Caffeine | latest | In-process read-aside cache |
+| JJWT | 0.12.5 | JWT signing and parsing |
+| Razorpay Java SDK | 1.4.6 | Payment order + signature verification |
+| Cloudinary (cloudinary-http44) | 1.37.0 | Product image hosting |
+| SendGrid Java | 4.10.2 | Transactional email (primary) |
+| Spring Boot Starter Mail | 3.2.x | SMTP email fallback |
+| Google API Client | 2.2.0 | Google ID token verification |
+| springdoc-openapi | 2.5.0 | Swagger UI / OpenAPI docs |
+| Lombok | latest | Boilerplate reduction |
+| JUnit 5 + Mockito | latest | Unit tests |
+| JaCoCo | 0.8.12 | Coverage gating (≥ 80% lines) |
+| Maven | 3.6+ | Build tool |
 
 ### Frontend
-- React 18 + TypeScript
-- Material UI (MUI v5)
-- Redux Toolkit (State Management)
-- React Router v6
-- Axios (HTTP Client)
-- Vite (Build Tool)
 
-### DevOps
-- Docker & Docker Compose
-- GitHub Actions CI/CD
-- PostgreSQL (external, production)
-- Nginx (Frontend serving)
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.3 | UI framework |
+| TypeScript | 5.5 | Static typing |
+| Vite | 5.4 | Dev server / production bundler |
+| Material UI (MUI) | 5.16 | Component library + theming |
+| Redux Toolkit | 2.2 | State management (auth, cart, products, orders) |
+| React Router | 6.26 | Client-side routing |
+| Axios | 1.7 | HTTP client + JWT interceptor |
+| @react-oauth/google | 0.13 | Google Sign-In button |
+| Recharts | 3.8 | Admin analytics charts |
+| ESLint + typescript-eslint | 9.x / 8.x | Linting |
+
+### Infrastructure / DevOps
+
+| Technology | Purpose |
+|------------|---------|
+| Docker / Docker Compose | Local + production container orchestration |
+| Nginx | Reverse proxy, SPA routing, SSL termination |
+| Certbot (Let's Encrypt) | Free SSL certificate issuance and renewal |
+| GitHub Actions | CI: backend tests, frontend build, image push |
+
+## Architecture
+
+High-level flow from a shopper's browser through to the database and external
+services:
+
+```mermaid
+flowchart LR
+    subgraph Client["Browser"]
+        UI[React SPA<br/>MUI + Redux Toolkit]
+    end
+
+    subgraph Edge["Edge / VM"]
+        NGINX[Nginx<br/>SSL + SPA + reverse proxy]
+    end
+
+    subgraph App["App Containers (Docker)"]
+        FE[Frontend Nginx<br/>kamyaabi-frontend]
+        BE[Spring Boot API<br/>kamyaabi-backend]
+        CACHE[(Caffeine<br/>in-process)]
+    end
+
+    subgraph Data["Data"]
+        DB[(PostgreSQL<br/>external)]
+    end
+
+    subgraph External["3rd Party"]
+        GOOG[Google OAuth<br/>ID token verify]
+        RZP[Razorpay<br/>Payment Gateway]
+        CLD[Cloudinary<br/>Image CDN]
+        MAIL[SendGrid / SMTP]
+    end
+
+    UI -->|HTTPS| NGINX
+    NGINX -->|/| FE
+    NGINX -->|/api, /actuator| BE
+    BE --- CACHE
+    BE -->|JDBC| DB
+    BE -->|verify ID token| GOOG
+    BE -->|create order, verify signature| RZP
+    BE -->|upload product images| CLD
+    BE -->|order + error emails| MAIL
+    UI -.->|Razorpay Checkout JS| RZP
+```
+
+**Request lifecycle.** Every HTTP request flows through a `TraceIdFilter`
+that mints (or accepts) a correlation id, places it in the SLF4J MDC, and
+echoes it back as the `X-Correlation-Id` response header. JWT-protected
+routes pass through `JwtAuthenticationFilter` which verifies the bearer
+token and populates the security context. Errors raised below the
+controller layer are mapped by `GlobalExceptionHandler` to a uniform JSON
+envelope (`{ status, error, message, traceId, fieldErrors? }`) and — for
+production — emailed to `DEVELOPER_EMAILS` via `EmailService`.
+
+**Module map.**
+
+- `controller/` — thin REST adapters; one per aggregate (Auth, Product, Cart,
+  Order, Payment, Address, Profile, Review, Admin, ErrorReport, Category).
+- `service/` (+ `service/impl/`) — business logic, transactions, validation,
+  caching, and orchestration of repositories + 3rd-party clients.
+- `repository/` — Spring Data JPA repositories.
+- `entity/` — JPA models (User, Category, Product, ProductImage, Cart,
+  CartItem, Order, OrderItem, Payment, Address, Review).
+- `security/` — `JwtTokenProvider`, `JwtAuthenticationFilter`, `CurrentUser`
+  argument resolver, `SecurityConfig`.
+- `config/` — CORS, cache, Swagger, multipart, async, email properties,
+  `DataInitializer` (seeds admin user + sample categories/products).
+- `email/` — `EmailService` abstraction with SendGrid primary + SMTP fallback,
+  Actuator health indicator, async dispatch.
+- `event/` — domain events (e.g. order placed) + listeners that drive emails.
+
+On the frontend, the SPA is split into `pages/` (one per route),
+`components/` (layout + shared + admin), `features/` (Redux slices for
+auth, cart, product, order), `api/` (one Axios module per backend resource),
+and `routes/AppRoutes.tsx` which guards `ProtectedRoute` /
+`AdminRoute` using JWT + role.
+
+## Prerequisites
+
+You need the following exact versions (or newer minor versions) installed
+locally:
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Java JDK | 17 (Temurin recommended) | Backend build & run |
+| Maven | 3.6+ | Backend build (or use `mvnw` if added) |
+| Node.js | 18.x or 20.x | Frontend build & dev server |
+| npm | 9+ | Frontend package manager |
+| Docker | 20.10+ | Container builds |
+| Docker Compose | v2+ | Stack orchestration |
+| Git | 2.30+ | Source control |
+
+For production deployment you additionally need:
+
+- A Linux VM (Ubuntu 22.04+) with ports 80/443 reachable.
+- A registered domain pointing to the VM.
+- An external PostgreSQL 14+ database.
+- Accounts for Google Cloud (OAuth client), Razorpay, Cloudinary, and a mail
+  provider (SendGrid or any SMTP relay).
+
+## Installation
+
+```bash
+# 1. Clone
+git clone https://github.com/omprakashpeddamadthala/kamyaabi.in.git
+cd kamyaabi.in
+
+# 2. Configure environment
+cp .env.example .env
+#    edit .env — set DOMAIN, DATABASE_*, JWT_SECRET, GOOGLE_*, RAZORPAY_*,
+#    CLOUDINARY_*, and (optionally) SENDGRID_API_KEY / SMTP_*.
+
+# 3. Backend deps + build (uses dev profile + H2 by default, no DB needed)
+cd kamyaabi-backend
+mvn clean compile
+cd ..
+
+# 4. Frontend deps
+cd kamyaabi-frontend
+npm install
+cd ..
+```
+
+> **Tip:** if you only want to try the app, the dev profile uses an
+> in-memory H2 database and ships with `DataInitializer` seeding sample
+> categories, products, and an admin user — you can skip step 2 and run with
+> placeholders.
+
+## Environment Variables
+
+All secrets are read from environment variables. Nothing secret is checked
+into the repo. The full template lives in [`.env.example`](.env.example).
+
+### Backend
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DOMAIN` | prod | `kamyaabi.in` | Public domain — drives Nginx, CORS, email defaults |
+| `DATABASE_URL` | prod | `jdbc:h2:mem:kamyaabidb` | JDBC URL for the app database |
+| `DATABASE_USERNAME` | prod | `sa` | DB username |
+| `DATABASE_PASSWORD` | prod | _(empty in dev)_ | DB password |
+| `JWT_SECRET` | yes | _(none — fails startup)_ | HS256 signing secret (≥ 32 bytes / 256 bits) |
+| `JWT_EXPIRATION_MS` | no | `7200000` (2 h) | JWT lifetime in ms |
+| `GOOGLE_CLIENT_ID` | yes | _(none)_ | Google OAuth web client id |
+| `GOOGLE_CLIENT_SECRET` | yes | _(none)_ | Google OAuth client secret |
+| `CORS_ALLOWED_ORIGINS` | yes | _(none)_ | Comma-separated frontend origins |
+| `RAZORPAY_KEY_ID` | yes | _(none)_ | Razorpay public key id |
+| `RAZORPAY_KEY_SECRET` | yes | _(none)_ | Razorpay secret key |
+| `CLOUDINARY_CLOUD_NAME` | yes | _(none)_ | Cloudinary account cloud name |
+| `CLOUDINARY_API_KEY` | yes | _(none)_ | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | yes | _(none)_ | Cloudinary API secret |
+| `PRODUCT_IMAGE_MAX_COUNT` | no | `5` | Max images per product |
+| `EMAIL_ENABLED` | no | `true` | Master switch for outbound email |
+| `EMAIL_FROM` | no | `noreply@${DOMAIN}` | Sender address |
+| `EMAIL_FROM_NAME` | no | `Kamyaabi` | Sender display name |
+| `ADMIN_EMAIL` | no | `admin@${DOMAIN}` | Admin notification address |
+| `DEVELOPER_EMAILS` | no | _(empty)_ | Comma-separated alert list for unhandled exceptions |
+| `SENDGRID_API_KEY` | no | _(empty → SMTP fallback)_ | SendGrid API key |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` | no | _(empty → no-op email)_ | SMTP fallback for transactional email |
+| `APP_SUPPORT_EMAIL` / `APP_SUPPORT_URL` | no | derived from `DOMAIN` | Surfaced in OpenAPI metadata |
+| `LOG_HOME` | no | `logs` (relative to `WORKDIR`) | Override for log file directory |
+
+### Frontend (Vite build args)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_API_BASE_URL` | no | _(empty = same origin via Nginx)_ | Backend base URL |
+| `VITE_GOOGLE_CLIENT_ID` | yes (prod) | _(none)_ | Google OAuth client id (matches backend) |
+| `VITE_BRAND_DOMAIN` | no | `kamyaabi.in` | Public brand domain rendered in UI |
+| `VITE_SUPPORT_EMAIL` | no | _(default in code)_ | Support email rendered in UI |
+| `VITE_SUPPORT_PHONE` | no | _(default in code)_ | 10-digit Indian phone for WhatsApp deep links |
+| `VITE_DEV_ADMIN_EMAIL` | no (dev only) | `omprakashornold@gmail.com` | Email used by localhost-only "Login as Admin" dev button |
+| `VITE_DEV_USER_EMAIL` | no (dev only) | `dev.user@kamyaabi.local` | Email used by localhost-only "Login as User" dev button |
+
+Frontend env vars are consumed via `kamyaabi-frontend/src/config/index.ts`,
+which throws in production builds when a required var is missing — preventing
+broken deploys.
+
+### Infrastructure (production deploy)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `CERTBOT_EMAIL` | yes (prod) | `admin@${DOMAIN}` | Email registered with Let's Encrypt |
+| `CERTBOT_STAGING` | no | `0` | Set to `1` to use staging CA (avoids rate limits) |
+| `BACKEND_IMAGE_TAG` / `FRONTEND_IMAGE_TAG` | no | `latest` | Docker image tags used by `docker-compose.prod.yml` |
+
+A complete sample is provided in [`.env.example`](.env.example). Copy it to
+`.env` and fill in your own values before running Docker Compose.
+
+## Running the App
+
+### Development mode
+
+```bash
+# Terminal 1 — backend (dev profile, H2, seeded sample data)
+cd kamyaabi-backend
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Terminal 2 — frontend (Vite dev server with HMR)
+cd kamyaabi-frontend
+npm run dev
+```
+
+- Frontend: <http://localhost:3000>
+- Backend API: <http://localhost:8080>
+- Swagger UI: <http://localhost:8080/swagger-ui.html>
+- H2 console (dev only): <http://localhost:8080/h2-console>
+- Actuator (admin-gated): <http://localhost:8080/actuator/health>
+
+### Docker (full stack)
+
+```bash
+# Build and run both containers
+docker compose up --build
+
+# Detached
+docker compose up --build -d
+
+# Stop
+docker compose down
+```
+
+This starts:
+
+- `kamyaabi-backend` — Spring Boot, on `127.0.0.1:8080`
+- `kamyaabi-frontend` — Nginx serving the built SPA, on `127.0.0.1:3000`
+
+Logs are bind-mounted to `./logs/` on the host for easy `tail -f`.
+
+### Production build
+
+```bash
+# Backend jar
+cd kamyaabi-backend
+mvn -DskipTests clean package
+
+# Frontend bundle
+cd ../kamyaabi-frontend
+npm run build
+```
+
+Or use `docker-compose.prod.yml` together with `setup-vm-ssl.sh` and
+`deploy.sh` to provision a Linux VM with Nginx + Certbot.
+
+### Running tests
+
+```bash
+# Backend unit tests + JaCoCo coverage gate (≥ 80% lines)
+cd kamyaabi-backend
+mvn clean verify
+# coverage report: target/site/jacoco/index.html
+
+# Frontend type-check + production build (no separate test suite)
+cd ../kamyaabi-frontend
+npm run build
+```
+
+### Linting
+
+```bash
+cd kamyaabi-frontend
+npm run lint
+```
 
 ## Project Structure
 
 ```
-kamyaabi/
-├── kamyaabi-backend/          # Spring Boot backend
-│   ├── Dockerfile             # Multi-stage Docker build
+kamyaabi.in/
+├── kamyaabi-backend/                # Spring Boot REST API
+│   ├── Dockerfile                   # Multi-stage JDK build
+│   ├── pom.xml                      # Maven dependencies
 │   └── src/
-│       ├── main/java/com/kamyaabi/
-│       │   ├── config/        # App configs (CORS, Cache, Swagger, Security)
-│       │   ├── controller/    # REST Controllers
-│       │   ├── dto/           # Request/Response DTOs
-│       │   ├── entity/        # JPA Entities
-│       │   ├── exception/     # Exception handling
-│       │   ├── mapper/        # Entity-DTO mappers
-│       │   ├── repository/    # Spring Data repositories
-│       │   ├── security/      # JWT, filters, security config
-│       │   └── service/       # Business logic
-│       └── test/java/com/kamyaabi/
-│           ├── controller/    # Controller unit tests
-│           ├── exception/     # Exception handler tests
-│           ├── mapper/        # Mapper unit tests
-│           ├── security/      # Security unit tests
-│           └── service/impl/  # Service unit tests
-├── kamyaabi-frontend/         # React frontend
-│   ├── Dockerfile             # Multi-stage Docker build
-│   ├── nginx.conf             # Nginx config for SPA routing
+│       ├── main/
+│       │   ├── java/com/kamyaabi/
+│       │   │   ├── KamyaabiApplication.java
+│       │   │   ├── config/          # CORS, Cache, Swagger, Multipart, Security, DataInitializer
+│       │   │   ├── controller/      # Thin REST adapters (Auth, Product, Cart, Order, Payment, Admin, …)
+│       │   │   ├── dto/             # Request / response payloads
+│       │   │   ├── entity/          # JPA models (User, Product, Cart, Order, Payment, …)
+│       │   │   ├── repository/      # Spring Data JPA repositories
+│       │   │   ├── service/         # Business logic interfaces + impl/
+│       │   │   ├── security/        # JwtTokenProvider, JwtAuthenticationFilter, CurrentUser
+│       │   │   ├── mapper/          # Entity ↔ DTO mappers
+│       │   │   ├── exception/       # Domain exceptions + GlobalExceptionHandler
+│       │   │   ├── email/           # SendGrid + SMTP, Actuator health, templates
+│       │   │   ├── event/           # Domain events + listeners (e.g. order placed)
+│       │   │   └── validation/      # Custom @Valid annotations
+│       │   └── resources/
+│       │       ├── application.yml          # Common defaults
+│       │       ├── application-dev.yml      # H2 + dev OAuth/JWT placeholders
+│       │       ├── application-prod.yml     # PostgreSQL + Flyway + strict secrets
+│       │       ├── application-docker.yml   # Docker Compose overrides
+│       │       ├── logback-spring.xml       # Profile-aware rolling logs (10-day retention)
+│       │       └── db/                      # Flyway migrations
+│       └── test/java/com/kamyaabi/  # JUnit 5 + Mockito tests (≥ 80% line coverage)
+│
+├── kamyaabi-frontend/               # React SPA
+│   ├── Dockerfile                   # Multi-stage Node + Nginx build
+│   ├── nginx.conf                   # SPA fallback to index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig*.json
 │   └── src/
-│       ├── api/               # API client modules
-│       ├── components/        # Reusable UI components
-│       ├── features/          # Redux slices
-│       ├── hooks/             # Custom hooks
-│       ├── pages/             # Page components
-│       ├── routes/            # App routing
-│       ├── store/             # Redux store
-│       ├── theme/             # MUI theme
-│       └── types/             # TypeScript types
-├── .github/workflows/ci.yml  # GitHub Actions CI/CD
-├── docker-compose.yml         # Docker Compose orchestration
-└── README.md
+│       ├── main.tsx                 # React + Redux + MUI bootstrap
+│       ├── api/                     # Axios modules (one per backend resource)
+│       ├── components/              # Shared layout, common widgets, admin tabs
+│       ├── config/                  # Env-validated runtime config
+│       ├── features/                # Redux slices (auth, cart, product, order)
+│       ├── hooks/                   # Typed Redux hooks
+│       ├── pages/                   # Route components (Home, Products, Cart, Checkout, Orders, Admin, …)
+│       ├── routes/AppRoutes.tsx     # Routing + ProtectedRoute / AdminRoute
+│       ├── store/                   # Redux store
+│       ├── theme/                   # MUI theme
+│       ├── types/                   # Shared TypeScript types
+│       └── utils/                   # Logger and helpers
+│
+├── nginx/                           # Host-VM Nginx config + Certbot bootstrap
+├── docker-compose.yml               # Local dev — builds from source
+├── docker-compose.prod.yml          # Production — pulls pre-built images
+├── deploy.sh                        # One-shot deploy script for the VM
+├── setup-vm-ssl.sh                  # Provisions Nginx + Let's Encrypt SSL
+├── .env.example                     # Documented env-var template
+├── .github/workflows/ci.yml         # GitHub Actions: tests + build + image push
+├── docs/
+│   ├── USER_GUIDE.md                # End-user guide (this PR)
+│   └── screenshots/                 # UI screenshots referenced by the user guide
+└── README.md                        # You are here
 ```
 
-## Getting Started
+## API Reference
 
-### Prerequisites
-- Java 17+
-- Maven 3.6+
-- Node.js 18+
-- npm 9+
+Base URL: `http://localhost:8080` (dev) or `https://${DOMAIN}` (prod). All
+JSON. Authenticated endpoints expect `Authorization: Bearer <jwt>`. Full
+schemas are available at `/swagger-ui.html`.
 
-### Backend Setup (Local Development)
+### Authentication — `/api/auth`
+
+| Method | Path | Auth | Request body | Response | Description |
+|--------|------|------|--------------|----------|-------------|
+| POST | `/api/auth/google` | Public | `{ "credential": "<google id token>" }` | `{ token, user }` | Exchange Google ID token for app JWT |
+| GET | `/api/auth/me` | User | — | `User` | Current authenticated user |
+| GET | `/api/auth/success` | Public | — | redirect | OAuth2 success handler |
+| GET | `/api/auth/failure` | Public | — | redirect | OAuth2 failure handler |
 
 ```bash
-cd kamyaabi-backend
-mvn clean compile
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+curl -X POST http://localhost:8080/api/auth/google \
+  -H "Content-Type: application/json" \
+  -d '{"credential":"<google-id-token>"}'
 ```
 
-The backend will start at `http://localhost:8080`.
+### Products — `/api/products`
 
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- H2 Console (dev): http://localhost:8080/h2-console
-
-### Frontend Setup (Local Development)
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/products` | Public | Paginated list (`?page=&size=&sort=`) |
+| GET | `/api/products/featured` | Public | Featured products for the home page |
+| GET | `/api/products/search?q=` | Public | Full-text search by name |
+| GET | `/api/products/category/{categoryId}` | Public | Filter by category |
+| GET | `/api/products/{id}` | Public | Product detail by id |
+| GET | `/api/products/slug/{slug}` | Public | Product detail by SEO slug |
+| GET | `/api/products/{id}/redirect` | Public | 302 redirect from id → canonical slug URL |
 
 ```bash
-cd kamyaabi-frontend
-npm install
-npm run dev
+curl "http://localhost:8080/api/products?page=0&size=12&sort=createdAt,desc"
 ```
 
-The frontend will start at `http://localhost:3000`.
+### Categories — `/api/categories`
 
-## Docker Setup
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/categories` | Public | List active categories |
+| GET | `/api/categories/{id}` | Public | Category detail |
 
-### Prerequisites
-- Docker 20+
-- Docker Compose v2+
+### Reviews — `/api/products/{productId}/reviews`
 
-### Running with Docker Compose
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/products/{productId}/reviews` | Public | List reviews for a product |
+| GET | `/api/products/{productId}/reviews/summary` | Public | Aggregate rating + count |
+
+### Cart — `/api/cart` _(JWT required)_
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/cart` | Get the current user's cart |
+| POST | `/api/cart/items` | Add an item: `{ productId, quantity }` |
+| PUT | `/api/cart/items/{itemId}` | Update quantity: `{ quantity }` |
+| DELETE | `/api/cart/items/{itemId}` | Remove an item |
 
 ```bash
-# Build and start all services
-docker compose up --build
-
-# Run in detached mode
-docker compose up --build -d
-
-# Stop all services
-docker compose down
-
-# Stop and remove volumes
-docker compose down -v
+curl -X POST http://localhost:8080/api/cart/items \
+  -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"productId": 1, "quantity": 2}'
 ```
 
-This starts two services (database is external):
-- **Backend** — `localhost:8080` (Spring Boot API)
-- **Frontend** — `localhost:3000` (React app via Nginx)
+### Addresses — `/api/addresses` _(JWT required)_
 
-### Docker Environment Variables
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/addresses` | List current user's addresses |
+| POST | `/api/addresses` | Create a new address |
+| PUT | `/api/addresses/{id}` | Update an address |
+| DELETE | `/api/addresses/{id}` | Delete an address |
+| PUT | `/api/addresses/{id}/default` | Mark address as default |
+| GET | `/api/addresses/states` | List supported Indian states |
+| GET | `/api/addresses/states/{state}/cities` | List cities for a state |
 
-Create a `.env` file in the project root (required for database configuration):
+### Orders — `/api/orders` _(JWT required)_
 
-```env
-# External Database (PostgreSQL)
-DATABASE_URL=jdbc:postgresql://your-db-host:5432/kamyaabi
-DATABASE_USERNAME=your-db-username
-DATABASE_PASSWORD=your-secure-db-password
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/orders` | Create order from cart: `{ addressId, paymentMethod }` |
+| GET | `/api/orders` | List current user's orders |
+| GET | `/api/orders/{id}` | Order detail with items + status |
 
-# Backend
-JWT_SECRET=your-jwt-secret-key
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-CORS_ALLOWED_ORIGINS=http://localhost:3000
-RAZORPAY_KEY_ID=your-razorpay-key-id
-RAZORPAY_KEY_SECRET=your-razorpay-key-secret
-```
+### Payments — `/api/payments` _(JWT required)_
 
-### Building Individual Images
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/payments/create-order` | Create a Razorpay order for a Kamyaabi order |
+| POST | `/api/payments/verify` | Verify Razorpay signature on success |
 
 ```bash
-# Build backend image
-docker build -t kamyaabi-backend ./kamyaabi-backend
-
-# Build frontend image
-docker build -t kamyaabi-frontend ./kamyaabi-frontend
+curl -X POST http://localhost:8080/api/payments/create-order \
+  -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"orderId": 42}'
 ```
 
-## Testing
+### Profile — `/api/profile` _(JWT required)_
 
-### Running Backend Tests
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/profile` | Get profile (name, phone, etc.) |
+| PUT | `/api/profile` | Update profile |
 
-```bash
-cd kamyaabi-backend
+### Error reporting — `/api/errors`
 
-# Run all tests
-mvn clean test
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/errors/report` | Public | Frontend `ErrorBoundary` posts unhandled UI errors here |
 
-# Run tests with coverage report
-mvn clean verify
+### Admin — `/api/admin` _(`ROLE_ADMIN` required)_
 
-# View coverage report
-open target/site/jacoco/index.html
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/dashboard/stats` | Aggregate KPIs for the admin home |
+| GET | `/api/admin/analytics` | Time-series analytics for charts |
+| GET | `/api/admin/products` | Paginated products including soft-deleted |
+| GET | `/api/admin/products/{id}` | Product detail (admin view) |
+| POST | `/api/admin/products` (multipart) | Create product + upload images |
+| PUT | `/api/admin/products/{id}` (multipart) | Update product + images |
+| DELETE | `/api/admin/products/{id}` | Soft-delete product |
+| POST | `/api/admin/products/{id}/restore` | Restore a soft-deleted product |
+| PATCH | `/api/admin/products/{id}/status` | Toggle active/inactive |
+| DELETE | `/api/admin/products/{id}/images/{imageId}` | Delete a single product image |
+| GET | `/api/admin/categories` | List categories (admin view) |
+| POST | `/api/admin/categories` | Create category |
+| PUT | `/api/admin/categories/{id}` | Update category |
+| DELETE | `/api/admin/categories/{id}` | Delete category |
+| GET | `/api/admin/orders` | List all orders |
+| PUT | `/api/admin/orders/{id}/status` | Update order status |
+| GET | `/api/admin/users` | List users |
+| PATCH | `/api/admin/users/{id}/role` | Change user role |
+| PATCH | `/api/admin/users/{id}/status` | Activate / deactivate user |
+
+### Standard error envelope
+
+All errors are returned as JSON with the same shape:
+
+```json
+{
+  "timestamp": "2026-05-01T08:30:00Z",
+  "status": 422,
+  "error": "Unprocessable Entity",
+  "message": "Selling price must be less than MRP",
+  "path": "/api/admin/products",
+  "traceId": "1a2b3c…",
+  "fieldErrors": { "sellingPrice": "must be less than MRP" }
+}
 ```
 
-### Test Coverage
+The `traceId` is also returned in the `X-Correlation-Id` response header so
+operators can grep server logs for the matching request.
 
-The project uses **JaCoCo** for code coverage with an **80% minimum line coverage** requirement.
+## Key Features
 
-Coverage includes:
-- **Service Layer** — 7 service implementations fully tested
-- **Controller Layer** — 8 controllers fully tested
-- **Security** — JwtTokenProvider, JwtAuthenticationFilter, CurrentUser
-- **Mappers** — All 7 entity-DTO mappers tested
-- **Exception Handler** — GlobalExceptionHandler fully tested
+1. **Google Sign-In with JWT sessions.** Customers authenticate with their
+   Google account; the backend verifies the Google ID token and issues an
+   HS256-signed JWT (default 2-hour lifetime). The frontend stores the token
+   and an absolute expiry, surfaces a *Session expired* notice on lapse, and
+   logs out cleanly.
 
-Excluded from coverage:
-- `KamyaabiApplication` (main class)
-- Entity classes (`entity/**`)
-- DTO classes (`dto/**`)
-- `DataInitializer`
-- `SwaggerConfig`
+2. **Product catalog with search and filters.** Paginated browsing,
+   category-scoped listings, full-text search on names, and SEO-friendly
+   slug URLs (`/products/almonds-premium-500g`). Featured products power the
+   home-page hero strip.
 
-### Test Summary
+3. **Product detail with images and reviews.** Each product page renders a
+   responsive image gallery (Cloudinary-hosted), bullet-point description,
+   tab-organised content, and an aggregate rating + review list.
 
-| Category | Test Files | Tests |
-|----------|-----------|-------|
-| Services | 7 | ~75 |
-| Controllers | 8 | ~25 |
-| Security | 3 | ~20 |
-| Mappers | 7 | ~25 |
-| Exception Handler | 1 | 7 |
-| **Total** | **26** | **159** |
+4. **Shopping cart with optimistic updates.** Add, update, and remove items
+   from any page; cart state is mirrored in Redux for instant feedback and
+   reconciled with the server. A "fly-to-cart" animation confirms the action,
+   and stale items are cleaned up when products are deleted.
 
-## CI/CD
+5. **Address book.** Customers can save multiple shipping addresses, mark a
+   default, and pick a delivery address at checkout. State + city options come
+   from a backend-curated list to keep data clean.
 
-### GitHub Actions
+6. **Razorpay checkout and payment verification.** A 3-step stepper walks the
+   user through *Address → Review → Pay*. Payment opens Razorpay Checkout in
+   a popup; on success the backend verifies the HMAC signature before marking
+   the order **Paid**.
 
-The project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that runs on every push and pull request to `master`.
+7. **Order tracking with step-by-step status.** Customers see every order in
+   `/orders`, with a stepper visualising *Placed → Paid → Confirmed → Shipped
+   → Delivered*. Admin status changes update this timeline in near real-time.
 
-**Pipeline Jobs:**
+8. **Admin dashboard.** A role-gated `/admin` console surfaces sales KPIs,
+   recent orders, a Recharts-powered analytics tab, and full CRUD for
+   products (including multipart image upload to Cloudinary, soft-delete +
+   restore), categories, and users (role + active flag).
 
-1. **Backend Test** — Runs `mvn clean verify` with JaCoCo coverage check
-   - Uploads JaCoCo coverage report as an artifact
-2. **Frontend Build** — Runs `npm ci` and `npm run build`
-3. **Docker Build** — Builds Docker images for backend and frontend (runs after tests pass)
+9. **Transactional email.** Order confirmations and admin alerts are sent
+   via SendGrid (preferred) with an SMTP fallback. Unhandled backend / frontend
+   errors are emailed to `DEVELOPER_EMAILS` for fast triage.
 
-### Environment Variables
+10. **Production-grade observability.** Every request gets a correlation id
+    (returned as `X-Correlation-Id` and present in MDC logs). Logback writes
+    rolling daily files to `./logs/` with a 10-day retention. Spring Boot
+    Actuator exposes `/health`, `/info`, `/metrics`, `/loggers`, and `/env`
+    (admin-gated); a custom `EmailProviderHealth` indicator surfaces SMTP /
+    SendGrid status.
 
-#### Backend (`application.properties`)
-```properties
-app.jwt.secret=your-jwt-secret
-app.jwt.expirationMs=86400000
-app.razorpay.keyId=your-razorpay-key
-app.razorpay.keySecret=your-razorpay-secret
-spring.security.oauth2.client.registration.google.client-id=your-google-client-id
-spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
-```
+11. **Caching.** Caffeine (`maximumSize=500, expireAfterWrite=10m`) backs
+    read-heavy product / category lookups for fast home and listing pages.
 
-#### Frontend (`.env`)
-```env
-VITE_API_BASE_URL=http://localhost:8080
-VITE_GOOGLE_CLIENT_ID=your-google-client-id
-```
+12. **Containerised end-to-end.** `docker-compose.yml` builds and runs the
+    full stack locally, while `docker-compose.prod.yml` plus `setup-vm-ssl.sh`
+    and `deploy.sh` provision a Linux VM with Nginx + Let's Encrypt SSL.
 
-## API Endpoints
+## Contributing
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| POST | /api/auth/google | Google OAuth login | Public |
-| GET | /api/auth/me | Get current user | User |
-| GET | /api/products | List products (paginated) | Public |
-| GET | /api/products/{id} | Get product detail | Public |
-| GET | /api/products/featured | Featured products | Public |
-| GET | /api/products/search | Search products | Public |
-| GET | /api/categories | List categories | Public |
-| GET | /api/cart | Get user cart | User |
-| POST | /api/cart/items | Add to cart | User |
-| PUT | /api/cart/items/{id} | Update cart item | User |
-| DELETE | /api/cart/items/{id} | Remove from cart | User |
-| POST | /api/orders | Create order | User |
-| GET | /api/orders | List user orders | User |
-| GET | /api/orders/{id} | Get order detail | User |
-| POST | /api/payments/create-order | Create Razorpay order | User |
-| POST | /api/payments/verify | Verify payment | User |
-| GET | /api/addresses | List addresses | User |
-| POST | /api/addresses | Create address | User |
-| POST | /api/admin/products | Create product | Admin |
-| PUT | /api/admin/products/{id} | Update product | Admin |
-| DELETE | /api/admin/products/{id} | Delete product | Admin |
-| POST | /api/admin/categories | Create category | Admin |
-| GET | /api/admin/orders | List all orders | Admin |
-| PUT | /api/admin/orders/{id}/status | Update order status | Admin |
+1. **Fork** the repo and clone your fork.
+2. **Create a feature branch** off `master`. Convention used in this repo:
+   `devin/<unix-timestamp>-<short-description>` or
+   `feat/<short-description>` / `fix/<short-description>`.
+3. **Install pre-flight checks** locally — make sure `mvn verify` and
+   `npm run lint && npm run build` both pass before pushing.
+4. **Commit conventions.** Use [Conventional Commits](https://www.conventionalcommits.org/)
+   with types `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `style:`.
+   Keep subjects ≤ 72 chars and explain the *why* in the body.
+5. **Open a Pull Request** against `master`. Each PR must:
+   - Have a clear title and description (what + why).
+   - Pass GitHub Actions CI (backend tests + 80% coverage + frontend build +
+     Docker image build).
+   - Add or update tests for any changed behaviour.
+   - Touch documentation (this README or `docs/`) if behaviour visible to
+     users or operators changes.
 
-## Features
+PR checklist:
 
-- **Google OAuth Login** — Secure authentication with JWT tokens
-- **Product Catalog** — Browse, search, filter by category with pagination
-- **Shopping Cart** — Add, update, remove items with stock validation
-- **Checkout & Payments** — Razorpay integration for secure payments
-- **Order Tracking** — Real-time order status with step-by-step progress
-- **Admin Dashboard** — Manage products, categories, and orders
-- **Caching** — Caffeine cache for improved performance
-- **Responsive Design** — Mobile-first UI with Material Design
-- **Docker Support** — Full containerization with Docker Compose
-- **CI/CD** — Automated testing and builds with GitHub Actions
-- **80%+ Code Coverage** — Comprehensive JUnit/Mockito test suite with JaCoCo
-- **Production-grade observability** — correlation id on every request, structured logs
-  with 10-day rolling retention, Actuator health/metrics/loggers
+- [ ] Code compiles locally (`mvn verify` and `npm run build`).
+- [ ] Backend coverage stays at or above 80% lines.
+- [ ] No secrets, API keys, or `.env` files committed.
+- [ ] Linter is green (`npm run lint`).
+- [ ] User-facing changes documented in `docs/USER_GUIDE.md`.
+- [ ] PR description references the issue / task it addresses.
 
-## Environment variables
+## License
 
-All secrets come from environment variables. Nothing secret is checked in.
-
-### Backend
-
-| Variable                   | Required | Default                     | Description                                              |
-|----------------------------|----------|-----------------------------|----------------------------------------------------------|
-| `DATABASE_URL`             | prod     | `jdbc:h2:mem:kamyaabidb`    | JDBC URL for the app database                            |
-| `DATABASE_USERNAME`        | prod     | `sa`                        | Database username                                        |
-| `DATABASE_PASSWORD`        | prod     | _(empty in dev)_            | Database password                                        |
-| `JWT_SECRET`               | yes      | _(none — fails startup)_    | HS256 signing secret (≥32 bytes)                         |
-| `JWT_EXPIRATION_MS`        | no       | `7200000` (2 h)             | JWT lifetime in ms                                       |
-| `GOOGLE_CLIENT_ID`         | yes      | _(none)_                    | Google OAuth web client id                               |
-| `GOOGLE_CLIENT_SECRET`     | yes      | _(none)_                    | Google OAuth client secret                               |
-| `CORS_ALLOWED_ORIGINS`     | yes      | _(none)_                    | Comma-separated frontend origins                         |
-| `RAZORPAY_KEY_ID`          | yes      | _(none)_                    | Razorpay public key id                                   |
-| `RAZORPAY_KEY_SECRET`      | yes      | _(none)_                    | Razorpay secret key                                      |
-| `SENDGRID_API_KEY`         | no       | _(empty → falls back to SMTP)_ | SendGrid API key                                      |
-| `SMTP_HOST/PORT/USER/PASS` | no       | _(empty → no-op email)_     | SMTP fallback for transactional email                    |
-
-### Frontend
-
-| Variable                 | Required | Description                                             |
-|--------------------------|----------|---------------------------------------------------------|
-| `VITE_API_BASE_URL`      | no       | Backend base URL. Blank = same-origin (behind Nginx).   |
-| `VITE_GOOGLE_CLIENT_ID`  | yes (prod) | Google OAuth web client id (same as backend)          |
-| `VITE_BRAND_DOMAIN`      | no       | Public brand domain; default `kamyaabi.in`            |
-| `VITE_SUPPORT_EMAIL`     | no       | Support email rendered in UI                            |
-
-Frontend env vars are consumed via `src/config/index.ts`, which throws in
-production builds if a required var is missing — preventing broken deploys.
-
-## Scripts cheat-sheet
-
-| Scope    | Command                                   | What it does                         |
-|----------|-------------------------------------------|--------------------------------------|
-| Backend  | `mvn -pl kamyaabi-backend spring-boot:run`| Run locally with dev profile         |
-| Backend  | `mvn -pl kamyaabi-backend test`           | Run all unit tests                   |
-| Backend  | `mvn -pl kamyaabi-backend verify`         | Tests + JaCoCo coverage gate         |
-| Frontend | `npm -C kamyaabi-frontend run dev`        | Vite dev server on :3000             |
-| Frontend | `npm -C kamyaabi-frontend run build`      | Type-check (tsc -b) + Vite prod build|
-| Frontend | `npm -C kamyaabi-frontend run lint`       | ESLint                               |
-| Stack    | `docker compose up --build`               | Build + run frontend + backend       |
-
+This project is **proprietary**. All rights reserved by the repository
+owner. No license is granted for redistribution, sublicensing, or
+commercial use without explicit written permission. If you would like to
+discuss licensing or partnership, please contact the repository owner via
+the support email configured in `.env` (defaults to `support@kamyaabi.in`).
