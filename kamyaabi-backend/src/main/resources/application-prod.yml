@@ -64,6 +64,8 @@ app:
     from-name: ${EMAIL_FROM_NAME:Kamyaabi}
     admin-emails:
       - ${ADMIN_EMAIL:admin@kamyaabi.in}
+    # Comma-separated DEVELOPER_EMAILS env var → developer-emails list.
+    developer-emails: ${DEVELOPER_EMAILS:}
     sendgrid:
       api-key: ${SENDGRID_API_KEY}
     smtp:

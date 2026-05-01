@@ -13,6 +13,8 @@ import {
   Stepper,
   Step,
   StepLabel,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
@@ -36,6 +38,11 @@ const OrderDetailPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const [paymentProcessing, setPaymentProcessing] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
+  const theme = useTheme();
+  // Switch the 5-step status timeline to a vertical layout on phones — the
+  // horizontal `alternativeLabel` variant clips its labels at 320–414px
+  // viewports and forces horizontal overflow on the card.
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (id) dispatch(fetchOrderById(Number(id)));
@@ -119,8 +126,12 @@ const OrderDetailPage: React.FC = () => {
 
       {/* Order Progress */}
       {order.status !== 'CANCELLED' && (
-        <Card sx={{ p: 3, mb: 4, '&:hover': { transform: 'none' } }}>
-          <Stepper activeStep={activeStep} alternativeLabel>
+        <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, '&:hover': { transform: 'none' } }}>
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel={!isMobile}
+            orientation={isMobile ? 'vertical' : 'horizontal'}
+          >
             {ORDER_STATUSES.map((status) => (
               <Step key={status}>
                 <StepLabel>{status}</StepLabel>

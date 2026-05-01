@@ -1,6 +1,7 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { Box, Button, Container, Typography } from '@mui/material';
 
+import { errorApi } from '../../api/errorApi';
 import { logger } from '../../utils/logger';
 
 interface ErrorBoundaryProps {
@@ -36,6 +37,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       message: error.message,
       stack: error.stack,
       componentStack: info.componentStack,
+    });
+    // Fire-and-forget: errorApi.report swallows its own failures so the
+    // fallback UI still renders even if the network is down.
+    void errorApi.report({
+      message: error.message,
+      stack: error.stack,
+      componentStack: info.componentStack ?? undefined,
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      source: 'react-error-boundary',
     });
   }
 
