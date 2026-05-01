@@ -3,12 +3,7 @@ import { Box, Container, Typography, Grid, TextField, Button, Link as MuiLink } 
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import {
-  SUPPORT_EMAIL,
-  SUPPORT_PHONE_DISPLAY,
-  SUPPORT_PHONE_TEL,
-  WHATSAPP_URL,
-} from '../config/brand';
+import { config } from '../config';
 
 const ContactPage: React.FC = () => {
   return (
@@ -39,8 +34,8 @@ const ContactPage: React.FC = () => {
                   <PhoneIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Phone</Typography>
-                    <MuiLink href={SUPPORT_PHONE_TEL} variant="body2" underline="hover" sx={{ color: '#666' }}>
-                      {SUPPORT_PHONE_DISPLAY}
+                    <MuiLink href={config.supportPhoneTel} variant="body2" underline="hover" sx={{ color: '#666' }}>
+                      {config.supportPhoneDisplay}
                     </MuiLink>
                   </Box>
                 </Box>
@@ -48,8 +43,8 @@ const ContactPage: React.FC = () => {
                   <EmailIcon sx={{ color: 'primary.main', fontSize: 28 }} />
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Email</Typography>
-                    <MuiLink href={`mailto:${SUPPORT_EMAIL}`} variant="body2" underline="hover" sx={{ color: '#666' }}>
-                      {SUPPORT_EMAIL}
+                    <MuiLink href={`mailto:${config.supportEmail}`} variant="body2" underline="hover" sx={{ color: '#666' }}>
+                      {config.supportEmail}
                     </MuiLink>
                   </Box>
                 </Box>
@@ -58,14 +53,14 @@ const ContactPage: React.FC = () => {
                   <Box>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>WhatsApp</Typography>
                     <MuiLink
-                      href={WHATSAPP_URL}
+                      href={config.whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       variant="body2"
                       underline="hover"
                       sx={{ color: '#666' }}
                     >
-                      {SUPPORT_PHONE_DISPLAY}
+                      {config.supportPhoneDisplay}
                     </MuiLink>
                   </Box>
                 </Box>

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Box, Container, Typography, Grid, Button, TextField, Card, CardMedia, Skeleton,
+  Box, Container, Typography, Grid, Button, TextField, Card, CardMedia,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
 import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
 import PageTransition from '../components/common/PageTransition';
-import { WHATSAPP_URL } from '../config/brand';
+import { config } from '../config';
 
 const heroSlides = [
   { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: '/assets/img/hero/banner2.webp' },
@@ -275,7 +275,7 @@ const HomePage: React.FC = () => {
       </Box>
 
       {/* WhatsApp floating button */}
-      <Box component="a" href={`${WHATSAPP_URL}?text=Hello%20Kamyaabi`} target="_blank" rel="noopener noreferrer"
+      <Box component="a" href={`${config.whatsappUrl}?text=Hello%20Kamyaabi`} target="_blank" rel="noopener noreferrer"
         sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000, width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', '&:hover': { transform: 'scale(1.1)' }, transition: 'transform 0.3s' }}>
         <img src="/assets/img/wicon.webp" alt="WhatsApp" style={{ width: '100%', height: '100%' }} />
       </Box>
