@@ -17,7 +17,6 @@ public class EmailProperties {
     private boolean enabled = true;
     private String fromEmail = "omprakashornold@gmail.com";
     private String fromName = "Kamyaabi";
-    private List<String> adminEmails = new ArrayList<>();
     private List<String> developerEmails = new ArrayList<>();
 
     private SendGrid sendgrid = new SendGrid();

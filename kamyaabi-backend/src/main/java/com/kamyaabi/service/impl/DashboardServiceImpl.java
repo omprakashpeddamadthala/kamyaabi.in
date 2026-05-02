@@ -8,6 +8,7 @@ import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.repository.ProductRepository;
 import com.kamyaabi.service.DashboardService;
+import com.kamyaabi.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,6 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
 
-    private static final int LOW_STOCK_THRESHOLD = 10;
     private static final int MAX_ANALYTICS_RANGE_DAYS = 366;
 
     private static final List<Order.OrderStatus> NON_REVENUE_STATUSES = List.of(
@@ -36,11 +36,14 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final SettingsService settingsService;
 
     public DashboardServiceImpl(ProductRepository productRepository,
-                                OrderRepository orderRepository) {
+                                OrderRepository orderRepository,
+                                SettingsService settingsService) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
+        this.settingsService = settingsService;
     }
 
     @Override
@@ -48,7 +51,10 @@ public class DashboardServiceImpl implements DashboardService {
         long totalProducts = productRepository.count();
         long totalOrders = orderRepository.count();
         BigDecimal totalRevenue = orderRepository.sumRevenueExcludingStatuses(NON_REVENUE_STATUSES);
-        long lowStock = productRepository.countByActiveTrueAndStockLessThan(LOW_STOCK_THRESHOLD);
+        int lowStockThreshold = settingsService.getInt(
+                SettingsService.LOW_STOCK_THRESHOLD,
+                SettingsService.DEFAULT_LOW_STOCK_THRESHOLD);
+        long lowStock = productRepository.countByActiveTrueAndStockLessThan(lowStockThreshold);
         return DashboardStatsResponse.builder()
                 .totalProducts(totalProducts)
                 .totalOrders(totalOrders)

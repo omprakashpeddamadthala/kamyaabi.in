@@ -60,8 +60,9 @@ app:
     enabled: true
     from-email: ${EMAIL_FROM:noreply@kamyaabi.in}
     from-name: Kamyaabi
-    admin-emails:
-      - ${ADMIN_EMAIL:admin@kamyaabi.in}
+    # Admin notification recipients are now resolved dynamically from the
+    # users table (any active user with role=ADMIN). The legacy admin-emails
+    # config and ADMIN_EMAIL env var are no longer read.
     # Comma-separated DEVELOPER_EMAILS env var → developer-emails list.
     developer-emails: ${DEVELOPER_EMAILS:}
     sendgrid:

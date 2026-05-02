@@ -54,6 +54,7 @@ class AdminControllerTest {
     @Mock private DashboardService dashboardService;
     @Mock private AdminUserService adminUserService;
     @Mock private CurrentUser currentUser;
+    @Mock private com.kamyaabi.service.SettingsService settingsService;
 
     @InjectMocks private AdminController adminController;
 
@@ -288,5 +289,30 @@ class AdminControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(adminUserService).updateUserStatus(2L, 1L, User.Status.BLOCKED);
+    }
+
+    @Test
+    void getSettings_shouldReturnAllSettings() {
+        when(settingsService.getAll()).thenReturn(java.util.Map.of(
+                "low_stock_threshold", "10",
+                "products_per_page", "8"));
+
+        ResponseEntity<?> response = adminController.getSettings();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void updateSettings_shouldReturn200WithUpdatedMap() {
+        com.kamyaabi.dto.request.SettingsUpdateRequest request =
+                new com.kamyaabi.dto.request.SettingsUpdateRequest();
+        request.put("low_stock_threshold", "15");
+        when(settingsService.updateAll(eq(request.any())))
+                .thenReturn(java.util.Map.of("low_stock_threshold", "15"));
+
+        ResponseEntity<?> response = adminController.updateSettings(request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(settingsService).updateAll(eq(request.any()));
     }
 }

@@ -56,6 +56,7 @@ import ProductCard from '../components/common/ProductCard';
 import { reviewApi } from '../api/reviewApi';
 import type { Review, ReviewSummary } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
+import { usePublicSettings } from '../hooks/usePublicSettings';
 
 function useRevealOnScroll(threshold = 0.15) {
   const [visible, setVisible] = useState(false);
@@ -198,6 +199,11 @@ const ProductDetailPage: React.FC = () => {
   const { selectedProduct: product, products } = useAppSelector((s) => s.products);
   const { user } = useAppSelector((s) => s.auth);
   const { addingProductIds } = useAppSelector((s) => s.cart);
+  const publicSettings = usePublicSettings();
+  const showBoughtRecentlyBadge =
+    publicSettings == null
+      ? true
+      : String(publicSettings.show_bought_recently_badge ?? 'true').toLowerCase() !== 'false';
 
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
@@ -688,7 +694,7 @@ const ProductDetailPage: React.FC = () => {
             </Box>
 
             {}
-            {reviewSummary && reviewSummary.recentBuyersCount > 0 && (
+            {showBoughtRecentlyBadge && reviewSummary && reviewSummary.recentBuyersCount > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
                 <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>

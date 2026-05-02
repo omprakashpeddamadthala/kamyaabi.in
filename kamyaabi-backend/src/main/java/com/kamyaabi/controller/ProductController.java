@@ -3,6 +3,7 @@ package com.kamyaabi.controller;
 import com.kamyaabi.dto.response.ApiResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.service.ProductService;
+import com.kamyaabi.service.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -27,20 +28,60 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final SettingsService settingsService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService,
+                             SettingsService settingsService) {
         this.productService = productService;
+        this.settingsService = settingsService;
+    }
+
+    /**
+     * Maps a frontend-friendly {@code sort} query param (e.g. {@code price_asc},
+     * {@code newest}) to a Spring Data {@link Sort}. Falls back to legacy
+     * {@code sortBy}+{@code sortDir} pair when {@code sort} is absent so existing
+     * callers stay green.
+     */
+    static Sort resolveSort(String sort, String sortBy, String sortDir) {
+        if (sort != null && !sort.isBlank()) {
+            return switch (sort.toLowerCase()) {
+                case "price_asc" -> Sort.by("price").ascending();
+                case "price_desc" -> Sort.by("price").descending();
+                case "name_asc" -> Sort.by("name").ascending();
+                case "name_desc" -> Sort.by("name").descending();
+                case "oldest" -> Sort.by("createdAt").ascending();
+                case "newest" -> Sort.by("createdAt").descending();
+                default -> Sort.by("createdAt").descending();
+            };
+        }
+        String safeSortBy = switch (sortBy == null ? "" : sortBy) {
+            case "price", "name", "createdAt" -> sortBy;
+            default -> "createdAt";
+        };
+        return "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by(safeSortBy).ascending()
+                : Sort.by(safeSortBy).descending();
+    }
+
+    private int resolveSize(Integer requested) {
+        if (requested != null && requested > 0) return requested;
+        return settingsService.getInt(
+                SettingsService.PRODUCTS_PER_PAGE,
+                SettingsService.DEFAULT_PRODUCTS_PER_PAGE);
     }
 
     @GetMapping
-    @Operation(summary = "Get all products", description = "Get paginated list of active products")
+    @Operation(summary = "Get all products",
+            description = "Get paginated list of active products. Pass `sort` for one of "
+                    + "price_asc, price_desc, name_asc, name_desc, newest, oldest. "
+                    + "`size` defaults to the admin-configured `products_per_page` setting (8 when unset).")
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
-        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, resolveSize(size), resolveSort(sort, sortBy, sortDir));
         Page<ProductResponse> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
@@ -78,23 +119,33 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    @Operation(summary = "Get products by category", description = "Get paginated products filtered by category")
+    @Operation(summary = "Get products by category",
+            description = "Get paginated products filtered by category. Honors the same `sort` "
+                    + "vocabulary as the listing endpoint and the configurable `products_per_page` setting.")
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByCategory(
             @PathVariable Long categoryId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Pageable pageable = PageRequest.of(page, resolveSize(size), resolveSort(sort, sortBy, sortDir));
         Page<ProductResponse> products = productService.getProductsByCategory(categoryId, pageable);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Search products", description = "Search products by keyword")
+    @Operation(summary = "Search products",
+            description = "Search products by keyword. Honors the same `sort` vocabulary as the listing "
+                    + "endpoint and the configurable `products_per_page` setting.")
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> searchProducts(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Pageable pageable = PageRequest.of(page, resolveSize(size), resolveSort(sort, sortBy, sortDir));
         Page<ProductResponse> products = productService.searchProducts(keyword, pageable);
         return ResponseEntity.ok(ApiResponse.success(products));
     }

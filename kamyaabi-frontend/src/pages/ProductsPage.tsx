@@ -25,6 +25,22 @@ import {
 import ProductCard from '../components/common/ProductCard';
 import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
 import PageTransition from '../components/common/PageTransition';
+import { ProductSort } from '../api/productApi';
+import { usePublicSettings } from '../hooks/usePublicSettings';
+
+const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'name_asc', label: 'Name: A to Z' },
+  { value: 'name_desc', label: 'Name: Z to A' },
+];
+
+const VALID_SORT = new Set<ProductSort>(SORT_OPTIONS.map((o) => o.value));
+
+const isValidSort = (raw: string | null): raw is ProductSort =>
+  raw != null && VALID_SORT.has(raw as ProductSort);
 
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -35,9 +51,16 @@ const ProductsPage: React.FC = () => {
   const isAdmin = user?.role === 'ADMIN';
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortDir, setSortDir] = useState('desc');
+  const publicSettings = usePublicSettings();
+  const productsPerPage: number | undefined = (() => {
+    const raw = publicSettings?.products_per_page;
+    if (raw == null) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  })();
 
+  const sortParam = searchParams.get('sort');
+  const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'newest';
   const categoryId = searchParams.get('category');
   const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
   const zeroBasedPage = urlPage - 1;
@@ -60,24 +83,35 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     if (searchQuery) {
-      dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage }));
+      dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage, size: productsPerPage, sort }));
     } else if (categoryId) {
-      dispatch(fetchProductsByCategory({ categoryId: Number(categoryId), page: zeroBasedPage }));
+      dispatch(
+        fetchProductsByCategory({
+          categoryId: Number(categoryId),
+          page: zeroBasedPage,
+          size: productsPerPage,
+          sort,
+        }),
+      );
     } else {
-      dispatch(fetchProducts({ page: zeroBasedPage, sortBy, sortDir }));
+      dispatch(fetchProducts({ page: zeroBasedPage, size: productsPerPage, sort }));
     }
-  }, [dispatch, categoryId, sortBy, sortDir, searchQuery, zeroBasedPage]);
+  }, [dispatch, categoryId, sort, searchQuery, zeroBasedPage, productsPerPage]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     updateParams({ page: page === 1 ? null : String(page) });
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSortChange = (next: ProductSort) => {
+    updateParams({ sort: next === 'newest' ? null : next, page: null });
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setSearchParams({});
-      dispatch(searchProducts({ keyword: searchQuery.trim(), page: 0 }));
+      dispatch(searchProducts({ keyword: searchQuery.trim(), page: 0, size: productsPerPage, sort }));
     }
   };
 
@@ -112,28 +146,18 @@ const ProductsPage: React.FC = () => {
           />
         </Box>
 
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 220 }}>
           <InputLabel>Sort By</InputLabel>
           <Select
-            value={sortBy}
+            value={sort}
             label="Sort By"
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={(e) => handleSortChange(e.target.value as ProductSort)}
           >
-            <MenuItem value="createdAt">Newest</MenuItem>
-            <MenuItem value="price">Price</MenuItem>
-            <MenuItem value="name">Name</MenuItem>
-          </Select>
-        </FormControl>
-
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Order</InputLabel>
-          <Select
-            value={sortDir}
-            label="Order"
-            onChange={(e) => setSortDir(e.target.value)}
-          >
-            <MenuItem value="asc">Ascending</MenuItem>
-            <MenuItem value="desc">Descending</MenuItem>
+            {SORT_OPTIONS.map((o) => (
+              <MenuItem key={o.value} value={o.value}>
+                {o.label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>

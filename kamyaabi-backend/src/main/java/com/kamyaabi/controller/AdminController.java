@@ -4,6 +4,7 @@ import com.kamyaabi.dto.request.CategoryRequest;
 import com.kamyaabi.dto.request.OrderStatusRequest;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.request.ProductStatusRequest;
+import com.kamyaabi.dto.request.SettingsUpdateRequest;
 import com.kamyaabi.dto.request.UpdateUserRoleRequest;
 import com.kamyaabi.dto.request.UpdateUserStatusRequest;
 import com.kamyaabi.dto.response.*;
@@ -13,6 +14,7 @@ import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ProductService;
+import com.kamyaabi.service.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -43,6 +46,7 @@ public class AdminController {
     private final OrderService orderService;
     private final DashboardService dashboardService;
     private final AdminUserService adminUserService;
+    private final SettingsService settingsService;
     private final CurrentUser currentUser;
 
     public AdminController(ProductService productService,
@@ -50,12 +54,14 @@ public class AdminController {
                            OrderService orderService,
                            DashboardService dashboardService,
                            AdminUserService adminUserService,
+                           SettingsService settingsService,
                            CurrentUser currentUser) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.orderService = orderService;
         this.dashboardService = dashboardService;
         this.adminUserService = adminUserService;
+        this.settingsService = settingsService;
         this.currentUser = currentUser;
     }
 
@@ -272,5 +278,22 @@ public class AdminController {
             @Valid @RequestBody UpdateUserStatusRequest request) {
         AdminUserResponse user = adminUserService.updateUserStatus(id, currentUser.getUserId(), request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("User status updated", user));
+    }
+
+    @GetMapping("/settings")
+    @Operation(summary = "Get all platform settings",
+            description = "Returns the full key/value map of admin-tunable platform settings "
+                    + "(low stock threshold, products-per-page, bought-recently badge toggle).")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getSettings() {
+        return ResponseEntity.ok(ApiResponse.success(settingsService.getAll()));
+    }
+
+    @PutMapping("/settings")
+    @Operation(summary = "Update platform settings",
+            description = "Bulk key/value update. Unknown keys and invalid values are rejected with 400.")
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateSettings(
+            @Valid @RequestBody SettingsUpdateRequest request) {
+        Map<String, String> updated = settingsService.updateAll(request.any());
+        return ResponseEntity.ok(ApiResponse.success("Settings updated", updated));
     }
 }

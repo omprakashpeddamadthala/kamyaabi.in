@@ -5,6 +5,7 @@ import com.kamyaabi.dto.response.DashboardStatsResponse;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.service.SettingsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +27,7 @@ class DashboardServiceImplTest {
 
     @Mock private ProductRepository productRepository;
     @Mock private OrderRepository orderRepository;
+    @Mock private SettingsService settingsService;
 
     @InjectMocks private DashboardServiceImpl dashboardService;
 
@@ -35,6 +37,8 @@ class DashboardServiceImplTest {
         when(orderRepository.count()).thenReturn(12L);
         when(orderRepository.sumRevenueExcludingStatuses(any()))
                 .thenReturn(new BigDecimal("4200.50"));
+        when(settingsService.getInt(SettingsService.LOW_STOCK_THRESHOLD,
+                SettingsService.DEFAULT_LOW_STOCK_THRESHOLD)).thenReturn(10);
         when(productRepository.countByActiveTrueAndStockLessThan(10)).thenReturn(3L);
 
         DashboardStatsResponse result = dashboardService.getStats();
@@ -50,6 +54,8 @@ class DashboardServiceImplTest {
         when(productRepository.count()).thenReturn(0L);
         when(orderRepository.count()).thenReturn(0L);
         when(orderRepository.sumRevenueExcludingStatuses(any())).thenReturn(null);
+        when(settingsService.getInt(SettingsService.LOW_STOCK_THRESHOLD,
+                SettingsService.DEFAULT_LOW_STOCK_THRESHOLD)).thenReturn(10);
         when(productRepository.countByActiveTrueAndStockLessThan(10)).thenReturn(0L);
 
         DashboardStatsResponse result = dashboardService.getStats();

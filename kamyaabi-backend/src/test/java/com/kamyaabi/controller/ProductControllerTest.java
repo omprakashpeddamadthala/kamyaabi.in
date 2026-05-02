@@ -2,6 +2,7 @@ package com.kamyaabi.controller;
 
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.service.ProductService;
+import com.kamyaabi.service.SettingsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
 class ProductControllerTest {
 
     @Mock private ProductService productService;
+    @Mock private SettingsService settingsService;
 
     @InjectMocks private ProductController productController;
 
@@ -35,7 +37,7 @@ class ProductControllerTest {
         Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
         when(productService.getAllProducts(any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<?> response = productController.getAllProducts(0, 12, "createdAt", "desc");
+        ResponseEntity<?> response = productController.getAllProducts(0, 12, null, "createdAt", "desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -45,7 +47,31 @@ class ProductControllerTest {
         Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
         when(productService.getAllProducts(any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<?> response = productController.getAllProducts(0, 12, "name", "asc");
+        ResponseEntity<?> response = productController.getAllProducts(0, 12, null, "name", "asc");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void getAllProducts_priceAscSort_shouldReturnPage() {
+        Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
+        when(settingsService.getInt(SettingsService.PRODUCTS_PER_PAGE,
+                SettingsService.DEFAULT_PRODUCTS_PER_PAGE)).thenReturn(8);
+        when(productService.getAllProducts(any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = productController.getAllProducts(0, null, "price_asc", "createdAt", "desc");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void getAllProducts_unspecifiedSize_shouldUseSettingsService() {
+        Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
+        when(settingsService.getInt(SettingsService.PRODUCTS_PER_PAGE,
+                SettingsService.DEFAULT_PRODUCTS_PER_PAGE)).thenReturn(8);
+        when(productService.getAllProducts(any(Pageable.class))).thenReturn(page);
+
+        ResponseEntity<?> response = productController.getAllProducts(0, null, null, "createdAt", "desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -64,7 +90,7 @@ class ProductControllerTest {
         Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
         when(productService.getProductsByCategory(eq(1L), any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<?> response = productController.getProductsByCategory(1L, 0, 12);
+        ResponseEntity<?> response = productController.getProductsByCategory(1L, 0, 12, null, "createdAt", "desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -74,7 +100,7 @@ class ProductControllerTest {
         Page<ProductResponse> page = new PageImpl<>(List.of(productResponse));
         when(productService.searchProducts(eq("cashew"), any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<?> response = productController.searchProducts("cashew", 0, 12);
+        ResponseEntity<?> response = productController.searchProducts("cashew", 0, 12, null, "createdAt", "desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
