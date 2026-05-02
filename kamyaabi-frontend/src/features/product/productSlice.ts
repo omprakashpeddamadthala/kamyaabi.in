@@ -29,11 +29,16 @@ const initialState: ProductState = {
   error: null,
 };
 
+type ProductSort = import('../../api/productApi').ProductSort;
+
 export const fetchProducts = createAsyncThunk(
   'products/fetchAll',
-  async ({ page, size, sortBy, sortDir }: { page?: number; size?: number; sortBy?: string; sortDir?: string } = {}, { rejectWithValue }) => {
+  async (
+    { page, size, sort }: { page?: number; size?: number; sort?: ProductSort } = {},
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await productApi.getAll(page, size, sortBy, sortDir);
+      const response = await productApi.getAll({ page, size, sort });
       return response.data.data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -44,9 +49,17 @@ export const fetchProducts = createAsyncThunk(
 
 export const fetchProductsByCategory = createAsyncThunk(
   'products/fetchByCategory',
-  async ({ categoryId, page, size }: { categoryId: number; page?: number; size?: number }, { rejectWithValue }) => {
+  async (
+    {
+      categoryId,
+      page,
+      size,
+      sort,
+    }: { categoryId: number; page?: number; size?: number; sort?: ProductSort },
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await productApi.getByCategory(categoryId, page, size);
+      const response = await productApi.getByCategory(categoryId, { page, size, sort });
       return response.data.data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -57,9 +70,17 @@ export const fetchProductsByCategory = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   'products/search',
-  async ({ keyword, page, size }: { keyword: string; page?: number; size?: number }, { rejectWithValue }) => {
+  async (
+    {
+      keyword,
+      page,
+      size,
+      sort,
+    }: { keyword: string; page?: number; size?: number; sort?: ProductSort },
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await productApi.search(keyword, page, size);
+      const response = await productApi.search(keyword, { page, size, sort });
       return response.data.data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

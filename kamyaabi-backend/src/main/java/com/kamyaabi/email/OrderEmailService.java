@@ -17,15 +17,18 @@ public class OrderEmailService {
     private final EmailTemplateEngine templateEngine;
     private final EmailProperties emailProperties;
     private final OrderRepository orderRepository;
+    private final AdminEmailResolver adminEmailResolver;
 
     public OrderEmailService(EmailServiceFactory emailServiceFactory,
                              EmailTemplateEngine templateEngine,
                              EmailProperties emailProperties,
-                             OrderRepository orderRepository) {
+                             OrderRepository orderRepository,
+                             AdminEmailResolver adminEmailResolver) {
         this.emailServiceFactory = emailServiceFactory;
         this.templateEngine = templateEngine;
         this.emailProperties = emailProperties;
         this.orderRepository = orderRepository;
+        this.adminEmailResolver = adminEmailResolver;
     }
 
     @Async("emailTaskExecutor")
@@ -71,8 +74,10 @@ public class OrderEmailService {
     }
 
     private void sendAdminEmails(Order order, OrderEventType eventType) {
-        if (emailProperties.getAdminEmails().isEmpty()) {
-            log.debug("No admin emails configured, skipping admin notification");
+        java.util.List<String> adminEmails = adminEmailResolver.getAdminEmails();
+        if (adminEmails.isEmpty()) {
+            log.warn("No active admin users found in database — skipping admin notification "
+                    + "for event: {} order: {}", eventType, order.getId());
             return;
         }
 
@@ -80,12 +85,13 @@ public class OrderEmailService {
             String subject = templateEngine.getAdminSubject(eventType, order);
             String htmlContent = templateEngine.renderAdminEmail(eventType, order);
 
-            for (String adminEmail : emailProperties.getAdminEmails()) {
+            for (String adminEmail : adminEmails) {
                 try {
                     emailServiceFactory.getEmailService().sendEmail(adminEmail, subject, htmlContent);
                     log.info("Admin email sent for event: {} order: {} to: {}", eventType, order.getId(), adminEmail);
                 } catch (Exception e) {
-                    log.error("Failed to send admin email to: {} for event: {} order: {}", adminEmail, eventType, order.getId(), e);
+                    log.error("Failed to send admin email to: {} for event: {} order: {}",
+                            adminEmail, eventType, order.getId(), e);
                 }
             }
         } catch (Exception e) {

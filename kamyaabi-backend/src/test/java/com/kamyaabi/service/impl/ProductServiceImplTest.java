@@ -9,9 +9,12 @@ import com.kamyaabi.entity.ProductImage;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.ProductMapper;
+import com.kamyaabi.repository.CartItemRepository;
 import com.kamyaabi.repository.CategoryRepository;
+import com.kamyaabi.repository.OrderItemRepository;
 import com.kamyaabi.repository.ProductImageRepository;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.repository.ReviewRepository;
 import com.kamyaabi.service.CloudinaryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +48,9 @@ class ProductServiceImplTest {
     @Mock private ProductImageRepository productImageRepository;
     @Mock private ProductMapper productMapper;
     @Mock private CloudinaryService cloudinaryService;
+    @Mock private ReviewRepository reviewRepository;
+    @Mock private CartItemRepository cartItemRepository;
+    @Mock private OrderItemRepository orderItemRepository;
 
     private ProductImageProperties imageProperties;
 
@@ -60,7 +66,8 @@ class ProductServiceImplTest {
     void setUp() {
         imageProperties = new ProductImageProperties();
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties);
+                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                reviewRepository, cartItemRepository, orderItemRepository);
 
         category = Category.builder().id(1L).name("Cashews").build();
         product = Product.builder()
@@ -175,7 +182,8 @@ class ProductServiceImplTest {
     void createProduct_tooManyImages_shouldThrowBadRequest() {
         imageProperties.setMaxCount(1);
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties);
+                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                reviewRepository, cartItemRepository, orderItemRepository);
         List<MultipartFile> many = List.of(image, image);
 
         assertThatThrownBy(() -> productService.createProduct(productRequest, many, 0))
@@ -273,7 +281,8 @@ class ProductServiceImplTest {
     void updateProduct_tooManyImages_shouldThrowBadRequest() {
         imageProperties.setMaxCount(1);
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties);
+                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                reviewRepository, cartItemRepository, orderItemRepository);
         product.getImages().add(ProductImage.builder().id(10L).publicId("a").imageUrl("u/a").isMain(true).displayOrder(0).build());
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
@@ -300,14 +309,61 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void deleteProduct_shouldSoftDelete() {
+    void deleteProduct_shouldHardDeleteAndCleanCloudinary() {
+        ProductImage img1 = ProductImage.builder().id(10L).publicId("pid-1").imageUrl("u1").isMain(true).displayOrder(0).build();
+        ProductImage img2 = ProductImage.builder().id(11L).publicId("pid-2").imageUrl("u2").isMain(false).displayOrder(1).build();
+        product.getImages().add(img1);
+        product.getImages().add(img2);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.save(product)).thenReturn(product);
+        when(cloudinaryService.deleteImage(any())).thenReturn(true);
+        when(reviewRepository.deleteAllByProductId(1L)).thenReturn(2);
+        when(cartItemRepository.deleteAllByProductId(1L)).thenReturn(1);
+        when(orderItemRepository.deleteAllByProductId(1L)).thenReturn(0);
 
         productService.deleteProduct(1L);
 
-        assertThat(product.getActive()).isFalse();
-        verify(productRepository).save(product);
+        verify(cloudinaryService).deleteImage("pid-1");
+        verify(cloudinaryService).deleteImage("pid-2");
+        verify(reviewRepository).deleteAllByProductId(1L);
+        verify(cartItemRepository).deleteAllByProductId(1L);
+        verify(orderItemRepository).deleteAllByProductId(1L);
+        verify(productRepository).delete(product);
+    }
+
+    @Test
+    void deleteProduct_shouldContinueWhenCloudinaryFails() {
+        ProductImage img = ProductImage.builder().id(10L).publicId("pid-1").imageUrl("u1").isMain(true).displayOrder(0).build();
+        product.getImages().add(img);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(cloudinaryService.deleteImage("pid-1")).thenThrow(new RuntimeException("network"));
+
+        productService.deleteProduct(1L);
+
+        verify(productRepository).delete(product);
+    }
+
+    @Test
+    void deleteProduct_shouldSkipImagesWithoutPublicId() {
+        ProductImage img = ProductImage.builder().id(10L).publicId(null).imageUrl("u1").isMain(true).displayOrder(0).build();
+        product.getImages().add(img);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        productService.deleteProduct(1L);
+
+        verify(cloudinaryService, never()).deleteImage(any());
+        verify(productRepository).delete(product);
+    }
+
+    @Test
+    void deleteProduct_shouldLogWhenCloudinaryReturnsFalse() {
+        ProductImage img = ProductImage.builder().id(10L).publicId("pid-1").imageUrl("u1").isMain(true).displayOrder(0).build();
+        product.getImages().add(img);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(cloudinaryService.deleteImage("pid-1")).thenReturn(false);
+
+        productService.deleteProduct(1L);
+
+        verify(productRepository).delete(product);
     }
 
     @Test

@@ -166,4 +166,10 @@ export const adminApi = {
 
   updateUserStatus: (id: number, status: 'ACTIVE' | 'BLOCKED' | 'REMOVED') =>
     axiosInstance.patch<ApiResponse<AdminUser>>(`/api/admin/users/${id}/status`, { status }),
+
+  getSettings: () =>
+    axiosInstance.get<ApiResponse<Record<string, string>>>('/api/admin/settings'),
+
+  updateSettings: (values: Record<string, string>) =>
+    axiosInstance.put<ApiResponse<Record<string, string>>>('/api/admin/settings', values),
 };

@@ -9,9 +9,12 @@ import com.kamyaabi.entity.ProductImage;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.ProductMapper;
+import com.kamyaabi.repository.CartItemRepository;
 import com.kamyaabi.repository.CategoryRepository;
+import com.kamyaabi.repository.OrderItemRepository;
 import com.kamyaabi.repository.ProductImageRepository;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.repository.ReviewRepository;
 import com.kamyaabi.service.CloudinaryService;
 import com.kamyaabi.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,19 +48,28 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final CloudinaryService cloudinaryService;
     private final ProductImageProperties imageProperties;
+    private final ReviewRepository reviewRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public ProductServiceImpl(ProductRepository productRepository,
                               CategoryRepository categoryRepository,
                               ProductImageRepository productImageRepository,
                               ProductMapper productMapper,
                               CloudinaryService cloudinaryService,
-                              ProductImageProperties imageProperties) {
+                              ProductImageProperties imageProperties,
+                              ReviewRepository reviewRepository,
+                              CartItemRepository cartItemRepository,
+                              OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productImageRepository = productImageRepository;
         this.productMapper = productMapper;
         this.cloudinaryService = cloudinaryService;
         this.imageProperties = imageProperties;
+        this.reviewRepository = reviewRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     @Override
@@ -262,14 +274,37 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {"products", "productById", "productBySlug",
+            "featuredProducts", "productsByCategory"}, allEntries = true)
     public void deleteProduct(Long id) {
-        log.info("Deleting product: {}", id);
+        log.info("Hard-deleting product: {}", id);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
-        product.setActive(false);
-        productRepository.save(product);
-        log.info("Product soft-deleted: {}", id);
+
+        List<ProductImage> images = new ArrayList<>(product.getImages());
+        for (ProductImage img : images) {
+            String publicId = img.getPublicId();
+            if (publicId == null || publicId.isBlank()) continue;
+            try {
+                boolean deleted = cloudinaryService.deleteImage(publicId);
+                if (!deleted) {
+                    log.warn("Cloudinary refused delete for publicId={} (product {}); "
+                            + "DB record will still be removed.", publicId, id);
+                }
+            } catch (RuntimeException ex) {
+                log.warn("Cloudinary delete threw for publicId={} (product {}); "
+                        + "DB record will still be removed.", publicId, id, ex);
+            }
+        }
+
+        int reviews = reviewRepository.deleteAllByProductId(id);
+        int cartItems = cartItemRepository.deleteAllByProductId(id);
+        int orderItems = orderItemRepository.deleteAllByProductId(id);
+        log.info("Cascade-deleted dependents for product {}: reviews={}, cartItems={}, orderItems={}",
+                id, reviews, cartItems, orderItems);
+
+        productRepository.delete(product);
+        log.info("Product hard-deleted: {}", id);
     }
 
     @Override

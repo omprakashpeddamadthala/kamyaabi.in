@@ -23,7 +23,7 @@ services:
       EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
       EMAIL_FROM: ${EMAIL_FROM:-noreply@kamyaabi.in}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Kamyaabi}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kamyaabi.in}
+      # ADMIN_EMAIL removed — admin recipients are resolved from the users table.
       DEVELOPER_EMAILS: ${DEVELOPER_EMAILS:-}
       APP_SUPPORT_EMAIL: ${APP_SUPPORT_EMAIL:-support@kamyaabi.in}
       APP_SUPPORT_URL: ${APP_SUPPORT_URL:-https://kamyaabi.in}
