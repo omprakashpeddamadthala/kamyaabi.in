@@ -37,8 +37,8 @@ class ProductMapperTest {
 
         ProductResponse response = mapper.toResponse(product);
 
-        assertThat(response.getMainImageUrl()).isEqualTo("http://legacy");
-        assertThat(response.getImages()).isEmpty();
+        assertThat(response.mainImageUrl()).isEqualTo("http://legacy");
+        assertThat(response.images()).isEmpty();
     }
 
     @Test
@@ -54,8 +54,8 @@ class ProductMapperTest {
 
         ProductResponse response = mapper.toResponse(product);
 
-        assertThat(response.getMainImageUrl()).isEqualTo("u/b");
-        assertThat(response.getImages()).hasSize(2);
+        assertThat(response.mainImageUrl()).isEqualTo("u/b");
+        assertThat(response.images()).hasSize(2);
     }
 
     @Test
@@ -69,7 +69,7 @@ class ProductMapperTest {
 
         ProductResponse response = mapper.toResponse(product);
 
-        assertThat(response.getMainImageUrl()).isEqualTo("u/a");
+        assertThat(response.mainImageUrl()).isEqualTo("u/a");
     }
 
     @Test

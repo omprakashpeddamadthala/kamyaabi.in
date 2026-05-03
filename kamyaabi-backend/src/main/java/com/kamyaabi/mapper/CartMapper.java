@@ -18,7 +18,7 @@ public class CartMapper {
                 .toList();
 
         BigDecimal totalAmount = itemResponses.stream()
-                .map(CartItemResponse::getSubtotal)
+                .map(CartItemResponse::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int totalItems = cart.getItems().stream()

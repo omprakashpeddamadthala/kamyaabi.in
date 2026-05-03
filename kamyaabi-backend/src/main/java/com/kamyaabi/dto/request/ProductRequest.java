@@ -3,50 +3,46 @@ package com.kamyaabi.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductRequest {
+public record ProductRequest(
+        @NotBlank(message = "Product name is required")
+        String name,
 
-    @NotBlank(message = "Product name is required")
-    private String name;
+        String description,
 
-    private String description;
+        @NotNull(message = "Price is required")
+        @Positive(message = "Price must be positive")
+        BigDecimal price,
 
-    @NotNull(message = "Price is required")
-    @Positive(message = "Price must be positive")
-    private BigDecimal price;
+        BigDecimal discountPrice,
 
-    private BigDecimal discountPrice;
+        String imageUrl,
 
-    private String imageUrl;
+        @NotNull(message = "Category ID is required")
+        Long categoryId,
 
-    @NotNull(message = "Category ID is required")
-    private Long categoryId;
+        @NotNull(message = "Stock is required")
+        @Positive(message = "Stock must be positive")
+        Integer stock,
 
-    @NotNull(message = "Stock is required")
-    @Positive(message = "Stock must be positive")
-    private Integer stock;
+        String weight,
 
-    private String weight;
+        String unit,
 
-    private String unit;
+        String shelfLife,
 
-    private String shelfLife;
+        Map<String, String> nutritionalInfo,
 
-    private java.util.Map<String, String> nutritionalInfo;
+        List<String> howToUse,
 
-    private java.util.List<String> howToUse;
+        List<String> storageTips,
 
-    private java.util.List<String> storageTips;
-
-    private Boolean active;
+        Boolean active
+) {
 }

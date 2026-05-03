@@ -31,6 +31,6 @@ class SettingsControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData()).containsEntry(SettingsService.PRODUCTS_PER_PAGE, "8");
+        assertThat(response.getBody().data()).containsEntry(SettingsService.PRODUCTS_PER_PAGE, "8");
     }
 }

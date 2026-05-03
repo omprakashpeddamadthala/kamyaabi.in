@@ -19,11 +19,11 @@ class UserMapperTest {
 
         UserResponse response = userMapper.toResponse(user);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.in");
-        assertThat(response.getName()).isEqualTo("Test User");
-        assertThat(response.getAvatarUrl()).isEqualTo("http://avatar.url");
-        assertThat(response.getRole()).isEqualTo("USER");
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.email()).isEqualTo("test@kamyaabi.in");
+        assertThat(response.name()).isEqualTo("Test User");
+        assertThat(response.avatarUrl()).isEqualTo("http://avatar.url");
+        assertThat(response.role()).isEqualTo("USER");
     }
 
     @Test
@@ -35,6 +35,6 @@ class UserMapperTest {
 
         UserResponse response = userMapper.toResponse(user);
 
-        assertThat(response.getRole()).isEqualTo("ADMIN");
+        assertThat(response.role()).isEqualTo("ADMIN");
     }
 }

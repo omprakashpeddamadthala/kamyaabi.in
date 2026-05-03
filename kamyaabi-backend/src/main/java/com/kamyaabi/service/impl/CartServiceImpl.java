@@ -54,16 +54,16 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse addItemToCart(Long userId, CartItemRequest request) {
-        log.info("Adding item to cart for user: {}, product: {}", userId, request.getProductId());
+        log.info("Adding item to cart for user: {}, product: {}", userId, request.productId());
         Cart cart = getOrCreateCart(userId);
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product", request.getProductId()));
+        Product product = productRepository.findById(request.productId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product", request.productId()));
 
         if (!product.getActive()) {
             throw new BadRequestException("Product is not available");
         }
 
-        if (product.getStock() < request.getQuantity()) {
+        if (product.getStock() < request.quantity()) {
             throw new BadRequestException("Insufficient stock. Available: " + product.getStock());
         }
 
@@ -72,7 +72,7 @@ public class CartServiceImpl implements CartService {
 
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
-            int newQuantity = item.getQuantity() + request.getQuantity();
+            int newQuantity = item.getQuantity() + request.quantity();
             if (product.getStock() < newQuantity) {
                 throw new BadRequestException("Insufficient stock. Available: " + product.getStock());
             }
@@ -82,7 +82,7 @@ public class CartServiceImpl implements CartService {
             CartItem newItem = CartItem.builder()
                     .cart(cart)
                     .product(product)
-                    .quantity(request.getQuantity())
+                    .quantity(request.quantity())
                     .build();
             cart.getItems().add(newItem);
             cartRepository.save(cart);

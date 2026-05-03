@@ -118,39 +118,39 @@ public class ProductMapper {
 
     public Product toEntity(ProductRequest request, Category category) {
         return Product.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .price(request.getPrice())
-                .discountPrice(request.getDiscountPrice())
-                .imageUrl(request.getImageUrl())
+                .name(request.name())
+                .description(request.description())
+                .price(request.price())
+                .discountPrice(request.discountPrice())
+                .imageUrl(request.imageUrl())
                 .category(category)
-                .stock(request.getStock())
-                .weight(request.getWeight())
-                .unit(request.getUnit())
-                .shelfLife(request.getShelfLife())
-                .nutritionalInfoJson(writeJson(request.getNutritionalInfo()))
-                .howToUseJson(writeJson(request.getHowToUse()))
-                .storageTipsJson(writeJson(request.getStorageTips()))
-                .active(request.getActive() != null ? request.getActive() : true)
+                .stock(request.stock())
+                .weight(request.weight())
+                .unit(request.unit())
+                .shelfLife(request.shelfLife())
+                .nutritionalInfoJson(writeJson(request.nutritionalInfo()))
+                .howToUseJson(writeJson(request.howToUse()))
+                .storageTipsJson(writeJson(request.storageTips()))
+                .active(request.active() != null ? request.active() : true)
                 .build();
     }
 
     public void updateEntity(Product product, ProductRequest request, Category category) {
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setDiscountPrice(request.getDiscountPrice());
-        product.setImageUrl(request.getImageUrl());
+        product.setName(request.name());
+        product.setDescription(request.description());
+        product.setPrice(request.price());
+        product.setDiscountPrice(request.discountPrice());
+        product.setImageUrl(request.imageUrl());
         product.setCategory(category);
-        product.setStock(request.getStock());
-        product.setWeight(request.getWeight());
-        product.setUnit(request.getUnit());
-        product.setShelfLife(request.getShelfLife());
-        product.setNutritionalInfoJson(writeJson(request.getNutritionalInfo()));
-        product.setHowToUseJson(writeJson(request.getHowToUse()));
-        product.setStorageTipsJson(writeJson(request.getStorageTips()));
-        if (request.getActive() != null) {
-            product.setActive(request.getActive());
+        product.setStock(request.stock());
+        product.setWeight(request.weight());
+        product.setUnit(request.unit());
+        product.setShelfLife(request.shelfLife());
+        product.setNutritionalInfoJson(writeJson(request.nutritionalInfo()));
+        product.setHowToUseJson(writeJson(request.howToUse()));
+        product.setStorageTipsJson(writeJson(request.storageTips()));
+        if (request.active() != null) {
+            product.setActive(request.active());
         }
     }
 }

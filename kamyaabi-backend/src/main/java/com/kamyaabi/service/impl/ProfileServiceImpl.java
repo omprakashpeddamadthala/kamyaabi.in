@@ -47,9 +47,9 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
-        user.setFirstName(request.getFirstName().trim());
-        user.setLastName(request.getLastName().trim());
-        user.setName(request.getFirstName().trim() + " " + request.getLastName().trim());
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+        user.setName(request.firstName().trim() + " " + request.lastName().trim());
 
         User saved = userRepository.save(user);
         log.info("Profile updated for user: {}", saved.getId());

@@ -60,8 +60,8 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
-        Address address = addressRepository.findById(request.getShippingAddressId())
-                .orElseThrow(() -> new ResourceNotFoundException("Address", request.getShippingAddressId()));
+        Address address = addressRepository.findById(request.shippingAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address", request.shippingAddressId()));
 
         if (!address.getUser().getId().equals(userId)) {
             throw new BadRequestException("Address does not belong to user");

@@ -46,13 +46,13 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         ApiErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(404);
-        assertThat(body.getError()).isEqualTo("Not Found");
-        assertThat(body.getMessage()).isEqualTo("Product not found");
-        assertThat(body.getPath()).isEqualTo("/api/test");
-        assertThat(body.getTraceId()).isEqualTo("test-trace-id");
-        assertThat(body.getTimestamp()).isNotNull();
-        assertThat(body.getFieldErrors()).isNull();
+        assertThat(body.status()).isEqualTo(404);
+        assertThat(body.error()).isEqualTo("Not Found");
+        assertThat(body.message()).isEqualTo("Product not found");
+        assertThat(body.path()).isEqualTo("/api/test");
+        assertThat(body.traceId()).isEqualTo("test-trace-id");
+        assertThat(body.timestamp()).isNotNull();
+        assertThat(body.fieldErrors()).isNull();
     }
 
     @Test
@@ -62,7 +62,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Invalid input");
+        assertThat(response.getBody().message()).isEqualTo("Invalid input");
     }
 
     @Test
@@ -72,7 +72,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Category already exists");
+        assertThat(response.getBody().message()).isEqualTo("Category already exists");
     }
 
     @Test
@@ -82,7 +82,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Payment failed");
+        assertThat(response.getBody().message()).isEqualTo("Payment failed");
     }
 
     @Test
@@ -92,7 +92,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Cannot cancel shipped order");
+        assertThat(response.getBody().message()).isEqualTo("Cannot cancel shipped order");
     }
 
     @Test
@@ -102,7 +102,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Token expired");
+        assertThat(response.getBody().message()).isEqualTo("Token expired");
     }
 
     @Test
@@ -112,7 +112,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).isEqualTo("Access denied");
+        assertThat(response.getBody().message()).isEqualTo("Access denied");
     }
 
     @Test
@@ -129,8 +129,8 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         ApiErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.getMessage()).isEqualTo("Validation failed");
-        assertThat(body.getFieldErrors())
+        assertThat(body.message()).isEqualTo("Validation failed");
+        assertThat(body.fieldErrors())
                 .containsEntry("name", "must not be blank")
                 .containsEntry("price", "must be positive");
     }
@@ -148,9 +148,9 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
         ApiErrorResponse body = response.getBody();
         assertThat(body).isNotNull();
-        assertThat(body.getStatus()).isEqualTo(413);
-        assertThat(body.getMessage()).isEqualTo("Uploaded file exceeds the configured size limit");
-        assertThat(body.getTraceId()).isEqualTo("test-trace-id");
+        assertThat(body.status()).isEqualTo(413);
+        assertThat(body.message()).isEqualTo("Uploaded file exceeds the configured size limit");
+        assertThat(body.traceId()).isEqualTo("test-trace-id");
     }
 
     @Test
@@ -160,7 +160,7 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).contains("unexpected error");
-        assertThat(response.getBody().getTraceId()).isEqualTo("test-trace-id");
+        assertThat(response.getBody().message()).contains("unexpected error");
+        assertThat(response.getBody().traceId()).isEqualTo("test-trace-id");
     }
 }

@@ -21,11 +21,11 @@ class PaymentMapperTest {
 
         PaymentResponse response = paymentMapper.toResponse(payment);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getRazorpayOrderId()).isEqualTo("order_123");
-        assertThat(response.getRazorpayPaymentId()).isEqualTo("pay_123");
-        assertThat(response.getAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.razorpayOrderId()).isEqualTo("order_123");
+        assertThat(response.razorpayPaymentId()).isEqualTo("pay_123");
+        assertThat(response.amount()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.status()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -37,7 +37,7 @@ class PaymentMapperTest {
 
         PaymentResponse response = paymentMapper.toResponse(payment);
 
-        assertThat(response.getStatus()).isEqualTo("PENDING");
+        assertThat(response.status()).isEqualTo("PENDING");
     }
 
     @Test
@@ -49,6 +49,6 @@ class PaymentMapperTest {
 
         PaymentResponse response = paymentMapper.toResponse(payment);
 
-        assertThat(response.getStatus()).isEqualTo("FAILED");
+        assertThat(response.status()).isEqualTo("FAILED");
     }
 }

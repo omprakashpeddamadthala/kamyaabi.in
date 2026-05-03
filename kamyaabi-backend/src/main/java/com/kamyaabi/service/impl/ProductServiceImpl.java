@@ -17,6 +17,8 @@ import com.kamyaabi.repository.ProductRepository;
 import com.kamyaabi.repository.ReviewRepository;
 import com.kamyaabi.service.CloudinaryService;
 import com.kamyaabi.service.ProductService;
+import com.kamyaabi.util.CacheNames;
+import com.kamyaabi.util.Slugifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -27,20 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService {
-
-    private static final Pattern NON_ALPHANUM = Pattern.compile("[^a-z0-9]+");
-    private static final Pattern EDGES = Pattern.compile("(^-|-$)");
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -74,7 +71,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = CacheNames.PRODUCTS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
         log.debug("Fetching all active products, page: {}", pageable.getPageNumber());
         return productRepository.findByActiveTrue(pageable)
@@ -83,7 +80,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "productsByCategory", key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.debug("Fetching products by category: {}", categoryId);
         return productRepository.findByCategoryIdAndActiveTrue(categoryId, pageable)
@@ -100,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "productById", key = "#id")
+    @Cacheable(value = CacheNames.PRODUCT_BY_ID, key = "#id")
     public ProductResponse getProductById(Long id) {
         log.debug("Fetching product by id: {}", id);
         Product product = productRepository.findById(id)
@@ -110,7 +107,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "productBySlug", key = "#slug")
+    @Cacheable(value = CacheNames.PRODUCT_BY_SLUG, key = "#slug")
     public ProductResponse getProductBySlug(String slug) {
         log.debug("Fetching product by slug: {}", slug);
         Product product = productRepository.findBySlug(slug)
@@ -134,7 +131,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "featuredProducts")
+    @Cacheable(value = CacheNames.FEATURED_PRODUCTS)
     public List<ProductResponse> getFeaturedProducts() {
         log.debug("Fetching featured products");
         return productRepository.findTop8ByActiveTrueOrderByCreatedAtDesc()
@@ -144,11 +141,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public ProductResponse createProduct(ProductRequest request,
                                          List<MultipartFile> images,
                                          int mainImageIndex) {
-        log.info("Creating new product: {}", request.getName());
+        log.info("Creating new product: {}", request.name());
         validateDiscountPrice(request);
         List<MultipartFile> files = images == null ? Collections.emptyList() : images;
         if (files.isEmpty()) {
@@ -160,8 +157,8 @@ public class ProductServiceImpl implements ProductService {
         }
         int mainIndex = Math.max(0, Math.min(mainImageIndex, files.size() - 1));
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId()));
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
 
         List<CloudinaryService.UploadResult> uploaded = new ArrayList<>(files.size());
         try {
@@ -169,7 +166,7 @@ public class ProductServiceImpl implements ProductService {
                 uploaded.add(cloudinaryService.uploadImage(file));
             }
             Product product = productMapper.toEntity(request, category);
-            product.setSlug(resolveSlug(null, request.getName(), null));
+            product.setSlug(resolveSlug(null, request.name(), null));
             for (int i = 0; i < uploaded.size(); i++) {
                 CloudinaryService.UploadResult ur = uploaded.get(i);
                 ProductImage img = ProductImage.builder()
@@ -195,7 +192,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.PRODUCT_BY_ID, CacheNames.PRODUCT_BY_SLUG, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public ProductResponse updateProduct(Long id,
                                          ProductRequest request,
                                          List<MultipartFile> newImages,
@@ -204,13 +201,13 @@ public class ProductServiceImpl implements ProductService {
         validateDiscountPrice(request);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category", request.getCategoryId()));
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
         String previousName = product.getName();
         productMapper.updateEntity(product, request, category);
         if (product.getSlug() == null || product.getSlug().isBlank()
-                || (previousName != null && !previousName.equals(request.getName()))) {
-            product.setSlug(resolveSlug(null, request.getName(), product.getId()));
+                || (previousName != null && !previousName.equals(request.name()))) {
+            product.setSlug(resolveSlug(null, request.name(), product.getId()));
         }
 
         List<MultipartFile> toUpload = newImages == null ? Collections.emptyList() : newImages;
@@ -265,17 +262,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void validateDiscountPrice(ProductRequest request) {
-        if (request.getDiscountPrice() != null
-                && request.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0
-                && request.getPrice() != null
-                && request.getDiscountPrice().compareTo(request.getPrice()) >= 0) {
+        if (request.discountPrice() != null
+                && request.discountPrice().compareTo(BigDecimal.ZERO) > 0
+                && request.price() != null
+                && request.discountPrice().compareTo(request.price()) >= 0) {
             throw new BadRequestException("Discount price must be less than the original price (MRP)");
         }
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug",
-            "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.PRODUCT_BY_ID, CacheNames.PRODUCT_BY_SLUG,
+            CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public void deleteProduct(Long id) {
         log.info("Hard-deleting product: {}", id);
         Product product = productRepository.findById(id)
@@ -329,7 +326,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.PRODUCT_BY_ID, CacheNames.PRODUCT_BY_SLUG, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public ProductResponse restoreProduct(Long id) {
         log.info("Restoring product: {}", id);
         Product product = productRepository.findById(id)
@@ -340,7 +337,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.PRODUCT_BY_ID, CacheNames.PRODUCT_BY_SLUG, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public ProductResponse setProductActive(Long id, boolean active) {
         log.info("Toggling product {} active -> {}", id, active);
         Product product = productRepository.findById(id)
@@ -351,7 +348,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @CacheEvict(value = {"products", "productById", "productBySlug", "featuredProducts", "productsByCategory"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.PRODUCT_BY_ID, CacheNames.PRODUCT_BY_SLUG, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
     public void deleteProductImage(Long productId, Long imageId) {
         log.info("Deleting image {} from product {}", imageId, productId);
         ProductImage image = productImageRepository.findByIdAndProductId(imageId, productId)
@@ -379,7 +376,7 @@ public class ProductServiceImpl implements ProductService {
     String resolveSlug(String requested, String name, Long currentId) {
         String base = (requested != null && !requested.isBlank())
                 ? requested.trim().toLowerCase(Locale.ROOT)
-                : slugify(name);
+                : Slugifier.slugify(name);
         if (base.isEmpty()) {
             throw new BadRequestException("Unable to derive slug from product name");
         }
@@ -398,11 +395,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public static String slugify(String name) {
-        if (name == null) return "";
-        String normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
-                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .toLowerCase(Locale.ROOT);
-        String dashed = NON_ALPHANUM.matcher(normalized).replaceAll("-");
-        return EDGES.matcher(dashed).replaceAll("");
+        return Slugifier.slugify(name);
     }
 }

@@ -37,12 +37,12 @@ class OrderMapperTest {
 
         OrderResponse response = orderMapper.toResponse(order);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
-        assertThat(response.getStatus()).isEqualTo("PENDING");
-        assertThat(response.getShippingAddress()).isNotNull();
-        assertThat(response.getShippingAddress().getFullName()).isEqualTo("Test");
-        assertThat(response.getItems()).hasSize(1);
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.totalAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.status()).isEqualTo("PENDING");
+        assertThat(response.shippingAddress()).isNotNull();
+        assertThat(response.shippingAddress().fullName()).isEqualTo("Test");
+        assertThat(response.items()).hasSize(1);
     }
 
     @Test
@@ -53,8 +53,8 @@ class OrderMapperTest {
 
         OrderResponse response = orderMapper.toResponse(order);
 
-        assertThat(response.getShippingAddress()).isNull();
-        assertThat(response.getPayment()).isNull();
+        assertThat(response.shippingAddress()).isNull();
+        assertThat(response.payment()).isNull();
     }
 
     @Test
@@ -68,9 +68,9 @@ class OrderMapperTest {
 
         OrderResponse response = orderMapper.toResponse(order);
 
-        assertThat(response.getPayment()).isNotNull();
-        assertThat(response.getPayment().getRazorpayOrderId()).isEqualTo("order_123");
-        assertThat(response.getPayment().getStatus()).isEqualTo("COMPLETED");
+        assertThat(response.payment()).isNotNull();
+        assertThat(response.payment().razorpayOrderId()).isEqualTo("order_123");
+        assertThat(response.payment().status()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -81,11 +81,11 @@ class OrderMapperTest {
 
         OrderItemResponse response = orderMapper.toItemResponse(item);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getProductId()).isEqualTo(1L);
-        assertThat(response.getProductName()).isEqualTo("Cashews");
-        assertThat(response.getQuantity()).isEqualTo(2);
-        assertThat(response.getPrice()).isEqualByComparingTo(new BigDecimal("749.00"));
-        assertThat(response.getSubtotal()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.productId()).isEqualTo(1L);
+        assertThat(response.productName()).isEqualTo("Cashews");
+        assertThat(response.quantity()).isEqualTo(2);
+        assertThat(response.price()).isEqualByComparingTo(new BigDecimal("749.00"));
+        assertThat(response.subtotal()).isEqualByComparingTo(new BigDecimal("1498.00"));
     }
 }

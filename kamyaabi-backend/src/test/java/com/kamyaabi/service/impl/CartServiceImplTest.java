@@ -55,7 +55,7 @@ class CartServiceImplTest {
 
         CartResponse result = cartService.getCart(1L);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.id()).isEqualTo(1L);
     }
 
     @Test

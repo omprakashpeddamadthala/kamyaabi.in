@@ -22,10 +22,10 @@ class CartMapperTest {
 
         CartResponse response = cartMapper.toResponse(cart);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getItems()).isEmpty();
-        assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(response.getTotalItems()).isEqualTo(0);
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.items()).isEmpty();
+        assertThat(response.totalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(response.totalItems()).isEqualTo(0);
     }
 
     @Test
@@ -44,9 +44,9 @@ class CartMapperTest {
 
         CartResponse response = cartMapper.toResponse(cart);
 
-        assertThat(response.getItems()).hasSize(2);
-        assertThat(response.getTotalItems()).isEqualTo(3);
-        assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("2497.00"));
+        assertThat(response.items()).hasSize(2);
+        assertThat(response.totalItems()).isEqualTo(3);
+        assertThat(response.totalAmount()).isEqualByComparingTo(new BigDecimal("2497.00"));
     }
 
     @Test
@@ -58,10 +58,10 @@ class CartMapperTest {
 
         CartItemResponse response = cartMapper.toItemResponse(item);
 
-        assertThat(response.getProductId()).isEqualTo(1L);
-        assertThat(response.getProductName()).isEqualTo("Cashews");
-        assertThat(response.getQuantity()).isEqualTo(3);
-        assertThat(response.getSubtotal()).isEqualByComparingTo(new BigDecimal("2247.00"));
+        assertThat(response.productId()).isEqualTo(1L);
+        assertThat(response.productName()).isEqualTo("Cashews");
+        assertThat(response.quantity()).isEqualTo(3);
+        assertThat(response.subtotal()).isEqualByComparingTo(new BigDecimal("2247.00"));
     }
 
     @Test
@@ -73,6 +73,6 @@ class CartMapperTest {
 
         CartItemResponse response = cartMapper.toItemResponse(item);
 
-        assertThat(response.getSubtotal()).isEqualByComparingTo(new BigDecimal("1998.00"));
+        assertThat(response.subtotal()).isEqualByComparingTo(new BigDecimal("1998.00"));
     }
 }

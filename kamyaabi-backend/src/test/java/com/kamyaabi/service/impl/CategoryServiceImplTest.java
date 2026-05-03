@@ -55,7 +55,7 @@ class CategoryServiceImplTest {
         List<CategoryResponse> result = categoryService.getAllCategories();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getName()).isEqualTo("Cashews");
+        assertThat(result.get(0).name()).isEqualTo("Cashews");
     }
 
     @Test
@@ -65,7 +65,7 @@ class CategoryServiceImplTest {
 
         CategoryResponse result = categoryService.getCategoryById(1L);
 
-        assertThat(result.getName()).isEqualTo("Cashews");
+        assertThat(result.name()).isEqualTo("Cashews");
     }
 
     @Test
@@ -158,7 +158,7 @@ class CategoryServiceImplTest {
 
         CategoryResponse result = categoryService.updateCategory(1L, categoryRequest);
 
-        assertThat(result.getName()).isEqualTo("Cashews");
+        assertThat(result.name()).isEqualTo("Cashews");
     }
 
     @Test

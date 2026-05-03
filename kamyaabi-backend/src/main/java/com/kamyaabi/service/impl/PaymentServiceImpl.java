@@ -118,28 +118,28 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse verifyPayment(PaymentVerifyRequest request) {
-        log.info("Verifying payment for order: {}", request.getOrderId());
+        log.info("Verifying payment for order: {}", request.orderId());
 
-        Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Razorpay order: " + request.getRazorpayOrderId()));
+        Payment payment = paymentRepository.findByRazorpayOrderId(request.razorpayOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Razorpay order: " + request.razorpayOrderId()));
 
         if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
-            log.info("Payment already completed for order: {}, skipping duplicate verification", request.getOrderId());
+            log.info("Payment already completed for order: {}, skipping duplicate verification", request.orderId());
             return paymentMapper.toResponse(payment);
         }
 
         try {
             JSONObject attributes = new JSONObject();
-            attributes.put("razorpay_order_id", request.getRazorpayOrderId());
-            attributes.put("razorpay_payment_id", request.getRazorpayPaymentId());
-            attributes.put("razorpay_signature", request.getRazorpaySignature());
+            attributes.put("razorpay_order_id", request.razorpayOrderId());
+            attributes.put("razorpay_payment_id", request.razorpayPaymentId());
+            attributes.put("razorpay_signature", request.razorpaySignature());
 
             boolean isValid = Utils.verifyPaymentSignature(attributes,
                     appProperties.getRazorpay().getKeySecret());
 
             if (isValid) {
-                payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
-                payment.setRazorpaySignature(request.getRazorpaySignature());
+                payment.setRazorpayPaymentId(request.razorpayPaymentId());
+                payment.setRazorpaySignature(request.razorpaySignature());
                 payment.setStatus(Payment.PaymentStatus.COMPLETED);
 
                 Order order = payment.getOrder();
@@ -147,7 +147,7 @@ public class PaymentServiceImpl implements PaymentService {
                 orderRepository.save(order);
 
                 Payment saved = paymentRepository.save(payment);
-                log.info("Payment verified successfully for order: {}", request.getOrderId());
+                log.info("Payment verified successfully for order: {}", request.orderId());
 
                 orderEventPublisher.publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
 

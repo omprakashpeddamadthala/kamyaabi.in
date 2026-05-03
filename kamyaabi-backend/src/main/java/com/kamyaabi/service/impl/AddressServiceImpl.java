@@ -126,12 +126,12 @@ public class AddressServiceImpl implements AddressService {
     }
 
     private void validateAddress(AddressRequest request) {
-        if (!addressValidator.isValidState(request.getState())) {
-            throw new BadRequestException("Invalid state: " + request.getState());
+        if (!addressValidator.isValidState(request.state())) {
+            throw new BadRequestException("Invalid state: " + request.state());
         }
-        if (!addressValidator.isValidCityForState(request.getState(), request.getCity())) {
+        if (!addressValidator.isValidCityForState(request.state(), request.city())) {
             throw new BadRequestException(
-                    "Invalid city '" + request.getCity() + "' for state '" + request.getState() + "'");
+                    "Invalid city '" + request.city() + "' for state '" + request.state() + "'");
         }
     }
 }

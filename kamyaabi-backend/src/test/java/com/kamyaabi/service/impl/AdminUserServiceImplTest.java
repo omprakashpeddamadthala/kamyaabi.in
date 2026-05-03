@@ -54,8 +54,8 @@ class AdminUserServiceImplTest {
         Page<AdminUserResponse> page = service.getAllUsers(null, pageable);
 
         assertThat(page.getContent()).hasSize(2);
-        assertThat(page.getContent().get(0).getEmail()).isEqualTo("admin@example.com");
-        assertThat(page.getContent().get(0).getStatus()).isEqualTo("ACTIVE");
+        assertThat(page.getContent().get(0).email()).isEqualTo("admin@example.com");
+        assertThat(page.getContent().get(0).status()).isEqualTo("ACTIVE");
         verify(userRepository, never()).findByEmailContainingIgnoreCaseOrNameContainingIgnoreCase(
                 any(), any(), any());
     }
@@ -80,7 +80,7 @@ class AdminUserServiceImplTest {
         Page<AdminUserResponse> page = service.getAllUsers("ad", pageable);
 
         assertThat(page.getContent()).hasSize(1);
-        assertThat(page.getContent().get(0).getEmail()).isEqualTo("admin@example.com");
+        assertThat(page.getContent().get(0).email()).isEqualTo("admin@example.com");
     }
 
     @Test
@@ -92,7 +92,7 @@ class AdminUserServiceImplTest {
 
         Page<AdminUserResponse> page = service.getAllUsers(null, pageable);
 
-        assertThat(page.getContent().get(0).getStatus()).isEqualTo("ACTIVE");
+        assertThat(page.getContent().get(0).status()).isEqualTo("ACTIVE");
     }
 
     @Test
@@ -102,7 +102,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserRole(2L, 1L, User.Role.ADMIN);
 
-        assertThat(response.getRole()).isEqualTo("ADMIN");
+        assertThat(response.role()).isEqualTo("ADMIN");
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
@@ -118,7 +118,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserRole(5L, 1L, User.Role.USER);
 
-        assertThat(response.getRole()).isEqualTo("USER");
+        assertThat(response.role()).isEqualTo("USER");
     }
 
     @Test
@@ -151,7 +151,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.BLOCKED);
 
-        assertThat(response.getStatus()).isEqualTo("BLOCKED");
+        assertThat(response.status()).isEqualTo("BLOCKED");
     }
 
     @Test
@@ -162,7 +162,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.ACTIVE);
 
-        assertThat(response.getStatus()).isEqualTo("ACTIVE");
+        assertThat(response.status()).isEqualTo("ACTIVE");
     }
 
     @Test
@@ -172,7 +172,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.REMOVED);
 
-        assertThat(response.getStatus()).isEqualTo("REMOVED");
+        assertThat(response.status()).isEqualTo("REMOVED");
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         assertThat(captor.getValue().getStatus()).isEqualTo(User.Status.REMOVED);
@@ -186,7 +186,7 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserStatus(2L, 1L, User.Status.ACTIVE);
 
-        assertThat(response.getStatus()).isEqualTo("ACTIVE");
+        assertThat(response.status()).isEqualTo("ACTIVE");
     }
 
     @Test
@@ -219,6 +219,6 @@ class AdminUserServiceImplTest {
 
         AdminUserResponse response = service.updateUserRole(2L, null, User.Role.ADMIN);
 
-        assertThat(response.getRole()).isEqualTo("ADMIN");
+        assertThat(response.role()).isEqualTo("ADMIN");
     }
 }

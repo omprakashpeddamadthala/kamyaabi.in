@@ -24,10 +24,10 @@ public class CategoryMapper {
 
     public Category toEntity(CategoryRequest request) {
         return Category.builder()
-                .name(request.getName())
-                .slug(request.getSlug())
-                .description(request.getDescription())
-                .imageUrl(request.getImageUrl())
+                .name(request.name())
+                .slug(request.slug())
+                .description(request.description())
+                .imageUrl(request.imageUrl())
                 .build();
     }
 }

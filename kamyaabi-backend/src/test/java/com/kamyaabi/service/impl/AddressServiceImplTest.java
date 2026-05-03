@@ -63,8 +63,8 @@ class AddressServiceImplTest {
         List<AddressResponse> result = addressService.getUserAddresses(1L);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getFullName()).isEqualTo("Test User");
-        assertThat(result.get(0).getAddressLine2()).isEqualTo("Apt 4");
+        assertThat(result.get(0).fullName()).isEqualTo("Test User");
+        assertThat(result.get(0).addressLine2()).isEqualTo("Apt 4");
     }
 
     @Test
@@ -78,7 +78,7 @@ class AddressServiceImplTest {
 
         AddressResponse result = addressService.createAddress(1L, addressRequest);
 
-        assertThat(result.getFullName()).isEqualTo("Test User");
+        assertThat(result.fullName()).isEqualTo("Test User");
         verify(addressValidator).isValidState("Maharashtra");
         verify(addressValidator).isValidCityForState("Maharashtra", "Mumbai");
         verify(addressRepository).save(address);
@@ -126,7 +126,7 @@ class AddressServiceImplTest {
 
         AddressResponse result = addressService.updateAddress(1L, 1L, addressRequest);
 
-        assertThat(result.getFullName()).isEqualTo("Test User");
+        assertThat(result.fullName()).isEqualTo("Test User");
         verify(addressValidator).isValidState("Maharashtra");
         verify(addressMapper).updateEntity(address, addressRequest);
     }
@@ -183,7 +183,7 @@ class AddressServiceImplTest {
         doAnswer(inv -> {
             Address a = inv.getArgument(0);
             AddressRequest r = inv.getArgument(1);
-            a.setIsDefault(r.getIsDefault());
+            a.setIsDefault(r.isDefault());
             return null;
         }).when(addressMapper).updateEntity(address, defaultRequest);
         when(addressRepository.findByUserId(1L)).thenReturn(List.of(address, existingDefault));
@@ -267,7 +267,7 @@ class AddressServiceImplTest {
 
         AddressResponse result = addressService.setDefaultAddress(1L, 1L);
 
-        assertThat(result.getIsDefault()).isTrue();
+        assertThat(result.isDefault()).isTrue();
         assertThat(existingDefault.getIsDefault()).isFalse();
         assertThat(address.getIsDefault()).isTrue();
         verify(addressRepository, atLeast(2)).save(any(Address.class));
