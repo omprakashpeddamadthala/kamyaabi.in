@@ -100,8 +100,8 @@ class AuthServiceImplTest {
 
         AuthResponse response = authService.processGoogleUser(userInfo);
 
-        assertThat(response.getToken()).isEqualTo("jwt-token");
-        assertThat(response.getUser()).isEqualTo(userResponse);
+        assertThat(response.token()).isEqualTo("jwt-token");
+        assertThat(response.user()).isEqualTo(userResponse);
         verify(userRepository).findByEmail("test@kamyaabi.in");
     }
 
@@ -120,7 +120,7 @@ class AuthServiceImplTest {
 
         AuthResponse response = authService.processGoogleUser(userInfo);
 
-        assertThat(response.getToken()).isEqualTo("jwt-token");
+        assertThat(response.token()).isEqualTo("jwt-token");
         verify(userRepository, atLeastOnce()).save(any(User.class));
     }
 
@@ -149,7 +149,7 @@ class AuthServiceImplTest {
 
         UserResponse response = authService.getCurrentUser(1L);
 
-        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.in");
+        assertThat(response.email()).isEqualTo("test@kamyaabi.in");
     }
 
     @Test

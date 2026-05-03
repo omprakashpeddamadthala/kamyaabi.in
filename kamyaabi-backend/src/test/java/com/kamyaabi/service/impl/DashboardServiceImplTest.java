@@ -43,10 +43,10 @@ class DashboardServiceImplTest {
 
         DashboardStatsResponse result = dashboardService.getStats();
 
-        assertThat(result.getTotalProducts()).isEqualTo(25);
-        assertThat(result.getTotalOrders()).isEqualTo(12);
-        assertThat(result.getTotalRevenue()).isEqualByComparingTo("4200.50");
-        assertThat(result.getLowStockCount()).isEqualTo(3);
+        assertThat(result.totalProducts()).isEqualTo(25);
+        assertThat(result.totalOrders()).isEqualTo(12);
+        assertThat(result.totalRevenue()).isEqualByComparingTo("4200.50");
+        assertThat(result.lowStockCount()).isEqualTo(3);
     }
 
     @Test
@@ -60,7 +60,7 @@ class DashboardServiceImplTest {
 
         DashboardStatsResponse result = dashboardService.getStats();
 
-        assertThat(result.getTotalRevenue()).isEqualByComparingTo("0");
+        assertThat(result.totalRevenue()).isEqualByComparingTo("0");
     }
 
     @Test
@@ -73,14 +73,14 @@ class DashboardServiceImplTest {
 
         AnalyticsResponse result = dashboardService.getAnalytics(start, end);
 
-        assertThat(result.getPoints()).hasSize(4);
-        assertThat(result.getPoints().get(0).getOrders()).isZero();
-        assertThat(result.getPoints().get(1).getOrders()).isEqualTo(2L);
-        assertThat(result.getPoints().get(1).getRevenue()).isEqualByComparingTo("500.00");
-        assertThat(result.getPoints().get(2).getOrders()).isZero();
-        assertThat(result.getPoints().get(3).getOrders()).isZero();
-        assertThat(result.getTotalOrders()).isEqualTo(2);
-        assertThat(result.getTotalRevenue()).isEqualByComparingTo("500.00");
+        assertThat(result.points()).hasSize(4);
+        assertThat(result.points().get(0).orders()).isZero();
+        assertThat(result.points().get(1).orders()).isEqualTo(2L);
+        assertThat(result.points().get(1).revenue()).isEqualByComparingTo("500.00");
+        assertThat(result.points().get(2).orders()).isZero();
+        assertThat(result.points().get(3).orders()).isZero();
+        assertThat(result.totalOrders()).isEqualTo(2);
+        assertThat(result.totalRevenue()).isEqualByComparingTo("500.00");
     }
 
     @Test
@@ -89,8 +89,8 @@ class DashboardServiceImplTest {
 
         AnalyticsResponse result = dashboardService.getAnalytics(null, null);
 
-        assertThat(result.getPoints()).hasSize(7);
-        assertThat(result.getEndDate()).isAfterOrEqualTo(result.getStartDate());
+        assertThat(result.points()).hasSize(7);
+        assertThat(result.endDate()).isAfterOrEqualTo(result.startDate());
     }
 
     @Test

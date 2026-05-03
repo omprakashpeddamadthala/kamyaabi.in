@@ -59,12 +59,12 @@ class ProfileServiceImplTest {
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getEmail()).isEqualTo("test@kamyaabi.in");
-        assertThat(response.getFirstName()).isEqualTo("Test");
-        assertThat(response.getLastName()).isEqualTo("User");
-        assertThat(response.getRole()).isEqualTo("USER");
-        assertThat(response.getAddresses()).isEmpty();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.email()).isEqualTo("test@kamyaabi.in");
+        assertThat(response.firstName()).isEqualTo("Test");
+        assertThat(response.lastName()).isEqualTo("User");
+        assertThat(response.role()).isEqualTo("USER");
+        assertThat(response.addresses()).isEmpty();
     }
 
     @Test
@@ -95,11 +95,11 @@ class ProfileServiceImplTest {
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getAddresses()).hasSize(1);
-        assertThat(response.getAddresses().get(0).getFullName()).isEqualTo("Test User");
-        assertThat(response.getAddresses().get(0).getCity()).isEqualTo("Bengaluru");
-        assertThat(response.getAddresses().get(0).getAddressLine2()).isEqualTo("Apt 4");
-        assertThat(response.getAddresses().get(0).getIsDefault()).isTrue();
+        assertThat(response.addresses()).hasSize(1);
+        assertThat(response.addresses().get(0).fullName()).isEqualTo("Test User");
+        assertThat(response.addresses().get(0).city()).isEqualTo("Bengaluru");
+        assertThat(response.addresses().get(0).addressLine2()).isEqualTo("Apt 4");
+        assertThat(response.addresses().get(0).isDefault()).isTrue();
     }
 
     @Test
@@ -109,7 +109,7 @@ class ProfileServiceImplTest {
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getAddresses()).isEmpty();
+        assertThat(response.addresses()).isEmpty();
     }
 
     @Test
@@ -186,8 +186,8 @@ class ProfileServiceImplTest {
 
         ProfileResponse response = profileService.updateProfile(1L, request);
 
-        assertThat(response.getAddresses()).hasSize(1);
-        assertThat(response.getAddresses().get(0).getCity()).isEqualTo("Bengaluru");
+        assertThat(response.addresses()).hasSize(1);
+        assertThat(response.addresses().get(0).city()).isEqualTo("Bengaluru");
     }
 
     @Test
@@ -197,6 +197,6 @@ class ProfileServiceImplTest {
 
         ProfileResponse response = profileService.getProfile(1L);
 
-        assertThat(response.getAvatarUrl()).isEqualTo("http://avatar.url");
+        assertThat(response.avatarUrl()).isEqualTo("http://avatar.url");
     }
 }

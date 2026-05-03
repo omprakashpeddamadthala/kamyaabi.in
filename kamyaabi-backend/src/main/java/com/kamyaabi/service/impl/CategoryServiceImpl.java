@@ -10,6 +10,8 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.CategoryMapper;
 import com.kamyaabi.repository.CategoryRepository;
 import com.kamyaabi.service.CategoryService;
+import com.kamyaabi.util.CacheNames;
+import com.kamyaabi.util.Slugifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,18 +20,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @Transactional
 public class CategoryServiceImpl implements CategoryService {
-
-    private static final Pattern NON_ALPHANUM = Pattern.compile("[^a-z0-9]+");
-    private static final Pattern EDGES = Pattern.compile("(^-|-$)");
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -41,7 +38,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "categories")
+    @Cacheable(value = CacheNames.CATEGORIES)
     public List<CategoryResponse> getAllCategories() {
         log.debug("Fetching all categories");
         return categoryRepository.findAll().stream()
@@ -67,39 +64,39 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public CategoryResponse createCategory(CategoryRequest request) {
-        log.info("Creating new category: {}", request.getName());
-        if (categoryRepository.existsByName(request.getName())) {
+        log.info("Creating new category: {}", request.name());
+        if (categoryRepository.existsByName(request.name())) {
             throw new DuplicateResourceException(
-                    "Category with name '" + request.getName() + "' already exists");
+                    "Category with name '" + request.name() + "' already exists");
         }
         Category category = categoryMapper.toEntity(request);
-        category.setSlug(resolveSlug(request.getSlug(), request.getName(), null));
-        applyParent(category, request.getParentId(), null);
+        category.setSlug(resolveSlug(request.slug(), request.name(), null));
+        applyParent(category, request.parentId(), null);
         Category saved = categoryRepository.save(category);
         log.info("Category created with id: {}", saved.getId());
         return categoryMapper.toResponse(saved);
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public CategoryResponse updateCategory(Long id, CategoryRequest request) {
         log.info("Updating category: {}", id);
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
 
-        if (!category.getName().equalsIgnoreCase(request.getName())
-                && categoryRepository.existsByNameAndIdNot(request.getName(), id)) {
+        if (!category.getName().equalsIgnoreCase(request.name())
+                && categoryRepository.existsByNameAndIdNot(request.name(), id)) {
             throw new DuplicateResourceException(
-                    "Category with name '" + request.getName() + "' already exists");
+                    "Category with name '" + request.name() + "' already exists");
         }
 
-        category.setName(request.getName());
-        category.setDescription(request.getDescription());
-        category.setImageUrl(request.getImageUrl());
-        category.setSlug(resolveSlug(request.getSlug(), request.getName(), id));
-        applyParent(category, request.getParentId(), id);
+        category.setName(request.name());
+        category.setDescription(request.description());
+        category.setImageUrl(request.imageUrl());
+        category.setSlug(resolveSlug(request.slug(), request.name(), id));
+        applyParent(category, request.parentId(), id);
 
         Category saved = categoryRepository.save(category);
         log.info("Category updated: {}", saved.getId());
@@ -107,7 +104,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     public void deleteCategory(Long id) {
         log.info("Deleting category: {}", id);
         Category category = categoryRepository.findById(id)
@@ -126,7 +123,7 @@ public class CategoryServiceImpl implements CategoryService {
     String resolveSlug(String requested, String name, Long currentId) {
         String base = (requested != null && !requested.isBlank())
                 ? requested.trim().toLowerCase(Locale.ROOT)
-                : slugify(name);
+                : Slugifier.slugify(name);
         if (base.isEmpty()) {
             throw new BadRequestException("Unable to derive slug from category name");
         }
@@ -145,12 +142,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public static String slugify(String name) {
-        if (name == null) return "";
-        String normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
-                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                .toLowerCase(Locale.ROOT);
-        String dashed = NON_ALPHANUM.matcher(normalized).replaceAll("-");
-        return EDGES.matcher(dashed).replaceAll("");
+        return Slugifier.slugify(name);
     }
 
     private void applyParent(Category category, Long parentId, Long currentId) {

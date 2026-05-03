@@ -209,7 +209,7 @@ class AdminControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getData().getTotalProducts()).isEqualTo(5);
+        assertThat(response.getBody().data().totalProducts()).isEqualTo(5);
     }
 
     @Test
@@ -232,8 +232,7 @@ class AdminControllerTest {
 
     @Test
     void updateOrderStatus_shouldReturn200() {
-        OrderStatusRequest request = new OrderStatusRequest();
-        request.setStatus(Order.OrderStatus.CONFIRMED);
+        OrderStatusRequest request = new OrderStatusRequest(Order.OrderStatus.CONFIRMED);
         OrderResponse orderResponse = OrderResponse.builder().id(1L).status("CONFIRMED").build();
         when(orderService.updateOrderStatus(1L, Order.OrderStatus.CONFIRMED)).thenReturn(orderResponse);
 

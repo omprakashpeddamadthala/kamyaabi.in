@@ -160,7 +160,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<ProductResponse>> updateProductStatus(
             @PathVariable Long id,
             @Valid @RequestBody ProductStatusRequest request) {
-        ProductResponse product = productService.setProductActive(id, request.getActive());
+        ProductResponse product = productService.setProductActive(id, request.active());
         return ResponseEntity.ok(ApiResponse.success("Product status updated", product));
     }
 
@@ -238,7 +238,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long id,
             @Valid @RequestBody OrderStatusRequest request) {
-        OrderResponse order = orderService.updateOrderStatus(id, request.getStatus());
+        OrderResponse order = orderService.updateOrderStatus(id, request.status());
         return ResponseEntity.ok(ApiResponse.success("Order status updated", order));
     }
 
@@ -265,7 +265,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserRole(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRoleRequest request) {
-        AdminUserResponse user = adminUserService.updateUserRole(id, currentUser.getUserId(), request.getRole());
+        AdminUserResponse user = adminUserService.updateUserRole(id, currentUser.getUserId(), request.role());
         return ResponseEntity.ok(ApiResponse.success("User role updated", user));
     }
 
@@ -276,7 +276,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserStatusRequest request) {
-        AdminUserResponse user = adminUserService.updateUserStatus(id, currentUser.getUserId(), request.getStatus());
+        AdminUserResponse user = adminUserService.updateUserStatus(id, currentUser.getUserId(), request.status());
         return ResponseEntity.ok(ApiResponse.success("User status updated", user));
     }
 

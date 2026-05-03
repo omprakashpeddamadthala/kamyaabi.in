@@ -30,18 +30,18 @@ public class ErrorReportController {
             description = "Triggers a developer alert email. The response body never echoes the report contents.")
     public ResponseEntity<ApiResponse<Void>> report(@Valid @RequestBody ClientErrorReportRequest request) {
         log.warn("Frontend error report received: source={} url={} message={}",
-                request.getSource(),
-                request.getUrl(),
-                truncate(request.getMessage(), 200));
+                request.source(),
+                request.url(),
+                truncate(request.message(), 200));
         try {
             errorAlertService.alertOnFrontendException(
-                    request.getMessage(),
-                    request.getStack(),
-                    request.getComponentStack(),
-                    request.getUrl(),
-                    request.getUserAgent(),
-                    request.getSource(),
-                    request.getTraceId());
+                    request.message(),
+                    request.stack(),
+                    request.componentStack(),
+                    request.url(),
+                    request.userAgent(),
+                    request.source(),
+                    request.traceId());
         } catch (Exception alertFailure) {
             log.error("Failed to dispatch frontend error alert: {}", alertFailure.getMessage());
         }

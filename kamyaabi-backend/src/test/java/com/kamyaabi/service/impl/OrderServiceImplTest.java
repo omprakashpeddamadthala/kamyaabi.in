@@ -81,7 +81,7 @@ class OrderServiceImplTest {
 
         OrderResponse result = orderService.createOrder(1L, request);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.id()).isEqualTo(1L);
         verify(cartService).clearCart(1L);
         verifyNoInteractions(orderEventPublisher);
     }
@@ -181,7 +181,7 @@ class OrderServiceImplTest {
 
         OrderResponse result = orderService.getOrderById(1L);
 
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.id()).isEqualTo(1L);
     }
 
     @Test

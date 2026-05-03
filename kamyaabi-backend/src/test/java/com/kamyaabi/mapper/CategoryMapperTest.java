@@ -24,11 +24,11 @@ class CategoryMapperTest {
 
         CategoryResponse response = categoryMapper.toResponse(category);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getName()).isEqualTo("Cashews");
-        assertThat(response.getDescription()).isEqualTo("Premium cashews");
-        assertThat(response.getImageUrl()).isEqualTo("http://img.url");
-        assertThat(response.getProductCount()).isEqualTo(0);
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.name()).isEqualTo("Cashews");
+        assertThat(response.description()).isEqualTo("Premium cashews");
+        assertThat(response.imageUrl()).isEqualTo("http://img.url");
+        assertThat(response.productCount()).isEqualTo(0);
     }
 
     @Test
@@ -42,7 +42,7 @@ class CategoryMapperTest {
 
         CategoryResponse response = categoryMapper.toResponse(category);
 
-        assertThat(response.getProductCount()).isEqualTo(2);
+        assertThat(response.productCount()).isEqualTo(2);
     }
 
     @Test
@@ -53,7 +53,7 @@ class CategoryMapperTest {
 
         CategoryResponse response = categoryMapper.toResponse(category);
 
-        assertThat(response.getProductCount()).isEqualTo(0);
+        assertThat(response.productCount()).isEqualTo(0);
     }
 
     @Test

@@ -100,8 +100,8 @@ public class DashboardServiceImpl implements DashboardService {
                     AnalyticsPointResponse.builder()
                             .date(d).orders(0L).revenue(BigDecimal.ZERO).build());
             points.add(p);
-            totalOrders += p.getOrders();
-            totalRevenue = totalRevenue.add(p.getRevenue());
+            totalOrders += p.orders();
+            totalRevenue = totalRevenue.add(p.revenue());
         }
 
         return AnalyticsResponse.builder()

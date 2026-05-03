@@ -94,10 +94,10 @@ class PaymentServiceImplTest {
         RazorpayOrderResponse response = paymentService.createRazorpayOrder(1L);
 
         assertThat(response).isNotNull();
-        assertThat(response.getRazorpayOrderId()).isEqualTo("order_123");
-        assertThat(response.getOrderId()).isEqualTo(1L);
-        assertThat(response.getAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
-        assertThat(response.getKeyId()).isEqualTo("rzp_test_key");
+        assertThat(response.razorpayOrderId()).isEqualTo("order_123");
+        assertThat(response.orderId()).isEqualTo(1L);
+        assertThat(response.amount()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.keyId()).isEqualTo("rzp_test_key");
         verify(paymentRepository, never()).save(any());
     }
 

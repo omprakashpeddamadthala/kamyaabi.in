@@ -100,7 +100,7 @@ class ProductServiceImplTest {
         Page<ProductResponse> result = productService.getAllProducts(pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getName()).isEqualTo("Whole Cashews");
+        assertThat(result.getContent().get(0).name()).isEqualTo("Whole Cashews");
     }
 
     @Test
@@ -134,7 +134,7 @@ class ProductServiceImplTest {
 
         ProductResponse result = productService.getProductById(1L);
 
-        assertThat(result.getName()).isEqualTo("Whole Cashews");
+        assertThat(result.name()).isEqualTo("Whole Cashews");
     }
 
     @Test
@@ -166,7 +166,7 @@ class ProductServiceImplTest {
 
         ProductResponse result = productService.createProduct(productRequest, List.of(image), 0);
 
-        assertThat(result.getName()).isEqualTo("Whole Cashews");
+        assertThat(result.name()).isEqualTo("Whole Cashews");
         verify(cloudinaryService).uploadImage(any());
         verify(productRepository).save(any(Product.class));
     }
@@ -194,18 +194,28 @@ class ProductServiceImplTest {
     @Test
     void createProduct_categoryNotFound_shouldThrowException() {
         when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
-        productRequest.setCategoryId(999L);
+        ProductRequest withMissingCategory = ProductRequest.builder()
+                .name(productRequest.name()).description(productRequest.description())
+                .price(productRequest.price()).categoryId(999L)
+                .stock(productRequest.stock()).weight(productRequest.weight())
+                .unit(productRequest.unit()).active(productRequest.active())
+                .build();
 
-        assertThatThrownBy(() -> productService.createProduct(productRequest, List.of(image), 0))
+        assertThatThrownBy(() -> productService.createProduct(withMissingCategory, List.of(image), 0))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     void createProduct_discountPriceTooHigh_shouldThrowBadRequest() {
-        productRequest.setPrice(new BigDecimal("100"));
-        productRequest.setDiscountPrice(new BigDecimal("100"));
+        ProductRequest equalDiscount = ProductRequest.builder()
+                .name(productRequest.name()).description(productRequest.description())
+                .price(new BigDecimal("100")).discountPrice(new BigDecimal("100"))
+                .categoryId(productRequest.categoryId()).stock(productRequest.stock())
+                .weight(productRequest.weight()).unit(productRequest.unit())
+                .active(productRequest.active())
+                .build();
 
-        assertThatThrownBy(() -> productService.createProduct(productRequest, List.of(image), 0))
+        assertThatThrownBy(() -> productService.createProduct(equalDiscount, List.of(image), 0))
                 .isInstanceOf(BadRequestException.class);
     }
 
@@ -231,7 +241,7 @@ class ProductServiceImplTest {
 
         ProductResponse result = productService.updateProduct(1L, productRequest, Collections.emptyList(), null);
 
-        assertThat(result.getName()).isEqualTo("Whole Cashews");
+        assertThat(result.name()).isEqualTo("Whole Cashews");
         verify(productMapper).updateEntity(product, productRequest, category);
     }
 

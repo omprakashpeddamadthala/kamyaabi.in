@@ -22,15 +22,15 @@ class AddressMapperTest {
 
         AddressResponse response = addressMapper.toResponse(address);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getFullName()).isEqualTo("Test User");
-        assertThat(response.getPhone()).isEqualTo("9876543210");
-        assertThat(response.getStreet()).isEqualTo("123 Main St");
-        assertThat(response.getAddressLine2()).isEqualTo("Apt 4");
-        assertThat(response.getCity()).isEqualTo("Mumbai");
-        assertThat(response.getState()).isEqualTo("Maharashtra");
-        assertThat(response.getPincode()).isEqualTo("400001");
-        assertThat(response.getIsDefault()).isTrue();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.fullName()).isEqualTo("Test User");
+        assertThat(response.phone()).isEqualTo("9876543210");
+        assertThat(response.street()).isEqualTo("123 Main St");
+        assertThat(response.addressLine2()).isEqualTo("Apt 4");
+        assertThat(response.city()).isEqualTo("Mumbai");
+        assertThat(response.state()).isEqualTo("Maharashtra");
+        assertThat(response.pincode()).isEqualTo("400001");
+        assertThat(response.isDefault()).isTrue();
     }
 
     @Test
@@ -43,7 +43,7 @@ class AddressMapperTest {
 
         AddressResponse response = addressMapper.toResponse(address);
 
-        assertThat(response.getAddressLine2()).isNull();
+        assertThat(response.addressLine2()).isNull();
     }
 
     @Test

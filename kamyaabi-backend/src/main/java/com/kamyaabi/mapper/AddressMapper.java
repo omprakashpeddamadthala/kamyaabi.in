@@ -25,28 +25,28 @@ public class AddressMapper {
 
     public Address toEntity(AddressRequest request, User user) {
         return Address.builder()
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
-                .street(request.getStreet())
-                .addressLine2(request.getAddressLine2())
-                .city(request.getCity())
-                .state(request.getState())
-                .pincode(request.getPincode())
-                .isDefault(request.getIsDefault() != null ? request.getIsDefault() : false)
+                .fullName(request.fullName())
+                .phone(request.phone())
+                .street(request.street())
+                .addressLine2(request.addressLine2())
+                .city(request.city())
+                .state(request.state())
+                .pincode(request.pincode())
+                .isDefault(request.isDefault() != null ? request.isDefault() : false)
                 .user(user)
                 .build();
     }
 
     public void updateEntity(Address address, AddressRequest request) {
-        address.setFullName(request.getFullName());
-        address.setPhone(request.getPhone());
-        address.setStreet(request.getStreet());
-        address.setAddressLine2(request.getAddressLine2());
-        address.setCity(request.getCity());
-        address.setState(request.getState());
-        address.setPincode(request.getPincode());
-        if (request.getIsDefault() != null) {
-            address.setIsDefault(request.getIsDefault());
+        address.setFullName(request.fullName());
+        address.setPhone(request.phone());
+        address.setStreet(request.street());
+        address.setAddressLine2(request.addressLine2());
+        address.setCity(request.city());
+        address.setState(request.state());
+        address.setPincode(request.pincode());
+        if (request.isDefault() != null) {
+            address.setIsDefault(request.isDefault());
         }
     }
 }
