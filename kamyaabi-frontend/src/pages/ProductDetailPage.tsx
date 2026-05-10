@@ -6,7 +6,6 @@ import {
   Typography,
   Box,
   Button,
-  Chip,
   Divider,
   IconButton,
   Breadcrumbs,
@@ -20,17 +19,17 @@ import {
   useMediaQuery,
   useTheme,
   Slide,
+  Select,
+  MenuItem,
+  FormControl,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   ShoppingCart,
-  Add,
-  Remove,
   Check,
   CheckCircle,
   Close,
-  VerifiedUser,
-  Inventory,
-  Lock,
   Star,
   NavigateNext,
   ZoomIn,
@@ -40,6 +39,13 @@ import {
   ChevronLeft,
   ChevronRight,
   FlashOn,
+  LocalShippingOutlined,
+  AssignmentReturnOutlined,
+  StorefrontOutlined,
+  ShieldOutlined,
+  FavoriteBorder,
+  KeyboardArrowDown,
+  LocationOnOutlined,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -103,25 +109,28 @@ const revealSx = (visible: boolean) => ({
 const ProductDetailSkeleton: React.FC = () => (
   <Container maxWidth="lg" sx={{ py: 4 }}>
     <Skeleton variant="text" width={250} height={24} sx={{ mb: 3 }} animation="wave" />
-    <Grid container spacing={4}>
-      <Grid item xs={12} md={6}>
-        <Skeleton variant="rectangular" height={500} sx={{ borderRadius: 2 }} animation="wave" />
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-          {[0, 1, 2, 3].map(i => (
-            <Skeleton key={i} variant="rectangular" width={72} height={72} sx={{ borderRadius: 1 }} animation="wave" />
-          ))}
+    <Grid container spacing={3}>
+      <Grid item xs={12} md={5}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', gap: 1 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} variant="rectangular" width={56} height={56} sx={{ borderRadius: 1 }} animation="wave" />
+            ))}
+          </Box>
+          <Skeleton variant="rectangular" sx={{ flex: 1, height: 460, borderRadius: 2 }} animation="wave" />
         </Box>
       </Grid>
-      <Grid item xs={12} md={6}>
-        <Skeleton variant="rectangular" width={100} height={32} sx={{ mb: 2, borderRadius: 2 }} animation="wave" />
-        <Skeleton variant="text" width="80%" height={48} sx={{ mb: 1 }} animation="wave" />
-        <Skeleton variant="text" width="30%" height={24} sx={{ mb: 3 }} animation="wave" />
-        <Skeleton variant="text" width="50%" height={40} sx={{ mb: 3 }} animation="wave" />
-        <Skeleton variant="rectangular" height={1} sx={{ mb: 3 }} animation="wave" />
+      <Grid item xs={12} md={4}>
+        <Skeleton variant="text" width="40%" height={20} sx={{ mb: 1 }} animation="wave" />
+        <Skeleton variant="text" width="90%" height={36} sx={{ mb: 1 }} animation="wave" />
+        <Skeleton variant="text" width="60%" height={24} sx={{ mb: 2 }} animation="wave" />
+        <Skeleton variant="text" width="50%" height={32} sx={{ mb: 2 }} animation="wave" />
         <Skeleton variant="text" width="100%" height={20} animation="wave" />
-        <Skeleton variant="text" width="90%" height={20} animation="wave" />
-        <Skeleton variant="text" width="70%" height={20} sx={{ mb: 3 }} animation="wave" />
-        <Skeleton variant="rectangular" height={48} sx={{ borderRadius: 1 }} animation="wave" />
+        <Skeleton variant="text" width="95%" height={20} animation="wave" />
+        <Skeleton variant="text" width="80%" height={20} sx={{ mb: 3 }} animation="wave" />
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <Skeleton variant="rectangular" height={420} sx={{ borderRadius: 2 }} animation="wave" />
       </Grid>
     </Grid>
   </Container>
@@ -186,6 +195,22 @@ function formatRelativeDate(iso: string): string {
   return `${Math.floor(diff / (day * 365))} years ago`;
 }
 
+function formatDeliveryDate(daysFromNow: number): string {
+  const target = new Date();
+  target.setDate(target.getDate() + daysFromNow);
+  return target.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+}
+
+function parseWeightInGrams(weight: string | undefined, unit: string | undefined): number | null {
+  if (!weight) return null;
+  const num = parseFloat(String(weight).replace(/[^\d.]/g, ''));
+  if (!isFinite(num) || num <= 0) return null;
+  const u = (unit || '').toLowerCase().trim();
+  if (['kg', 'kgs', 'kilogram', 'kilograms'].includes(u)) return num * 1000;
+  if (['g', 'gm', 'gms', 'gram', 'grams'].includes(u) || u === '') return num;
+  return null;
+}
+
 const ProductDetailPage: React.FC = () => {
   const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -217,6 +242,7 @@ const ProductDetailPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [wishlistSnack, setWishlistSnack] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -361,6 +387,16 @@ const ProductDetailPage: React.FC = () => {
     : 0;
   const effectivePrice = hasDiscount ? product.discountPrice! : product.price;
 
+  const weightInGrams = parseWeightInGrams(product.weight, product.unit);
+  const pricePer100g = weightInGrams && weightInGrams >= 50
+    ? Math.round((effectivePrice / weightInGrams) * 100)
+    : null;
+
+  const deliveryDateLabel = formatDeliveryDate(5);
+  const orderWithinHours = 11;
+  const orderWithinMins = 6;
+  const inStock = product.stock > 0;
+
   const descriptionBullets = parseDescriptionBullets(product.description);
 
   const additionalInfoRows: Array<{ label: string; value: string }> = [];
@@ -406,296 +442,274 @@ const ProductDetailPage: React.FC = () => {
       </Container>
 
       <Container maxWidth="lg" sx={{ pb: { xs: 2, md: 3 } }}>
-        {}
-        <Grid container spacing={{ xs: 3, md: 4 }} alignItems="flex-start">
-          {}
-          <Grid item xs={12} md={6}>
-            {}
+        {/* Amazon-style 3-column layout: Gallery | Details | Buy Box */}
+        <Grid container spacing={{ xs: 2, md: 3 }} alignItems="flex-start">
+          {/* COLUMN 1: GALLERY (vertical thumbs + main image) */}
+          <Grid item xs={12} md={5}>
             <Box
               sx={{
-                borderRadius: 2,
-                overflow: 'hidden',
-                bgcolor: '#F5F5F0',
-                position: 'relative',
-                cursor: 'zoom-in',
-                '&:hover .zoom-hint': { opacity: isZooming ? 0 : 1 },
+                display: 'flex',
+                gap: 2,
+                flexDirection: { xs: 'column', md: 'row' },
               }}
-              onMouseEnter={() => setIsZooming(true)}
-              onMouseLeave={() => setIsZooming(false)}
-              onMouseMove={handleMouseMove}
-              onClick={() => setLightboxOpen(true)}
             >
+              {/* Vertical thumbnails (left on desktop, below on mobile) */}
+              {galleryImages.length > 1 && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'row', md: 'column' },
+                    gap: 1,
+                    order: { xs: 2, md: 1 },
+                    flexWrap: { xs: 'wrap', md: 'nowrap' },
+                  }}
+                >
+                  {galleryImages.map((img, idx) => (
+                    <Box
+                      key={img.id ?? idx}
+                      component="img"
+                      src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      onMouseEnter={() => setSelectedImageIdx(idx)}
+                      onClick={() => setSelectedImageIdx(idx)}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View image ${idx + 1}`}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' || e.key === ' ') setSelectedImageIdx(idx);
+                      }}
+                      sx={{
+                        width: { xs: 60, md: 56 },
+                        height: { xs: 60, md: 56 },
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        cursor: 'pointer',
+                        border: '1px solid',
+                        borderColor: idx === safeIdx ? 'primary.main' : 'divider',
+                        outline: idx === safeIdx ? '2px solid' : 'none',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 1,
+                        transition: 'border-color 0.2s ease, outline 0.2s ease',
+                        '&:hover': { borderColor: 'primary.main' },
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {/* Main image */}
               <Box
-                component="img"
-                ref={imageRef}
-                src={withCloudinaryTransform(primaryImageSource, 'w_800,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
-                srcSet={cloudinarySrcSet(primaryImageSource) || undefined}
-                sizes="(max-width: 900px) 100vw, 600px"
-                width={800}
-                height={520}
-                alt={product.name}
                 sx={{
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: 520,
-                  aspectRatio: '4 / 3',
-                  objectFit: 'cover',
-                  display: 'block',
-                  transition: 'transform 0.3s ease, opacity 0.3s ease',
-                  transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                  transform: isZooming ? 'scale(1.5)' : 'scale(1)',
+                  flex: 1,
+                  minWidth: 0,
+                  order: { xs: 1, md: 2 },
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  bgcolor: '#F5F5F0',
+                  position: 'relative',
+                  cursor: 'zoom-in',
+                  '&:hover .zoom-hint': { opacity: isZooming ? 0 : 1 },
                 }}
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-              />
-              <Box
-                className="zoom-hint"
-                sx={{
-                  position: 'absolute',
-                  bottom: 12,
-                  right: 12,
-                  bgcolor: 'rgba(0,0,0,0.6)',
-                  color: '#fff',
-                  borderRadius: 1,
-                  px: 1.5,
-                  py: 0.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  opacity: 0,
-                  transition: 'opacity 0.2s',
-                  pointerEvents: 'none',
-                }}
+                onMouseEnter={() => setIsZooming(true)}
+                onMouseLeave={() => setIsZooming(false)}
+                onMouseMove={handleMouseMove}
+                onClick={() => setLightboxOpen(true)}
               >
-                <ZoomIn fontSize="small" />
-                <Typography variant="caption">Click to expand</Typography>
+                <Box
+                  component="img"
+                  ref={imageRef}
+                  src={withCloudinaryTransform(primaryImageSource, 'w_800,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
+                  srcSet={cloudinarySrcSet(primaryImageSource) || undefined}
+                  sizes="(max-width: 900px) 100vw, 500px"
+                  width={800}
+                  height={520}
+                  alt={product.name}
+                  sx={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: 520,
+                    aspectRatio: '1 / 1',
+                    objectFit: 'cover',
+                    display: 'block',
+                    transition: 'transform 0.3s ease, opacity 0.3s ease',
+                    transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                    transform: isZooming ? 'scale(1.5)' : 'scale(1)',
+                  }}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
+                />
+                <Box
+                  className="zoom-hint"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 12,
+                    right: 12,
+                    bgcolor: 'rgba(0,0,0,0.6)',
+                    color: '#fff',
+                    borderRadius: 1,
+                    px: 1.5,
+                    py: 0.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <ZoomIn fontSize="small" />
+                  <Typography variant="caption">Click to expand</Typography>
+                </Box>
               </Box>
             </Box>
-
-            {}
-            {galleryImages.length > 1 && (
-              <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
-                {galleryImages.map((img, idx) => (
-                  <Box
-                    key={img.id ?? idx}
-                    component="img"
-                    src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
-                    alt={`${product.name} thumbnail ${idx + 1}`}
-                    onClick={() => setSelectedImageIdx(idx)}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`View image ${idx + 1}`}
-                    onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') setSelectedImageIdx(idx); }}
-                    sx={{
-                      width: 72,
-                      height: 72,
-                      objectFit: 'cover',
-                      borderRadius: 1,
-                      cursor: 'pointer',
-                      border: '2px solid',
-                      borderColor: idx === safeIdx ? 'primary.main' : 'transparent',
-                      transition: 'border-color 0.2s ease, transform 0.2s ease',
-                      '&:hover': { transform: 'scale(1.05)', borderColor: 'primary.light' },
-                    }}
-                  />
-                ))}
-              </Box>
-            )}
           </Grid>
 
-          {}
-          <Grid item xs={12} md={6}>
-            <Chip
-              label={product.categoryName}
-              color="primary"
-              variant="outlined"
-              size="small"
-              sx={{ mb: 1.5 }}
-            />
-
-            {}
+          {/* COLUMN 2: PRODUCT DETAILS */}
+          <Grid item xs={12} md={4}>
+            {/* Title */}
             <Typography
-              variant="h3"
+              variant="h4"
               component="h1"
               sx={{
                 mb: 1,
-                fontWeight: 700,
-                fontSize: { xs: '1.6rem', sm: '2rem', md: '2.4rem' },
-                lineHeight: 1.2,
+                fontWeight: 600,
+                fontSize: { xs: '1.4rem', sm: '1.6rem', md: '1.5rem' },
+                lineHeight: 1.3,
+                fontFamily: '"Inter", "Roboto", sans-serif',
               }}
             >
               {product.name}
             </Typography>
 
-            {}
-            {hasRating && reviewSummary && (
+            {/* Brand */}
+            <Typography variant="body2" sx={{ mb: 1, color: '#007185', fontWeight: 500 }}>
+              Brand: <Box component="span" sx={{ color: '#007185' }}>Kamyaabi</Box>
+            </Typography>
+
+            {/* Rating */}
+            {hasRating && reviewSummary ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <Rating value={reviewSummary.averageRating} precision={0.5} readOnly size="small" />
+                <Typography variant="body2" fontWeight={600}>
+                  {reviewSummary.averageRating.toFixed(1)}
+                </Typography>
+                <Rating
+                  value={reviewSummary.averageRating}
+                  precision={0.5}
+                  readOnly
+                  size="small"
+                  sx={{ color: '#F59E0B' }}
+                />
+                <MuiLink
+                  href="#reviews"
+                  underline="hover"
+                  variant="body2"
+                  sx={{ color: '#007185' }}
+                >
+                  ({reviewSummary.totalReviews})
+                </MuiLink>
+              </Box>
+            ) : (
+              <Box sx={{ mb: 1.5 }}>
                 <Typography variant="body2" color="text.secondary">
-                  ({reviewSummary.averageRating.toFixed(1)}) · {reviewSummary.totalReviews}
-                  {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
+                  Be the first to review
                 </Typography>
               </Box>
             )}
 
-            {}
-            {(product.weight || product.unit) && (
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                {product.weight} {product.unit}
+            <Divider sx={{ mb: 1.5 }} />
+
+            {/* Discount + Price block */}
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
+              {hasDiscount && (
+                <Typography
+                  variant="h6"
+                  sx={{ color: '#CC0C39', fontWeight: 500, fontSize: '1rem' }}
+                >
+                  -{discountPercent}%
+                </Typography>
+              )}
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: { xs: '1.6rem', md: '1.9rem' },
+                  color: '#0F1111',
+                  lineHeight: 1,
+                }}
+              >
+                <Box component="sup" sx={{ fontSize: '0.55em', mr: 0.25, top: '-0.7em', position: 'relative' }}>₹</Box>
+                {effectivePrice}
+              </Typography>
+              {pricePer100g != null && (
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                  (₹{pricePer100g}/100 g)
+                </Typography>
+              )}
+            </Box>
+
+            {hasDiscount && (
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                M.R.P.:{' '}
+                <Box component="span" sx={{ textDecoration: 'line-through' }}>
+                  ₹{product.price}
+                </Box>
               </Typography>
             )}
 
-            {}
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1 }}>
-              <Typography variant="h4" color="primary" fontWeight={700} sx={{ fontSize: { xs: '1.6rem', md: '2rem' } }}>
-                ₹{effectivePrice}
-              </Typography>
-              {hasDiscount && (
-                <>
-                  <Typography variant="h6" sx={{ textDecoration: 'line-through', color: 'text.secondary', fontWeight: 400 }}>
-                    ₹{product.price}
-                  </Typography>
-                  <Chip label={`${discountPercent}% OFF`} color="error" size="small" sx={{ fontWeight: 600 }} />
-                </>
-              )}
-            </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Inclusive of all taxes
             </Typography>
 
-            {}
-            <Box ref={trustReveal.ref} sx={{ ...revealSx(trustReveal.visible) }}>
-              <Box sx={{
-                display: 'flex',
-                gap: { xs: 1.5, sm: 2 },
-                py: 2,
-                px: { xs: 1, sm: 2 },
-                mb: 2.5,
-                bgcolor: '#FAFAF5',
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                justifyContent: 'space-around',
-                flexWrap: 'wrap',
-              }}>
-                <TrustBadge icon={<VerifiedUser />} label="100% Natural" />
-                <TrustBadge icon={<Inventory />} label="Fresh Stock" />
-                <TrustBadge icon={<Lock />} label="Secure Payment" />
-              </Box>
-            </Box>
-
-            <Divider sx={{ mb: 2.5 }} />
-
-            {}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="body1" fontWeight={600}>Quantity:</Typography>
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '2px solid',
-                borderColor: 'primary.light',
-                borderRadius: 2,
-                overflow: 'hidden',
-              }}>
-                <IconButton
-                  size="small"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  aria-label="Decrease quantity"
-                  sx={{
-                    borderRadius: 0,
-                    px: 1.5,
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <Remove fontSize="small" />
-                </IconButton>
-                <Typography sx={{
-                  px: 2.5,
-                  fontWeight: 700,
-                  minWidth: 40,
-                  textAlign: 'center',
-                  userSelect: 'none',
-                }}>
-                  {quantity}
+            {/* About this item bullets */}
+            {descriptionBullets.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  About this item
                 </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  disabled={quantity >= product.stock}
-                  aria-label="Increase quantity"
+                <Box
+                  component="ul"
                   sx={{
-                    borderRadius: 0,
-                    px: 1.5,
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: 'primary.main', color: '#fff' },
-                    transition: 'all 0.2s ease',
+                    pl: 2.5,
+                    m: 0,
+                    '& li': { mb: 0.75 },
+                    '& li::marker': { color: 'text.secondary' },
                   }}
                 >
-                  <Add fontSize="small" />
-                </IconButton>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                ({product.stock} in stock)
-              </Typography>
-            </Box>
-
-            {}
-            <Box ref={ctaRef}>
-              {(!user || user.role !== 'ADMIN') && (
-                <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    startIcon={
-                      isAdding ? <CircularProgress size={20} color="inherit" /> :
-                      justAdded ? <Check /> : <ShoppingCart />
-                    }
-                    onClick={handleAddToCart}
-                    disabled={product.stock === 0 || isAdding}
-                    color={justAdded ? 'success' : 'primary'}
-                    sx={{
-                      py: 1.5,
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
-                      '&:hover': { transform: 'translateY(-1px)' },
-                      '&:active': { transform: 'scale(0.97)' },
-                    }}
-                  >
-                    {product.stock === 0 ? 'Out of Stock' :
-                     isAdding ? 'Adding...' :
-                     justAdded ? 'Added to Cart!' : 'Add to Cart'}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    fullWidth
-                    startIcon={<FlashOn />}
-                    onClick={handleBuyNow}
-                    disabled={product.stock === 0 || isAdding}
-                    sx={{
-                      py: 1.5,
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      borderWidth: 2,
-                      '&:hover': { borderWidth: 2, transform: 'translateY(-1px)' },
-                      transition: 'transform 0.15s ease',
-                    }}
-                  >
-                    Buy Now
-                  </Button>
+                  {descriptionBullets.slice(0, 5).map((point, i) => (
+                    <li key={i}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                        {point}
+                      </Typography>
+                    </li>
+                  ))}
                 </Box>
-              )}
+              </Box>
+            )}
+
+            {/* Trust icons row (Amazon-style: Free Delivery / Non-Returnable / Delivered / Secure) */}
+            <Box
+              ref={trustReveal.ref}
+              sx={{
+                display: 'flex',
+                gap: 1,
+                py: 1.5,
+                mt: 1,
+                borderTop: '1px solid',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                ...revealSx(trustReveal.visible),
+              }}
+            >
+              <TrustBadge icon={<LocalShippingOutlined />} label="Free Delivery" />
+              <TrustBadge icon={<AssignmentReturnOutlined />} label="Non-Returnable" />
+              <TrustBadge icon={<StorefrontOutlined />} label="Kamyaabi Delivered" />
+              <TrustBadge icon={<ShieldOutlined />} label="Secure transaction" />
             </Box>
 
-            {}
+            {/* Bought recently badge */}
             {showBoughtRecentlyBadge && reviewSummary && reviewSummary.recentBuyersCount > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
                 <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
                   {reviewSummary.recentBuyersCount}
@@ -704,6 +718,209 @@ const ProductDetailPage: React.FC = () => {
                 </Typography>
               </Box>
             )}
+          </Grid>
+
+          {/* COLUMN 3: BUY BOX (sticky on desktop) */}
+          <Grid item xs={12} md={3}>
+            <Box ref={ctaRef}>
+              <Box
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  p: 2,
+                  bgcolor: '#fff',
+                  position: { md: 'sticky' },
+                  top: { md: 88 },
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                }}
+              >
+                {/* Price + per-unit */}
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, mb: 1 }}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '1.6rem', md: '1.9rem' },
+                      color: '#0F1111',
+                      lineHeight: 1,
+                    }}
+                  >
+                    <Box component="sup" sx={{ fontSize: '0.55em', mr: 0.25, top: '-0.7em', position: 'relative' }}>₹</Box>
+                    {effectivePrice}
+                  </Typography>
+                  {pricePer100g != null && (
+                    <Typography variant="caption" color="text.secondary">
+                      (₹{pricePer100g}/100 g)
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Free delivery */}
+                <Typography variant="body2" sx={{ mb: 0.25 }}>
+                  FREE delivery{' '}
+                  <Box component="span" sx={{ fontWeight: 700 }}>
+                    {deliveryDateLabel}
+                  </Box>
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Order within{' '}
+                  <Box component="span" sx={{ color: '#007600', fontWeight: 600 }}>
+                    {orderWithinHours} hrs {orderWithinMins} mins
+                  </Box>
+                </Typography>
+
+                {/* Deliver to */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
+                  <LocationOnOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    Deliver across India
+                  </Typography>
+                </Box>
+
+                {/* Stock */}
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: inStock ? '#007600' : '#CC0C39',
+                    fontWeight: 500,
+                    fontSize: '1.1rem',
+                    mb: 1.25,
+                  }}
+                >
+                  {inStock ? 'In stock' : 'Out of stock'}
+                </Typography>
+
+                {/* Sold by + Payment rows */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'auto 1fr', columnGap: 1.5, rowGap: 0.5, mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">Sold by</Typography>
+                  <Typography variant="body2" sx={{ color: '#007185' }}>
+                    SM Enterprises (Kamyaabi)
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">Payment</Typography>
+                  <Typography variant="body2" sx={{ color: '#007185' }}>
+                    Secure transaction
+                  </Typography>
+                </Box>
+
+                {/* Quantity */}
+                <FormControl size="small" fullWidth sx={{ mb: 1.5 }}>
+                  <Select
+                    id="qty-select"
+                    value={String(Math.min(quantity, Math.max(product.stock, 1)))}
+                    onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value))))}
+                    disabled={!inStock}
+                    IconComponent={KeyboardArrowDown}
+                    inputProps={{ 'aria-label': 'Quantity' }}
+                    sx={{
+                      borderRadius: 999,
+                      bgcolor: '#F0F2F2',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D5D9D9' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#888C8C' },
+                      '& .MuiSelect-select': { py: 1, pl: 2 },
+                    }}
+                    renderValue={(v) => `Quantity: ${v}`}
+                  >
+                    {Array.from({ length: Math.min(Math.max(product.stock, 1), 10) }, (_, i) => i + 1).map((n) => (
+                      <MenuItem key={n} value={String(n)}>{n}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Add to Cart - Yellow Amazon-style */}
+                {(!user || user.role !== 'ADMIN') && (
+                  <>
+                    <Button
+                      fullWidth
+                      onClick={handleAddToCart}
+                      disabled={!inStock || isAdding}
+                      startIcon={
+                        isAdding ? <CircularProgress size={18} sx={{ color: '#0F1111' }} /> :
+                        justAdded ? <Check /> : <ShoppingCart />
+                      }
+                      sx={{
+                        bgcolor: '#FFD814',
+                        color: '#0F1111',
+                        borderRadius: 999,
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        py: 1,
+                        mb: 1,
+                        boxShadow: '0 2px 5px rgba(213,217,217,.5)',
+                        border: '1px solid #FCD200',
+                        '&:hover': {
+                          bgcolor: '#F7CA00',
+                          boxShadow: '0 2px 5px rgba(213,217,217,.5)',
+                        },
+                        '&.Mui-disabled': {
+                          bgcolor: '#F7F7F7',
+                          color: '#A0A0A0',
+                          border: '1px solid #E0E0E0',
+                        },
+                      }}
+                    >
+                      {!inStock ? 'Out of Stock' :
+                       isAdding ? 'Adding...' :
+                       justAdded ? 'Added to Cart!' : 'Add to Cart'}
+                    </Button>
+
+                    {/* Buy Now - Orange */}
+                    <Button
+                      fullWidth
+                      onClick={handleBuyNow}
+                      disabled={!inStock || isAdding}
+                      startIcon={<FlashOn />}
+                      sx={{
+                        bgcolor: '#FFA41C',
+                        color: '#0F1111',
+                        borderRadius: 999,
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        py: 1,
+                        mb: 1.5,
+                        boxShadow: '0 2px 5px rgba(213,217,217,.5)',
+                        border: '1px solid #FF8F00',
+                        '&:hover': {
+                          bgcolor: '#FA8900',
+                          boxShadow: '0 2px 5px rgba(213,217,217,.5)',
+                        },
+                        '&.Mui-disabled': {
+                          bgcolor: '#F7F7F7',
+                          color: '#A0A0A0',
+                          border: '1px solid #E0E0E0',
+                        },
+                      }}
+                    >
+                      Buy Now
+                    </Button>
+
+                    <Divider sx={{ my: 1.5 }} />
+
+                    {/* Add to Wish List */}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<FavoriteBorder />}
+                      onClick={() => setWishlistSnack(true)}
+                      sx={{
+                        borderRadius: 999,
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        color: '#0F1111',
+                        borderColor: '#D5D9D9',
+                        bgcolor: '#F0F2F2',
+                        '&:hover': {
+                          bgcolor: '#E3E6E6',
+                          borderColor: '#888C8C',
+                        },
+                      }}
+                    >
+                      Add to Wish List
+                    </Button>
+                  </>
+                )}
+              </Box>
+            </Box>
           </Grid>
         </Grid>
 
@@ -1074,6 +1291,23 @@ const ProductDetailPage: React.FC = () => {
           </Box>
         </Slide>
       )}
+
+      {/* Wishlist coming-soon snackbar */}
+      <Snackbar
+        open={wishlistSnack}
+        autoHideDuration={3000}
+        onClose={() => setWishlistSnack(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setWishlistSnack(false)}
+          severity="info"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          Wishlist is coming soon!
+        </Alert>
+      </Snackbar>
     </PageTransition>
   );
 };
