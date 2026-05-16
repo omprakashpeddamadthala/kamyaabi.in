@@ -24,6 +24,9 @@ import {
   FormControl,
   Snackbar,
   Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -46,6 +49,8 @@ import {
   FavoriteBorder,
   KeyboardArrowDown,
   LocationOnOutlined,
+  ExpandMore,
+  HelpOutline,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -1103,50 +1108,146 @@ const ProductDetailPage: React.FC = () => {
         )}
 
         {}
-        {!reviewsLoading && reviews.length > 0 && reviewSummary && (
-          <Box ref={reviewsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(reviewsReveal.visible) }}>
-            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>Customer Reviews</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Typography variant="h3" fontWeight={700} color="primary.main">
-                {reviewSummary.averageRating.toFixed(1)}
-              </Typography>
-              <Box>
-                <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
-                <Typography variant="body2" color="text.secondary">
-                  Based on {reviewSummary.totalReviews}
-                  {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
-                </Typography>
-              </Box>
-            </Box>
+        <Box ref={reviewsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(reviewsReveal.visible) }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, fontFamily: '"Playfair Display", serif' }}
+          >
+            <Star fontSize="small" sx={{ color: 'secondary.main' }} />
+            Customer Reviews
+          </Typography>
+          {reviewsLoading ? (
             <Grid container spacing={3}>
-              {reviews.map((review) => (
-                <Grid item xs={12} sm={6} md={4} key={review.id}>
-                  <Box sx={{
-                    p: 3,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    height: '100%',
-                    bgcolor: 'background.paper',
-                    transition: 'box-shadow 0.2s ease',
-                    '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-                  }}>
-                    <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
-                    {review.text && (
-                      <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
-                        &ldquo;{review.text}&rdquo;
-                      </Typography>
-                    )}
-                    <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                      · {formatRelativeDate(review.createdAt)}
-                    </Typography>
-                  </Box>
+              {[0, 1, 2].map((i) => (
+                <Grid item xs={12} sm={6} md={4} key={i}>
+                  <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2 }} animation="wave" />
                 </Grid>
               ))}
             </Grid>
-          </Box>
-        )}
+          ) : reviews.length > 0 && reviewSummary ? (
+            <>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Typography variant="h3" fontWeight={700} color="primary.main">
+                  {reviewSummary.averageRating.toFixed(1)}
+                </Typography>
+                <Box>
+                  <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
+                  <Typography variant="body2" color="text.secondary">
+                    Based on {reviewSummary.totalReviews}
+                    {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
+                  </Typography>
+                </Box>
+              </Box>
+              <Grid container spacing={3}>
+                {reviews.map((review) => (
+                  <Grid item xs={12} sm={6} md={4} key={review.id}>
+                    <Box sx={{
+                      p: 3,
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      height: '100%',
+                      bgcolor: 'background.paper',
+                      transition: 'box-shadow 0.2s ease',
+                      '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+                    }}>
+                      <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
+                      {review.text && (
+                        <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
+                          &ldquo;{review.text}&rdquo;
+                        </Typography>
+                      )}
+                      <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                        · {formatRelativeDate(review.createdAt)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </>
+          ) : (
+            <Box
+              sx={{
+                p: 3,
+                borderRadius: 2,
+                border: '1px dashed',
+                borderColor: 'divider',
+                bgcolor: '#FAFAF5',
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                No reviews yet. Be the first to share your experience with {product.name}.
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {}
+        <Box sx={{ mt: { xs: 4, md: 5 } }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, fontFamily: '"Playfair Display", serif' }}
+          >
+            <HelpOutline fontSize="small" color="primary" />
+            Frequently Asked Questions
+          </Typography>
+          {[
+            {
+              q: 'How fresh are the products when delivered?',
+              a: 'Every order is packed on demand from our climate-controlled storage and sealed in airtight, food-grade pouches. Most customers receive their order within 3–5 business days of dispatch.',
+            },
+            {
+              q: 'How should I store this product?',
+              a: 'Keep the pack in a cool, dry place away from direct sunlight. Once opened, transfer the contents to an airtight container or reseal the pouch tightly to preserve crunch and flavor.',
+            },
+            {
+              q: 'Are these dry fruits raw, roasted, or salted?',
+              a: 'Preparation varies by product. Refer to the Description and Additional Information sections above for the exact processing details for this specific item.',
+            },
+            {
+              q: 'Do you offer returns or refunds?',
+              a: 'Yes. If your order arrives damaged or you are not satisfied with the quality, contact us within 7 days of delivery and we will arrange a replacement or refund as per our return policy.',
+            },
+            {
+              q: 'Is the packaging vegetarian and food-safe?',
+              a: 'Absolutely. All Kamyaabi products are 100% vegetarian and packed in FSSAI-compliant, food-grade materials that protect freshness without any added preservatives.',
+            },
+          ].map((item, idx) => (
+            <Accordion
+              key={idx}
+              disableGutters
+              square
+              sx={{
+                mb: 1.25,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+                boxShadow: 'none',
+                '&::before': { display: 'none' },
+                '&.Mui-expanded': { boxShadow: '0 4px 16px rgba(0,0,0,0.06)' },
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMore />}
+                aria-controls={`faq-content-${idx}`}
+                id={`faq-header-${idx}`}
+                sx={{ px: 2, py: 0.5 }}
+              >
+                <Typography variant="subtitle1" fontWeight={600}>{item.q}</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 2, pb: 2, pt: 0 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                  {item.a}
+                </Typography>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
 
         {}
         {relatedProducts.length > 0 && (

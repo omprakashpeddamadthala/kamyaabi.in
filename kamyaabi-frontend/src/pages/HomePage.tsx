@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Box, Container, Typography, Grid, Button, TextField, Card, CardMedia,
+  Box, Container, Typography, Grid, Button, Card, CardMedia,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
@@ -13,6 +13,7 @@ import { config } from '../config';
 const heroSlides = [
   { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: '/assets/img/hero/banner2.webp' },
   { title: 'The Ultimate Nut Trio: Pistachios, Cashews & Almonds', desc: 'Our Roasted and Salted Pistachios, Premium Split Cashews, and California Almonds offer a savory, crunchy snack packed with antioxidants and healthy fats.', image: '/assets/img/hero/banner1.webp' },
+  { title: 'Wholesome Goodness, Delivered Fresh', desc: 'From handpicked almonds to crunchy pistachios, every Kamyaabi pack is sourced for purity, sealed for freshness, and delivered straight to your door.', image: '/assets/img/about/aboutUS.webp' },
 ];
 
 const productShowcase = [
@@ -24,9 +25,15 @@ const productShowcase = [
 ];
 
 const galleryImages = [
-  '/assets/img/categorie/gallery1.webp', '/assets/img/categorie/gallery2.webp',
-  '/assets/img/categorie/gallery3.webp', '/assets/img/categorie/gallery4.webp',
-  '/assets/img/categorie/gallery5.webp', '/assets/img/categorie/gallery6.webp',
+  '/assets/img/product/almond_jumbo1.webp', '/assets/img/product/pista2.webp',
+  '/assets/img/product/wholecashew3.webp', '/assets/img/product/splitcashew1.webp',
+  '/assets/img/product/almond_2.webp', '/assets/img/product/pista4.webp',
+];
+
+const welcomeImages = [
+  '/assets/img/product/almond_1.webp',
+  '/assets/img/product/pista1.webp',
+  '/assets/img/product/wholecashew3.webp',
 ];
 
 const testimonials = [
@@ -34,8 +41,6 @@ const testimonials = [
   { name: 'Priya', text: "\"Great variety and fresh products! I absolutely loved the dates and pistachios I got. The only reason I'm giving 4 stars is because I wish they had a few more organic options. Otherwise, the experience was wonderful!\"" },
   { name: 'Ananya', text: "\"I've been shopping for dry fruits from various places, but nothing compares to the quality I found here! The nuts are so fresh and the variety is amazing. I love the packaging too\u2014everything arrives perfectly sealed and fresh. Will definitely be a regular customer!\"" },
 ];
-
-const services = ['Premium Quality', 'Natural & Fresh', 'Wide Variety', 'Freshly Packaged'];
 
 const counters = [
   { icon: '/assets/img/icon/counter-icon1.webp', label: 'Premium Selection' },
@@ -103,10 +108,10 @@ const HomePage: React.FC = () => {
       {}
       <Box sx={{ py: 6 }}>
         <Container maxWidth="lg">
-          <Grid container spacing={3}>
+          <Grid container spacing={3} justifyContent="center">
             {productShowcase.map((item, idx) => (
-              <Grid item xs={6} sm={4} md={2.4} key={idx}>
-                <Card sx={{ bgcolor: item.bg, borderRadius: 3, overflow: 'hidden', textAlign: 'center', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
+              <Grid item xs={12} sm={6} md={4} lg={2.4} key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Card sx={{ width: '100%', maxWidth: 240, bgcolor: item.bg, borderRadius: 3, overflow: 'hidden', textAlign: 'center', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
                   <CardMedia component="img" image={item.image} alt={item.name} sx={{ height: 200, objectFit: 'cover' }} />
                   <Box sx={{ p: 2 }}>
                     <Box component="img" src="/assets/img/product/c.webp" alt="" sx={{ width: 40, height: 40, mx: 'auto', mb: 1 }} />
@@ -133,7 +138,7 @@ const HomePage: React.FC = () => {
                 Kamyaabi is dedicated to offering the finest premium dry fruits, carefully handpicked for freshness and quality. We ensure each product retains its natural goodness and rich flavor, providing you with a healthy, flavorful snacking experience.
               </Typography>
               <Grid container spacing={2}>
-                {galleryImages.slice(0, 3).map((img, idx) => (
+                {welcomeImages.map((img, idx) => (
                   <Grid item xs={4} key={idx}>
                     <Box component="img" src={img} alt="" sx={{ width: '100%', borderRadius: 2, height: 100, objectFit: 'cover' }} />
                   </Grid>
@@ -195,29 +200,6 @@ const HomePage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
-        <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8 }} />
-            <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>OUR BEST SERVICES</Typography>
-            <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Pure Freshness in Every Bite</Typography>
-          </Box>
-          <Grid container spacing={3} justifyContent="center">
-            {services.map((service, idx) => (
-              <Grid item xs={6} sm={3} key={idx}>
-                <Box sx={{ textAlign: 'center', p: 3, bgcolor: '#fff', borderRadius: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', transition: 'transform 0.3s, box-shadow 0.3s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' } }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>{service}</Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-          <Typography variant="body1" align="center" sx={{ mt: 4, color: '#666', maxWidth: 600, mx: 'auto', lineHeight: 1.8 }}>
-            Our dry fruits are carefully selected for their freshness and quality, ensuring you get the best in every bite.
-          </Typography>
-        </Container>
-      </Box>
-
-      {}
       <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -240,37 +222,22 @@ const HomePage: React.FC = () => {
 
       {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
-        <Container maxWidth="lg">
-          <Grid container spacing={6}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>CLIENT TESTIMONIAL</Typography>
-              <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
-                What Does The Customer Have To Say?
-              </Typography>
-              <Box sx={{ bgcolor: '#f9f9f9', p: 4, borderRadius: 3, minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{testimonials[currentTestimonial].name}</Typography>
-                <Typography variant="body1" sx={{ color: '#666', lineHeight: 1.8, fontStyle: 'italic' }}>{testimonials[currentTestimonial].text}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                {testimonials.map((_, i) => (
-                  <Box key={i} onClick={() => setCurrentTestimonial(i)} sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: i === currentTestimonial ? 'primary.main' : '#ccc', cursor: 'pointer', transition: 'all 0.3s' }} />
-                ))}
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body1" sx={{ mb: 3, color: '#666' }}>
-                Please fill out the form below and one of our specialists will back in touch shortly.
-              </Typography>
-              <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField multiline rows={4} placeholder="Message" variant="outlined" fullWidth />
-                <TextField placeholder="Name" variant="outlined" fullWidth />
-                <TextField placeholder="Email Address" type="email" variant="outlined" fullWidth />
-                <Button type="button" variant="contained" size="large" sx={{ bgcolor: 'primary.main', color: '#fff', py: 1.5, fontWeight: 700, '&:hover': { bgcolor: 'primary.dark' } }}>
-                  Send Message
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
+        <Container maxWidth="md">
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>CLIENT TESTIMONIAL</Typography>
+            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>
+              What Does The Customer Have To Say?
+            </Typography>
+          </Box>
+          <Box sx={{ bgcolor: '#f9f9f9', p: 4, borderRadius: 3, minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{testimonials[currentTestimonial].name}</Typography>
+            <Typography variant="body1" sx={{ color: '#666', lineHeight: 1.8, fontStyle: 'italic' }}>{testimonials[currentTestimonial].text}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
+            {testimonials.map((_, i) => (
+              <Box key={i} onClick={() => setCurrentTestimonial(i)} sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: i === currentTestimonial ? 'primary.main' : '#ccc', cursor: 'pointer', transition: 'all 0.3s' }} />
+            ))}
+          </Box>
         </Container>
       </Box>
 
