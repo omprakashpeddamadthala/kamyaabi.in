@@ -119,7 +119,7 @@ const ProductsPage: React.FC = () => {
 
   return (
     <PageTransition>
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Typography variant="h3" sx={{ mb: 1 }}>
         {selectedCategory ? selectedCategory.name : 'All Products'}
       </Typography>
@@ -128,8 +128,20 @@ const ProductsPage: React.FC = () => {
       </Typography>
 
       {}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Box component="form" onSubmit={handleSearchSubmit} sx={{ flex: 1, minWidth: 200 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: { xs: 1.5, sm: 2 },
+          mb: 4,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          component="form"
+          onSubmit={handleSearchSubmit}
+          sx={{ flex: '1 1 220px', minWidth: 0 }}
+        >
           <TextField
             size="small"
             fullWidth
@@ -146,7 +158,13 @@ const ProductsPage: React.FC = () => {
           />
         </Box>
 
-        <FormControl size="small" sx={{ minWidth: 220 }}>
+        <FormControl
+          size="small"
+          sx={{
+            minWidth: { xs: '100%', sm: 200 },
+            flex: { xs: '1 1 100%', sm: '0 0 auto' },
+          }}
+        >
           <InputLabel>Sort By</InputLabel>
           <Select
             value={sort}

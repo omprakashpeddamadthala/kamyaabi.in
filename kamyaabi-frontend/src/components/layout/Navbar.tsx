@@ -119,8 +119,22 @@ const Navbar: React.FC = () => {
             </IconButton>
           )}
 
-          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 50 }} />
+          <Box
+            component={Link}
+            to="/"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+              flexShrink: 0,
+            }}
+          >
+            <Box
+              component="img"
+              src="/assets/img/klogo1.webp"
+              alt="Kamyaabi"
+              sx={{ height: { xs: 36, sm: 42, md: 50 }, width: 'auto' }}
+            />
           </Box>
 
           {!isMobile && (

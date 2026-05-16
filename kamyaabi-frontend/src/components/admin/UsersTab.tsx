@@ -268,7 +268,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
       {loading && <LinearProgress sx={{ mb: 1 }} />}
 
       <TableContainer component={Paper} variant="outlined">
-        <Table size="small" aria-label="users-table">
+        <Table size="small" aria-label="users-table" sx={{ minWidth: 720 }}>
           <TableHead>
             <TableRow>
               <TableCell>User ID</TableCell>

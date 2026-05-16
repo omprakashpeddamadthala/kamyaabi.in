@@ -119,7 +119,7 @@ const OrderDetailPage: React.FC = () => {
   const activeStep = getActiveStep(order.status, order.payment?.status);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Breadcrumbs sx={{ mb: 3 }}>
         <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
         <MuiLink component={Link} to="/orders" underline="hover" color="inherit">Orders</MuiLink>
@@ -157,24 +157,41 @@ const OrderDetailPage: React.FC = () => {
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
           {}
-          <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 1.5, sm: 3 }, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Items</Typography>
             {order.items.map((item) => (
               <Box key={item.id}>
-                <Box sx={{ display: 'flex', gap: 2, py: 2, alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: { xs: 1.5, sm: 2 },
+                    py: 2,
+                    alignItems: 'center',
+                  }}
+                >
                   <Box
                     component="img"
                     src={item.productImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
                     alt={item.productName}
-                    sx={{ width: 80, height: 80, borderRadius: 1, objectFit: 'cover' }}
+                    sx={{
+                      width: { xs: 56, sm: 80 },
+                      height: { xs: 56, sm: 80 },
+                      borderRadius: 1,
+                      objectFit: 'cover',
+                      flexShrink: 0,
+                    }}
                   />
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={600}>{item.productName}</Typography>
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Typography fontWeight={600} sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                      {item.productName}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Qty: {item.quantity} x ₹{item.price}
                     </Typography>
                   </Box>
-                  <Typography fontWeight={600}>₹{item.subtotal}</Typography>
+                  <Typography fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
+                    ₹{item.subtotal}
+                  </Typography>
                 </Box>
                 <Divider />
               </Box>

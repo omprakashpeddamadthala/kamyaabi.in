@@ -267,18 +267,48 @@ const CartPage: React.FC = () => {
 
           {}
           {cart.items.map((item) => (
-            <Card key={item.id} sx={{ mb: 2, p: 2, '&:hover': { transform: 'none' } }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Card key={item.id} sx={{ mb: 2, p: { xs: 1.5, sm: 2 }, '&:hover': { transform: 'none' } }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: { xs: 1.5, sm: 2 },
+                  alignItems: 'center',
+                  gridTemplateColumns: {
+                    xs: 'auto 1fr auto',
+                    sm: 'auto 1fr auto auto auto',
+                  },
+                  gridTemplateAreas: {
+                    xs: `"image info remove"
+                         "qty qty price"`,
+                    sm: `"image info qty price remove"`,
+                  },
+                }}
+              >
                 <CardMedia
                   component="img"
                   image={item.productImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
                   alt={item.productName}
-                  sx={{ width: 100, height: 100, borderRadius: 1, objectFit: 'cover' }}
+                  sx={{
+                    gridArea: 'image',
+                    width: { xs: 72, sm: 100 },
+                    height: { xs: 72, sm: 100 },
+                    borderRadius: 1,
+                    objectFit: 'cover',
+                  }}
                 />
-                <Box sx={{ flexGrow: 1 }}>
+                <Box sx={{ gridArea: 'info', flexGrow: 1, minWidth: 0 }}>
                   <Typography
                     variant="h6"
-                    sx={{ fontSize: '1rem', cursor: 'pointer' }}
+                    sx={{
+                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                      cursor: 'pointer',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
                     onClick={() => navigate(`/products/${item.productId}`)}
                   >
                     {item.productName}
@@ -287,7 +317,15 @@ const CartPage: React.FC = () => {
                     ₹{item.productDiscountPrice || item.productPrice}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    gridArea: 'qty',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    justifySelf: { xs: 'start', sm: 'center' },
+                  }}
+                >
                   <IconButton
                     size="small"
                     aria-label={item.quantity === 1 ? 'Remove item from cart' : 'Decrease quantity'}
@@ -316,12 +354,23 @@ const CartPage: React.FC = () => {
                     <Add />
                   </IconButton>
                 </Box>
-                <Typography variant="h6" sx={{ minWidth: 80, textAlign: 'right' }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    gridArea: 'price',
+                    minWidth: { sm: 80 },
+                    textAlign: 'right',
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   ₹{item.subtotal}
                 </Typography>
                 <IconButton
                   color="error"
                   onClick={() => dispatch(removeFromCart(item.id))}
+                  sx={{ gridArea: 'remove', justifySelf: 'end' }}
+                  aria-label="Remove item"
                 >
                   <Delete />
                 </IconButton>

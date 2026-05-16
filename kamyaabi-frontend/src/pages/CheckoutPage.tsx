@@ -127,8 +127,11 @@ const CheckoutPage: React.FC = () => {
   if (!cart) return <Loading />;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Typography
+        variant="h3"
+        sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } }}
+      >
         Checkout
       </Typography>
 
@@ -138,11 +141,20 @@ const CheckoutPage: React.FC = () => {
         </Alert>
       )}
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
         <Grid item xs={12} md={8}>
           {}
-          <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2,
+                flexWrap: 'wrap',
+                gap: 1,
+              }}
+            >
               <Typography variant="h6">Shipping Address</Typography>
               <Button startIcon={<Add />} onClick={() => setShowAddDialog(true)}>
                 Add Address
@@ -182,23 +194,34 @@ const CheckoutPage: React.FC = () => {
           </Card>
 
           {}
-          <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Order Items
             </Typography>
             {cart.items.map((item) => (
-              <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography>
+              <Box
+                key={item.id}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                  mb: 1,
+                }}
+              >
+                <Typography sx={{ minWidth: 0, wordBreak: 'break-word' }}>
                   {item.productName} x {item.quantity}
                 </Typography>
-                <Typography fontWeight={600}>₹{item.subtotal}</Typography>
+                <Typography fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
+                  ₹{item.subtotal}
+                </Typography>
               </Box>
             ))}
           </Card>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Order Summary
             </Typography>

@@ -94,10 +94,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <CardMedia
           component="img"
           ref={imageRef}
-          height="220"
           image={cardImageUrl || PRODUCT_PLACEHOLDER_IMAGE}
           alt={product.name}
-          sx={{ objectFit: 'cover' }}
+          sx={{
+            objectFit: 'cover',
+            height: { xs: 160, sm: 180, md: 200, lg: 220 },
+            width: '100%',
+          }}
           loading="lazy"
         />
         {hasDiscount && (
@@ -109,17 +112,41 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         )}
       </Box>
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 1.25, sm: 2 },
+        }}
+      >
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           {product.categoryName}
         </Typography>
-        <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontSize: { xs: '0.9rem', sm: '1rem' },
+            fontWeight: 600,
+            mb: 1,
+            lineHeight: 1.3,
+          }}
+        >
           {product.name}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1, whiteSpace: 'nowrap' }}>
           {product.weight} {product.unit}
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, mt: 'auto' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+            mb: 2,
+            mt: 'auto',
+          }}
+        >
           <Typography variant="h6" color="primary" fontWeight={700} sx={{ whiteSpace: 'nowrap' }}>
             ₹{hasDiscount ? product.discountPrice : product.price}
           </Typography>

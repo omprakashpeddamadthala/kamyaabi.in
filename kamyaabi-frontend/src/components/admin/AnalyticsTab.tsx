@@ -135,27 +135,31 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ active }) => {
         spacing={2}
         sx={{ mb: 3, alignItems: { md: 'center' }, flexWrap: 'wrap' }}
       >
-        <TextField
-          size="small"
-          type="date"
-          label="Start date"
-          InputLabelProps={{ shrink: true }}
-          value={pendingStart}
-          onChange={(e) => setPendingStart(e.target.value)}
-        />
-        <TextField
-          size="small"
-          type="date"
-          label="End date"
-          InputLabelProps={{ shrink: true }}
-          value={pendingEnd}
-          onChange={(e) => setPendingEnd(e.target.value)}
-        />
-        <Button variant="contained" onClick={applyRange} disabled={loading}>
-          Apply
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        <Stack direction="row" spacing={1}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ flex: { md: '0 0 auto' } }}>
+          <TextField
+            size="small"
+            type="date"
+            label="Start date"
+            InputLabelProps={{ shrink: true }}
+            value={pendingStart}
+            onChange={(e) => setPendingStart(e.target.value)}
+            fullWidth
+          />
+          <TextField
+            size="small"
+            type="date"
+            label="End date"
+            InputLabelProps={{ shrink: true }}
+            value={pendingEnd}
+            onChange={(e) => setPendingEnd(e.target.value)}
+            fullWidth
+          />
+          <Button variant="contained" onClick={applyRange} disabled={loading}>
+            Apply
+          </Button>
+        </Stack>
+        <Box sx={{ flex: 1, display: { xs: 'none', md: 'block' } }} />
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, rowGap: 1 }}>
           <Button size="small" variant="outlined" onClick={applyToday}>
             Today
           </Button>
