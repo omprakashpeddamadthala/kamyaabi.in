@@ -14,6 +14,7 @@ import com.kamyaabi.repository.CategoryRepository;
 import com.kamyaabi.repository.OrderItemRepository;
 import com.kamyaabi.repository.ProductImageRepository;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.repository.ProductTagRepository;
 import com.kamyaabi.repository.ReviewRepository;
 import com.kamyaabi.service.CloudinaryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +47,7 @@ class ProductServiceImplTest {
     @Mock private ProductRepository productRepository;
     @Mock private CategoryRepository categoryRepository;
     @Mock private ProductImageRepository productImageRepository;
+    @Mock private ProductTagRepository productTagRepository;
     @Mock private ProductMapper productMapper;
     @Mock private CloudinaryService cloudinaryService;
     @Mock private ReviewRepository reviewRepository;
@@ -66,7 +68,7 @@ class ProductServiceImplTest {
     void setUp() {
         imageProperties = new ProductImageProperties();
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                productImageRepository, productTagRepository, productMapper, cloudinaryService, imageProperties,
                 reviewRepository, cartItemRepository, orderItemRepository);
 
         category = Category.builder().id(1L).name("Cashews").build();
@@ -182,7 +184,7 @@ class ProductServiceImplTest {
     void createProduct_tooManyImages_shouldThrowBadRequest() {
         imageProperties.setMaxCount(1);
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                productImageRepository, productTagRepository, productMapper, cloudinaryService, imageProperties,
                 reviewRepository, cartItemRepository, orderItemRepository);
         List<MultipartFile> many = List.of(image, image);
 
@@ -291,7 +293,7 @@ class ProductServiceImplTest {
     void updateProduct_tooManyImages_shouldThrowBadRequest() {
         imageProperties.setMaxCount(1);
         productService = new ProductServiceImpl(productRepository, categoryRepository,
-                productImageRepository, productMapper, cloudinaryService, imageProperties,
+                productImageRepository, productTagRepository, productMapper, cloudinaryService, imageProperties,
                 reviewRepository, cartItemRepository, orderItemRepository);
         product.getImages().add(ProductImage.builder().id(10L).publicId("a").imageUrl("u/a").isMain(true).displayOrder(0).build());
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
