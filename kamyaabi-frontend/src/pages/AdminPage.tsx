@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -48,6 +48,9 @@ import {
   Star,
   StarBorder,
   Search as SearchIcon,
+  Article,
+  Label,
+  Category as CategoryIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCategories } from '../features/product/productSlice';
@@ -179,6 +182,7 @@ const clampPage = (raw: string | null): number => {
 
 const AdminPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const { categories } = useAppSelector((state) => state.products);
   const currentUser = useAppSelector((state) => state.auth.user);
@@ -791,6 +795,50 @@ const AdminPage: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Blog & Product Tags Management */}
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+          Content Management
+        </Typography>
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+          <Button
+            variant="outlined"
+            startIcon={<Article />}
+            onClick={() => navigate('/admin/blog')}
+          >
+            Blog Posts
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<CategoryIcon />}
+            onClick={() => navigate('/admin/blog/categories')}
+          >
+            Blog Categories
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Label />}
+            onClick={() => navigate('/admin/blog/tags')}
+          >
+            Blog Tags
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Label />}
+            onClick={() => navigate('/admin/products/tags')}
+          >
+            Product Tags
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<CategoryIcon />}
+            onClick={() => navigate('/admin/products/categories')}
+          >
+            Product Categories
+          </Button>
+        </Stack>
+      </Paper>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs

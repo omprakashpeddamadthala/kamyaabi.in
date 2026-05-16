@@ -34,6 +34,7 @@ import {
   Build,
   ContactMail,
   Person,
+  Article,
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
@@ -44,6 +45,7 @@ const navLinks = [
   { label: 'About Us', to: '/about' },
   { label: 'Service', to: '/service' },
   { label: 'Products', to: '/products' },
+  { label: 'Blog', to: '/blog' },
   { label: 'Contact', to: '/contact' },
 ];
 
@@ -102,6 +104,7 @@ const Navbar: React.FC = () => {
     '/about': <Info />,
     '/service': <Build />,
     '/products': <Store />,
+    '/blog': <Article />,
     '/contact': <ContactMail />,
   };
 
