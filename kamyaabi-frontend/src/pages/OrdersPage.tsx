@@ -91,7 +91,7 @@ const OrdersPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Typography variant="h3" sx={{ mb: 1 }}>
         My Orders
       </Typography>
@@ -106,14 +106,21 @@ const OrdersPage: React.FC = () => {
       {orders.map((order) => (
         <Card
           key={order.id}
-          sx={{ mb: 2, p: 3, '&:hover': { transform: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' } }}
+          sx={{ mb: 2, p: { xs: 1.5, sm: 3 }, '&:hover': { transform: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' } }}
         >
           <Box
-            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, cursor: 'pointer' }}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              flexWrap: 'wrap',
+              gap: { xs: 1, sm: 2 },
+              cursor: 'pointer',
+            }}
             onClick={(e) => toggleExpand(order.id, e)}
           >
-            <Box>
-              <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+            <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
+              <Typography variant="h6" sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}>
                 Order #{order.id}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -127,7 +134,7 @@ const OrdersPage: React.FC = () => {
                 {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
               <Box sx={{ textAlign: 'right' }}>
                 <Chip
                   label={order.status}
@@ -135,7 +142,7 @@ const OrdersPage: React.FC = () => {
                   size="small"
                   sx={{ mb: 1 }}
                 />
-                <Typography variant="h6" color="primary">
+                <Typography variant="h6" color="primary" sx={{ whiteSpace: 'nowrap' }}>
                   ₹{order.totalAmount}
                 </Typography>
               </Box>
@@ -147,10 +154,16 @@ const OrdersPage: React.FC = () => {
             <Divider sx={{ my: 2 }} />
 
             {order.status !== 'CANCELLED' && (
-              <Box sx={{ mb: 3 }}>
+              <Box sx={{ mb: 3, overflowX: 'auto' }}>
                 <Stepper
                   activeStep={getActiveStep(order.status, order.payment?.status)}
                   alternativeLabel
+                  sx={{
+                    minWidth: { xs: 480, sm: 'auto' },
+                    '& .MuiStepLabel-label': {
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    },
+                  }}
                 >
                   {ORDER_STEP_LABELS.map((label) => (
                     <Step key={label}>

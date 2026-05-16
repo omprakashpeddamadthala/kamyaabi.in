@@ -4,8 +4,19 @@ import { Card, CardContent, Box, Skeleton } from '@mui/material';
 const ProductCardSkeleton: React.FC = () => {
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Skeleton variant="rectangular" height={220} animation="wave" />
-      <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Skeleton
+        variant="rectangular"
+        animation="wave"
+        sx={{ height: { xs: 160, sm: 180, md: 200, lg: 220 } }}
+      />
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 1.25, sm: 2 },
+        }}
+      >
         <Skeleton variant="text" width="40%" height={20} sx={{ mb: 0.5 }} animation="wave" />
         <Skeleton variant="text" width="80%" height={24} sx={{ mb: 1 }} animation="wave" />
         <Skeleton variant="text" width="30%" height={18} sx={{ mb: 1 }} animation="wave" />

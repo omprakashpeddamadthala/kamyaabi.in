@@ -11,13 +11,18 @@ const Footer: React.FC = () => {
   return (
     <Box
       component="footer"
-      sx={{ bgcolor: '#1A1A1A', color: '#FFFFFF', pt: 6, pb: 3, mt: 'auto' }}
+      sx={{ bgcolor: '#1A1A1A', color: '#FFFFFF', pt: { xs: 4, sm: 6 }, pb: 3, mt: 'auto' }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={5}>
+        <Grid container spacing={{ xs: 3, sm: 4, md: 5 }}>
           <Grid item xs={12} md={4}>
             <Box component={Link} to="/" sx={{ display: 'inline-block', mb: 2 }}>
-              <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 50 }} />
+              <Box
+                component="img"
+                src="/assets/img/klogo1.webp"
+                alt="Kamyaabi"
+                sx={{ height: { xs: 42, sm: 50 }, width: 'auto' }}
+              />
             </Box>
             <Typography variant="body2" sx={{ color: '#BBB', lineHeight: 1.8, maxWidth: 360 }}>
               Premium dry fruits sourced from the finest farms. Where freshness meets flavor —

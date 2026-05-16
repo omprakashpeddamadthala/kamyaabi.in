@@ -33,6 +33,8 @@ import {
   Stack,
   InputAdornment,
   Switch,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   Edit,
@@ -178,6 +180,8 @@ const AdminPage: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const { categories } = useAppSelector((state) => state.products);
   const currentUser = useAppSelector((state) => state.auth.user);
+  const muiTheme = useTheme();
+  const isMobileViewport = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tabId = (searchParams.get('tab') as TabId | null) ?? 'products';
@@ -1297,6 +1301,7 @@ const AdminPage: React.FC = () => {
         onClose={() => !savingProduct && setShowProductDialog(false)}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobileViewport}
       >
         <DialogTitle>{editingProductId ? 'Edit Product' : 'Add Product'}</DialogTitle>
         <DialogContent>
@@ -1321,7 +1326,7 @@ const AdminPage: React.FC = () => {
               helperText={productErrors.description}
             />
             <Grid container spacing={2}>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Price (MRP) ₹"
                   type="number"
@@ -1334,7 +1339,7 @@ const AdminPage: React.FC = () => {
                   inputProps={{ min: 0, step: '0.01' }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Discount Price ₹"
                   type="number"
@@ -1499,7 +1504,7 @@ const AdminPage: React.FC = () => {
               )}
             </Box>
             <Grid container spacing={2}>
-              <Grid item xs={4}>
+              <Grid item xs={12} sm={6} md={4}>
                 <FormControl fullWidth required error={!!productErrors.categoryId}>
                   <InputLabel>Category</InputLabel>
                   <Select
@@ -1520,7 +1525,7 @@ const AdminPage: React.FC = () => {
                   )}
                 </FormControl>
               </Grid>
-              <Grid item xs={3}>
+              <Grid item xs={6} sm={6} md={3}>
                 <TextField
                   label="Stock"
                   type="number"
@@ -1531,7 +1536,7 @@ const AdminPage: React.FC = () => {
                   helperText={productErrors.stock}
                 />
               </Grid>
-              <Grid item xs={3}>
+              <Grid item xs={6} sm={6} md={3}>
                 <TextField
                   label="Weight"
                   value={productForm.weight}
@@ -1541,7 +1546,7 @@ const AdminPage: React.FC = () => {
                   helperText={productErrors.weight}
                 />
               </Grid>
-              <Grid item xs={2}>
+              <Grid item xs={12} sm={6} md={2}>
                 <FormControl fullWidth>
                   <InputLabel>Unit</InputLabel>
                   <Select

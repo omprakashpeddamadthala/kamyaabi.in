@@ -106,17 +106,17 @@ const HomePage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ py: 6 }}>
+      <Box sx={{ py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
-          <Grid container spacing={3} justifyContent="center">
+          <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center">
             {productShowcase.map((item, idx) => (
-              <Grid item xs={12} sm={6} md={4} lg={2.4} key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Grid item xs={6} sm={4} md={4} lg={2.4} key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Card sx={{ width: '100%', maxWidth: 240, bgcolor: item.bg, borderRadius: 3, overflow: 'hidden', textAlign: 'center', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
-                  <CardMedia component="img" image={item.image} alt={item.name} sx={{ height: 200, objectFit: 'cover' }} />
-                  <Box sx={{ p: 2 }}>
-                    <Box component="img" src="/assets/img/product/c.webp" alt="" sx={{ width: 40, height: 40, mx: 'auto', mb: 1 }} />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>{item.name}</Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', mt: 0.5 }}>{item.desc}</Typography>
+                  <CardMedia component="img" image={item.image} alt={item.name} sx={{ height: { xs: 140, sm: 180, md: 200 }, objectFit: 'cover' }} />
+                  <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+                    <Box component="img" src="/assets/img/product/c.webp" alt="" sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, mx: 'auto', mb: 1 }} />
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#fff', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>{item.name}</Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: { xs: '0.7rem', sm: '0.75rem' }, mt: 0.5 }}>{item.desc}</Typography>
                   </Box>
                 </Card>
               </Grid>

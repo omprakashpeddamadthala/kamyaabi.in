@@ -10,6 +10,8 @@ import {
   Box,
   MenuItem,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { addressApi, AddressRequest } from '../../api/addressApi';
 import { Address } from '../../types';
@@ -178,8 +180,11 @@ const AddressFormDialog: React.FC<AddressFormDialogProps> = ({
     }
   };
 
+  const muiTheme = useTheme();
+  const isMobileViewport = useMediaQuery(muiTheme.breakpoints.down('sm'));
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth fullScreen={isMobileViewport}>
       <DialogTitle>{editAddress ? 'Edit Address' : 'Add New Address'}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
