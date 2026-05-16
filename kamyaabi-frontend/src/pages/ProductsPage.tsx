@@ -47,9 +47,6 @@ const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { products, categories, totalPages, totalElements, currentPage, pageSize, loading } =
     useAppSelector((state) => state.products);
-  const { user } = useAppSelector((state) => state.auth);
-  const isAdmin = user?.role === 'ADMIN';
-
   const [searchQuery, setSearchQuery] = useState('');
   const publicSettings = usePublicSettings();
   const productsPerPage: number | undefined = (() => {
@@ -202,13 +199,7 @@ const ProductsPage: React.FC = () => {
         ))}
       </Box>
 
-      {isAdmin ? (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary">
-            Admin users cannot browse products. Please use the Admin Dashboard to manage products.
-          </Typography>
-        </Box>
-      ) : loading ? (
+      {loading ? (
         <Grid container spacing={3}>
           {Array.from({ length: pageSize || 6 }).map((_, i) => (
             <Grid item xs={6} sm={4} md={3} key={i}>

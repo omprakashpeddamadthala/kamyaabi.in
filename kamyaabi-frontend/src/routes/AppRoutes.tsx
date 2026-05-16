@@ -52,6 +52,14 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+const CustomerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAppSelector((state) => state.auth);
+  const { authenticated } = useSessionGuard();
+  if (!authenticated) return <Navigate to="/login" replace />;
+  if (user?.role === 'ADMIN') return <Navigate to="/products" replace />;
+  return <>{children}</>;
+};
+
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
@@ -68,33 +76,33 @@ const AppRoutes: React.FC = () => {
         <Route
           path="/cart"
           element={
-            <ProtectedRoute>
+            <CustomerRoute>
               <CartPage />
-            </ProtectedRoute>
+            </CustomerRoute>
           }
         />
         <Route
           path="/checkout"
           element={
-            <ProtectedRoute>
+            <CustomerRoute>
               <CheckoutPage />
-            </ProtectedRoute>
+            </CustomerRoute>
           }
         />
         <Route
           path="/orders"
           element={
-            <ProtectedRoute>
+            <CustomerRoute>
               <OrdersPage />
-            </ProtectedRoute>
+            </CustomerRoute>
           }
         />
         <Route
           path="/orders/:id"
           element={
-            <ProtectedRoute>
+            <CustomerRoute>
               <OrderDetailPage />
-            </ProtectedRoute>
+            </CustomerRoute>
           }
         />
         <Route
