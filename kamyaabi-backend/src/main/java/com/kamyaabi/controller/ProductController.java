@@ -134,6 +134,21 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(products));
     }
 
+    @GetMapping("/tag/{tagSlug}")
+    @Operation(summary = "Get products by tag",
+            description = "Get paginated products filtered by tag slug.")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByTag(
+            @PathVariable String tagSlug,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Pageable pageable = PageRequest.of(page, resolveSize(size), resolveSort(sort, sortBy, sortDir));
+        Page<ProductResponse> products = productService.getProductsByTag(tagSlug, pageable);
+        return ResponseEntity.ok(ApiResponse.success(products));
+    }
+
     @GetMapping("/search")
     @Operation(summary = "Search products",
             description = "Search products by keyword. Honors the same `sort` vocabulary as the listing "

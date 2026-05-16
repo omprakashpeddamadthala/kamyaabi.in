@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
+import { HelmetProvider } from 'react-helmet-async';
 
 import { store } from './store/store';
 import theme from './theme/theme';
@@ -17,23 +18,25 @@ import { ToastProvider } from './components/common/ToastProvider';
 const App: React.FC = () => {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <GlobalLoadingBar />
-        <SessionManager />
-        <ApiErrorNotifier />
-        <ErrorBoundary>
-          <ToastProvider>
-            <BrowserRouter>
-              <Suspense fallback={<Loading message="Loading page..." />}>
-                <FlyToCartProvider>
-                  <AppRoutes />
-                </FlyToCartProvider>
-              </Suspense>
-            </BrowserRouter>
-          </ToastProvider>
-        </ErrorBoundary>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <GlobalLoadingBar />
+          <SessionManager />
+          <ApiErrorNotifier />
+          <ErrorBoundary>
+            <ToastProvider>
+              <BrowserRouter>
+                <Suspense fallback={<Loading message="Loading page..." />}>
+                  <FlyToCartProvider>
+                    <AppRoutes />
+                  </FlyToCartProvider>
+                </Suspense>
+              </BrowserRouter>
+            </ToastProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
+      </HelmetProvider>
     </Provider>
   );
 };

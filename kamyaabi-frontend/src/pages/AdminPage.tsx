@@ -64,7 +64,9 @@ import {
   PageResponse,
   Product,
   ProductImage,
+  ProductTag,
 } from '../types';
+import { adminProductTagApi } from '../api/productTagApi';
 import AnalyticsTab from '../components/admin/AnalyticsTab';
 import UsersTab from '../components/admin/UsersTab';
 import SettingsTab from '../components/admin/SettingsTab';
@@ -267,6 +269,8 @@ const AdminPage: React.FC = () => {
 
   const [productForm, setProductForm] = useState<ProductRequest>(initialProductForm);
   const [productErrors, setProductErrors] = useState<ProductFormErrors>({});
+  const [allProductTags, setAllProductTags] = useState<ProductTag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [categoryForm, setCategoryForm] = useState<CategoryRequest>(initialCategoryForm);
   const [categoryErrors, setCategoryErrors] = useState<CategoryFormErrors>({});
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
@@ -367,6 +371,9 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     dispatch(fetchCategories());
     loadDashboardStats();
+    adminProductTagApi.getAll()
+      .then((res) => setAllProductTags(res.data.data))
+      .catch(() => {});
   }, [dispatch, loadDashboardStats]);
 
   useEffect(() => {
@@ -468,6 +475,7 @@ const AdminPage: React.FC = () => {
           productForm.discountPrice && productForm.discountPrice > 0
             ? productForm.discountPrice
             : undefined,
+        tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       };
       const onProgress = pendingImages.length > 0 ? setUploadProgress : undefined;
       if (editingProductId) {
@@ -633,6 +641,7 @@ const AdminPage: React.FC = () => {
     setSelectedExistingMainId(null);
     setProductErrors({});
     setUploadProgress(null);
+    setSelectedTagIds([]);
   };
 
   const resetCategoryForm = () => {
@@ -655,6 +664,7 @@ const AdminPage: React.FC = () => {
       unit: product.unit,
       active: product.active,
     });
+    setSelectedTagIds(product.tags?.map((t) => t.id) ?? []);
     setEditingProductId(product.id);
     pendingPreviews.forEach((url) => URL.revokeObjectURL(url));
     setPendingImages([]);
@@ -1561,6 +1571,30 @@ const AdminPage: React.FC = () => {
                 </FormControl>
               </Grid>
             </Grid>
+            {allProductTags.length > 0 && (
+              <FormControl fullWidth>
+                <InputLabel>Tags</InputLabel>
+                <Select
+                  label="Tags"
+                  multiple
+                  value={selectedTagIds}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedTagIds(typeof val === 'string' ? val.split(',').map(Number) : (val as number[]));
+                  }}
+                  renderValue={(selected) =>
+                    (selected as number[])
+                      .map((id) => allProductTags.find((t) => t.id === id)?.name ?? id)
+                      .join(', ')
+                  }
+                >
+                  {allProductTags.map((tag) => (
+                    <MenuItem key={tag.id} value={tag.id}>{tag.name}</MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>Optional. Select tags for this product.</FormHelperText>
+              </FormControl>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>

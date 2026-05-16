@@ -6,6 +6,7 @@ import {
   Typography,
   Box,
   Button,
+  Chip,
   Divider,
   IconButton,
   Breadcrumbs,
@@ -47,6 +48,7 @@ import {
   KeyboardArrowDown,
   ExpandMore,
   HelpOutline,
+  LocalOffer,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -648,11 +650,47 @@ const ProductDetailPage: React.FC = () => {
                 color: inStock ? '#007600' : '#CC0C39',
                 fontWeight: 600,
                 fontSize: '1rem',
-                mb: 2,
+                mb: 1.5,
               }}
             >
               {inStock ? 'In stock' : 'Out of stock'}
             </Typography>
+
+            {/* Category link */}
+            {product.categoryName && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary">Category:</Typography>
+                <MuiLink
+                  component={Link}
+                  to={`/products?category=${product.categoryId}`}
+                  underline="hover"
+                  variant="body2"
+                  color="primary"
+                  sx={{ fontWeight: 500 }}
+                >
+                  {product.categoryName}
+                </MuiLink>
+              </Box>
+            )}
+
+            {/* Tag pills */}
+            {product.tags && product.tags.length > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
+                <LocalOffer sx={{ fontSize: 16, color: 'text.secondary' }} />
+                {product.tags.map((tag) => (
+                  <Chip
+                    key={tag.id}
+                    label={tag.name}
+                    size="small"
+                    variant="outlined"
+                    component={Link}
+                    to={`/products?tag=${tag.slug}`}
+                    clickable
+                    sx={{ fontSize: '0.75rem' }}
+                  />
+                ))}
+              </Box>
+            )}
 
             {/* Quantity + Add to Cart + Buy Now */}
             {(!user || user.role !== 'ADMIN') && (

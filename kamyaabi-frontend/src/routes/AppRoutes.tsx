@@ -21,6 +21,18 @@ const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const RefundPolicyPage = lazy(() => import('../pages/RefundPolicyPage'));
 
+const BlogListPage = lazy(() => import('../pages/BlogListPage'));
+const BlogPostPage = lazy(() => import('../pages/BlogPostPage'));
+const BlogCategoryPage = lazy(() => import('../pages/BlogCategoryPage'));
+const BlogTagPage = lazy(() => import('../pages/BlogTagPage'));
+
+const AdminBlogListPage = lazy(() => import('../pages/AdminBlogListPage'));
+const AdminBlogEditorPage = lazy(() => import('../pages/AdminBlogEditorPage'));
+const AdminBlogCategoriesPage = lazy(() => import('../pages/AdminBlogCategoriesPage'));
+const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
+const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
+const AdminProductCategoriesPage = lazy(() => import('../pages/AdminProductCategoriesPage'));
+
 function useSessionGuard(): { authenticated: boolean } {
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
@@ -73,6 +85,13 @@ const AppRoutes: React.FC = () => {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
         <Route path="/login" element={<LoginPage />} />
+
+        {/* Public Blog Routes */}
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
+        <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
+
         <Route
           path="/cart"
           element={
@@ -118,6 +137,62 @@ const AppRoutes: React.FC = () => {
           element={
             <AdminRoute>
               <AdminPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/blog"
+          element={
+            <AdminRoute>
+              <AdminBlogListPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/new"
+          element={
+            <AdminRoute>
+              <AdminBlogEditorPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/edit/:id"
+          element={
+            <AdminRoute>
+              <AdminBlogEditorPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/categories"
+          element={
+            <AdminRoute>
+              <AdminBlogCategoriesPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/tags"
+          element={
+            <AdminRoute>
+              <AdminBlogTagsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/products/tags"
+          element={
+            <AdminRoute>
+              <AdminProductTagsPage />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/products/categories"
+          element={
+            <AdminRoute>
+              <AdminProductCategoriesPage />
             </AdminRoute>
           }
         />
