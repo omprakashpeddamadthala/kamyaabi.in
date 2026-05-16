@@ -53,6 +53,18 @@ export const productApi = {
       },
     }),
 
+  getByTag: (tagSlug: string, { page, size, sort }: ListParams = {}) =>
+    axiosInstance.get<ApiResponse<PageResponse<Product>>>(
+      `/api/products/tag/${encodeURIComponent(tagSlug)}`,
+      {
+        params: {
+          page: page ?? 0,
+          ...(size != null ? { size } : {}),
+          ...(sort ? { sort } : {}),
+        },
+      },
+    ),
+
   getFeatured: () =>
     axiosInstance.get<ApiResponse<Product[]>>('/api/products/featured'),
 };

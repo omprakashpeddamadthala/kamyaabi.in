@@ -55,6 +55,7 @@ export interface Product {
   nutritionalInfo?: Record<string, string> | null;
   howToUse?: string[] | null;
   storageTips?: string[] | null;
+  tags?: ProductTag[];
   active: boolean;
   createdAt: string;
 }
@@ -191,4 +192,66 @@ export interface RazorpayOrder {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+// ── Blog Types ──────────────────────────────────────────────
+
+export interface BlogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  parentId: number | null;
+  parentName: string | null;
+  postCount: number;
+  createdAt: string;
+}
+
+export interface BlogTag {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  postCount: number;
+  createdAt: string;
+}
+
+export type BlogPostStatus = 'DRAFT' | 'PUBLISHED' | 'SCHEDULED';
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string | null;
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
+  authorId: number;
+  authorName: string | null;
+  authorAvatarUrl: string | null;
+  status: BlogPostStatus;
+  publishedAt: string | null;
+  scheduledAt: string | null;
+  categories: BlogCategory[];
+  tags: BlogTag[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  ogImageUrl: string | null;
+  canonicalUrl: string | null;
+  readingTimeMinutes: number;
+  viewCount: number;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Product Tag Types ───────────────────────────────────────
+
+export interface ProductTag {
+  id: number;
+  name: string;
+  slug: string;
+  productCount?: number;
+  createdAt: string;
 }

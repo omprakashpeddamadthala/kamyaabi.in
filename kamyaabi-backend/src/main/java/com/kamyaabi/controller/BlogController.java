@@ -109,6 +109,32 @@ public class BlogController {
         return ResponseEntity.ok(ApiResponse.success(blogService.getTagBySlug(slug)));
     }
 
+    @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
+    @Operation(summary = "Blog sitemap", description = "XML sitemap of all published blog posts")
+    public ResponseEntity<String> getBlogSitemap() {
+        List<BlogPostResponse> posts = blogService.getAllPublishedPosts();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sb.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+        for (BlogPostResponse post : posts) {
+            sb.append("  <url>\n");
+            sb.append("    <loc>https://kamyaabi.in/blog/").append(escapeXml(post.slug())).append("</loc>\n");
+            if (post.updatedAt() != null) {
+                sb.append("    <lastmod>").append(post.updatedAt().toLocalDate().toString()).append("</lastmod>\n");
+            } else if (post.publishedAt() != null) {
+                sb.append("    <lastmod>").append(post.publishedAt().toLocalDate().toString()).append("</lastmod>\n");
+            }
+            sb.append("    <changefreq>weekly</changefreq>\n");
+            sb.append("    <priority>0.7</priority>\n");
+            sb.append("  </url>\n");
+        }
+        sb.append("</urlset>");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_XML)
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
+                .body(sb.toString());
+    }
+
     @GetMapping(value = "/rss", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Blog RSS feed", description = "RSS 2.0 feed of all published blog posts")
     public ResponseEntity<String> getRssFeed() {

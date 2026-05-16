@@ -128,12 +128,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           sx={{
             fontSize: { xs: '0.9rem', sm: '1rem' },
             fontWeight: 600,
-            mb: 1,
+            mb: 0.5,
             lineHeight: 1.3,
           }}
         >
           {product.name}
         </Typography>
+        {product.tags && product.tags.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 0.5 }}>
+            {product.tags.slice(0, 3).map((tag) => (
+              <Chip key={tag.id} label={tag.name} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 20 }} />
+            ))}
+            {product.tags.length > 3 && (
+              <Chip label={`+${product.tags.length - 3}`} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 20 }} />
+            )}
+          </Box>
+        )}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1, whiteSpace: 'nowrap' }}>
           {product.weight} {product.unit}
         </Typography>

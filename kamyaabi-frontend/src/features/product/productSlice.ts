@@ -128,6 +128,27 @@ export const fetchProductBySlug = createAsyncThunk(
   }
 );
 
+export const fetchProductsByTag = createAsyncThunk(
+  'products/fetchByTag',
+  async (
+    {
+      tagSlug,
+      page,
+      size,
+      sort,
+    }: { tagSlug: string; page?: number; size?: number; sort?: ProductSort },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await productApi.getByTag(tagSlug, { page, size, sort });
+      return response.data.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message || 'Failed to fetch products by tag');
+    }
+  }
+);
+
 export const fetchCategories = createAsyncThunk(
   'products/fetchCategories',
   async (_, { rejectWithValue }) => {
@@ -203,6 +224,19 @@ const productSlice = createSlice({
         state.selectedProduct = action.payload;
       })
       .addCase(fetchProductBySlug.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchProductsByTag.pending, (state) => { state.loading = true; })
+      .addCase(fetchProductsByTag.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.content;
+        state.totalPages = action.payload.totalPages;
+        state.totalElements = action.payload.totalElements;
+        state.currentPage = action.payload.number;
+        state.pageSize = action.payload.size;
+      })
+      .addCase(fetchProductsByTag.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

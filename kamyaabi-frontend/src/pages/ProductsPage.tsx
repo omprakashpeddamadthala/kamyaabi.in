@@ -13,12 +13,14 @@ import {
   Select,
   MenuItem,
   Chip,
+  Divider,
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { Search, LocalOffer } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
   fetchProducts,
   fetchProductsByCategory,
+  fetchProductsByTag,
   searchProducts,
   fetchCategories,
 } from '../features/product/productSlice';
@@ -27,6 +29,8 @@ import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
 import PageTransition from '../components/common/PageTransition';
 import { ProductSort } from '../api/productApi';
 import { usePublicSettings } from '../hooks/usePublicSettings';
+import { productTagApi } from '../api/productTagApi';
+import { ProductTag } from '../types';
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: 'newest', label: 'Newest First' },
@@ -48,6 +52,7 @@ const ProductsPage: React.FC = () => {
   const { products, categories, totalPages, totalElements, currentPage, pageSize, loading } =
     useAppSelector((state) => state.products);
   const [searchQuery, setSearchQuery] = useState('');
+  const [productTags, setProductTags] = useState<ProductTag[]>([]);
   const publicSettings = usePublicSettings();
   const productsPerPage: number | undefined = (() => {
     const raw = publicSettings?.products_per_page;
@@ -59,6 +64,7 @@ const ProductsPage: React.FC = () => {
   const sortParam = searchParams.get('sort');
   const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'newest';
   const categoryId = searchParams.get('category');
+  const tagSlug = searchParams.get('tag');
   const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
   const zeroBasedPage = urlPage - 1;
 
@@ -76,11 +82,16 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => {
     dispatch(fetchCategories());
+    productTagApi.getAll()
+      .then((res) => setProductTags(res.data.data))
+      .catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
     if (searchQuery) {
       dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage, size: productsPerPage, sort }));
+    } else if (tagSlug) {
+      dispatch(fetchProductsByTag({ tagSlug, page: zeroBasedPage, size: productsPerPage, sort }));
     } else if (categoryId) {
       dispatch(
         fetchProductsByCategory({
@@ -93,7 +104,7 @@ const ProductsPage: React.FC = () => {
     } else {
       dispatch(fetchProducts({ page: zeroBasedPage, size: productsPerPage, sort }));
     }
-  }, [dispatch, categoryId, sort, searchQuery, zeroBasedPage, productsPerPage]);
+  }, [dispatch, categoryId, tagSlug, sort, searchQuery, zeroBasedPage, productsPerPage]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     updateParams({ page: page === 1 ? null : String(page) });
@@ -178,11 +189,11 @@ const ProductsPage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
         <Chip
           label="All"
-          variant={!categoryId ? 'filled' : 'outlined'}
-          color={!categoryId ? 'primary' : 'default'}
+          variant={!categoryId && !tagSlug ? 'filled' : 'outlined'}
+          color={!categoryId && !tagSlug ? 'primary' : 'default'}
           onClick={() => { setSearchParams({}); setSearchQuery(''); }}
         />
         {categories.map((cat) => (
@@ -198,6 +209,29 @@ const ProductsPage: React.FC = () => {
           />
         ))}
       </Box>
+
+      {productTags.length > 0 && (
+        <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          <LocalOffer sx={{ fontSize: 18, color: 'text.secondary', mr: 0.5 }} />
+          {productTags.map((tag) => (
+            <Chip
+              key={tag.id}
+              label={tag.name}
+              size="small"
+              variant={tagSlug === tag.slug ? 'filled' : 'outlined'}
+              color={tagSlug === tag.slug ? 'secondary' : 'default'}
+              onClick={() => {
+                if (tagSlug === tag.slug) {
+                  updateParams({ tag: null, page: null });
+                } else {
+                  updateParams({ tag: tag.slug, category: null, page: null });
+                  setSearchQuery('');
+                }
+              }}
+            />
+          ))}
+        </Box>
+      )}
 
       {loading ? (
         <Grid container spacing={3}>

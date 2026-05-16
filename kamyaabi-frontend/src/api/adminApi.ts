@@ -21,6 +21,7 @@ export interface ProductRequest {
   weight: string;
   unit: string;
   active?: boolean;
+  tagIds?: number[];
 }
 
 export interface CategoryRequest {
