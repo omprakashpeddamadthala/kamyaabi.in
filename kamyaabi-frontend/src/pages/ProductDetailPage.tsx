@@ -196,12 +196,6 @@ function formatRelativeDate(iso: string): string {
   return `${Math.floor(diff / (day * 365))} years ago`;
 }
 
-function formatDeliveryDate(daysFromNow: number): string {
-  const target = new Date();
-  target.setDate(target.getDate() + daysFromNow);
-  return target.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
-}
-
 function parseWeightInGrams(weight: string | undefined, unit: string | undefined): number | null {
   if (!weight) return null;
   const num = parseFloat(String(weight).replace(/[^\d.]/g, ''));
@@ -392,9 +386,6 @@ const ProductDetailPage: React.FC = () => {
     ? Math.round((effectivePrice / weightInGrams) * 100)
     : null;
 
-  const deliveryDateLabel = formatDeliveryDate(5);
-  const orderWithinHours = 11;
-  const orderWithinMins = 6;
   const inStock = product.stock > 0;
 
   const descriptionBullets = parseDescriptionBullets(product.description);
