@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -34,6 +35,7 @@ public class CartController {
     }
 
     @PostMapping("/items")
+    @PreAuthorize("!hasRole('ADMIN')")
     @Operation(summary = "Add item to cart", description = "Add a product to the shopping cart")
     public ResponseEntity<ApiResponse<CartResponse>> addItemToCart(@Valid @RequestBody CartItemRequest request) {
         CartResponse cart = cartService.addItemToCart(currentUser.getUserId(), request);
@@ -41,6 +43,7 @@ public class CartController {
     }
 
     @PutMapping("/items/{itemId}")
+    @PreAuthorize("!hasRole('ADMIN')")
     @Operation(summary = "Update cart item quantity")
     public ResponseEntity<ApiResponse<CartResponse>> updateCartItemQuantity(
             @PathVariable Long itemId,

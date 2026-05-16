@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -30,6 +31,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @PreAuthorize("!hasRole('ADMIN')")
     @Operation(summary = "Create order", description = "Create a new order from cart items")
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest request) {
         OrderResponse order = orderService.createOrder(currentUser.getUserId(), request);
