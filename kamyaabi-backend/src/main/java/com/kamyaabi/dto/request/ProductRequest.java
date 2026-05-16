@@ -43,6 +43,8 @@ public record ProductRequest(
 
         List<String> storageTips,
 
-        Boolean active
+        Boolean active,
+
+        java.util.Set<Long> tagIds
 ) {
 }

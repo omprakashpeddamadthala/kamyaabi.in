@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductImageResponse;
 import com.kamyaabi.dto.response.ProductResponse;
+import com.kamyaabi.dto.response.ProductTagResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
+import com.kamyaabi.entity.ProductTag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +41,16 @@ public class ProductMapper {
                 .map(productImageMapper::toResponse)
                 .toList();
         String mainImageUrl = resolveMainImageUrl(images, product.getImageUrl());
+        List<ProductTagResponse> tagResponses = product.getTags() != null
+                ? product.getTags().stream()
+                    .map(t -> ProductTagResponse.builder()
+                            .id(t.getId())
+                            .name(t.getName())
+                            .slug(t.getSlug())
+                            .createdAt(t.getCreatedAt())
+                            .build())
+                    .toList()
+                : Collections.emptyList();
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -51,6 +63,7 @@ public class ProductMapper {
                 .images(imageResponses)
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
+                .tags(tagResponses)
                 .stock(product.getStock())
                 .weight(product.getWeight())
                 .unit(product.getUnit())

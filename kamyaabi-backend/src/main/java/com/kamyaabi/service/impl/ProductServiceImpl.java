@@ -6,6 +6,7 @@ import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
+import com.kamyaabi.entity.ProductTag;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.ProductMapper;
@@ -14,6 +15,7 @@ import com.kamyaabi.repository.CategoryRepository;
 import com.kamyaabi.repository.OrderItemRepository;
 import com.kamyaabi.repository.ProductImageRepository;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.repository.ProductTagRepository;
 import com.kamyaabi.repository.ReviewRepository;
 import com.kamyaabi.service.CloudinaryService;
 import com.kamyaabi.service.ProductService;
@@ -31,8 +33,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -42,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
+    private final ProductTagRepository productTagRepository;
     private final ProductMapper productMapper;
     private final CloudinaryService cloudinaryService;
     private final ProductImageProperties imageProperties;
@@ -52,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductServiceImpl(ProductRepository productRepository,
                               CategoryRepository categoryRepository,
                               ProductImageRepository productImageRepository,
+                              ProductTagRepository productTagRepository,
                               ProductMapper productMapper,
                               CloudinaryService cloudinaryService,
                               ProductImageProperties imageProperties,
@@ -61,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productImageRepository = productImageRepository;
+        this.productTagRepository = productTagRepository;
         this.productMapper = productMapper;
         this.cloudinaryService = cloudinaryService;
         this.imageProperties = imageProperties;
@@ -84,6 +91,14 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.debug("Fetching products by category: {}", categoryId);
         return productRepository.findByCategoryIdAndActiveTrue(categoryId, pageable)
+                .map(productMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProductsByTag(String tagSlug, Pageable pageable) {
+        log.debug("Fetching products by tag: {}", tagSlug);
+        return productRepository.findByTagSlug(tagSlug, pageable)
                 .map(productMapper::toResponse);
     }
 
@@ -165,8 +180,9 @@ public class ProductServiceImpl implements ProductService {
             for (MultipartFile file : files) {
                 uploaded.add(cloudinaryService.uploadImage(file));
             }
-            Product product = productMapper.toEntity(request, category);
-            product.setSlug(resolveSlug(null, request.name(), null));
+                Product product = productMapper.toEntity(request, category);
+                product.setSlug(resolveSlug(null, request.name(), null));
+                applyTags(product, request.tagIds());
             for (int i = 0; i < uploaded.size(); i++) {
                 CloudinaryService.UploadResult ur = uploaded.get(i);
                 ProductImage img = ProductImage.builder()
@@ -209,6 +225,7 @@ public class ProductServiceImpl implements ProductService {
                 || (previousName != null && !previousName.equals(request.name()))) {
             product.setSlug(resolveSlug(null, request.name(), product.getId()));
         }
+        applyTags(product, request.tagIds());
 
         List<MultipartFile> toUpload = newImages == null ? Collections.emptyList() : newImages;
         int existingCount = product.getImages() == null ? 0 : product.getImages().size();
@@ -392,6 +409,15 @@ public class ProductServiceImpl implements ProductService {
         return currentId == null
                 ? productRepository.existsBySlug(slug)
                 : productRepository.existsBySlugAndIdNot(slug, currentId);
+    }
+
+    private void applyTags(Product product, Set<Long> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) {
+            product.setTags(new HashSet<>());
+            return;
+        }
+        Set<ProductTag> tags = new HashSet<>(productTagRepository.findByIdIn(tagIds));
+        product.setTags(tags);
     }
 
     public static String slugify(String name) {

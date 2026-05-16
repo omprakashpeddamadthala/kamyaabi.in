@@ -39,6 +39,18 @@ public class Category {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
+    @Builder.Default
+    private Integer displayOrder = 0;
+
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Column(length = 200)
+    private String seoTitle;
+
+    @Column(length = 300)
+    private String seoDescription;
+
     @OneToMany(mappedBy = "category")
     @Builder.Default
     private List<Product> products = new ArrayList<>();

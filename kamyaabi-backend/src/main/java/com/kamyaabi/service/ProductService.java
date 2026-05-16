@@ -11,6 +11,7 @@ import java.util.List;
 public interface ProductService {
     Page<ProductResponse> getAllProducts(Pageable pageable);
     Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable);
+    Page<ProductResponse> getProductsByTag(String tagSlug, Pageable pageable);
     Page<ProductResponse> searchProducts(String keyword, Pageable pageable);
     ProductResponse getProductById(Long id);
 

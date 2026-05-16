@@ -48,4 +48,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     long countByCategoryId(Long categoryId);
 
     long countByActiveTrueAndStockLessThan(int threshold);
+
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.tags t WHERE p.active = true AND t.slug = :tagSlug")
+    Page<Product> findByTagSlug(@Param("tagSlug") String tagSlug, Pageable pageable);
 }
