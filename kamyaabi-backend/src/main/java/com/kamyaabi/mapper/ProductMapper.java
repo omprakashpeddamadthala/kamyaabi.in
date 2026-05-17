@@ -73,6 +73,11 @@ public class ProductMapper {
                 .storageTips(readList(product.getStorageTipsJson()))
                 .active(product.getActive())
                 .createdAt(product.getCreatedAt())
+                .seoTitle(product.getSeoTitle())
+                .seoDescription(product.getSeoDescription())
+                .seoKeywords(product.getSeoKeywords())
+                .ogImageUrl(product.getOgImageUrl())
+                .canonicalUrl(product.getCanonicalUrl())
                 .build();
     }
 
@@ -145,6 +150,11 @@ public class ProductMapper {
                 .howToUseJson(writeJson(request.howToUse()))
                 .storageTipsJson(writeJson(request.storageTips()))
                 .active(request.active() != null ? request.active() : true)
+                .seoTitle(request.seoTitle())
+                .seoDescription(request.seoDescription())
+                .seoKeywords(request.seoKeywords())
+                .ogImageUrl(request.ogImageUrl())
+                .canonicalUrl(request.canonicalUrl())
                 .build();
     }
 
@@ -165,5 +175,10 @@ public class ProductMapper {
         if (request.active() != null) {
             product.setActive(request.active());
         }
+        product.setSeoTitle(request.seoTitle());
+        product.setSeoDescription(request.seoDescription());
+        product.setSeoKeywords(request.seoKeywords());
+        product.setOgImageUrl(request.ogImageUrl());
+        product.setCanonicalUrl(request.canonicalUrl());
     }
 }

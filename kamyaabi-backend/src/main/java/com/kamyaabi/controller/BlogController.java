@@ -35,15 +35,21 @@ public class BlogController {
 
     @GetMapping("/posts")
     @Operation(summary = "List published blog posts",
-            description = "Paginated list of published posts. Supports category, tag, search, and featured filters.")
+            description = "Paginated list of published posts. Supports category, tag, search, featured filters, and sorting (e.g. sort=createdAt,desc).")
     public ResponseEntity<ApiResponse<Page<BlogPostResponse>>> getPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "9") int size,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean featured) {
-        Pageable pageable = PageRequest.of(page, size);
+            @RequestParam(required = false) Boolean featured,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        String[] sortParts = sort.split(",");
+        String sortField = sortParts[0];
+        org.springframework.data.domain.Sort sortOrder = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
+                ? org.springframework.data.domain.Sort.by(sortField).ascending()
+                : org.springframework.data.domain.Sort.by(sortField).descending();
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
         Page<BlogPostResponse> posts;
         if (search != null && !search.isBlank()) {
             posts = blogService.searchPublishedPosts(search, pageable);

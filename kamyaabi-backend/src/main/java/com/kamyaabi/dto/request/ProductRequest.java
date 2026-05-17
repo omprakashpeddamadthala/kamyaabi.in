@@ -45,6 +45,16 @@ public record ProductRequest(
 
         Boolean active,
 
-        java.util.Set<Long> tagIds
+        java.util.Set<Long> tagIds,
+
+        String seoTitle,
+
+        String seoDescription,
+
+        String seoKeywords,
+
+        String ogImageUrl,
+
+        String canonicalUrl
 ) {
 }

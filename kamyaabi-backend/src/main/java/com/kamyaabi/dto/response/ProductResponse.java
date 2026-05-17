@@ -29,6 +29,11 @@ public record ProductResponse(
         List<String> howToUse,
         List<String> storageTips,
         Boolean active,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String seoTitle,
+        String seoDescription,
+        String seoKeywords,
+        String ogImageUrl,
+        String canonicalUrl
 ) {
 }

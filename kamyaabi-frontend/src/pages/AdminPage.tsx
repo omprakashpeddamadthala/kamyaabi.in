@@ -35,6 +35,9 @@ import {
   Switch,
   useMediaQuery,
   useTheme,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   Edit,
@@ -51,6 +54,7 @@ import {
   Article,
   Label,
   Category as CategoryIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCategories } from '../features/product/productSlice';
@@ -137,6 +141,11 @@ const initialProductForm: ProductRequest = {
   weight: '',
   unit: 'g',
   active: true,
+  seoTitle: '',
+  seoDescription: '',
+  seoKeywords: '',
+  ogImageUrl: '',
+  canonicalUrl: '',
 };
 
 const initialCategoryForm: CategoryRequest = {
@@ -667,6 +676,11 @@ const AdminPage: React.FC = () => {
       weight: product.weight,
       unit: product.unit,
       active: product.active,
+      seoTitle: product.seoTitle || '',
+      seoDescription: product.seoDescription || '',
+      seoKeywords: product.seoKeywords || '',
+      ogImageUrl: product.ogImageUrl || '',
+      canonicalUrl: product.canonicalUrl || '',
     });
     setSelectedTagIds(product.tags?.map((t) => t.id) ?? []);
     setEditingProductId(product.id);
@@ -1643,6 +1657,52 @@ const AdminPage: React.FC = () => {
                 <FormHelperText>Optional. Select tags for this product.</FormHelperText>
               </FormControl>
             )}
+            <Accordion disableGutters sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider', '&:before': { display: 'none' } }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle2">SEO Settings</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField
+                    label="Meta Title"
+                    value={productForm.seoTitle || ''}
+                    onChange={(e) => setProductForm({ ...productForm, seoTitle: e.target.value })}
+                    fullWidth
+                    helperText="Page title for search engines (50-60 chars recommended)"
+                  />
+                  <TextField
+                    label="Meta Description"
+                    value={productForm.seoDescription || ''}
+                    onChange={(e) => setProductForm({ ...productForm, seoDescription: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={2}
+                    helperText="Page description for search engines (150-160 chars recommended)"
+                  />
+                  <TextField
+                    label="Meta Keywords"
+                    value={productForm.seoKeywords || ''}
+                    onChange={(e) => setProductForm({ ...productForm, seoKeywords: e.target.value })}
+                    fullWidth
+                    helperText="Comma-separated keywords"
+                  />
+                  <TextField
+                    label="OG Image URL"
+                    value={productForm.ogImageUrl || ''}
+                    onChange={(e) => setProductForm({ ...productForm, ogImageUrl: e.target.value })}
+                    fullWidth
+                    helperText="Image URL for social media sharing (1200x630px recommended)"
+                  />
+                  <TextField
+                    label="Canonical URL"
+                    value={productForm.canonicalUrl || ''}
+                    onChange={(e) => setProductForm({ ...productForm, canonicalUrl: e.target.value })}
+                    fullWidth
+                    helperText="Canonical URL if different from the default product page URL"
+                  />
+                </Box>
+              </AccordionDetails>
+            </Accordion>
           </Box>
         </DialogContent>
         <DialogActions>

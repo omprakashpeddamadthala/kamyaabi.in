@@ -70,6 +70,20 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String storageTipsJson;
 
+    private String seoTitle;
+
+    @Column(columnDefinition = "TEXT")
+    private String seoDescription;
+
+    @Column(length = 500)
+    private String seoKeywords;
+
+    @Column(length = 500)
+    private String ogImageUrl;
+
+    @Column(length = 500)
+    private String canonicalUrl;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
