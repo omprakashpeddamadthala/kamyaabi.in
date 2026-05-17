@@ -60,6 +60,6 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, Long> {
 
     @Query("SELECT p FROM BlogPost p WHERE " +
             "(:status IS NULL OR p.status = :status) AND " +
-            "(:q IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :q, '%')))")
+            "(CAST(:q AS string) IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:q AS string), '%')))")
     Page<BlogPost> findAllAdmin(@Param("status") BlogPostStatus status, @Param("q") String q, Pageable pageable);
 }
