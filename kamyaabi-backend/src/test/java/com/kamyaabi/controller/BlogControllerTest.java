@@ -55,7 +55,7 @@ class BlogControllerTest {
     void getPosts_default_shouldReturn200() {
         when(blogService.getPublishedPosts(any())).thenReturn(new PageImpl<>(List.of(postResponse)));
 
-        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, null, null);
+        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, null, null, "createdAt,desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -65,7 +65,7 @@ class BlogControllerTest {
         when(blogService.searchPublishedPosts(eq("test"), any()))
                 .thenReturn(new PageImpl<>(List.of(postResponse)));
 
-        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, "test", null);
+        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, "test", null, "createdAt,desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -75,7 +75,7 @@ class BlogControllerTest {
         when(blogService.getPublishedPostsByCategory(eq("health"), any()))
                 .thenReturn(new PageImpl<>(List.of(postResponse)));
 
-        ResponseEntity<?> response = blogController.getPosts(0, 10, "health", null, null, null);
+        ResponseEntity<?> response = blogController.getPosts(0, 10, "health", null, null, null, "createdAt,desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -85,7 +85,7 @@ class BlogControllerTest {
         when(blogService.getPublishedPostsByTag(eq("organic"), any()))
                 .thenReturn(new PageImpl<>(List.of(postResponse)));
 
-        ResponseEntity<?> response = blogController.getPosts(0, 10, null, "organic", null, null);
+        ResponseEntity<?> response = blogController.getPosts(0, 10, null, "organic", null, null, "createdAt,desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -95,7 +95,7 @@ class BlogControllerTest {
         when(blogService.getPublishedFeaturedPosts(any()))
                 .thenReturn(new PageImpl<>(List.of(postResponse)));
 
-        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, null, true);
+        ResponseEntity<?> response = blogController.getPosts(0, 10, null, null, null, true, "createdAt,desc");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
