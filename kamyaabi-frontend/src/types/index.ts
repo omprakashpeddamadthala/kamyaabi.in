@@ -58,6 +58,11 @@ export interface Product {
   tags?: ProductTag[];
   active: boolean;
   createdAt: string;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoKeywords?: string | null;
+  ogImageUrl?: string | null;
+  canonicalUrl?: string | null;
 }
 
 export interface Review {

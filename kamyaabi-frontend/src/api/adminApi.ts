@@ -22,6 +22,11 @@ export interface ProductRequest {
   unit: string;
   active?: boolean;
   tagIds?: number[];
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  ogImageUrl?: string;
+  canonicalUrl?: string;
 }
 
 export interface CategoryRequest {
