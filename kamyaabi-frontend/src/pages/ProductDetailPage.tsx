@@ -26,6 +26,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  TextField,
+  Alert,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -49,6 +51,9 @@ import {
   ExpandMore,
   HelpOutline,
   LocalOffer,
+  RateReview,
+  Delete as DeleteIcon,
+  PhotoCamera,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -63,7 +68,7 @@ import PageTransition from '../components/common/PageTransition';
 import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
 import ProductCard from '../components/common/ProductCard';
 import { reviewApi } from '../api/reviewApi';
-import type { Review, ReviewSummary } from '../types';
+import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';
 
@@ -239,6 +244,17 @@ const ProductDetailPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+
+  // Review form state
+  const [reviewFormRating, setReviewFormRating] = useState<number | null>(null);
+  const [reviewFormTitle, setReviewFormTitle] = useState('');
+  const [reviewFormText, setReviewFormText] = useState('');
+  const [reviewFormImages, setReviewFormImages] = useState<File[]>([]);
+  const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false);
+  const [reviewFormError, setReviewFormError] = useState('');
+  const [reviewFormSuccess, setReviewFormSuccess] = useState('');
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -277,7 +293,7 @@ const ProductDetailPage: React.FC = () => {
     if (!productId) return;
     let cancelled = false;
     setReviewsLoading(true);
-    Promise.all([reviewApi.list(productId, 0, 6), reviewApi.summary(productId)])
+    Promise.all([reviewApi.list(productId, 0, 50), reviewApi.summary(productId)])
       .then(([listRes, sumRes]) => {
         if (cancelled) return;
         setReviews(listRes.data.data?.content ?? []);
@@ -293,6 +309,68 @@ const ProductDetailPage: React.FC = () => {
       });
     return () => { cancelled = true; };
   }, [product?.id]);
+
+  useEffect(() => {
+    const productId = product?.id;
+    if (!productId) return;
+    let cancelled = false;
+    reviewApi.getFaqs(productId)
+      .then((res) => { if (!cancelled) setFaqs(res.data.data ?? []); })
+      .catch(() => { if (!cancelled) setFaqs([]); });
+    return () => { cancelled = true; };
+  }, [product?.id]);
+
+  const userAlreadyReviewed = user && reviews.some((r) => r.userId === user.id);
+
+  const handleReviewSubmit = async () => {
+    if (!product || !user) return;
+    if (!reviewFormRating) { setReviewFormError('Please select a rating'); return; }
+    if (reviewFormText.length < 20) { setReviewFormError('Review text must be at least 20 characters'); return; }
+    setReviewFormError('');
+    setReviewFormSubmitting(true);
+    try {
+      const res = await reviewApi.create(product.id, {
+        rating: reviewFormRating,
+        title: reviewFormTitle || undefined,
+        text: reviewFormText,
+      }, reviewFormImages.length > 0 ? reviewFormImages : undefined);
+      setReviews((prev) => [res.data.data, ...prev]);
+      setReviewSummary((prev) => prev ? {
+        ...prev,
+        totalReviews: prev.totalReviews + 1,
+        averageRating: Math.round(((prev.averageRating * prev.totalReviews + reviewFormRating) / (prev.totalReviews + 1)) * 10) / 10,
+      } : prev);
+      setReviewFormRating(null);
+      setReviewFormTitle('');
+      setReviewFormText('');
+      setReviewFormImages([]);
+      setReviewFormSuccess('Review submitted successfully!');
+      setTimeout(() => setReviewFormSuccess(''), 4000);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to submit review';
+      setReviewFormError(msg);
+    } finally {
+      setReviewFormSubmitting(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!window.confirm('Delete this review? This cannot be undone.')) return;
+    try {
+      await reviewApi.deleteReview(reviewId);
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      setReviewSummary((prev) => prev && prev.totalReviews > 1 ? {
+        ...prev,
+        totalReviews: prev.totalReviews - 1,
+      } : prev);
+    } catch { /* silently handle */ }
+  };
+
+  const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const valid = files.filter((f) => f.size <= 5 * 1024 * 1024 && /image\/(jpeg|png|webp)/.test(f.type));
+    setReviewFormImages((prev) => [...prev, ...valid].slice(0, 5));
+  };
 
   useEffect(() => {
     const el = ctaRef.current;
@@ -418,10 +496,21 @@ const ProductDetailPage: React.FC = () => {
   const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;
   const hasStorageTips = !!product.storageTips && product.storageTips.length > 0;
   const hasUsageTab = hasHowToUse || hasStorageTips;
-  const tabKeys: Array<'description' | 'nutrition' | 'usage'> = ['description'];
+  const tabKeys: Array<'description' | 'nutrition' | 'usage' | 'reviews' | 'faq'> = ['description'];
   if (hasNutrition) tabKeys.push('nutrition');
   if (hasUsageTab) tabKeys.push('usage');
+  tabKeys.push('reviews');
+  tabKeys.push('faq');
   const safeTabValue = Math.min(tabValue, tabKeys.length - 1);
+
+  const defaultFaqs = [
+    { id: -1, question: 'How fresh are the products when delivered?', answer: 'Every order is packed on demand from our climate-controlled storage and sealed in airtight, food-grade pouches. Most customers receive their order within 3–5 business days of dispatch.', displayOrder: 0 },
+    { id: -2, question: 'How should I store this product?', answer: 'Keep the pack in a cool, dry place away from direct sunlight. Once opened, transfer the contents to an airtight container or reseal the pouch tightly to preserve crunch and flavor.', displayOrder: 1 },
+    { id: -3, question: 'Are these dry fruits raw, roasted, or salted?', answer: 'Preparation varies by product. Refer to the Description and Additional Information sections above for the exact processing details for this specific item.', displayOrder: 2 },
+    { id: -4, question: 'Do you offer returns or refunds?', answer: 'Yes. If your order arrives damaged or you are not satisfied with the quality, contact us within 7 days of delivery and we will arrange a replacement or refund as per our return policy.', displayOrder: 3 },
+    { id: -5, question: 'Is the packaging vegetarian and food-safe?', answer: 'Absolutely. All Kamyaabi products are 100% vegetarian and packed in FSSAI-compliant, food-grade materials that protect freshness without any added preservatives.', displayOrder: 4 },
+  ];
+  const displayFaqs = faqs.length > 0 ? faqs : defaultFaqs;
 
   return (
     <PageTransition>
@@ -830,7 +919,8 @@ const ProductDetailPage: React.FC = () => {
             <Tabs
               value={safeTabValue}
               onChange={(_, v) => setTabValue(v)}
-              variant={isMobile ? 'fullWidth' : 'standard'}
+              variant={isMobile ? 'scrollable' : 'standard'}
+              scrollButtons="auto"
               sx={{
                 borderBottom: 1,
                 borderColor: 'divider',
@@ -842,7 +932,11 @@ const ProductDetailPage: React.FC = () => {
                   ? { icon: <DescriptionIcon />, label: 'Description' }
                   : key === 'nutrition'
                     ? { icon: <Restaurant />, label: 'Nutritional Info' }
-                    : { icon: <Kitchen />, label: 'How to Use' };
+                    : key === 'usage'
+                      ? { icon: <Kitchen />, label: 'How to Use' }
+                      : key === 'reviews'
+                        ? { icon: <RateReview />, label: `Reviews${hasRating ? ` (${reviewSummary!.totalReviews})` : ''}` }
+                        : { icon: <HelpOutline />, label: 'FAQ' };
                 return (
                   <Tab
                     key={key}
@@ -997,152 +1091,227 @@ const ProductDetailPage: React.FC = () => {
                     )}
                   </>
                 )}
+
+                {key === 'reviews' && (
+                  <>
+                    {reviewsLoading ? (
+                      <Grid container spacing={3}>
+                        {[0, 1, 2].map((i) => (
+                          <Grid item xs={12} sm={6} md={4} key={i}>
+                            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2 }} animation="wave" />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    ) : (
+                      <>
+                        {hasRating && reviewSummary && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                            <Typography variant="h3" fontWeight={700} color="primary.main">
+                              {reviewSummary.averageRating.toFixed(1)}
+                            </Typography>
+                            <Box>
+                              <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
+                              <Typography variant="body2" color="text.secondary">
+                                Based on {reviewSummary.totalReviews}
+                                {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+
+                        {reviews.length > 0 ? (
+                          <Grid container spacing={3}>
+                            {reviews.map((review) => (
+                              <Grid item xs={12} sm={6} md={4} key={review.id}>
+                                <Box sx={{
+                                  p: 3,
+                                  borderRadius: 2,
+                                  border: '1px solid',
+                                  borderColor: 'divider',
+                                  height: '100%',
+                                  bgcolor: 'background.paper',
+                                  transition: 'box-shadow 0.2s ease',
+                                  '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+                                  position: 'relative',
+                                }}>
+                                  {user?.role === 'ADMIN' && (
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleDeleteReview(review.id)}
+                                      sx={{ position: 'absolute', top: 8, right: 8, color: 'error.main' }}
+                                      aria-label="Delete review"
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  )}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <Rating value={review.rating} readOnly size="small" />
+                                    {review.title && (
+                                      <Typography variant="subtitle2" fontWeight={600}>{review.title}</Typography>
+                                    )}
+                                  </Box>
+                                  {review.text && (
+                                    <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
+                                      &ldquo;{review.text}&rdquo;
+                                    </Typography>
+                                  )}
+                                  {review.images && review.images.length > 0 && (
+                                    <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                                      {review.images.map((img, imgIdx) => (
+                                        <Box
+                                          key={imgIdx}
+                                          component="img"
+                                          src={img}
+                                          alt={`Review image ${imgIdx + 1}`}
+                                          onClick={() => setLightboxImageUrl(img)}
+                                          sx={{
+                                            width: 56, height: 56, objectFit: 'cover',
+                                            borderRadius: 1, cursor: 'pointer',
+                                            border: '1px solid', borderColor: 'divider',
+                                          }}
+                                        />
+                                      ))}
+                                    </Box>
+                                  )}
+                                  <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                    · {formatRelativeDate(review.createdAt)}
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                            ))}
+                          </Grid>
+                        ) : (
+                          <Box sx={{ p: 3, borderRadius: 2, border: '1px dashed', borderColor: 'divider', bgcolor: '#FAFAF5', textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                              No reviews yet. Be the first to review!
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {/* Review submission form */}
+                        <Divider sx={{ my: 4 }} />
+                        {user ? (
+                          userAlreadyReviewed ? (
+                            <Alert severity="info" sx={{ borderRadius: 2 }}>
+                              You have already reviewed this product.
+                            </Alert>
+                          ) : (
+                            <Box sx={{ maxWidth: 600 }}>
+                              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Write a Review</Typography>
+                              {reviewFormError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{reviewFormError}</Alert>}
+                              {reviewFormSuccess && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{reviewFormSuccess}</Alert>}
+                              <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" sx={{ mb: 0.5 }}>Rating *</Typography>
+                                <Rating
+                                  value={reviewFormRating}
+                                  onChange={(_, v) => setReviewFormRating(v)}
+                                  size="large"
+                                />
+                              </Box>
+                              <TextField
+                                label="Title (optional)"
+                                fullWidth
+                                size="small"
+                                value={reviewFormTitle}
+                                onChange={(e) => setReviewFormTitle(e.target.value.slice(0, 100))}
+                                sx={{ mb: 2 }}
+                                inputProps={{ maxLength: 100 }}
+                              />
+                              <TextField
+                                label="Your review *"
+                                fullWidth
+                                multiline
+                                rows={4}
+                                value={reviewFormText}
+                                onChange={(e) => setReviewFormText(e.target.value.slice(0, 1000))}
+                                sx={{ mb: 1 }}
+                                helperText={`${reviewFormText.length}/1000 (min 20)`}
+                                inputProps={{ maxLength: 1000 }}
+                              />
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                <Button
+                                  component="label"
+                                  variant="outlined"
+                                  size="small"
+                                  startIcon={<PhotoCamera />}
+                                  disabled={reviewFormImages.length >= 5}
+                                >
+                                  Add Images ({reviewFormImages.length}/5)
+                                  <input type="file" hidden multiple accept="image/jpeg,image/png,image/webp" onChange={handleReviewImageChange} />
+                                </Button>
+                                {reviewFormImages.map((f, fi) => (
+                                  <Chip
+                                    key={fi}
+                                    label={f.name.slice(0, 20)}
+                                    size="small"
+                                    onDelete={() => setReviewFormImages((prev) => prev.filter((_, i) => i !== fi))}
+                                  />
+                                ))}
+                              </Box>
+                              <Button
+                                variant="contained"
+                                onClick={handleReviewSubmit}
+                                disabled={reviewFormSubmitting}
+                                startIcon={reviewFormSubmitting ? <CircularProgress size={18} color="inherit" /> : <RateReview />}
+                              >
+                                {reviewFormSubmitting ? 'Submitting...' : 'Submit Review'}
+                              </Button>
+                            </Box>
+                          )
+                        ) : (
+                          <Box sx={{ p: 3, borderRadius: 2, bgcolor: '#FAFAF5', textAlign: 'center', border: '1px solid', borderColor: 'divider' }}>
+                            <Typography variant="body2" color="text.secondary">
+                              <MuiLink component={Link} to="/login" underline="hover" color="primary" fontWeight={600}>
+                                Login
+                              </MuiLink>{' '}to write a review
+                            </Typography>
+                          </Box>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
+
+                {key === 'faq' && (
+                  <>
+                    {displayFaqs.map((item, idx) => (
+                      <Accordion
+                        key={item.id ?? idx}
+                        disableGutters
+                        square
+                        sx={{
+                          mb: 1.25,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          bgcolor: 'background.paper',
+                          boxShadow: 'none',
+                          '&::before': { display: 'none' },
+                          '&.Mui-expanded': { boxShadow: '0 4px 16px rgba(0,0,0,0.06)' },
+                        }}
+                      >
+                        <AccordionSummary
+                          expandIcon={<ExpandMore />}
+                          aria-controls={`faq-content-${idx}`}
+                          id={`faq-header-${idx}`}
+                          sx={{ px: 2, py: 0.5 }}
+                        >
+                          <Typography variant="subtitle1" fontWeight={600}>{item.question}</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ px: 2, pb: 2, pt: 0 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                            {item.answer}
+                          </Typography>
+                        </AccordionDetails>
+                      </Accordion>
+                    ))}
+                  </>
+                )}
               </TabPanel>
             ))}
           </Box>
         )}
-
-        {}
-        <Box ref={reviewsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(reviewsReveal.visible) }}>
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, fontFamily: '"Playfair Display", serif' }}
-          >
-            <Star fontSize="small" sx={{ color: 'secondary.main' }} />
-            Customer Reviews
-          </Typography>
-          {reviewsLoading ? (
-            <Grid container spacing={3}>
-              {[0, 1, 2].map((i) => (
-                <Grid item xs={12} sm={6} md={4} key={i}>
-                  <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2 }} animation="wave" />
-                </Grid>
-              ))}
-            </Grid>
-          ) : reviews.length > 0 && reviewSummary ? (
-            <>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Typography variant="h3" fontWeight={700} color="primary.main">
-                  {reviewSummary.averageRating.toFixed(1)}
-                </Typography>
-                <Box>
-                  <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
-                  <Typography variant="body2" color="text.secondary">
-                    Based on {reviewSummary.totalReviews}
-                    {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
-                  </Typography>
-                </Box>
-              </Box>
-              <Grid container spacing={3}>
-                {reviews.map((review) => (
-                  <Grid item xs={12} sm={6} md={4} key={review.id}>
-                    <Box sx={{
-                      p: 3,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      height: '100%',
-                      bgcolor: 'background.paper',
-                      transition: 'box-shadow 0.2s ease',
-                      '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-                    }}>
-                      <Rating value={review.rating} readOnly size="small" sx={{ mb: 1 }} />
-                      {review.text && (
-                        <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
-                          &ldquo;{review.text}&rdquo;
-                        </Typography>
-                      )}
-                      <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                        · {formatRelativeDate(review.createdAt)}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
-          ) : (
-            <Box
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                border: '1px dashed',
-                borderColor: 'divider',
-                bgcolor: '#FAFAF5',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                No reviews yet. Be the first to share your experience with {product.name}.
-              </Typography>
-            </Box>
-          )}
-        </Box>
-
-        {}
-        <Box sx={{ mt: { xs: 4, md: 5 } }}>
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1, fontFamily: '"Playfair Display", serif' }}
-          >
-            <HelpOutline fontSize="small" color="primary" />
-            Frequently Asked Questions
-          </Typography>
-          {[
-            {
-              q: 'How fresh are the products when delivered?',
-              a: 'Every order is packed on demand from our climate-controlled storage and sealed in airtight, food-grade pouches. Most customers receive their order within 3–5 business days of dispatch.',
-            },
-            {
-              q: 'How should I store this product?',
-              a: 'Keep the pack in a cool, dry place away from direct sunlight. Once opened, transfer the contents to an airtight container or reseal the pouch tightly to preserve crunch and flavor.',
-            },
-            {
-              q: 'Are these dry fruits raw, roasted, or salted?',
-              a: 'Preparation varies by product. Refer to the Description and Additional Information sections above for the exact processing details for this specific item.',
-            },
-            {
-              q: 'Do you offer returns or refunds?',
-              a: 'Yes. If your order arrives damaged or you are not satisfied with the quality, contact us within 7 days of delivery and we will arrange a replacement or refund as per our return policy.',
-            },
-            {
-              q: 'Is the packaging vegetarian and food-safe?',
-              a: 'Absolutely. All Kamyaabi products are 100% vegetarian and packed in FSSAI-compliant, food-grade materials that protect freshness without any added preservatives.',
-            },
-          ].map((item, idx) => (
-            <Accordion
-              key={idx}
-              disableGutters
-              square
-              sx={{
-                mb: 1.25,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                boxShadow: 'none',
-                '&::before': { display: 'none' },
-                '&.Mui-expanded': { boxShadow: '0 4px 16px rgba(0,0,0,0.06)' },
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                aria-controls={`faq-content-${idx}`}
-                id={`faq-header-${idx}`}
-                sx={{ px: 2, py: 0.5 }}
-              >
-                <Typography variant="subtitle1" fontWeight={600}>{item.q}</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 2, pb: 2, pt: 0 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                  {item.a}
-                </Typography>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
 
         {}
         {relatedProducts.length > 0 && (
@@ -1247,6 +1416,26 @@ const ProductDetailPage: React.FC = () => {
                 />
               ))}
             </Box>
+          )}
+        </Box>
+      </Dialog>
+
+      {/* Review image lightbox */}
+      <Dialog
+        open={!!lightboxImageUrl}
+        onClose={() => setLightboxImageUrl(null)}
+        maxWidth="md"
+        PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.95)', boxShadow: 'none' } }}
+      >
+        <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+          <IconButton
+            onClick={() => setLightboxImageUrl(null)}
+            sx={{ position: 'absolute', top: 8, right: 8, color: '#fff' }}
+          >
+            <Close />
+          </IconButton>
+          {lightboxImageUrl && (
+            <Box component="img" src={lightboxImageUrl} alt="Review image" sx={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }} />
           )}
         </Box>
       </Dialog>

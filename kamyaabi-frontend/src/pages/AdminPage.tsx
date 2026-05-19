@@ -77,6 +77,7 @@ import { adminProductTagApi } from '../api/productTagApi';
 import AnalyticsTab from '../components/admin/AnalyticsTab';
 import UsersTab from '../components/admin/UsersTab';
 import SettingsTab from '../components/admin/SettingsTab';
+import AdminReviewsPanel from '../components/admin/AdminReviewsPanel';
 import { withCloudinaryTransform } from '../utils/cloudinary';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
@@ -169,7 +170,7 @@ const ORDER_STATUSES = [
   'PENDING',
 ] as const;
 
-const TAB_IDS = ['products', 'categories', 'orders', 'users', 'analytics', 'settings'] as const;
+const TAB_IDS = ['products', 'categories', 'orders', 'reviews', 'users', 'analytics', 'settings'] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const tabIndexOf = (id: string | null | undefined): number => {
@@ -865,6 +866,7 @@ const AdminPage: React.FC = () => {
           <Tab label="Products" />
           <Tab label="Categories" />
           <Tab label="Orders" />
+          <Tab label="Reviews" />
           <Tab label="Users" />
           <Tab label="Analytics" />
           <Tab label="Settings" />
@@ -1354,16 +1356,21 @@ const AdminPage: React.FC = () => {
 
       {}
       <TabPanel value={tabValue} index={3}>
-        <UsersTab active={tabId === 'users'} currentUserId={currentUser?.id} />
+        <AdminReviewsPanel active={tabId === 'reviews'} />
       </TabPanel>
 
       {}
       <TabPanel value={tabValue} index={4}>
-        <AnalyticsTab active={tabId === 'analytics'} />
+        <UsersTab active={tabId === 'users'} currentUserId={currentUser?.id} />
       </TabPanel>
 
       {}
       <TabPanel value={tabValue} index={5}>
+        <AnalyticsTab active={tabId === 'analytics'} />
+      </TabPanel>
+
+      {}
+      <TabPanel value={tabValue} index={6}>
         <SettingsTab active={tabId === 'settings'} />
       </TabPanel>
 

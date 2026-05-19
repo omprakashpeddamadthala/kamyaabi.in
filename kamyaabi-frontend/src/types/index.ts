@@ -68,8 +68,11 @@ export interface Product {
 export interface Review {
   id: number;
   authorName: string;
+  title: string | null;
   rating: number;
   text: string | null;
+  images: string[];
+  userId: number | null;
   createdAt: string;
 }
 
@@ -77,6 +80,13 @@ export interface ReviewSummary {
   averageRating: number;
   totalReviews: number;
   recentBuyersCount: number;
+}
+
+export interface Faq {
+  id: number;
+  question: string;
+  answer: string;
+  displayOrder: number;
 }
 
 export interface CartItem {

@@ -8,6 +8,10 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   backend-test:
     name: Backend - Build & Test
@@ -29,10 +33,12 @@ jobs:
 
       - name: Upload JaCoCo Report
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
           path: kamyaabi-backend/target/site/jacoco/
+          retention-days: 7
 
   frontend-build:
     name: Frontend - Build
