@@ -8,6 +8,7 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.*;
 import com.kamyaabi.service.CartService;
+import com.kamyaabi.service.ShiprocketService;
 import com.kamyaabi.event.OrderEventPublisher;
 import com.kamyaabi.event.OrderEventType;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,7 @@ class OrderServiceImplTest {
     @Mock private OrderMapper orderMapper;
     @Mock private CartService cartService;
     @Mock private OrderEventPublisher orderEventPublisher;
+    @Mock private ShiprocketService shiprocketService;
 
     @InjectMocks private OrderServiceImpl orderService;
 

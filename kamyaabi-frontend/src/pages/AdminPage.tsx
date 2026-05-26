@@ -1228,15 +1228,16 @@ const AdminPage: React.FC = () => {
                 <TableCell>Shipping Address</TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Shipping</TableCell>
                 <TableCell>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {ordersLoading ? (
-                <TableSkeleton rows={5} columns={7} />
+                <TableSkeleton rows={5} columns={8} />
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                     <Typography variant="body2" color="text.secondary">
                       {orderStatusFilter
                         ? `No orders for status: ${orderStatusFilter.replace('_', ' ')}`
@@ -1284,6 +1285,26 @@ const AdminPage: React.FC = () => {
                     <TableCell>₹{o.totalAmount}</TableCell>
                     <TableCell>
                       <Chip label={o.status} size="small" />
+                    </TableCell>
+                    <TableCell sx={{ fontSize: '0.8rem', minWidth: 120 }}>
+                      {o.awbNumber ? (
+                        <Box>
+                          {o.courierName && <Box sx={{ fontWeight: 600 }}>{o.courierName}</Box>}
+                          <Box>AWB: {o.awbNumber}</Box>
+                          {o.shippingStatus && (
+                            <Chip
+                              label={o.shippingStatus.replace(/_/g, ' ')}
+                              size="small"
+                              color="info"
+                              sx={{ mt: 0.5 }}
+                            />
+                          )}
+                        </Box>
+                      ) : o.shiprocketSynced === false && (o.status === 'PAID' || o.status === 'CONFIRMED') ? (
+                        <Chip label="Sync Pending" size="small" color="warning" />
+                      ) : (
+                        '—'
+                      )}
                     </TableCell>
                     <TableCell>
                       <FormControl

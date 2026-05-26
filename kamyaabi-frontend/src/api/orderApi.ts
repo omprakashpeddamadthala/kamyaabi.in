@@ -12,4 +12,7 @@ export const orderApi = {
 
   getById: (id: number) =>
     axiosInstance.get<ApiResponse<Order>>(`/api/orders/${id}`),
+
+  trackShipment: (orderId: number) =>
+    axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/shipping/track/${orderId}`),
 };

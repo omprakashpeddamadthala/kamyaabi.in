@@ -45,4 +45,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     long countDistinctRecentBuyersForProduct(@Param("productId") Long productId,
                                              @Param("since") LocalDateTime since,
                                              @Param("excluded") List<Order.OrderStatus> excluded);
+
+    List<Order> findByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
+
+    Optional<Order> findByAwbNumber(String awbNumber);
 }

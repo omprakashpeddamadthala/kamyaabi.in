@@ -9,6 +9,7 @@ import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.*;
 import com.kamyaabi.service.CartService;
 import com.kamyaabi.service.OrderService;
+import com.kamyaabi.service.ShiprocketService;
 import com.kamyaabi.event.OrderEventPublisher;
 import com.kamyaabi.event.OrderEventType;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final CartService cartService;
     private final OrderEventPublisher orderEventPublisher;
+    private final ShiprocketService shiprocketService;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             CartRepository cartRepository,
@@ -42,7 +44,8 @@ public class OrderServiceImpl implements OrderService {
                             ProductRepository productRepository,
                             OrderMapper orderMapper,
                             CartService cartService,
-                            OrderEventPublisher orderEventPublisher) {
+                            OrderEventPublisher orderEventPublisher,
+                            ShiprocketService shiprocketService) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.addressRepository = addressRepository;
@@ -51,6 +54,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderMapper = orderMapper;
         this.cartService = cartService;
         this.orderEventPublisher = orderEventPublisher;
+        this.shiprocketService = shiprocketService;
     }
 
     @Override
@@ -174,6 +178,14 @@ public class OrderServiceImpl implements OrderService {
                 productRepository.save(product);
                 log.debug("Deducted {} units from product {} '{}'; remaining stock: {}",
                         item.getQuantity(), product.getId(), product.getName(), newStock);
+            }
+        }
+
+        if (status == Order.OrderStatus.CANCELLED && order.getShiprocketOrderId() != null) {
+            try {
+                shiprocketService.cancelShiprocketOrder(order);
+            } catch (Exception e) {
+                log.error("Failed to cancel Shiprocket order for order {}: {}", orderId, e.getMessage());
             }
         }
 
