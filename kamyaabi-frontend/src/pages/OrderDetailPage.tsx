@@ -264,6 +264,47 @@ const OrderDetailPage: React.FC = () => {
           )}
 
           {}
+          {(order.awbNumber || order.courierName || order.shippingStatus) && (
+            <Card sx={{ p: 3, mt: 3, '&:hover': { transform: 'none' } }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>Shipping Details</Typography>
+              {order.courierName && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Courier</Typography>
+                  <Typography variant="body2" fontWeight={600}>{order.courierName}</Typography>
+                </Box>
+              )}
+              {order.awbNumber && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">AWB / Tracking No.</Typography>
+                  <Typography variant="body2" fontWeight={600}>{order.awbNumber}</Typography>
+                </Box>
+              )}
+              {order.shippingStatus && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Shipping Status</Typography>
+                  <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />
+                </Box>
+              )}
+              {order.pickupScheduledAt && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Pickup Scheduled</Typography>
+                  <Typography variant="body2">
+                    {new Date(order.pickupScheduledAt).toLocaleDateString('en-IN')}
+                  </Typography>
+                </Box>
+              )}
+              {order.deliveredAt && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Delivered On</Typography>
+                  <Typography variant="body2">
+                    {new Date(order.deliveredAt).toLocaleDateString('en-IN')}
+                  </Typography>
+                </Box>
+              )}
+            </Card>
+          )}
+
+          {}
           <Card sx={{ p: 3, mt: 3, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Info</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

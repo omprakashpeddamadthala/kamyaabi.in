@@ -14,6 +14,14 @@ public record OrderResponse(
         String status,
         AddressResponse shippingAddress,
         PaymentResponse payment,
+        String shiprocketOrderId,
+        String shiprocketShipmentId,
+        String awbNumber,
+        String courierName,
+        String shippingStatus,
+        LocalDateTime pickupScheduledAt,
+        LocalDateTime deliveredAt,
+        Boolean shiprocketSynced,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

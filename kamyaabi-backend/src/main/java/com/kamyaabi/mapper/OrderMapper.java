@@ -34,6 +34,14 @@ public class OrderMapper {
                         ? addressMapper.toResponse(order.getShippingAddress()) : null)
                 .payment(order.getPayment() != null
                         ? paymentMapper.toResponse(order.getPayment()) : null)
+                .shiprocketOrderId(order.getShiprocketOrderId())
+                .shiprocketShipmentId(order.getShiprocketShipmentId())
+                .awbNumber(order.getAwbNumber())
+                .courierName(order.getCourierName())
+                .shippingStatus(order.getShippingStatus())
+                .pickupScheduledAt(order.getPickupScheduledAt())
+                .deliveredAt(order.getDeliveredAt())
+                .shiprocketSynced(order.getShiprocketSynced())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();

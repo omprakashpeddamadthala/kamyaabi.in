@@ -50,6 +50,23 @@ public class Order {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private Payment payment;
 
+    private String shiprocketOrderId;
+
+    private String shiprocketShipmentId;
+
+    private String awbNumber;
+
+    private String courierName;
+
+    private String shippingStatus;
+
+    private LocalDateTime pickupScheduledAt;
+
+    private LocalDateTime deliveredAt;
+
+    @Builder.Default
+    private Boolean shiprocketSynced = false;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

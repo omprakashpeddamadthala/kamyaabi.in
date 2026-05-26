@@ -145,6 +145,14 @@ export interface Order {
   status: string;
   shippingAddress: Address | null;
   payment: Payment | null;
+  shiprocketOrderId: string | null;
+  shiprocketShipmentId: string | null;
+  awbNumber: string | null;
+  courierName: string | null;
+  shippingStatus: string | null;
+  pickupScheduledAt: string | null;
+  deliveredAt: string | null;
+  shiprocketSynced: boolean | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -77,6 +77,17 @@ app:
       starttls-enabled: true
       auth: true
 
+  shiprocket:
+    email: ${SHIPROCKET_EMAIL}
+    password: ${SHIPROCKET_PASSWORD}
+    pickup-location: ${SHIPROCKET_PICKUP_LOCATION:Primary Warehouse}
+    channel-id: ${SHIPROCKET_CHANNEL_ID:}
+    webhook-secret: ${SHIPROCKET_WEBHOOK_SECRET:}
+    default-weight: ${SHIPROCKET_DEFAULT_WEIGHT:0.5}
+    default-length: ${SHIPROCKET_DEFAULT_LENGTH:10}
+    default-breadth: ${SHIPROCKET_DEFAULT_BREADTH:10}
+    default-height: ${SHIPROCKET_DEFAULT_HEIGHT:10}
+
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
