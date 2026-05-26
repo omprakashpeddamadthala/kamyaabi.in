@@ -11,8 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class ShiprocketProperties {
 
-    private String email = "";
-    private String password = "";
+    private String apiToken = "";
     private String pickupLocation = "Primary Warehouse";
     private String channelId = "";
     private String webhookSecret = "";
@@ -22,7 +21,6 @@ public class ShiprocketProperties {
     private int defaultHeight = 10;
 
     public boolean isConfigured() {
-        return email != null && !email.isBlank()
-                && password != null && !password.isBlank();
+        return apiToken != null && !apiToken.isBlank();
     }
 }
