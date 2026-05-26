@@ -12,7 +12,6 @@ import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -29,9 +28,6 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     private final ShiprocketProperties properties;
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
-
-    private String authToken;
-    private LocalDateTime tokenExpiry;
 
     public ShiprocketServiceImpl(ShiprocketProperties properties,
                                  OrderRepository orderRepository) {
@@ -287,48 +283,10 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     // ── Auth ────────────────────────────────────────────────────────────────
 
     private HttpHeaders buildAuthHeaders() {
-        String token = getAuthToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(token);
+        headers.setBearerAuth(properties.getApiToken());
         return headers;
-    }
-
-    private synchronized String getAuthToken() {
-        if (authToken != null && tokenExpiry != null && LocalDateTime.now().isBefore(tokenExpiry)) {
-            return authToken;
-        }
-
-        log.info("Obtaining new Shiprocket auth token");
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", properties.getEmail());
-        body.put("password", properties.getPassword());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
-
-        try {
-            @SuppressWarnings("unchecked")
-            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                    BASE_URL + "/auth/login", request,
-                    (Class<Map<String, Object>>) (Class<?>) Map.class);
-
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("token")) {
-                authToken = (String) responseBody.get("token");
-                tokenExpiry = LocalDateTime.now().plusHours(23);
-                log.info("Shiprocket auth token obtained, expires at {}", tokenExpiry);
-                return authToken;
-            }
-
-            throw new RuntimeException("Shiprocket auth response missing token");
-
-        } catch (HttpClientErrorException e) {
-            log.error("Shiprocket auth failed: {} {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new RuntimeException("Shiprocket authentication failed: " + e.getMessage(), e);
-        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────

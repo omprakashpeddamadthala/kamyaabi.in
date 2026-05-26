@@ -7,42 +7,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ShiprocketPropertiesTest {
 
     @Test
-    void isConfigured_bothSet_returnsTrue() {
+    void isConfigured_tokenSet_returnsTrue() {
         ShiprocketProperties props = new ShiprocketProperties();
-        props.setEmail("test@example.com");
-        props.setPassword("password");
+        props.setApiToken("some-api-token");
         assertThat(props.isConfigured()).isTrue();
     }
 
     @Test
-    void isConfigured_emailNull_returnsFalse() {
+    void isConfigured_tokenNull_returnsFalse() {
         ShiprocketProperties props = new ShiprocketProperties();
-        props.setEmail(null);
-        props.setPassword("password");
+        props.setApiToken(null);
         assertThat(props.isConfigured()).isFalse();
     }
 
     @Test
-    void isConfigured_emailBlank_returnsFalse() {
+    void isConfigured_tokenBlank_returnsFalse() {
         ShiprocketProperties props = new ShiprocketProperties();
-        props.setEmail("  ");
-        props.setPassword("password");
+        props.setApiToken("  ");
         assertThat(props.isConfigured()).isFalse();
     }
 
     @Test
-    void isConfigured_passwordNull_returnsFalse() {
+    void isConfigured_tokenEmpty_returnsFalse() {
         ShiprocketProperties props = new ShiprocketProperties();
-        props.setEmail("test@example.com");
-        props.setPassword(null);
-        assertThat(props.isConfigured()).isFalse();
-    }
-
-    @Test
-    void isConfigured_passwordBlank_returnsFalse() {
-        ShiprocketProperties props = new ShiprocketProperties();
-        props.setEmail("test@example.com");
-        props.setPassword("  ");
+        props.setApiToken("");
         assertThat(props.isConfigured()).isFalse();
     }
 

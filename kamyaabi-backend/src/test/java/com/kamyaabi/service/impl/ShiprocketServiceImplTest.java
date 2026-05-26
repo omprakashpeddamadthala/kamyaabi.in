@@ -6,7 +6,6 @@ import com.kamyaabi.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
@@ -32,8 +31,7 @@ class ShiprocketServiceImplTest {
     @BeforeEach
     void setUp() {
         properties = new ShiprocketProperties();
-        properties.setEmail("test@example.com");
-        properties.setPassword("testpassword");
+        properties.setApiToken("test-api-token-123");
         properties.setPickupLocation("Primary Warehouse");
         properties.setDefaultWeight(0.5);
         properties.setDefaultLength(10);
@@ -41,7 +39,6 @@ class ShiprocketServiceImplTest {
         properties.setDefaultHeight(10);
 
         shiprocketService = new ShiprocketServiceImpl(properties, orderRepository);
-        // Inject the mocked RestTemplate via reflection
         try {
             java.lang.reflect.Field field = ShiprocketServiceImpl.class.getDeclaredField("restTemplate");
             field.setAccessible(true);
@@ -52,25 +49,19 @@ class ShiprocketServiceImplTest {
     }
 
     @Test
-    void isConfigured_whenCredentialsSet_returnsTrue() {
+    void isConfigured_whenTokenSet_returnsTrue() {
         assertThat(shiprocketService.isConfigured()).isTrue();
     }
 
     @Test
-    void isConfigured_whenEmailBlank_returnsFalse() {
-        properties.setEmail("");
-        assertThat(shiprocketService.isConfigured()).isFalse();
-    }
-
-    @Test
-    void isConfigured_whenPasswordBlank_returnsFalse() {
-        properties.setPassword("");
+    void isConfigured_whenTokenBlank_returnsFalse() {
+        properties.setApiToken("");
         assertThat(shiprocketService.isConfigured()).isFalse();
     }
 
     @Test
     void syncOrderToShiprocket_whenNotConfigured_skips() {
-        properties.setEmail("");
+        properties.setApiToken("");
         Order order = buildOrder();
         shiprocketService.syncOrderToShiprocket(order);
         verifyNoInteractions(restTemplate);
@@ -82,16 +73,6 @@ class ShiprocketServiceImplTest {
     void syncOrderToShiprocket_success_setsFieldsAndSaves() {
         Order order = buildOrder();
 
-        // Mock auth
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
-        // Mock create order
         Map<String, Object> createResponse = new HashMap<>();
         createResponse.put("order_id", 12345);
         createResponse.put("shipment_id", 67890);
@@ -101,7 +82,6 @@ class ShiprocketServiceImplTest {
                 any(Class.class)))
                 .thenReturn(ResponseEntity.ok(createResponse));
 
-        // Mock assign AWB
         Map<String, Object> awbData = new HashMap<>();
         awbData.put("awb_code", "AWB123456");
         awbData.put("courier_name", "Delhivery");
@@ -115,7 +95,6 @@ class ShiprocketServiceImplTest {
                 any(Class.class)))
                 .thenReturn(ResponseEntity.ok(awbResponse));
 
-        // Mock pickup
         when(restTemplate.postForEntity(
                 contains("/courier/generate/pickup"),
                 any(HttpEntity.class),
@@ -138,16 +117,6 @@ class ShiprocketServiceImplTest {
     void syncOrderToShiprocket_createOrderFails_marksSyncedFalse() {
         Order order = buildOrder();
 
-        // Mock auth
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
-        // Mock create order - throws exception
         when(restTemplate.postForEntity(
                 contains("/orders/create/adhoc"),
                 any(HttpEntity.class),
@@ -161,7 +130,6 @@ class ShiprocketServiceImplTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void cancelShiprocketOrder_whenNotSynced_skips() {
         Order order = buildOrder();
         order.setShiprocketOrderId(null);
@@ -176,16 +144,6 @@ class ShiprocketServiceImplTest {
         Order order = buildOrder();
         order.setShiprocketOrderId("12345");
 
-        // Mock auth
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
-        // Mock cancel
         when(restTemplate.postForEntity(
                 contains("/orders/cancel"),
                 any(HttpEntity.class),
@@ -200,7 +158,7 @@ class ShiprocketServiceImplTest {
 
     @Test
     void trackShipment_whenNotConfigured_returnsEmpty() {
-        properties.setEmail("");
+        properties.setApiToken("");
         Map<String, Object> result = shiprocketService.trackShipment("AWB123");
         assertThat(result).isEmpty();
     }
@@ -220,15 +178,6 @@ class ShiprocketServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void trackShipment_success_returnsData() {
-        // Mock auth
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
         Map<String, Object> trackingData = new HashMap<>();
         trackingData.put("tracking_data", Map.of("track_status", 1));
         when(restTemplate.exchange(
@@ -245,15 +194,6 @@ class ShiprocketServiceImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void trackShipment_apiFails_returnsEmpty() {
-        // Mock auth
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
         when(restTemplate.exchange(
                 contains("/courier/track/awb/"),
                 eq(HttpMethod.GET),
@@ -267,7 +207,7 @@ class ShiprocketServiceImplTest {
 
     @Test
     void retryFailedOrders_whenNotConfigured_skips() {
-        properties.setEmail("");
+        properties.setApiToken("");
         shiprocketService.retryFailedOrders();
         verify(orderRepository, never()).findByShiprocketSyncedFalseAndStatusIn(any());
     }
@@ -288,14 +228,6 @@ class ShiprocketServiceImplTest {
     void syncOrderToShiprocket_awbAssignmentFails_stillSavesOrder() {
         Order order = buildOrder();
 
-        Map<String, Object> authResponse = new HashMap<>();
-        authResponse.put("token", "test-token-123");
-        when(restTemplate.postForEntity(
-                contains("/auth/login"),
-                any(HttpEntity.class),
-                any(Class.class)))
-                .thenReturn(ResponseEntity.ok(authResponse));
-
         Map<String, Object> createResponse = new HashMap<>();
         createResponse.put("order_id", 12345);
         createResponse.put("shipment_id", 67890);
@@ -305,14 +237,12 @@ class ShiprocketServiceImplTest {
                 any(Class.class)))
                 .thenReturn(ResponseEntity.ok(createResponse));
 
-        // AWB fails
         when(restTemplate.postForEntity(
                 contains("/courier/assign/awb"),
                 any(HttpEntity.class),
                 any(Class.class)))
                 .thenThrow(new RuntimeException("AWB failure"));
 
-        // Pickup also will fail since AWB failed but that's handled
         when(restTemplate.postForEntity(
                 contains("/courier/generate/pickup"),
                 any(HttpEntity.class),
