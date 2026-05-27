@@ -36,7 +36,7 @@ public class AdminCouponController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Boolean active) {
-        Sort sort = Sort.by("createdAt").descending();
+        Sort sort = Sort.by("created_at").descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<CouponResponse> coupons = couponService.listCoupons(q, active, pageable);
         return ResponseEntity.ok(ApiResponse.success(coupons));
