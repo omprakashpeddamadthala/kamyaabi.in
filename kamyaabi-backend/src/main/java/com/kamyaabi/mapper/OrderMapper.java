@@ -42,6 +42,8 @@ public class OrderMapper {
                 .pickupScheduledAt(order.getPickupScheduledAt())
                 .deliveredAt(order.getDeliveredAt())
                 .shiprocketSynced(order.getShiprocketSynced())
+                .couponCode(order.getCouponCode())
+                .discountAmount(order.getDiscountAmount())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();

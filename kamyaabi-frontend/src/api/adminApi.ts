@@ -3,6 +3,7 @@ import {
   ApiResponse,
   Product,
   Category,
+  Coupon,
   Order,
   PageResponse,
   DashboardStats,
@@ -178,4 +179,32 @@ export const adminApi = {
 
   updateSettings: (values: Record<string, string>) =>
     axiosInstance.put<ApiResponse<Record<string, string>>>('/api/admin/settings', values),
+
+  // ── Coupon Admin ─────────────────────────────────────────
+  getCoupons: (page = 0, size = 10, q?: string, active?: boolean) =>
+    axiosInstance.get<ApiResponse<PageResponse<Coupon>>>('/api/admin/coupons', {
+      params: {
+        page,
+        size,
+        ...(q ? { q } : {}),
+        ...(active != null ? { active } : {}),
+      },
+    }),
+
+  createCoupon: (data: CouponFormRequest) =>
+    axiosInstance.post<ApiResponse<Coupon>>('/api/admin/coupons', data),
+
+  updateCoupon: (id: number, data: CouponFormRequest) =>
+    axiosInstance.patch<ApiResponse<Coupon>>(`/api/admin/coupons/${id}`, data),
+
+  deactivateCoupon: (id: number) =>
+    axiosInstance.delete<ApiResponse<void>>(`/api/admin/coupons/${id}`),
 };
+
+export interface CouponFormRequest {
+  code: string;
+  discountType: 'PERCENTAGE' | 'FLAT';
+  discountValue: number;
+  isActive?: boolean;
+  expiresAt?: string | null;
+}

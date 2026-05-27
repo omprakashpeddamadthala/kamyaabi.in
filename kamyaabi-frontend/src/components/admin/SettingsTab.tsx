@@ -23,6 +23,12 @@ interface SettingsTabProps {
 const LOW_STOCK_THRESHOLD = 'low_stock_threshold';
 const PRODUCTS_PER_PAGE = 'products_per_page';
 const SHOW_BOUGHT_RECENTLY_BADGE = 'show_bought_recently_badge';
+const COUPON_ENABLED = 'coupon_enabled';
+const COUPON_MAX_USES_PER_USER = 'coupon_max_uses_per_user';
+const COUPON_MAX_USES_PER_USER_PER_DAY = 'coupon_max_uses_per_user_per_day';
+const COUPON_MAX_TOTAL_MEMBERS = 'coupon_max_total_members';
+const COUPON_DEFAULT_EXPIRY_DAYS = 'coupon_default_expiry_days';
+const COUPON_ALLOW_STACKING = 'coupon_allow_stacking';
 
 const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const toast = useToast();
@@ -32,6 +38,14 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const [productsPerPage, setProductsPerPage] = useState('8');
   const [showBoughtRecently, setShowBoughtRecently] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Coupon settings
+  const [couponEnabled, setCouponEnabled] = useState(true);
+  const [couponMaxUsesPerUser, setCouponMaxUsesPerUser] = useState('1');
+  const [couponMaxUsesPerUserPerDay, setCouponMaxUsesPerUserPerDay] = useState('1');
+  const [couponMaxTotalMembers, setCouponMaxTotalMembers] = useState('20');
+  const [couponDefaultExpiryDays, setCouponDefaultExpiryDays] = useState('30');
+  const [couponAllowStacking, setCouponAllowStacking] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -49,6 +63,16 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
             String(data[SHOW_BOUGHT_RECENTLY_BADGE]).toLowerCase() === 'true',
           );
         }
+        if (data[COUPON_ENABLED] !== undefined) {
+          setCouponEnabled(String(data[COUPON_ENABLED]).toLowerCase() === 'true');
+        }
+        if (data[COUPON_MAX_USES_PER_USER]) setCouponMaxUsesPerUser(data[COUPON_MAX_USES_PER_USER]);
+        if (data[COUPON_MAX_USES_PER_USER_PER_DAY]) setCouponMaxUsesPerUserPerDay(data[COUPON_MAX_USES_PER_USER_PER_DAY]);
+        if (data[COUPON_MAX_TOTAL_MEMBERS]) setCouponMaxTotalMembers(data[COUPON_MAX_TOTAL_MEMBERS]);
+        if (data[COUPON_DEFAULT_EXPIRY_DAYS]) setCouponDefaultExpiryDays(data[COUPON_DEFAULT_EXPIRY_DAYS]);
+        if (data[COUPON_ALLOW_STACKING] !== undefined) {
+          setCouponAllowStacking(String(data[COUPON_ALLOW_STACKING]).toLowerCase() === 'true');
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -64,11 +88,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
     const next: Record<string, string> = {};
     const lowN = Number(lowStock);
     if (!Number.isInteger(lowN) || lowN < 1) {
-      next[LOW_STOCK_THRESHOLD] = 'Must be a positive integer (≥ 1)';
+      next[LOW_STOCK_THRESHOLD] = 'Must be a positive integer (\u2265 1)';
     }
     const pppN = Number(productsPerPage);
     if (!Number.isInteger(pppN) || pppN < 1) {
-      next[PRODUCTS_PER_PAGE] = 'Must be a positive integer (≥ 1)';
+      next[PRODUCTS_PER_PAGE] = 'Must be a positive integer (\u2265 1)';
+    }
+    const cpuN = Number(couponMaxUsesPerUser);
+    if (!Number.isInteger(cpuN) || cpuN < 1) {
+      next[COUPON_MAX_USES_PER_USER] = 'Must be a positive integer (\u2265 1)';
+    }
+    const cpdN = Number(couponMaxUsesPerUserPerDay);
+    if (!Number.isInteger(cpdN) || cpdN < 1) {
+      next[COUPON_MAX_USES_PER_USER_PER_DAY] = 'Must be a positive integer (\u2265 1)';
+    }
+    const cmtN = Number(couponMaxTotalMembers);
+    if (!Number.isInteger(cmtN) || cmtN < 1) {
+      next[COUPON_MAX_TOTAL_MEMBERS] = 'Must be a positive integer (\u2265 1)';
+    }
+    const cedN = Number(couponDefaultExpiryDays);
+    if (!Number.isInteger(cedN) || cedN < 1) {
+      next[COUPON_DEFAULT_EXPIRY_DAYS] = 'Must be a positive integer (\u2265 1)';
     }
     return next;
   };
@@ -86,6 +126,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         [LOW_STOCK_THRESHOLD]: String(Number(lowStock)),
         [PRODUCTS_PER_PAGE]: String(Number(productsPerPage)),
         [SHOW_BOUGHT_RECENTLY_BADGE]: showBoughtRecently ? 'true' : 'false',
+        [COUPON_ENABLED]: couponEnabled ? 'true' : 'false',
+        [COUPON_MAX_USES_PER_USER]: String(Number(couponMaxUsesPerUser)),
+        [COUPON_MAX_USES_PER_USER_PER_DAY]: String(Number(couponMaxUsesPerUserPerDay)),
+        [COUPON_MAX_TOTAL_MEMBERS]: String(Number(couponMaxTotalMembers)),
+        [COUPON_DEFAULT_EXPIRY_DAYS]: String(Number(couponDefaultExpiryDays)),
+        [COUPON_ALLOW_STACKING]: couponAllowStacking ? 'true' : 'false',
       });
       toast.showSuccess('Settings updated');
     } catch (err) {
@@ -169,11 +215,135 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
               label={showBoughtRecently ? 'Enabled' : 'Disabled'}
             />
           </Box>
+
+          {/* ── Coupon Settings ─────────────────────────────── */}
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
+              Coupon Settings
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Configure coupon/promo code system behavior. Changes take effect immediately.
+            </Typography>
+
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Enable Coupon System
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Master switch — disables all coupon input if off.
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={couponEnabled}
+                      onChange={(_, v) => setCouponEnabled(v)}
+                    />
+                  }
+                  label={couponEnabled ? 'Enabled' : 'Disabled'}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Max Uses Per User (All Time)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  How many times one user can use any single coupon.
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  value={couponMaxUsesPerUser}
+                  onChange={(e) => setCouponMaxUsesPerUser(e.target.value)}
+                  error={!!errors[COUPON_MAX_USES_PER_USER]}
+                  helperText={errors[COUPON_MAX_USES_PER_USER] ?? 'Default: 1'}
+                  inputProps={{ min: 1, step: 1 }}
+                  sx={{ maxWidth: 240 }}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Max Uses Per User Per Day
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Daily usage cap per user per coupon.
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  value={couponMaxUsesPerUserPerDay}
+                  onChange={(e) => setCouponMaxUsesPerUserPerDay(e.target.value)}
+                  error={!!errors[COUPON_MAX_USES_PER_USER_PER_DAY]}
+                  helperText={errors[COUPON_MAX_USES_PER_USER_PER_DAY] ?? 'Default: 1'}
+                  inputProps={{ min: 1, step: 1 }}
+                  sx={{ maxWidth: 240 }}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Max Total Members Per Coupon
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Hard cap on unique users who can redeem a coupon.
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  value={couponMaxTotalMembers}
+                  onChange={(e) => setCouponMaxTotalMembers(e.target.value)}
+                  error={!!errors[COUPON_MAX_TOTAL_MEMBERS]}
+                  helperText={errors[COUPON_MAX_TOTAL_MEMBERS] ?? 'Default: 20'}
+                  inputProps={{ min: 1, step: 1 }}
+                  sx={{ maxWidth: 240 }}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Default Coupon Expiry (Days)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Pre-fills expiry when creating new coupons.
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  value={couponDefaultExpiryDays}
+                  onChange={(e) => setCouponDefaultExpiryDays(e.target.value)}
+                  error={!!errors[COUPON_DEFAULT_EXPIRY_DAYS]}
+                  helperText={errors[COUPON_DEFAULT_EXPIRY_DAYS] ?? 'Default: 30'}
+                  inputProps={{ min: 1, step: 1 }}
+                  sx={{ maxWidth: 240 }}
+                />
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Allow Stacking Multiple Coupons
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  Whether users can apply more than one coupon per order.
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={couponAllowStacking}
+                      onChange={(_, v) => setCouponAllowStacking(v)}
+                    />
+                  }
+                  label={couponAllowStacking ? 'Enabled' : 'Disabled'}
+                />
+              </Box>
+            </Stack>
+          </Box>
         </Stack>
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
           <Button variant="contained" onClick={onSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save Settings'}
+            {saving ? 'Saving\u2026' : 'Save Settings'}
           </Button>
         </Box>
       </CardContent>

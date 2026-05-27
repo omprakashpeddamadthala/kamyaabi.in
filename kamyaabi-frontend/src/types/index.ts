@@ -153,6 +153,8 @@ export interface Order {
   pickupScheduledAt: string | null;
   deliveredAt: string | null;
   shiprocketSynced: boolean | null;
+  couponCode: string | null;
+  discountAmount: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -277,4 +279,28 @@ export interface ProductTag {
   slug: string;
   productCount?: number;
   createdAt: string;
+}
+
+// ── Coupon Types ────────────────────────────────────────────
+
+export interface Coupon {
+  id: number;
+  code: string;
+  discountType: 'PERCENTAGE' | 'FLAT';
+  discountValue: number;
+  isActive: boolean;
+  expiresAt: string | null;
+  usageCount: number;
+  uniqueMembers: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  code: string;
+  discountType: string | null;
+  discountValue: number | null;
+  discountAmount: number | null;
+  message: string;
 }

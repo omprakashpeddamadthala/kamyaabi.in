@@ -67,6 +67,16 @@ public class Order {
     @Builder.Default
     private Boolean shiprocketSynced = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupon_id")
+    private Coupon coupon;
+
+    private String couponCode;
+
+    @Column(precision = 12, scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

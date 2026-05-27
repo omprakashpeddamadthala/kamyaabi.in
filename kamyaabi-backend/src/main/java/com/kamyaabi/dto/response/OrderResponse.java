@@ -22,6 +22,8 @@ public record OrderResponse(
         LocalDateTime pickupScheduledAt,
         LocalDateTime deliveredAt,
         Boolean shiprocketSynced,
+        String couponCode,
+        BigDecimal discountAmount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
