@@ -17,9 +17,23 @@ public interface SettingsService {
     String SHOW_BOUGHT_RECENTLY_BADGE = "show_bought_recently_badge";
     String PRODUCTS_PER_PAGE = "products_per_page";
 
+    String COUPON_ENABLED = "coupon_enabled";
+    String COUPON_MAX_USES_PER_USER = "coupon_max_uses_per_user";
+    String COUPON_MAX_USES_PER_USER_PER_DAY = "coupon_max_uses_per_user_per_day";
+    String COUPON_MAX_TOTAL_MEMBERS = "coupon_max_total_members";
+    String COUPON_DEFAULT_EXPIRY_DAYS = "coupon_default_expiry_days";
+    String COUPON_ALLOW_STACKING = "coupon_allow_stacking";
+
     int DEFAULT_LOW_STOCK_THRESHOLD = 10;
     boolean DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE = true;
     int DEFAULT_PRODUCTS_PER_PAGE = 8;
+
+    boolean DEFAULT_COUPON_ENABLED = true;
+    int DEFAULT_COUPON_MAX_USES_PER_USER = 1;
+    int DEFAULT_COUPON_MAX_USES_PER_USER_PER_DAY = 1;
+    int DEFAULT_COUPON_MAX_TOTAL_MEMBERS = 20;
+    int DEFAULT_COUPON_DEFAULT_EXPIRY_DAYS = 30;
+    boolean DEFAULT_COUPON_ALLOW_STACKING = false;
 
     int getInt(String key, int defaultValue);
 

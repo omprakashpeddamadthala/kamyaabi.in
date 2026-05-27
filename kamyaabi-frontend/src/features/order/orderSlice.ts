@@ -26,15 +26,18 @@ const initialState: OrderState = {
 
 export const createOrder = createAsyncThunk(
   'orders/create',
-  async (shippingAddressId: number, { rejectWithValue }) => {
+  async (
+    { shippingAddressId, couponCode }: { shippingAddressId: number; couponCode?: string },
+    { rejectWithValue },
+  ) => {
     try {
-      const response = await orderApi.create(shippingAddressId);
+      const response = await orderApi.create(shippingAddressId, couponCode);
       return response.data.data;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Failed to create order');
     }
-  }
+  },
 );
 
 export const fetchOrders = createAsyncThunk(

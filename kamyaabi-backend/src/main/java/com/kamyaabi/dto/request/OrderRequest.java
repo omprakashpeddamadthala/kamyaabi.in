@@ -6,6 +6,8 @@ import lombok.Builder;
 @Builder
 public record OrderRequest(
         @NotNull(message = "Shipping address ID is required")
-        Long shippingAddressId
+        Long shippingAddressId,
+
+        String couponCode
 ) {
 }

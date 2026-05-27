@@ -23,7 +23,13 @@ public class SettingsServiceImpl implements SettingsService {
     static final Set<String> ALLOWED_KEYS = Set.of(
             LOW_STOCK_THRESHOLD,
             SHOW_BOUGHT_RECENTLY_BADGE,
-            PRODUCTS_PER_PAGE);
+            PRODUCTS_PER_PAGE,
+            COUPON_ENABLED,
+            COUPON_MAX_USES_PER_USER,
+            COUPON_MAX_USES_PER_USER_PER_DAY,
+            COUPON_MAX_TOTAL_MEMBERS,
+            COUPON_DEFAULT_EXPIRY_DAYS,
+            COUPON_ALLOW_STACKING);
 
     static final List<String> PUBLIC_KEYS = List.of(
             SHOW_BOUGHT_RECENTLY_BADGE,
@@ -112,7 +118,9 @@ public class SettingsServiceImpl implements SettingsService {
 
     private void validate(String key, String value) {
         switch (key) {
-            case LOW_STOCK_THRESHOLD, PRODUCTS_PER_PAGE -> {
+            case LOW_STOCK_THRESHOLD, PRODUCTS_PER_PAGE,
+                 COUPON_MAX_USES_PER_USER, COUPON_MAX_USES_PER_USER_PER_DAY,
+                 COUPON_MAX_TOTAL_MEMBERS, COUPON_DEFAULT_EXPIRY_DAYS -> {
                 int n;
                 try {
                     n = Integer.parseInt(value);
@@ -125,7 +133,7 @@ public class SettingsServiceImpl implements SettingsService {
                             "Setting '" + key + "' must be >= 1");
                 }
             }
-            case SHOW_BOUGHT_RECENTLY_BADGE -> {
+            case SHOW_BOUGHT_RECENTLY_BADGE, COUPON_ENABLED, COUPON_ALLOW_STACKING -> {
                 if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
                     throw new BadRequestException(
                             "Setting '" + key + "' must be 'true' or 'false'");
@@ -141,6 +149,18 @@ public class SettingsServiceImpl implements SettingsService {
             case PRODUCTS_PER_PAGE -> String.valueOf(getInt(key, DEFAULT_PRODUCTS_PER_PAGE));
             case SHOW_BOUGHT_RECENTLY_BADGE ->
                     String.valueOf(getBoolean(key, DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE));
+            case COUPON_ENABLED ->
+                    String.valueOf(getBoolean(key, DEFAULT_COUPON_ENABLED));
+            case COUPON_MAX_USES_PER_USER ->
+                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_USES_PER_USER));
+            case COUPON_MAX_USES_PER_USER_PER_DAY ->
+                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_USES_PER_USER_PER_DAY));
+            case COUPON_MAX_TOTAL_MEMBERS ->
+                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_TOTAL_MEMBERS));
+            case COUPON_DEFAULT_EXPIRY_DAYS ->
+                    String.valueOf(getInt(key, DEFAULT_COUPON_DEFAULT_EXPIRY_DAYS));
+            case COUPON_ALLOW_STACKING ->
+                    String.valueOf(getBoolean(key, DEFAULT_COUPON_ALLOW_STACKING));
             default -> "";
         };
     }

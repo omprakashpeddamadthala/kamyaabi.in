@@ -8,8 +8,10 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.*;
 import com.kamyaabi.service.CartService;
+import com.kamyaabi.service.CouponService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ShiprocketService;
+import com.kamyaabi.dto.response.CouponValidationResponse;
 import com.kamyaabi.event.OrderEventPublisher;
 import com.kamyaabi.event.OrderEventType;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final CartService cartService;
+    private final CouponService couponService;
     private final OrderEventPublisher orderEventPublisher;
     private final ShiprocketService shiprocketService;
 
@@ -44,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
                             ProductRepository productRepository,
                             OrderMapper orderMapper,
                             CartService cartService,
+                            CouponService couponService,
                             OrderEventPublisher orderEventPublisher,
                             ShiprocketService shiprocketService) {
         this.orderRepository = orderRepository;
@@ -53,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
         this.productRepository = productRepository;
         this.orderMapper = orderMapper;
         this.cartService = cartService;
+        this.couponService = couponService;
         this.orderEventPublisher = orderEventPublisher;
         this.shiprocketService = shiprocketService;
     }
@@ -111,6 +116,19 @@ public class OrderServiceImpl implements OrderService {
 
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
+
+        // Apply coupon if provided
+        if (request.couponCode() != null && !request.couponCode().isBlank()) {
+            CouponValidationResponse couponResult = couponService.applyCoupon(
+                    request.couponCode(), userId, null, totalAmount);
+            if (couponResult.valid()) {
+                order.setCouponCode(couponResult.code());
+                order.setDiscountAmount(couponResult.discountAmount());
+                order.setTotalAmount(totalAmount.subtract(couponResult.discountAmount()));
+            } else {
+                throw new BadRequestException(couponResult.message());
+            }
+        }
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order created with id: {}", savedOrder.getId());
