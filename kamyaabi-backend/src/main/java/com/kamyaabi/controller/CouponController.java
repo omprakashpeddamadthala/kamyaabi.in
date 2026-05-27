@@ -2,6 +2,7 @@ package com.kamyaabi.controller;
 
 import com.kamyaabi.dto.request.CouponValidateRequest;
 import com.kamyaabi.dto.response.ApiResponse;
+import com.kamyaabi.dto.response.CouponResponse;
 import com.kamyaabi.dto.response.CouponValidationResponse;
 import com.kamyaabi.entity.Cart;
 import com.kamyaabi.exception.BadRequestException;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -33,6 +35,14 @@ public class CouponController {
         this.couponService = couponService;
         this.currentUser = currentUser;
         this.cartRepository = cartRepository;
+    }
+
+    @GetMapping("/available")
+    @Operation(summary = "List available coupons",
+            description = "Returns all active, non-expired coupons that users can apply.")
+    public ResponseEntity<ApiResponse<List<CouponResponse>>> getAvailableCoupons() {
+        List<CouponResponse> coupons = couponService.getAvailableCoupons();
+        return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 
     @PostMapping("/validate")

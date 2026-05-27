@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -202,6 +203,18 @@ public class CouponServiceImpl implements CouponService {
         coupon.setIsActive(false);
         couponRepository.save(coupon);
         log.info("Coupon deactivated: {} (id={})", coupon.getCode(), coupon.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CouponResponse> getAvailableCoupons() {
+        if (!settingsService.getBoolean(COUPON_ENABLED, true)) {
+            return List.of();
+        }
+        return couponRepository.findAvailableCoupons(LocalDateTime.now())
+                .stream()
+                .map(couponMapper::toResponse)
+                .toList();
     }
 
     /**
