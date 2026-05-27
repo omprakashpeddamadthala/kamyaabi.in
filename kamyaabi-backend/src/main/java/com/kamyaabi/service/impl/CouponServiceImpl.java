@@ -80,7 +80,7 @@ public class CouponServiceImpl implements CouponService {
         }
 
         Coupon coupon = couponRepository.findByCodeIgnoreCase(code.trim())
-                .orElseThrow(() -> new ResourceNotFoundException("Coupon", "code", code));
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found with code: " + code));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", userId));
