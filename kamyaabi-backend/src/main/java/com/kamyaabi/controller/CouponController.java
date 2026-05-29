@@ -74,7 +74,7 @@ public class CouponController {
     }
 
     private BigDecimal getCartTotal(Long userId) {
-        Cart cart = cartRepository.findByUserId(userId).orElse(null);
+        Cart cart = cartRepository.findByUserIdWithItems(userId).orElse(null);
         if (cart == null || cart.getItems().isEmpty()) {
             return BigDecimal.ZERO;
         }
