@@ -38,6 +38,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
 import { useFlyToCart } from '../common/FlyToCartAnimation';
+import SocialLinks from '../common/SocialLinks';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -192,6 +193,9 @@ const Navbar: React.FC = () => {
           )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {!isMobile && (
+              <SocialLinks size={22} color="#1A1A1A" gap={0.25} sx={{ mr: 0.5 }} />
+            )}
             {user && user.role !== 'ADMIN' && (
               <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
                 <IconButton component={Link} to="/cart" color="inherit">
@@ -314,6 +318,13 @@ const Navbar: React.FC = () => {
               </ListItem>
             )}
           </List>
+          <Divider />
+          <Box sx={{ p: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#1A1A1A' }}>
+              Follow Us
+            </Typography>
+            <SocialLinks size={22} color="#1A1A1A" />
+          </Box>
         </Box>
       </Drawer>
     </AppBar>
