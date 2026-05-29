@@ -67,6 +67,7 @@ import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
 import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
 import ProductCard from '../components/common/ProductCard';
+import AmazonBanner from '../components/common/AmazonBanner';
 import { reviewApi } from '../api/reviewApi';
 import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
@@ -913,6 +914,8 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
+        <AmazonBanner variant="product" />
+
         {}
         {(tabKeys.length > 1 || product.description) && (
           <Box ref={tabsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(tabsReveal.visible) }}>
@@ -1330,13 +1333,13 @@ const ProductDetailPage: React.FC = () => {
                 <Box
                   key={rp.id}
                   sx={{
-                    minWidth: { xs: 260, sm: 280 },
-                    maxWidth: 300,
+                    minWidth: { xs: 150, sm: 180 },
+                    maxWidth: { xs: 160, sm: 190 },
                     scrollSnapAlign: 'start',
                     flexShrink: 0,
                   }}
                 >
-                  <ProductCard product={rp} />
+                  <ProductCard product={rp} compact />
                 </Box>
               ))}
             </Box>

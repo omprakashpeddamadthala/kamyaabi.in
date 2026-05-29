@@ -24,33 +24,48 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    // Global scale-down: base font reduced from MUI's default 14px to 13px,
+    // with proportionally smaller headings. Visual hierarchy is preserved.
+    fontSize: 13,
     h1: {
       fontFamily: '"Playfair Display", serif',
       fontWeight: 700,
-      fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+      fontSize: 'clamp(1.75rem, 4.5vw, 3rem)',
     },
     h2: {
       fontFamily: '"Playfair Display", serif',
       fontWeight: 600,
-      fontSize: 'clamp(1.75rem, 4vw, 3rem)',
+      fontSize: 'clamp(1.5rem, 3.8vw, 2.5rem)',
     },
     h3: {
       fontFamily: '"Playfair Display", serif',
       fontWeight: 600,
-      fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)',
+      fontSize: 'clamp(1.3rem, 3.2vw, 2.1rem)',
     },
     h4: {
       fontFamily: '"Playfair Display", serif',
       fontWeight: 500,
-      fontSize: 'clamp(1.35rem, 3vw, 2.125rem)',
+      fontSize: 'clamp(1.15rem, 2.6vw, 1.8rem)',
     },
     h5: {
       fontWeight: 600,
-      fontSize: 'clamp(1.15rem, 2vw, 1.5rem)',
+      fontSize: 'clamp(1rem, 1.8vw, 1.3rem)',
     },
     h6: {
       fontWeight: 600,
-      fontSize: 'clamp(1rem, 1.5vw, 1.25rem)',
+      fontSize: 'clamp(0.9rem, 1.4vw, 1.1rem)',
+    },
+    body1: {
+      fontSize: '0.9rem',
+    },
+    body2: {
+      fontSize: '0.8rem',
+    },
+    subtitle1: {
+      fontSize: '0.95rem',
+    },
+    subtitle2: {
+      fontSize: '0.82rem',
     },
     button: {
       textTransform: 'none',

@@ -24,6 +24,8 @@ public interface SettingsService {
     String COUPON_DEFAULT_EXPIRY_DAYS = "coupon_default_expiry_days";
     String COUPON_ALLOW_STACKING = "coupon_allow_stacking";
 
+    String AMAZON_STORE_URL = "amazon_store_url";
+
     int DEFAULT_LOW_STOCK_THRESHOLD = 10;
     boolean DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE = true;
     int DEFAULT_PRODUCTS_PER_PAGE = 8;
@@ -35,9 +37,13 @@ public interface SettingsService {
     int DEFAULT_COUPON_DEFAULT_EXPIRY_DAYS = 30;
     boolean DEFAULT_COUPON_ALLOW_STACKING = false;
 
+    String DEFAULT_AMAZON_STORE_URL = "";
+
     int getInt(String key, int defaultValue);
 
     boolean getBoolean(String key, boolean defaultValue);
+
+    String getString(String key, String defaultValue);
 
     Map<String, String> getAll();
 

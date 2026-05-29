@@ -29,11 +29,13 @@ public class SettingsServiceImpl implements SettingsService {
             COUPON_MAX_USES_PER_USER_PER_DAY,
             COUPON_MAX_TOTAL_MEMBERS,
             COUPON_DEFAULT_EXPIRY_DAYS,
-            COUPON_ALLOW_STACKING);
+            COUPON_ALLOW_STACKING,
+            AMAZON_STORE_URL);
 
     static final List<String> PUBLIC_KEYS = List.of(
             SHOW_BOUGHT_RECENTLY_BADGE,
-            PRODUCTS_PER_PAGE);
+            PRODUCTS_PER_PAGE,
+            AMAZON_STORE_URL);
 
     private final SettingRepository settingRepository;
 
@@ -68,6 +70,15 @@ public class SettingsServiceImpl implements SettingsService {
         log.warn("Setting {} has non-boolean value '{}', falling back to default {}",
                 key, raw, defaultValue);
         return defaultValue;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = "settings", key = "'str:' + #key")
+    public String getString(String key, String defaultValue) {
+        return settingRepository.findById(key)
+                .map(Setting::getValue)
+                .orElse(defaultValue);
     }
 
     @Override
@@ -139,6 +150,14 @@ public class SettingsServiceImpl implements SettingsService {
                             "Setting '" + key + "' must be 'true' or 'false'");
                 }
             }
+            case AMAZON_STORE_URL -> {
+                if (!value.isEmpty()
+                        && !value.startsWith("http://")
+                        && !value.startsWith("https://")) {
+                    throw new BadRequestException(
+                            "Setting '" + key + "' must be empty or a valid http(s) URL");
+                }
+            }
             default -> throw new BadRequestException("Unknown setting key: " + key);
         }
     }
@@ -161,6 +180,7 @@ public class SettingsServiceImpl implements SettingsService {
                     String.valueOf(getInt(key, DEFAULT_COUPON_DEFAULT_EXPIRY_DAYS));
             case COUPON_ALLOW_STACKING ->
                     String.valueOf(getBoolean(key, DEFAULT_COUPON_ALLOW_STACKING));
+            case AMAZON_STORE_URL -> getString(key, DEFAULT_AMAZON_STORE_URL);
             default -> "";
         };
     }

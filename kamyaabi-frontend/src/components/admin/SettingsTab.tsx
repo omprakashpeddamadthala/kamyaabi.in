@@ -29,6 +29,7 @@ const COUPON_MAX_USES_PER_USER_PER_DAY = 'coupon_max_uses_per_user_per_day';
 const COUPON_MAX_TOTAL_MEMBERS = 'coupon_max_total_members';
 const COUPON_DEFAULT_EXPIRY_DAYS = 'coupon_default_expiry_days';
 const COUPON_ALLOW_STACKING = 'coupon_allow_stacking';
+const AMAZON_STORE_URL = 'amazon_store_url';
 
 const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const toast = useToast();
@@ -46,6 +47,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const [couponMaxTotalMembers, setCouponMaxTotalMembers] = useState('20');
   const [couponDefaultExpiryDays, setCouponDefaultExpiryDays] = useState('30');
   const [couponAllowStacking, setCouponAllowStacking] = useState(false);
+  const [amazonStoreUrl, setAmazonStoreUrl] = useState('');
 
   useEffect(() => {
     if (!active) return;
@@ -73,6 +75,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         if (data[COUPON_ALLOW_STACKING] !== undefined) {
           setCouponAllowStacking(String(data[COUPON_ALLOW_STACKING]).toLowerCase() === 'true');
         }
+        if (data[AMAZON_STORE_URL] !== undefined) setAmazonStoreUrl(data[AMAZON_STORE_URL]);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -110,6 +113,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
     if (!Number.isInteger(cedN) || cedN < 1) {
       next[COUPON_DEFAULT_EXPIRY_DAYS] = 'Must be a positive integer (\u2265 1)';
     }
+    const url = amazonStoreUrl.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      next[AMAZON_STORE_URL] = 'Must be empty or start with http:// or https://';
+    }
     return next;
   };
 
@@ -132,6 +139,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         [COUPON_MAX_TOTAL_MEMBERS]: String(Number(couponMaxTotalMembers)),
         [COUPON_DEFAULT_EXPIRY_DAYS]: String(Number(couponDefaultExpiryDays)),
         [COUPON_ALLOW_STACKING]: couponAllowStacking ? 'true' : 'false',
+        [AMAZON_STORE_URL]: amazonStoreUrl.trim(),
       });
       toast.showSuccess('Settings updated');
     } catch (err) {
@@ -338,6 +346,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
                 />
               </Box>
             </Stack>
+          </Box>
+
+          {/* ── Amazon Storefront ─────────────────────── */}
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
+              Amazon Storefront
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              URL used by the &quot;Also Available on Amazon&quot; banners on product pages and the
+              &quot;Find Us on Amazon&quot; section on the homepage. Leave blank to hide these banners.
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="https://www.amazon.in/s?k=kamyaabi"
+              value={amazonStoreUrl}
+              onChange={(e) => setAmazonStoreUrl(e.target.value)}
+              error={!!errors[AMAZON_STORE_URL]}
+              helperText={errors[AMAZON_STORE_URL] ?? 'Full Amazon store or product/search URL'}
+              sx={{ maxWidth: 560 }}
+            />
           </Box>
         </Stack>
 
