@@ -34,7 +34,7 @@ const slugify = (raw: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const LIST_PATH = '/admin?tab=categories';
+const LIST_PATH = '/admin/categories';
 
 const AdminCategoryFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

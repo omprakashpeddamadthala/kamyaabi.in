@@ -26,7 +26,7 @@ const initialForm: CouponFormRequest = {
   expiresAt: null,
 };
 
-const LIST_PATH = '/admin?tab=coupons';
+const LIST_PATH = '/admin/coupons';
 
 const AdminCouponFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

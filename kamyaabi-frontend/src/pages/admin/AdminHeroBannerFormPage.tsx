@@ -44,7 +44,7 @@ const toForm = (b: HeroBanner): BannerForm => ({
   active: b.active,
 });
 
-const LIST_PATH = '/admin?tab=hero-banners';
+const LIST_PATH = '/admin/hero-banners';
 
 const AdminHeroBannerFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

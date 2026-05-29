@@ -67,7 +67,7 @@ const initialProductForm: ProductRequest = {
   canonicalUrl: '',
 };
 
-const LIST_PATH = '/admin?tab=products';
+const LIST_PATH = '/admin/products';
 
 const AdminProductFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
