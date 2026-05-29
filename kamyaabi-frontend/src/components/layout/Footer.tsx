@@ -6,6 +6,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { Link } from 'react-router-dom';
 import { config } from '../../config';
+import SocialLinks from '../common/SocialLinks';
 
 const Footer: React.FC = () => {
   return (
@@ -28,6 +29,14 @@ const Footer: React.FC = () => {
               Premium dry fruits sourced from the finest farms. Where freshness meets flavor —
               delivering quality and natural goodness in every bite.
             </Typography>
+
+            <Typography
+              variant="subtitle1"
+              sx={{ mt: 3, mb: 1, fontWeight: 600 }}
+            >
+              Follow Us
+            </Typography>
+            <SocialLinks size={24} color="#BBB" />
           </Grid>
 
           <Grid item xs={12} sm={6} md={2}>

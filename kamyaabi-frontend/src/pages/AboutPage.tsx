@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Container, Typography, Grid } from '@mui/material';
+import SocialLinks from '../components/common/SocialLinks';
 
 const galleryImages = [
   '/assets/img/categorie/gallery1.webp', '/assets/img/categorie/gallery2.webp',
@@ -79,6 +80,18 @@ const AboutPage: React.FC = () => {
               </Grid>
             ))}
           </Grid>
+        </Container>
+      </Box>
+
+      <Box sx={{ py: 8, bgcolor: '#f0ede6', textAlign: 'center' }}>
+        <Container maxWidth="md">
+          <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 2 }}>
+            Connect With Us
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#666', mb: 3 }}>
+            Follow Kamyaabi on social media for the latest products, offers and updates.
+          </Typography>
+          <SocialLinks size={32} color="#1A1A1A" gap={1.5} sx={{ justifyContent: 'center' }} />
         </Container>
       </Box>
     </Box>

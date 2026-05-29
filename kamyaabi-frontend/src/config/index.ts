@@ -7,6 +7,10 @@ const DEFAULT_SUPPORT_PHONE = '9848999072';
 const DEFAULT_DEV_ADMIN_EMAIL = 'omprakashornold@gmail.com';
 const DEFAULT_DEV_USER_EMAIL = 'dev.user@kamyaabi.local';
 
+const DEFAULT_FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61590173527332&sk=about';
+const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/kamyaabi_dryfruits/';
+const DEFAULT_GA_ID = 'G-M887QJRB53';
+
 export interface DevLoginConfig {
   readonly enabled: boolean;
   readonly adminEmail: string;
@@ -22,6 +26,9 @@ interface AppConfig {
   readonly supportPhoneDisplay: string;
   readonly supportPhoneTel: string;
   readonly whatsappUrl: string;
+  readonly facebookUrl: string;
+  readonly instagramUrl: string;
+  readonly gaId: string;
   readonly brandSiteUrl: string;
   readonly isProd: boolean;
   readonly devLogin: DevLoginConfig;
@@ -74,6 +81,9 @@ export const config: AppConfig = Object.freeze({
   supportPhoneDisplay,
   supportPhoneTel: `tel:${supportPhoneE164}`,
   whatsappUrl: `https://wa.me/${whatsappDigits}`,
+  facebookUrl: readString('VITE_FACEBOOK_URL', DEFAULT_FACEBOOK_URL),
+  instagramUrl: readString('VITE_INSTAGRAM_URL', DEFAULT_INSTAGRAM_URL),
+  gaId: readString('VITE_GA_ID', DEFAULT_GA_ID),
   brandSiteUrl: `https://${brandDomain}`,
   isProd: isProdBuild,
   devLogin,
