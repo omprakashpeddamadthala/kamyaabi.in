@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box, Container, Typography, Grid, Button, Card, CardMedia,
@@ -8,12 +8,24 @@ import { fetchFeaturedProducts, fetchCategories } from '../features/product/prod
 import ProductCard from '../components/common/ProductCard';
 import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
 import PageTransition from '../components/common/PageTransition';
+import AmazonBanner from '../components/common/AmazonBanner';
+import { heroBannerApi, HeroBanner } from '../api/heroBannerApi';
+import { withCloudinaryTransform } from '../utils/cloudinary';
 import { config } from '../config';
 
-const heroSlides = [
-  { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: '/assets/img/hero/banner2.webp' },
-  { title: 'The Ultimate Nut Trio: Pistachios, Cashews & Almonds', desc: 'Our Roasted and Salted Pistachios, Premium Split Cashews, and California Almonds offer a savory, crunchy snack packed with antioxidants and healthy fats.', image: '/assets/img/hero/banner1.webp' },
-  { title: 'Wholesome Goodness, Delivered Fresh', desc: 'From handpicked almonds to crunchy pistachios, every Kamyaabi pack is sourced for purity, sealed for freshness, and delivered straight to your door.', image: '/assets/img/about/aboutUS.webp' },
+interface HeroSlide {
+  title: string;
+  desc: string;
+  image: string;
+  alt: string;
+  link?: string;
+}
+
+// Fallback used only if no banners are configured in the admin panel / the API fails.
+const fallbackHeroSlides: HeroSlide[] = [
+  { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: '/assets/img/hero/banner2.webp', alt: 'Premium almonds and cashews' },
+  { title: 'The Ultimate Nut Trio: Pistachios, Cashews & Almonds', desc: 'Our Roasted and Salted Pistachios, Premium Split Cashews, and California Almonds offer a savory, crunchy snack packed with antioxidants and healthy fats.', image: '/assets/img/hero/banner1.webp', alt: 'Pistachios, cashews and almonds' },
+  { title: 'Wholesome Goodness, Delivered Fresh', desc: 'From handpicked almonds to crunchy pistachios, every Kamyaabi pack is sourced for purity, sealed for freshness, and delivered straight to your door.', image: '/assets/img/about/aboutUS.webp', alt: 'Wholesome dry fruits delivered fresh' },
 ];
 
 const productShowcase = [
@@ -22,12 +34,6 @@ const productShowcase = [
   { name: 'Almonds - Regular', desc: 'Rich, Nutty, Crunchy, Fresh, Earthy, Bold', image: '/assets/img/product/almond_1.webp', bg: '#2a3d2a' },
   { name: 'California Almonds - Jumbo', desc: 'Savory, Crisp, Robust, Natural, Toasted, Wholesome', image: '/assets/img/product/almond_jumbo1.webp', bg: '#2a3d3d' },
   { name: 'Premium Split Cashews', desc: 'Buttery, Smooth, Mild, Rich, Nutty, Sweet', image: '/assets/img/product/splitcashew1.webp', bg: '#3d2a2a' },
-];
-
-const galleryImages = [
-  '/assets/img/product/almond_jumbo1.webp', '/assets/img/product/pista2.webp',
-  '/assets/img/product/wholecashew3.webp', '/assets/img/product/splitcashew1.webp',
-  '/assets/img/product/almond_2.webp', '/assets/img/product/pista4.webp',
 ];
 
 const welcomeImages = [
@@ -57,6 +63,7 @@ const HomePage: React.FC = () => {
   const isAdmin = user?.role === 'ADMIN';
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [heroBanners, setHeroBanners] = useState<HeroBanner[] | null>(null);
 
   useEffect(() => {
     dispatch(fetchFeaturedProducts());
@@ -64,9 +71,36 @@ const HomePage: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    let cancelled = false;
+    heroBannerApi
+      .getActive()
+      .then((res) => { if (!cancelled) setHeroBanners(res.data.data ?? []); })
+      .catch(() => { if (!cancelled) setHeroBanners([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const heroSlides: HeroSlide[] = useMemo(() => {
+    if (heroBanners && heroBanners.length > 0) {
+      return heroBanners.map((b) => ({
+        title: b.title ?? '',
+        desc: b.subtitle ?? '',
+        image: withCloudinaryTransform(b.imageUrl) || b.imageUrl,
+        alt: b.altText ?? b.title ?? 'Kamyaabi hero banner',
+        link: b.linkUrl ?? undefined,
+      }));
+    }
+    return fallbackHeroSlides;
+  }, [heroBanners]);
+
+  useEffect(() => {
+    if (currentSlide > heroSlides.length - 1) setCurrentSlide(0);
+  }, [heroSlides.length, currentSlide]);
+
+  useEffect(() => {
+    if (heroSlides.length <= 1) return undefined;
     const interval = setInterval(() => { setCurrentSlide((prev) => (prev + 1) % heroSlides.length); }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroSlides.length]);
 
   useEffect(() => {
     const interval = setInterval(() => { setCurrentTestimonial((prev) => (prev + 1) % testimonials.length); }, 4000);
@@ -74,6 +108,7 @@ const HomePage: React.FC = () => {
   }, []);
 
   const showProductSkeletons = loading && featuredProducts.length === 0;
+  const activeSlide = heroSlides[currentSlide] ?? heroSlides[0];
 
   return (
     <PageTransition>
@@ -84,14 +119,11 @@ const HomePage: React.FC = () => {
           <Grid container alignItems="center" sx={{ minHeight: { xs: 400, md: 500 } }}>
             <Grid item xs={12} md={6} sx={{ py: { xs: 4, md: 6 }, position: 'relative', zIndex: 2 }}>
               <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: '#1A1A1A' }}>
-                {heroSlides[currentSlide].title}
+                {activeSlide.title}
               </Typography>
               <Typography variant="body1" sx={{ mb: 4, color: '#666', lineHeight: 1.8, maxWidth: 500 }}>
-                {heroSlides[currentSlide].desc}
+                {activeSlide.desc}
               </Typography>
-              <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
-                Discover Products
-              </Button>
               <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
                 {heroSlides.map((_, i) => (
                   <Box key={i} onClick={() => setCurrentSlide(i)} sx={{ width: i === currentSlide ? 30 : 12, height: 4, bgcolor: i === currentSlide ? 'primary.main' : '#ccc', borderRadius: 2, cursor: 'pointer', transition: 'all 0.3s' }} />
@@ -99,7 +131,13 @@ const HomePage: React.FC = () => {
               </Box>
             </Grid>
             <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Box component="img" src={heroSlides[currentSlide].image} alt="Hero" sx={{ maxWidth: '100%', maxHeight: 450, objectFit: 'contain', transition: 'opacity 0.5s' }} />
+              {activeSlide.link ? (
+                <Box component={Link} to={activeSlide.link} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                  <Box component="img" src={activeSlide.image} alt={activeSlide.alt} sx={{ maxWidth: '100%', maxHeight: 450, objectFit: 'contain', transition: 'opacity 0.5s' }} />
+                </Box>
+              ) : (
+                <Box component="img" src={activeSlide.image} alt={activeSlide.alt} sx={{ maxWidth: '100%', maxHeight: 450, objectFit: 'contain', transition: 'opacity 0.5s' }} />
+              )}
             </Grid>
           </Grid>
         </Container>
@@ -184,22 +222,6 @@ const HomePage: React.FC = () => {
       )}
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#fff' }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
-            Explore Our Premium Dry Fruits Collection
-          </Typography>
-          <Grid container spacing={2}>
-            {galleryImages.map((img, idx) => (
-              <Grid item xs={6} sm={4} key={idx}>
-                <Box component="img" src={img} alt={`Premium dry fruits collection ${idx + 1}`} sx={{ width: '100%', height: { xs: 150, md: 220 }, objectFit: 'cover', borderRadius: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }} />
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {}
       <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -219,6 +241,9 @@ const HomePage: React.FC = () => {
           </Grid>
         </Container>
       </Box>
+
+      {}
+      <AmazonBanner variant="home" />
 
       {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
