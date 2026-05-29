@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Box,
   List,
@@ -10,7 +10,7 @@ import {
   Tooltip,
   Divider,
 } from '@mui/material';
-import { ADMIN_NAV, AdminNavItem } from './adminNav';
+import { ADMIN_NAV, ADMIN_NAV_ITEMS } from './adminNav';
 
 interface AdminSidebarProps {
   /** Mini (icon-only) mode on desktop. */
@@ -19,23 +19,28 @@ interface AdminSidebarProps {
   onNavigate?: () => void;
 }
 
-const isItemActive = (item: AdminNavItem, pathname: string, tab: string): boolean => {
-  if (item.tab) {
-    return pathname === '/admin' && tab === item.tab;
+/**
+ * The active nav item is the one whose `to` is the longest prefix of the
+ * current pathname (exact match or a `/`-delimited descendant). `/admin` only
+ * matches exactly so it isn't selected for every sub-route.
+ */
+const activeNavTo = (pathname: string): string => {
+  let best = '';
+  for (const item of ADMIN_NAV_ITEMS) {
+    if (item.to === '/admin') {
+      if (pathname === '/admin' && best === '') best = '/admin';
+      continue;
+    }
+    if ((pathname === item.to || pathname.startsWith(`${item.to}/`)) && item.to.length > best.length) {
+      best = item.to;
+    }
   }
-  if (item.to === '/admin') {
-    return pathname === '/admin' && tab === 'products';
-  }
-  if (item.to === '/admin/blog') {
-    return pathname === '/admin/blog' || pathname.startsWith('/admin/blog/new') || pathname.startsWith('/admin/blog/edit');
-  }
-  return pathname === item.to;
+  return best;
 };
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) => {
   const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') ?? 'products';
+  const activeTo = activeNavTo(location.pathname);
 
   return (
     <Box
@@ -90,7 +95,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) =>
             )}
             <List disablePadding sx={{ px: 1 }}>
               {section.items.map((item) => {
-                const active = isItemActive(item, location.pathname, currentTab);
+                const active = item.to === activeTo;
                 const Icon = item.icon;
                 const button = (
                   <ListItemButton

@@ -31,7 +31,16 @@ const AdminBlogEditorPage = lazy(() => import('../pages/AdminBlogEditorPage'));
 const AdminBlogCategoriesPage = lazy(() => import('../pages/AdminBlogCategoriesPage'));
 const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
 const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
-const AdminProductCategoriesPage = lazy(() => import('../pages/AdminProductCategoriesPage'));
+
+const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
+const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
+const AdminOrdersPage = lazy(() => import('../pages/admin/AdminOrdersPage'));
+const AdminCouponsPage = lazy(() => import('../pages/admin/AdminCouponsPage'));
+const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage'));
+const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage'));
+const AdminAnalyticsPage = lazy(() => import('../pages/admin/AdminAnalyticsPage'));
+const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));
+const AdminHeroBannersPage = lazy(() => import('../pages/admin/AdminHeroBannersPage'));
 
 const AdminProductFormPage = lazy(() => import('../pages/admin/AdminProductFormPage'));
 const AdminCategoryFormPage = lazy(() => import('../pages/admin/AdminCategoryFormPage'));
@@ -146,6 +155,16 @@ const AppRoutes: React.FC = () => {
       <Route element={<AdminLayoutRoute />}>
         <Route path="/admin" element={<AdminPage />} />
 
+        <Route path="/admin/products" element={<AdminProductsPage />} />
+        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+        <Route path="/admin/reviews" element={<AdminReviewsPage />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+        <Route path="/admin/settings" element={<AdminSettingsPage />} />
+        <Route path="/admin/hero-banners" element={<AdminHeroBannersPage />} />
+
         <Route path="/admin/products/new" element={<AdminProductFormPage />} />
         <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
         <Route path="/admin/categories/new" element={<AdminCategoryFormPage />} />
@@ -168,7 +187,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/products/tags" element={<AdminProductTagsPage />} />
         <Route path="/admin/products/tags/new" element={<AdminProductTagFormPage />} />
         <Route path="/admin/products/tags/edit/:id" element={<AdminProductTagFormPage />} />
-        <Route path="/admin/products/categories" element={<AdminProductCategoriesPage />} />
       </Route>
     </Routes>
   );

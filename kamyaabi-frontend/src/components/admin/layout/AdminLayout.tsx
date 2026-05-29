@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation, useNavigate, useSearchParams, Link as RouterLink } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -46,7 +46,6 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const [searchParams] = useSearchParams();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const { user } = useAppSelector((state) => state.auth);
@@ -96,7 +95,7 @@ const AdminLayout: React.FC = () => {
   };
 
   const sidebarWidth = collapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH;
-  const crumbs = buildAdminBreadcrumbs(location.pathname, searchParams.get('tab'));
+  const crumbs = buildAdminBreadcrumbs(location.pathname);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -225,7 +224,7 @@ const AdminLayout: React.FC = () => {
                 <List dense disablePadding>
                   <ListItem
                     component={RouterLink}
-                    to="/admin?tab=products"
+                    to="/admin/products"
                     onClick={() => setNotifAnchor(null)}
                     sx={{ color: 'inherit' }}
                   >

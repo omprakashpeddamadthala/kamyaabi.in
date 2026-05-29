@@ -17,11 +17,9 @@ import {
 
 export interface AdminNavItem {
   label: string;
-  /** Route path the link points to (may include a query string). */
+  /** Route path the link points to. */
   to: string;
   icon: SvgIconComponent;
-  /** Tab id for `/admin?tab=` driven sections; undefined for standalone routes. */
-  tab?: string;
 }
 
 export interface AdminNavSection {
@@ -31,8 +29,7 @@ export interface AdminNavSection {
 
 /**
  * Single source of truth for the admin sidebar and breadcrumb labels.
- * Paths mirror the existing route table — no route paths are changed; the
- * `/admin` tabbed sections are addressed via the existing `?tab=` query param.
+ * Every admin section is a dedicated route.
  */
 export const ADMIN_NAV: AdminNavSection[] = [
   {
@@ -42,22 +39,22 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     heading: 'Catalog',
     items: [
-      { label: 'Products', to: '/admin?tab=products', icon: Inventory2Outlined, tab: 'products' },
-      { label: 'Categories', to: '/admin?tab=categories', icon: CategoryOutlined, tab: 'categories' },
+      { label: 'Products', to: '/admin/products', icon: Inventory2Outlined },
+      { label: 'Categories', to: '/admin/categories', icon: CategoryOutlined },
       { label: 'Product Tags', to: '/admin/products/tags', icon: LocalOfferOutlined },
     ],
   },
   {
     heading: 'Sales',
     items: [
-      { label: 'Orders', to: '/admin?tab=orders', icon: ReceiptLongOutlined, tab: 'orders' },
-      { label: 'Coupons', to: '/admin?tab=coupons', icon: ConfirmationNumberOutlined, tab: 'coupons' },
+      { label: 'Orders', to: '/admin/orders', icon: ReceiptLongOutlined },
+      { label: 'Coupons', to: '/admin/coupons', icon: ConfirmationNumberOutlined },
     ],
   },
   {
     heading: 'Content',
     items: [
-      { label: 'Hero Banners', to: '/admin?tab=hero-banners', icon: ViewCarouselOutlined, tab: 'hero-banners' },
+      { label: 'Hero Banners', to: '/admin/hero-banners', icon: ViewCarouselOutlined },
       { label: 'Blog Posts', to: '/admin/blog', icon: ArticleOutlined },
       { label: 'Blog Categories', to: '/admin/blog/categories', icon: CategoryOutlined },
       { label: 'Blog Tags', to: '/admin/blog/tags', icon: BookmarksOutlined },
@@ -66,14 +63,14 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     heading: 'Insights & People',
     items: [
-      { label: 'Reviews', to: '/admin?tab=reviews', icon: RateReviewOutlined, tab: 'reviews' },
-      { label: 'Analytics', to: '/admin?tab=analytics', icon: InsightsOutlined, tab: 'analytics' },
-      { label: 'Users', to: '/admin?tab=users', icon: PeopleAltOutlined, tab: 'users' },
+      { label: 'Reviews', to: '/admin/reviews', icon: RateReviewOutlined },
+      { label: 'Analytics', to: '/admin/analytics', icon: InsightsOutlined },
+      { label: 'Users', to: '/admin/users', icon: PeopleAltOutlined },
     ],
   },
   {
     heading: 'System',
-    items: [{ label: 'Settings', to: '/admin?tab=settings', icon: SettingsOutlined, tab: 'settings' }],
+    items: [{ label: 'Settings', to: '/admin/settings', icon: SettingsOutlined }],
   },
 ];
 
@@ -86,12 +83,20 @@ export interface Crumb {
 
 const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin': 'Dashboard',
+  '/admin/products': 'Products',
+  '/admin/categories': 'Categories',
+  '/admin/orders': 'Orders',
+  '/admin/coupons': 'Coupons',
+  '/admin/reviews': 'Reviews',
+  '/admin/users': 'Users',
+  '/admin/analytics': 'Analytics',
+  '/admin/settings': 'Settings',
+  '/admin/hero-banners': 'Hero Banners',
   '/admin/blog': 'Blog Posts',
   '/admin/blog/new': 'New Post',
   '/admin/blog/categories': 'Blog Categories',
   '/admin/blog/tags': 'Blog Tags',
   '/admin/products/tags': 'Product Tags',
-  '/admin/products/categories': 'Product Categories',
   '/admin/products/new': 'New Product',
   '/admin/categories/new': 'New Category',
   '/admin/coupons/new': 'New Coupon',
@@ -101,74 +106,45 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/blog/tags/new': 'New Blog Tag',
 };
 
-const TAB_CRUMB_LABELS: Record<string, string> = {
-  products: 'Products',
-  categories: 'Categories',
-  orders: 'Orders',
-  coupons: 'Coupons',
-  reviews: 'Reviews',
-  users: 'Users',
-  analytics: 'Analytics',
-  settings: 'Settings',
-  'hero-banners': 'Hero Banners',
-};
+/** Parameterised edit routes -> [parent label, parent path, default leaf label]. */
+const EDIT_CRUMBS: { prefix: string; parentLabel: string; parentTo: string; leaf: string }[] = [
+  { prefix: '/admin/blog/categories/edit', parentLabel: 'Blog Categories', parentTo: '/admin/blog/categories', leaf: 'Edit Category' },
+  { prefix: '/admin/blog/tags/edit', parentLabel: 'Blog Tags', parentTo: '/admin/blog/tags', leaf: 'Edit Tag' },
+  { prefix: '/admin/blog/edit', parentLabel: 'Blog Posts', parentTo: '/admin/blog', leaf: 'Edit Post' },
+  { prefix: '/admin/products/tags/edit', parentLabel: 'Product Tags', parentTo: '/admin/products/tags', leaf: 'Edit Tag' },
+  { prefix: '/admin/products/edit', parentLabel: 'Products', parentTo: '/admin/products', leaf: 'Edit Product' },
+  { prefix: '/admin/categories/edit', parentLabel: 'Categories', parentTo: '/admin/categories', leaf: 'Edit Category' },
+  { prefix: '/admin/coupons/edit', parentLabel: 'Coupons', parentTo: '/admin/coupons', leaf: 'Edit Coupon' },
+  { prefix: '/admin/hero-banners/edit', parentLabel: 'Hero Banners', parentTo: '/admin/hero-banners', leaf: 'Edit Hero Banner' },
+];
 
 /**
- * Build breadcrumb trail from the current pathname + optional `tab` query value.
- * Always rooted at the Admin dashboard.
+ * Build breadcrumb trail from the current pathname. Always rooted at the Admin
+ * dashboard.
  */
 export const buildAdminBreadcrumbs = (
   pathname: string,
-  tab?: string | null,
   trailingLabel?: string,
 ): Crumb[] => {
   const crumbs: Crumb[] = [{ label: 'Admin', to: '/admin' }];
 
   if (pathname === '/admin') {
-    if (tab && tab !== 'products' && TAB_CRUMB_LABELS[tab]) {
-      crumbs.push({ label: TAB_CRUMB_LABELS[tab] });
-    } else {
-      crumbs.push({ label: tab && TAB_CRUMB_LABELS[tab] ? TAB_CRUMB_LABELS[tab] : 'Dashboard' });
-    }
+    crumbs.push({ label: 'Dashboard' });
     return crumbs;
   }
 
   const known = STATIC_CRUMB_LABELS[pathname];
   if (known) {
     crumbs.push({ label: known });
-  } else {
-    // Parameterised routes (edit pages): derive a sensible label.
-    if (pathname.startsWith('/admin/blog/edit')) {
-      crumbs.push({ label: 'Blog Posts', to: '/admin/blog' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Post' });
-    } else if (pathname.startsWith('/admin/blog/categories/edit')) {
-      crumbs.push({ label: 'Blog Categories', to: '/admin/blog/categories' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Category' });
-    } else if (pathname.startsWith('/admin/blog/tags/edit')) {
-      crumbs.push({ label: 'Blog Tags', to: '/admin/blog/tags' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Tag' });
-    } else if (pathname.startsWith('/admin/products/tags/edit')) {
-      crumbs.push({ label: 'Product Tags', to: '/admin/products/tags' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Tag' });
-    } else if (pathname.startsWith('/admin/products/edit')) {
-      crumbs.push({ label: 'Products', to: '/admin?tab=products' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Product' });
-    } else if (pathname.startsWith('/admin/categories/edit')) {
-      crumbs.push({ label: 'Categories', to: '/admin?tab=categories' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Category' });
-    } else if (pathname.startsWith('/admin/coupons/edit')) {
-      crumbs.push({ label: 'Coupons', to: '/admin?tab=coupons' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Coupon' });
-    } else if (pathname.startsWith('/admin/hero-banners/edit')) {
-      crumbs.push({ label: 'Hero Banners', to: '/admin?tab=hero-banners' });
-      crumbs.push({ label: trailingLabel ?? 'Edit Hero Banner' });
-    } else {
-      crumbs.push({ label: trailingLabel ?? 'Admin' });
-    }
+    return crumbs;
   }
 
-  if (trailingLabel && known) {
-    // e.g. New Product already covered; nothing extra.
+  const edit = EDIT_CRUMBS.find((e) => pathname.startsWith(e.prefix));
+  if (edit) {
+    crumbs.push({ label: edit.parentLabel, to: edit.parentTo });
+    crumbs.push({ label: trailingLabel ?? edit.leaf });
+  } else {
+    crumbs.push({ label: trailingLabel ?? 'Admin' });
   }
   return crumbs;
 };
