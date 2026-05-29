@@ -138,11 +138,14 @@ export interface Payment {
   createdAt: string;
 }
 
+export type PaymentMethod = 'PREPAID' | 'COD';
+
 export interface Order {
   id: number;
   items: OrderItem[];
   totalAmount: number;
   status: string;
+  paymentMethod: PaymentMethod;
   shippingAddress: Address | null;
   payment: Payment | null;
   shiprocketOrderId: string | null;
@@ -157,6 +160,18 @@ export interface Order {
   discountAmount: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShiprocketStats {
+  totalSynced: number;
+  syncPending: number;
+  pickupScheduled: number;
+  awbAssigned: number;
+  inTransit: number;
+  delivered: number;
+  cancelled: number;
+  codOrders: number;
+  shiprocketConfigured: boolean;
 }
 
 export interface ApiResponse<T> {

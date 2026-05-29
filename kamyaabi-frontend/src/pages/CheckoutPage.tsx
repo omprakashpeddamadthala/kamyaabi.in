@@ -25,6 +25,8 @@ import {
   ExpandMore,
   ExpandLess,
   ContentCopy,
+  CreditCardOutlined,
+  LocalShippingOutlined,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart } from '../features/cart/cartSlice';
@@ -32,7 +34,7 @@ import { createOrder } from '../features/order/orderSlice';
 import { addressApi } from '../api/addressApi';
 import { paymentApi } from '../api/paymentApi';
 import { couponApi } from '../api/couponApi';
-import { Address, Coupon, CouponValidationResult } from '../types';
+import { Address, Coupon, CouponValidationResult, PaymentMethod } from '../types';
 import Loading from '../components/common/Loading';
 import AddressFormDialog from '../components/common/AddressFormDialog';
 
@@ -61,6 +63,8 @@ const CheckoutPage: React.FC = () => {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('PREPAID');
 
   useEffect(() => {
     dispatch(fetchCart());
@@ -143,8 +147,14 @@ const CheckoutPage: React.FC = () => {
         createOrder({
           shippingAddressId: selectedAddressId,
           couponCode: couponResult?.valid ? couponResult.code : undefined,
+          paymentMethod,
         }),
       ).unwrap();
+
+      if (paymentMethod === 'COD') {
+        navigate(`/orders/${orderResult.id}`);
+        return;
+      }
 
       const paymentRes = await paymentApi.createOrder(orderResult.id);
       const razorpayOrder = paymentRes.data.data;
@@ -274,6 +284,50 @@ const CheckoutPage: React.FC = () => {
                 ))}
               </RadioGroup>
             )}
+          </Card>
+
+          {/* Payment Method Selection */}
+          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Payment Method
+            </Typography>
+            <RadioGroup
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+            >
+              <FormControlLabel
+                value="PREPAID"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CreditCardOutlined fontSize="small" color="primary" />
+                    <Box>
+                      <Typography fontWeight={600}>Pay Online (Razorpay)</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        UPI, cards, net banking, and wallets. Order ships once payment is confirmed.
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ mb: 1, alignItems: 'flex-start' }}
+              />
+              <FormControlLabel
+                value="COD"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocalShippingOutlined fontSize="small" color="primary" />
+                    <Box>
+                      <Typography fontWeight={600}>Cash on Delivery</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Pay in cash when your order is delivered. We'll ship it via Shiprocket.
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ alignItems: 'flex-start' }}
+              />
+            </RadioGroup>
           </Card>
 
           {}
@@ -501,8 +555,19 @@ const CheckoutPage: React.FC = () => {
               onClick={handlePlaceOrder}
               disabled={loading || paymentProcessing || !selectedAddressId}
             >
-              {loading ? 'Processing...' : paymentProcessing ? 'Payment in progress...' : 'Place Order & Pay'}
+              {loading
+                ? 'Processing...'
+                : paymentProcessing
+                ? 'Payment in progress...'
+                : paymentMethod === 'COD'
+                ? 'Place Order (Cash on Delivery)'
+                : 'Place Order & Pay'}
             </Button>
+            {paymentMethod === 'COD' && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+                You'll pay ₹{finalTotal} in cash to the courier on delivery.
+              </Typography>
+            )}
           </Card>
         </Grid>
       </Grid>

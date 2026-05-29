@@ -83,10 +83,15 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Cart is empty");
         }
 
+        Order.PaymentMethod paymentMethod = request.paymentMethod() != null
+                ? request.paymentMethod() : Order.PaymentMethod.PREPAID;
+        boolean isCod = paymentMethod == Order.PaymentMethod.COD;
+
         Order order = Order.builder()
                 .user(user)
                 .shippingAddress(address)
-                .status(Order.OrderStatus.PENDING)
+                .paymentMethod(paymentMethod)
+                .status(isCod ? Order.OrderStatus.CONFIRMED : Order.OrderStatus.PENDING)
                 .build();
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -117,6 +122,22 @@ public class OrderServiceImpl implements OrderService {
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
 
+        // COD orders are confirmed at creation — deduct stock immediately (mirrors
+        // what updateOrderStatus does when an admin confirms a prepaid order).
+        if (isCod) {
+            for (OrderItem orderItem : orderItems) {
+                Product product = orderItem.getProduct();
+                int newStock = product.getStock() - orderItem.getQuantity();
+                if (newStock < 0) {
+                    log.warn("Stock would go negative on COD order for product {} (current: {}, ordered: {}) — clamping to 0",
+                            product.getId(), product.getStock(), orderItem.getQuantity());
+                    newStock = 0;
+                }
+                product.setStock(newStock);
+                productRepository.save(product);
+            }
+        }
+
         // Apply coupon if provided
         if (request.couponCode() != null && !request.couponCode().isBlank()) {
             CouponValidationResponse couponResult = couponService.applyCoupon(
@@ -131,11 +152,16 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        log.info("Order created with id: {}", savedOrder.getId());
+        log.info("Order created with id: {} (paymentMethod={})", savedOrder.getId(), paymentMethod);
 
         cartService.clearCart(userId);
 
-        log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
+        if (isCod) {
+            log.info("Order {} placed via COD — publishing COD_ORDER_PLACED event", savedOrder.getId());
+            orderEventPublisher.publishOrderEvent(savedOrder, OrderEventType.COD_ORDER_PLACED);
+        } else {
+            log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
+        }
 
         return orderMapper.toResponse(savedOrder);
     }

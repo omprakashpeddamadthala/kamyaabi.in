@@ -13,6 +13,7 @@ import {
   ArticleOutlined,
   BookmarksOutlined,
   SettingsOutlined,
+  LocalShippingOutlined,
 } from '@mui/icons-material';
 
 export interface AdminNavItem {
@@ -48,6 +49,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
     heading: 'Sales',
     items: [
       { label: 'Orders', to: '/admin/orders', icon: ReceiptLongOutlined },
+      { label: 'Shipping', to: '/admin/shipping', icon: LocalShippingOutlined },
       { label: 'Coupons', to: '/admin/coupons', icon: ConfirmationNumberOutlined },
     ],
   },
@@ -86,6 +88,7 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/products': 'Products',
   '/admin/categories': 'Categories',
   '/admin/orders': 'Orders',
+  '/admin/shipping': 'Shipping',
   '/admin/coupons': 'Coupons',
   '/admin/reviews': 'Reviews',
   '/admin/users': 'Users',
