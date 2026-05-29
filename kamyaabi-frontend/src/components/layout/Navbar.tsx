@@ -31,7 +31,6 @@ import {
   Logout,
   Login,
   Info,
-  Build,
   ContactMail,
   Person,
   Article,
@@ -43,7 +42,6 @@ import { useFlyToCart } from '../common/FlyToCartAnimation';
 const navLinks = [
   { label: 'Home', to: '/' },
   { label: 'About Us', to: '/about' },
-  { label: 'Service', to: '/service' },
   { label: 'Products', to: '/products' },
   { label: 'Blog', to: '/blog' },
   { label: 'Contact', to: '/contact' },
@@ -102,7 +100,6 @@ const Navbar: React.FC = () => {
   const drawerIcons: Record<string, React.ReactNode> = {
     '/': <Home />,
     '/about': <Info />,
-    '/service': <Build />,
     '/products': <Store />,
     '/blog': <Article />,
     '/contact': <ContactMail />,

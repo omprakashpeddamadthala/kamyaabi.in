@@ -16,7 +16,6 @@ const OrderDetailPage = lazy(() => import('../pages/OrderDetailPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const AdminPage = lazy(() => import('../pages/AdminPage'));
 const AboutPage = lazy(() => import('../pages/AboutPage'));
-const ServicePage = lazy(() => import('../pages/ServicePage'));
 const ContactPage = lazy(() => import('../pages/ContactPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const RefundPolicyPage = lazy(() => import('../pages/RefundPolicyPage'));
@@ -78,7 +77,6 @@ const AppRoutes: React.FC = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/service" element={<ServicePage />} />
         <Route path="/products" element={<ProductsPage />} />
         {}
         <Route path="/products/:slug" element={<ProductDetailPage />} />
