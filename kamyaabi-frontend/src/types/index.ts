@@ -143,6 +143,7 @@ export interface Order {
   items: OrderItem[];
   totalAmount: number;
   status: string;
+  paymentMethod: 'ONLINE' | 'COD';
   shippingAddress: Address | null;
   payment: Payment | null;
   shiprocketOrderId: string | null;
@@ -157,6 +158,16 @@ export interface Order {
   discountAmount: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShiprocketDashboard {
+  totalOrders: number;
+  shiprocketSyncedOrders: number;
+  pendingSyncOrders: number;
+  codOrders: number;
+  onlineOrders: number;
+  ordersByStatus: Record<string, number>;
+  shippingStatusBreakdown: Record<string, number>;
 }
 
 export interface ApiResponse<T> {

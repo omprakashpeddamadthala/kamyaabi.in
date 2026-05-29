@@ -21,12 +21,16 @@ public class ShiprocketEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderEvent(OrderEvent event) {
-        if (event.getEventType() != OrderEventType.PAYMENT_SUCCESS) {
+        boolean shouldSync = event.getEventType() == OrderEventType.PAYMENT_SUCCESS
+                || (event.getEventType() == OrderEventType.ORDER_CONFIRMED
+                    && event.getOrder().getPaymentMethod() == Order.PaymentMethod.COD);
+
+        if (!shouldSync) {
             return;
         }
 
         Order order = event.getOrder();
-        log.info("Payment success for order {} — triggering Shiprocket sync", order.getId());
+        log.info("{} for order {} — triggering Shiprocket sync", event.getEventType(), order.getId());
 
         try {
             shiprocketService.syncOrderToShiprocket(order);

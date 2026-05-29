@@ -2,10 +2,11 @@ import axiosInstance from './axiosInstance';
 import { ApiResponse, Order, PageResponse } from '../types';
 
 export const orderApi = {
-  create: (shippingAddressId: number, couponCode?: string) =>
+  create: (shippingAddressId: number, couponCode?: string, paymentMethod?: string) =>
     axiosInstance.post<ApiResponse<Order>>('/api/orders', {
       shippingAddressId,
       ...(couponCode ? { couponCode } : {}),
+      ...(paymentMethod ? { paymentMethod } : {}),
     }),
 
   getAll: (page = 0, size = 10) =>

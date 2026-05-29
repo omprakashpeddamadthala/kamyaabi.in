@@ -171,7 +171,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
 
         List<Order> failedOrders = orderRepository.findByShiprocketSyncedFalseAndStatusIn(
-                List.of(Order.OrderStatus.PAID, Order.OrderStatus.CONFIRMED));
+                List.of(Order.OrderStatus.PAID, Order.OrderStatus.CONFIRMED, Order.OrderStatus.PROCESSING));
 
         if (failedOrders.isEmpty()) {
             return;
@@ -231,7 +231,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         body.put("shipping_is_billing", true);
 
         body.put("order_items", items);
-        body.put("payment_method", "Prepaid");
+        body.put("payment_method",
+                order.getPaymentMethod() == Order.PaymentMethod.COD ? "COD" : "Prepaid");
         body.put("sub_total", order.getTotalAmount().doubleValue());
 
         body.put("length", properties.getDefaultLength());

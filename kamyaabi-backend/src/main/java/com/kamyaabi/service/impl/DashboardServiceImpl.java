@@ -3,13 +3,18 @@ package com.kamyaabi.service.impl;
 import com.kamyaabi.dto.response.AnalyticsPointResponse;
 import com.kamyaabi.dto.response.AnalyticsResponse;
 import com.kamyaabi.dto.response.DashboardStatsResponse;
+import com.kamyaabi.dto.response.OrderResponse;
+import com.kamyaabi.dto.response.ShiprocketDashboardResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.exception.BadRequestException;
+import com.kamyaabi.mapper.OrderMapper;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.repository.ProductRepository;
 import com.kamyaabi.service.DashboardService;
 import com.kamyaabi.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,13 +43,16 @@ public class DashboardServiceImpl implements DashboardService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final SettingsService settingsService;
+    private final OrderMapper orderMapper;
 
     public DashboardServiceImpl(ProductRepository productRepository,
                                 OrderRepository orderRepository,
-                                SettingsService settingsService) {
+                                SettingsService settingsService,
+                                OrderMapper orderMapper) {
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.settingsService = settingsService;
+        this.orderMapper = orderMapper;
     }
 
     @Override
@@ -111,6 +120,43 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalRevenue(totalRevenue)
                 .points(points)
                 .build();
+    }
+
+    @Override
+    public ShiprocketDashboardResponse getShiprocketDashboard() {
+        long totalOrders = orderRepository.count();
+        long syncedOrders = orderRepository.countByShiprocketSyncedTrue();
+        long pendingSyncOrders = orderRepository.findByShiprocketSyncedFalseAndStatusIn(
+                List.of(Order.OrderStatus.PAID, Order.OrderStatus.CONFIRMED, Order.OrderStatus.PROCESSING)).size();
+        long codOrders = orderRepository.countByPaymentMethod(Order.PaymentMethod.COD);
+        long onlineOrders = orderRepository.countByPaymentMethod(Order.PaymentMethod.ONLINE);
+
+        Map<String, Long> ordersByStatus = new LinkedHashMap<>();
+        for (Object[] row : orderRepository.countShiprocketOrdersByStatusGrouped()) {
+            ordersByStatus.put(((Order.OrderStatus) row[0]).name(), (Long) row[1]);
+        }
+
+        Map<String, Long> shippingBreakdown = new LinkedHashMap<>();
+        for (Object[] row : orderRepository.countByShippingStatusGrouped()) {
+            String status = row[0] != null ? row[0].toString() : "UNKNOWN";
+            shippingBreakdown.put(status, (Long) row[1]);
+        }
+
+        return ShiprocketDashboardResponse.builder()
+                .totalOrders(totalOrders)
+                .shiprocketSyncedOrders(syncedOrders)
+                .pendingSyncOrders(pendingSyncOrders)
+                .codOrders(codOrders)
+                .onlineOrders(onlineOrders)
+                .ordersByStatus(ordersByStatus)
+                .shippingStatusBreakdown(shippingBreakdown)
+                .build();
+    }
+
+    @Override
+    public Page<OrderResponse> getShiprocketOrders(Pageable pageable) {
+        return orderRepository.findShiprocketOrders(pageable)
+                .map(orderMapper::toResponse);
     }
 
     private static LocalDate coerceToLocalDate(Object raw) {

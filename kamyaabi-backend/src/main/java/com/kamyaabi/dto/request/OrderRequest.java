@@ -8,6 +8,8 @@ public record OrderRequest(
         @NotNull(message = "Shipping address ID is required")
         Long shippingAddressId,
 
-        String couponCode
+        String couponCode,
+
+        String paymentMethod
 ) {
 }

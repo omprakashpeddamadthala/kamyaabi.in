@@ -25,6 +25,8 @@ import {
   ExpandMore,
   ExpandLess,
   ContentCopy,
+  CreditCard,
+  LocalShipping,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart } from '../features/cart/cartSlice';
@@ -55,6 +57,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'COD'>('ONLINE');
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponResult, setCouponResult] = useState<CouponValidationResult | null>(null);
@@ -143,8 +146,14 @@ const CheckoutPage: React.FC = () => {
         createOrder({
           shippingAddressId: selectedAddressId,
           couponCode: couponResult?.valid ? couponResult.code : undefined,
+          paymentMethod,
         }),
       ).unwrap();
+
+      if (paymentMethod === 'COD') {
+        navigate(`/orders/${orderResult.id}`);
+        return;
+      }
 
       const paymentRes = await paymentApi.createOrder(orderResult.id);
       const razorpayOrder = paymentRes.data.data;
@@ -300,6 +309,48 @@ const CheckoutPage: React.FC = () => {
                 </Typography>
               </Box>
             ))}
+          </Card>
+
+          {/* Payment Method */}
+          <Card sx={{ p: { xs: 2, sm: 3 }, mt: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Payment Method</Typography>
+            <RadioGroup
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as 'ONLINE' | 'COD')}
+            >
+              <FormControlLabel
+                value="ONLINE"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CreditCard color="primary" />
+                    <Box>
+                      <Typography fontWeight={600}>Pay Online</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        UPI, Credit/Debit Card, Net Banking
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ mb: 1, alignItems: 'flex-start' }}
+              />
+              <FormControlLabel
+                value="COD"
+                control={<Radio />}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocalShipping color="success" />
+                    <Box>
+                      <Typography fontWeight={600}>Cash on Delivery</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Pay when your order is delivered
+                      </Typography>
+                    </Box>
+                  </Box>
+                }
+                sx={{ alignItems: 'flex-start' }}
+              />
+            </RadioGroup>
           </Card>
         </Grid>
 
@@ -501,7 +552,13 @@ const CheckoutPage: React.FC = () => {
               onClick={handlePlaceOrder}
               disabled={loading || paymentProcessing || !selectedAddressId}
             >
-              {loading ? 'Processing...' : paymentProcessing ? 'Payment in progress...' : 'Place Order & Pay'}
+              {loading
+                ? 'Processing...'
+                : paymentProcessing
+                  ? 'Payment in progress...'
+                  : paymentMethod === 'COD'
+                    ? 'Place Order (Cash on Delivery)'
+                    : 'Place Order & Pay'}
             </Button>
           </Card>
         </Grid>

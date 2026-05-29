@@ -43,6 +43,11 @@ public class Order {
     @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
     private Address shippingAddress;
@@ -85,5 +90,9 @@ public class Order {
 
     public enum OrderStatus {
         PENDING, PAID, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, PAYMENT_FAILED
+    }
+
+    public enum PaymentMethod {
+        ONLINE, COD
     }
 }

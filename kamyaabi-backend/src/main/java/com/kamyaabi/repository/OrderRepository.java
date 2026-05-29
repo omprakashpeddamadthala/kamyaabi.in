@@ -49,4 +49,29 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
 
     Optional<Order> findByAwbNumber(String awbNumber);
+
+    long countByPaymentMethod(Order.PaymentMethod paymentMethod);
+
+    long countByShiprocketSyncedTrue();
+
+    long countByShippingStatus(String shippingStatus);
+
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.shippingStatus IS NOT NULL AND o.shippingStatus <> ''")
+    long countWithShippingStatus();
+
+    @Query("SELECT o.shippingStatus, COUNT(o) FROM Order o "
+            + "WHERE o.shiprocketSynced = true AND o.shippingStatus IS NOT NULL "
+            + "GROUP BY o.shippingStatus")
+    List<Object[]> countByShippingStatusGrouped();
+
+    @Query("SELECT o.status, COUNT(o) FROM Order o "
+            + "WHERE o.shiprocketSynced = true "
+            + "GROUP BY o.status")
+    List<Object[]> countShiprocketOrdersByStatusGrouped();
+
+    @Query("SELECT o FROM Order o WHERE o.shiprocketSynced = true ORDER BY o.updatedAt DESC")
+    Page<Order> findShiprocketOrders(Pageable pageable);
+
+    @Query("SELECT o FROM Order o WHERE o.paymentMethod = :method ORDER BY o.createdAt DESC")
+    Page<Order> findByPaymentMethodOrdered(@Param("method") Order.PaymentMethod method, Pageable pageable);
 }

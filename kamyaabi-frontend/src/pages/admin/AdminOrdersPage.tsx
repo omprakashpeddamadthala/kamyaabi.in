@@ -146,6 +146,7 @@ const AdminOrdersPage: React.FC = () => {
             <TableRow>
               <TableCell>Order ID</TableCell>
               <TableCell>Date</TableCell>
+              <TableCell>Payment</TableCell>
               <TableCell>Items</TableCell>
               <TableCell>Shipping Address</TableCell>
               <TableCell>Total</TableCell>
@@ -156,10 +157,10 @@ const AdminOrdersPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={8} />
+              <TableSkeleton rows={5} columns={9} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -170,6 +171,14 @@ const AdminOrdersPage: React.FC = () => {
                 <TableRow key={o.id}>
                   <TableCell>#{o.id}</TableCell>
                   <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={o.paymentMethod === 'COD' ? 'COD' : 'Online'}
+                      size="small"
+                      color={o.paymentMethod === 'COD' ? 'warning' : 'info'}
+                      variant="outlined"
+                    />
+                  </TableCell>
                   <TableCell>
                     {o.items.length === 0 ? (
                       '—'

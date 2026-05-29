@@ -9,6 +9,7 @@ import {
   DashboardStats,
   AnalyticsResponse,
   AdminUser,
+  ShiprocketDashboard,
 } from '../types';
 
 export interface ProductRequest {
@@ -199,6 +200,15 @@ export const adminApi = {
 
   deactivateCoupon: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/coupons/${id}`),
+
+  // ── Shiprocket Dashboard ──────────────────────────────────
+  getShiprocketDashboard: () =>
+    axiosInstance.get<ApiResponse<ShiprocketDashboard>>('/api/admin/shiprocket/dashboard'),
+
+  getShiprocketOrders: (page = 0, size = 10) =>
+    axiosInstance.get<ApiResponse<PageResponse<Order>>>('/api/admin/shiprocket/orders', {
+      params: { page, size },
+    }),
 };
 
 export interface CouponFormRequest {

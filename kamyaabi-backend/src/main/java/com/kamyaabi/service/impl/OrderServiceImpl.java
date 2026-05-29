@@ -83,10 +83,13 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Cart is empty");
         }
 
+        boolean isCod = "COD".equalsIgnoreCase(request.paymentMethod());
+
         Order order = Order.builder()
                 .user(user)
                 .shippingAddress(address)
                 .status(Order.OrderStatus.PENDING)
+                .paymentMethod(isCod ? Order.PaymentMethod.COD : Order.PaymentMethod.ONLINE)
                 .build();
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -135,7 +138,27 @@ public class OrderServiceImpl implements OrderService {
 
         cartService.clearCart(userId);
 
-        log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
+        if (isCod) {
+            savedOrder.setStatus(Order.OrderStatus.CONFIRMED);
+
+            for (OrderItem item : savedOrder.getItems()) {
+                Product product = item.getProduct();
+                int newStock = product.getStock() - item.getQuantity();
+                if (newStock < 0) {
+                    log.warn("Stock would go negative for product {} — clamping to 0", product.getId());
+                    newStock = 0;
+                }
+                product.setStock(newStock);
+                productRepository.save(product);
+            }
+
+            savedOrder = orderRepository.save(savedOrder);
+            log.info("COD order {} confirmed — stock deducted, triggering Shiprocket sync", savedOrder.getId());
+
+            orderEventPublisher.publishOrderEvent(savedOrder, OrderEventType.ORDER_CONFIRMED);
+        } else {
+            log.info("Order {} created successfully. Awaiting payment before sending notifications.", savedOrder.getId());
+        }
 
         return orderMapper.toResponse(savedOrder);
     }
