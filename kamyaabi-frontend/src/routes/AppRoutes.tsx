@@ -1,6 +1,7 @@
 import React, { lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
+import AdminLayout from '../components/admin/layout/AdminLayout';
 import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
 import { isSessionExpired, clearSession } from '../api/axiosInstance';
 import { logout } from '../features/auth/authSlice';
@@ -32,6 +33,14 @@ const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
 const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
 const AdminProductCategoriesPage = lazy(() => import('../pages/AdminProductCategoriesPage'));
 
+const AdminProductFormPage = lazy(() => import('../pages/admin/AdminProductFormPage'));
+const AdminCategoryFormPage = lazy(() => import('../pages/admin/AdminCategoryFormPage'));
+const AdminCouponFormPage = lazy(() => import('../pages/admin/AdminCouponFormPage'));
+const AdminHeroBannerFormPage = lazy(() => import('../pages/admin/AdminHeroBannerFormPage'));
+const AdminProductTagFormPage = lazy(() => import('../pages/admin/AdminProductTagFormPage'));
+const AdminBlogCategoryFormPage = lazy(() => import('../pages/admin/AdminBlogCategoryFormPage'));
+const AdminBlogTagFormPage = lazy(() => import('../pages/admin/AdminBlogTagFormPage'));
+
 function useSessionGuard(): { authenticated: boolean } {
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
@@ -55,12 +64,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AdminLayoutRoute: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { authenticated } = useSessionGuard();
   if (!authenticated) return <Navigate to="/login" replace />;
   if (user?.role !== 'ADMIN') return <Navigate to="/" replace />;
-  return <>{children}</>;
+  return <AdminLayout />;
 };
 
 const CustomerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -130,71 +139,36 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/blog"
-          element={
-            <AdminRoute>
-              <AdminBlogListPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/new"
-          element={
-            <AdminRoute>
-              <AdminBlogEditorPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/edit/:id"
-          element={
-            <AdminRoute>
-              <AdminBlogEditorPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/categories"
-          element={
-            <AdminRoute>
-              <AdminBlogCategoriesPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/tags"
-          element={
-            <AdminRoute>
-              <AdminBlogTagsPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/products/tags"
-          element={
-            <AdminRoute>
-              <AdminProductTagsPage />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/products/categories"
-          element={
-            <AdminRoute>
-              <AdminProductCategoriesPage />
-            </AdminRoute>
-          }
-        />
         <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+
+      {/* Admin panel — dedicated shell (sidebar + top app bar), guarded by role */}
+      <Route element={<AdminLayoutRoute />}>
+        <Route path="/admin" element={<AdminPage />} />
+
+        <Route path="/admin/products/new" element={<AdminProductFormPage />} />
+        <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
+        <Route path="/admin/categories/new" element={<AdminCategoryFormPage />} />
+        <Route path="/admin/categories/edit/:id" element={<AdminCategoryFormPage />} />
+        <Route path="/admin/coupons/new" element={<AdminCouponFormPage />} />
+        <Route path="/admin/coupons/edit/:id" element={<AdminCouponFormPage />} />
+        <Route path="/admin/hero-banners/new" element={<AdminHeroBannerFormPage />} />
+        <Route path="/admin/hero-banners/edit/:id" element={<AdminHeroBannerFormPage />} />
+
+        <Route path="/admin/blog" element={<AdminBlogListPage />} />
+        <Route path="/admin/blog/new" element={<AdminBlogEditorPage />} />
+        <Route path="/admin/blog/edit/:id" element={<AdminBlogEditorPage />} />
+        <Route path="/admin/blog/categories" element={<AdminBlogCategoriesPage />} />
+        <Route path="/admin/blog/categories/new" element={<AdminBlogCategoryFormPage />} />
+        <Route path="/admin/blog/categories/edit/:id" element={<AdminBlogCategoryFormPage />} />
+        <Route path="/admin/blog/tags" element={<AdminBlogTagsPage />} />
+        <Route path="/admin/blog/tags/new" element={<AdminBlogTagFormPage />} />
+        <Route path="/admin/blog/tags/edit/:id" element={<AdminBlogTagFormPage />} />
+
+        <Route path="/admin/products/tags" element={<AdminProductTagsPage />} />
+        <Route path="/admin/products/tags/new" element={<AdminProductTagFormPage />} />
+        <Route path="/admin/products/tags/edit/:id" element={<AdminProductTagFormPage />} />
+        <Route path="/admin/products/categories" element={<AdminProductCategoriesPage />} />
       </Route>
     </Routes>
   );

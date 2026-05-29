@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -15,29 +15,18 @@ import {
   TableRow,
   IconButton,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Grid,
   Chip,
   Select,
   MenuItem,
   FormControl,
-  FormHelperText,
   InputLabel,
   Pagination,
   Paper,
-  LinearProgress,
   Stack,
   InputAdornment,
   Switch,
-  useMediaQuery,
-  useTheme,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 import {
   Edit,
@@ -47,22 +36,16 @@ import {
   ShoppingCart as CartIcon,
   CurrencyRupee,
   Warning,
-  CloudUpload,
-  Star,
-  StarBorder,
   Search as SearchIcon,
   Article,
   Label,
   Category as CategoryIcon,
-  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCategories } from '../features/product/productSlice';
 import {
   adminApi,
   AdminProductFilters,
-  CategoryRequest,
-  ProductRequest,
 } from '../api/adminApi';
 import {
   Category,
@@ -70,10 +53,7 @@ import {
   Order,
   PageResponse,
   Product,
-  ProductImage,
-  ProductTag,
 } from '../types';
-import { adminProductTagApi } from '../api/productTagApi';
 import AnalyticsTab from '../components/admin/AnalyticsTab';
 import UsersTab from '../components/admin/UsersTab';
 import SettingsTab from '../components/admin/SettingsTab';
@@ -83,7 +63,7 @@ import HeroBannersTab from '../components/admin/HeroBannersTab';
 import { withCloudinaryTransform } from '../utils/cloudinary';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
 
 interface TabPanelProps {
@@ -98,33 +78,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
   </div>
 );
 
-const slugify = (raw: string): string =>
-  raw
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-interface ProductFormErrors {
-  name?: string;
-  description?: string;
-  price?: string;
-  discountPrice?: string;
-  categoryId?: string;
-  stock?: string;
-  weight?: string;
-  unit?: string;
-  images?: string;
-}
-
-interface CategoryFormErrors {
-  name?: string;
-  slug?: string;
-  description?: string;
-  parentId?: string;
-}
-
 interface ConfirmState {
   open: boolean;
   title: string;
@@ -132,32 +85,6 @@ interface ConfirmState {
   loading: boolean;
   onConfirm: (() => Promise<void>) | (() => void);
 }
-
-const initialProductForm: ProductRequest = {
-  name: '',
-  description: '',
-  price: 0,
-  discountPrice: 0,
-  imageUrl: '',
-  categoryId: 0,
-  stock: 0,
-  weight: '',
-  unit: 'g',
-  active: true,
-  seoTitle: '',
-  seoDescription: '',
-  seoKeywords: '',
-  ogImageUrl: '',
-  canonicalUrl: '',
-};
-
-const initialCategoryForm: CategoryRequest = {
-  name: '',
-  slug: '',
-  description: '',
-  imageUrl: '',
-  parentId: null,
-};
 
 const DEFAULT_PAGE_SIZE = 10;
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
@@ -198,8 +125,6 @@ const AdminPage: React.FC = () => {
   const { showSuccess, showError } = useToast();
   const { categories } = useAppSelector((state) => state.products);
   const currentUser = useAppSelector((state) => state.auth.user);
-  const muiTheme = useTheme();
-  const isMobileViewport = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tabId = (searchParams.get('tab') as TabId | null) ?? 'products';
@@ -259,11 +184,6 @@ const AdminPage: React.FC = () => {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
-  const [showProductDialog, setShowProductDialog] = useState(false);
-  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<number | null>(null);
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
-
   const [confirmState, setConfirmState] = useState<ConfirmState>({
     open: false,
     title: '',
@@ -271,31 +191,6 @@ const AdminPage: React.FC = () => {
     loading: false,
     onConfirm: () => undefined,
   });
-
-  const [savingProduct, setSavingProduct] = useState(false);
-  const [savingCategory, setSavingCategory] = useState(false);
-  const [deletingImageId, setDeletingImageId] = useState<number | null>(null);
-
-  const [pendingImages, setPendingImages] = useState<File[]>([]);
-  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
-  const [pendingMainIndex, setPendingMainIndex] = useState<number>(0);
-  const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
-  const [selectedExistingMainId, setSelectedExistingMainId] = useState<number | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-
-  const [productForm, setProductForm] = useState<ProductRequest>(initialProductForm);
-  const [productErrors, setProductErrors] = useState<ProductFormErrors>({});
-  const [allProductTags, setAllProductTags] = useState<ProductTag[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
-  const [categoryForm, setCategoryForm] = useState<CategoryRequest>(initialCategoryForm);
-  const [categoryErrors, setCategoryErrors] = useState<CategoryFormErrors>({});
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-
-  const previewsRef = useRef<string[]>([]);
-  useEffect(() => {
-    previewsRef.current = pendingPreviews;
-  }, [pendingPreviews]);
-  useEffect(() => () => previewsRef.current.forEach((url) => URL.revokeObjectURL(url)), []);
 
   const loadAdminProducts = useCallback(
     async (filters: AdminProductFilters = {}) => {
@@ -387,9 +282,6 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     dispatch(fetchCategories());
     loadDashboardStats();
-    adminProductTagApi.getAll()
-      .then((res) => setAllProductTags(res.data.data))
-      .catch(() => {});
   }, [dispatch, loadDashboardStats]);
 
   useEffect(() => {
@@ -405,127 +297,6 @@ const AdminPage: React.FC = () => {
   }, [tabId, categoryPage, currentLimit, loadCategoryRows]);
 
 
-  const handleImageFilesSelected = (files: File[]) => {
-    const nonImage = files.find((f) => !f.type.startsWith('image/'));
-    if (nonImage) {
-      setProductErrors((prev) => ({
-        ...prev,
-        images: `Unsupported file type: ${nonImage.type || nonImage.name}`,
-      }));
-      return;
-    }
-    setProductErrors((prev) => ({ ...prev, images: undefined }));
-    const nextPreviews = files.map((f) => URL.createObjectURL(f));
-    setPendingImages((prev) => [...prev, ...files]);
-    setPendingPreviews((prev) => [...prev, ...nextPreviews]);
-  };
-
-  const handleRemovePendingImage = (idx: number) => {
-    URL.revokeObjectURL(pendingPreviews[idx]);
-    setPendingImages((prev) => prev.filter((_, i) => i !== idx));
-    setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
-    if (pendingMainIndex === idx) setPendingMainIndex(0);
-    else if (pendingMainIndex > idx) setPendingMainIndex((v) => v - 1);
-  };
-
-  const requestRemoveExistingImage = (productId: number, imageId: number) => {
-    setConfirmState({
-      open: true,
-      title: 'Remove image?',
-      message: 'This permanently removes the image from the product.',
-      loading: false,
-      onConfirm: async () => {
-        setConfirmState((s) => ({ ...s, loading: true }));
-        setDeletingImageId(imageId);
-        try {
-          await adminApi.deleteProductImage(productId, imageId);
-          const remaining = existingImages.filter((img) => img.id !== imageId);
-          setExistingImages(remaining);
-          if (selectedExistingMainId === imageId) {
-            const newMain = remaining.find((i) => i.isMain) || remaining[0];
-            setSelectedExistingMainId(newMain ? newMain.id : null);
-          }
-          showSuccess('Image removed');
-        } catch (err) {
-          const parsed = parseApiError(err, 'Failed to remove image');
-          showError(parsed.message);
-        } finally {
-          setDeletingImageId(null);
-          setConfirmState((s) => ({ ...s, open: false, loading: false }));
-        }
-      },
-    });
-  };
-
-
-  const validateProductForm = (): boolean => {
-    const errs: ProductFormErrors = {};
-    if (!productForm.name.trim()) errs.name = 'Name is required';
-    if (!productForm.categoryId) errs.categoryId = 'Category is required';
-    if (productForm.price <= 0) errs.price = 'Price (MRP) must be greater than zero';
-    if (
-      productForm.discountPrice &&
-      productForm.discountPrice > 0 &&
-      productForm.discountPrice >= productForm.price
-    ) {
-      errs.discountPrice = 'Discount price must be less than MRP';
-    }
-    if (productForm.stock < 0) errs.stock = 'Stock cannot be negative';
-    if (!productForm.weight.trim()) errs.weight = 'Weight is required';
-    if (!productForm.unit) errs.unit = 'Unit is required';
-    if (!editingProductId && pendingImages.length === 0) {
-      errs.images = 'At least one image is required';
-    }
-    setProductErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSaveProduct = async () => {
-    if (!validateProductForm()) return;
-    setSavingProduct(true);
-    setUploadProgress(pendingImages.length > 0 ? 0 : null);
-    try {
-      const payload: ProductRequest = {
-        ...productForm,
-        discountPrice:
-          productForm.discountPrice && productForm.discountPrice > 0
-            ? productForm.discountPrice
-            : undefined,
-        tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-      };
-      const onProgress = pendingImages.length > 0 ? setUploadProgress : undefined;
-      if (editingProductId) {
-        await adminApi.updateProduct(
-          editingProductId,
-          payload,
-          pendingImages,
-          selectedExistingMainId,
-          onProgress,
-        );
-        showSuccess('Product updated');
-      } else {
-        await adminApi.createProduct(payload, pendingImages, pendingMainIndex, onProgress);
-        showSuccess('Product created');
-      }
-      setShowProductDialog(false);
-      resetProductForm();
-      loadAdminProducts();
-      loadDashboardStats();
-    } catch (err) {
-      const parsed = parseApiError(err, 'Failed to save product');
-      if (Object.keys(parsed.fieldErrors).length > 0) {
-        const mapped: ProductFormErrors = {};
-        for (const [key, value] of Object.entries(parsed.fieldErrors)) {
-          (mapped as Record<string, string>)[key] = value;
-        }
-        setProductErrors(mapped);
-      }
-      showError(parsed.message);
-    } finally {
-      setSavingProduct(false);
-      setUploadProgress(null);
-    }
-  };
 
   const requestDeleteProduct = (id: number, name: string) => {
     setConfirmState({
@@ -551,51 +322,6 @@ const AdminPage: React.FC = () => {
   };
 
 
-  const validateCategoryForm = (): boolean => {
-    const errs: CategoryFormErrors = {};
-    if (!categoryForm.name.trim()) errs.name = 'Name is required';
-    if (categoryForm.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(categoryForm.slug)) {
-      errs.slug = 'Slug must be lowercase letters/numbers separated by hyphens';
-    }
-    setCategoryErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSaveCategory = async () => {
-    if (!validateCategoryForm()) return;
-    setSavingCategory(true);
-    try {
-      const payload: CategoryRequest = {
-        ...categoryForm,
-        slug: categoryForm.slug ? categoryForm.slug : undefined,
-        parentId: categoryForm.parentId || null,
-      };
-      if (editingCategoryId) {
-        await adminApi.updateCategory(editingCategoryId, payload);
-        showSuccess('Category updated');
-      } else {
-        await adminApi.createCategory(payload);
-        showSuccess('Category created');
-      }
-      setShowCategoryDialog(false);
-      resetCategoryForm();
-      dispatch(fetchCategories());
-      loadCategoryRows(categoryPage, currentLimit);
-      loadDashboardStats();
-    } catch (err) {
-      const parsed = parseApiError(err, 'Failed to save category');
-      if (Object.keys(parsed.fieldErrors).length > 0) {
-        const mapped: CategoryFormErrors = {};
-        for (const [key, value] of Object.entries(parsed.fieldErrors)) {
-          (mapped as Record<string, string>)[key] = value;
-        }
-        setCategoryErrors(mapped);
-      }
-      showError(parsed.message);
-    } finally {
-      setSavingCategory(false);
-    }
-  };
 
   const requestDeleteCategory = (id: number, name: string, productCount: number) => {
     if (productCount > 0) {
@@ -646,87 +372,6 @@ const AdminPage: React.FC = () => {
   };
 
 
-  const resetProductForm = () => {
-    setProductForm(initialProductForm);
-    setEditingProductId(null);
-    pendingPreviews.forEach((url) => URL.revokeObjectURL(url));
-    setPendingImages([]);
-    setPendingPreviews([]);
-    setPendingMainIndex(0);
-    setExistingImages([]);
-    setSelectedExistingMainId(null);
-    setProductErrors({});
-    setUploadProgress(null);
-    setSelectedTagIds([]);
-  };
-
-  const resetCategoryForm = () => {
-    setCategoryForm(initialCategoryForm);
-    setEditingCategoryId(null);
-    setCategoryErrors({});
-    setSlugManuallyEdited(false);
-  };
-
-  const openEditProduct = (product: Product) => {
-    setProductForm({
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      discountPrice: product.discountPrice || 0,
-      imageUrl: product.imageUrl,
-      categoryId: product.categoryId,
-      stock: product.stock,
-      weight: product.weight,
-      unit: product.unit,
-      active: product.active,
-      seoTitle: product.seoTitle || '',
-      seoDescription: product.seoDescription || '',
-      seoKeywords: product.seoKeywords || '',
-      ogImageUrl: product.ogImageUrl || '',
-      canonicalUrl: product.canonicalUrl || '',
-    });
-    setSelectedTagIds(product.tags?.map((t) => t.id) ?? []);
-    setEditingProductId(product.id);
-    pendingPreviews.forEach((url) => URL.revokeObjectURL(url));
-    setPendingImages([]);
-    setPendingPreviews([]);
-    setPendingMainIndex(0);
-    setExistingImages(product.images ?? []);
-    const mainImg = (product.images ?? []).find((i) => i.isMain);
-    setSelectedExistingMainId(mainImg ? mainImg.id : product.images?.[0]?.id ?? null);
-    setProductErrors({});
-    setUploadProgress(null);
-    setShowProductDialog(true);
-  };
-
-  const openEditCategory = (category: {
-    id: number;
-    name: string;
-    slug: string;
-    description: string;
-    imageUrl: string;
-    parentId: number | null;
-  }) => {
-    setCategoryForm({
-      name: category.name,
-      slug: category.slug || '',
-      description: category.description || '',
-      imageUrl: category.imageUrl || '',
-      parentId: category.parentId,
-    });
-    setEditingCategoryId(category.id);
-    setCategoryErrors({});
-    setSlugManuallyEdited(true);
-    setShowCategoryDialog(true);
-  };
-
-  const handleCategoryNameChange = (value: string) => {
-    setCategoryForm((prev) => ({
-      ...prev,
-      name: value,
-      slug: slugManuallyEdited ? prev.slug : slugify(value),
-    }));
-  };
 
 
   const handleToggleProductStatus = async (product: Product, nextActive: boolean) => {
@@ -752,16 +397,22 @@ const AdminPage: React.FC = () => {
   };
 
 
-  const parentCategoryOptions = useMemo(
-    () => categories.filter((c) => c.id !== editingCategoryId && !c.parentId),
-    [categories, editingCategoryId],
-  );
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h3" sx={{ mb: 3 }}>
         Admin Dashboard
       </Typography>
+
+      <InlineConfirmBar
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        loading={confirmState.loading}
+        confirmLabel="Confirm"
+        onConfirm={() => confirmState.onConfirm()}
+        onCancel={() => setConfirmState((s) => ({ ...s, open: false, loading: false }))}
+      />
 
       {}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -941,10 +592,7 @@ const AdminPage: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => {
-              resetProductForm();
-              setShowProductDialog(true);
-            }}
+            onClick={() => navigate('/admin/products/new')}
           >
             Add Product
           </Button>
@@ -1025,7 +673,7 @@ const AdminPage: React.FC = () => {
                       <TableCell>
                         <IconButton
                           size="small"
-                          onClick={() => openEditProduct(p)}
+                          onClick={() => navigate(`/admin/products/edit/${p.id}`)}
                           aria-label={`Edit ${p.name}`}
                         >
                           <Edit />
@@ -1095,8 +743,7 @@ const AdminPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => {
-              resetCategoryForm();
-              setShowCategoryDialog(true);
+              navigate('/admin/categories/new');
             }}
           >
             Add Category
@@ -1138,7 +785,7 @@ const AdminPage: React.FC = () => {
                     <TableCell>
                       <IconButton
                         size="small"
-                        onClick={() => openEditCategory(c)}
+                        onClick={() => navigate(`/admin/categories/edit/${c.id}`)}
                         aria-label={`Edit ${c.name}`}
                       >
                         <Edit />
@@ -1409,456 +1056,6 @@ const AdminPage: React.FC = () => {
         <HeroBannersTab active={tabId === 'hero-banners'} />
       </TabPanel>
 
-      {}
-      <Dialog
-        open={showProductDialog}
-        onClose={() => !savingProduct && setShowProductDialog(false)}
-        maxWidth="md"
-        fullWidth
-        fullScreen={isMobileViewport}
-      >
-        <DialogTitle>{editingProductId ? 'Edit Product' : 'Add Product'}</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Name"
-              value={productForm.name}
-              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-              fullWidth
-              required
-              error={!!productErrors.name}
-              helperText={productErrors.name}
-            />
-            <TextField
-              label="Description"
-              value={productForm.description}
-              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-              fullWidth
-              multiline
-              rows={3}
-              error={!!productErrors.description}
-              helperText={productErrors.description}
-            />
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Price (MRP) ₹"
-                  type="number"
-                  value={productForm.price || ''}
-                  onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                  fullWidth
-                  required
-                  error={!!productErrors.price}
-                  helperText={productErrors.price ?? 'Original price before any discount'}
-                  inputProps={{ min: 0, step: '0.01' }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Discount Price ₹"
-                  type="number"
-                  value={productForm.discountPrice || ''}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, discountPrice: Number(e.target.value) })
-                  }
-                  fullWidth
-                  error={!!productErrors.discountPrice}
-                  helperText={productErrors.discountPrice ?? 'Optional. Must be less than MRP.'}
-                  inputProps={{ min: 0, step: '0.01' }}
-                />
-              </Grid>
-            </Grid>
-            <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 1, p: 2 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Product Images ({existingImages.length + pendingImages.length})
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-                JPG, PNG, WEBP, GIF, or AVIF. No size limit. Click a thumbnail to make it the main
-                image.
-              </Typography>
-              {existingImages.length > 0 && (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
-                  {existingImages.map((img) => (
-                    <Box key={img.id} sx={{ position: 'relative' }}>
-                      <Box
-                        component="img"
-                        src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
-                        alt="product"
-                        onClick={() => setSelectedExistingMainId(img.id)}
-                        sx={{
-                          width: 88,
-                          height: 88,
-                          objectFit: 'cover',
-                          borderRadius: 1,
-                          cursor: 'pointer',
-                          border: '2px solid',
-                          borderColor:
-                            selectedExistingMainId === img.id ? 'primary.main' : 'transparent',
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        sx={{ position: 'absolute', top: -6, right: -6, bgcolor: 'background.paper' }}
-                        onClick={() =>
-                          editingProductId && requestRemoveExistingImage(editingProductId, img.id)
-                        }
-                        disabled={deletingImageId === img.id}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          bottom: 4,
-                          left: 4,
-                          bgcolor: 'background.paper',
-                          borderRadius: '50%',
-                        }}
-                      >
-                        {selectedExistingMainId === img.id ? (
-                          <Star fontSize="small" color="primary" />
-                        ) : (
-                          <StarBorder fontSize="small" />
-                        )}
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-              {pendingImages.length > 0 && (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1.5 }}>
-                  {pendingPreviews.map((preview, idx) => (
-                    <Box key={preview} sx={{ position: 'relative' }}>
-                      <Box
-                        component="img"
-                        src={preview}
-                        alt="preview"
-                        onClick={() => {
-                          if (!editingProductId) setPendingMainIndex(idx);
-                        }}
-                        sx={{
-                          width: 88,
-                          height: 88,
-                          objectFit: 'cover',
-                          borderRadius: 1,
-                          cursor: editingProductId ? 'default' : 'pointer',
-                          border: '2px solid',
-                          borderColor:
-                            !editingProductId && pendingMainIndex === idx
-                              ? 'primary.main'
-                              : 'transparent',
-                        }}
-                      />
-                      <IconButton
-                        size="small"
-                        sx={{ position: 'absolute', top: -6, right: -6, bgcolor: 'background.paper' }}
-                        onClick={() => handleRemovePendingImage(idx)}
-                        disabled={savingProduct}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                      {!editingProductId && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            bottom: 4,
-                            left: 4,
-                            bgcolor: 'background.paper',
-                            borderRadius: '50%',
-                          }}
-                        >
-                          {pendingMainIndex === idx ? (
-                            <Star fontSize="small" color="primary" />
-                          ) : (
-                            <StarBorder fontSize="small" />
-                          )}
-                        </Box>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              )}
-              <Button
-                variant="outlined"
-                component="label"
-                size="small"
-                startIcon={<CloudUpload />}
-                disabled={savingProduct}
-              >
-                Upload Images
-                <input
-                  type="file"
-                  hidden
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      handleImageFilesSelected(Array.from(e.target.files));
-                      e.target.value = '';
-                    }
-                  }}
-                />
-              </Button>
-              {productErrors.images && (
-                <FormHelperText error sx={{ mt: 1 }}>
-                  {productErrors.images}
-                </FormHelperText>
-              )}
-              {uploadProgress != null && (
-                <Box sx={{ mt: 1.5 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    Uploading… {Math.round(uploadProgress * 100)}%
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.round(uploadProgress * 100)}
-                    sx={{ mt: 0.5, borderRadius: 1, height: 6 }}
-                  />
-                </Box>
-              )}
-            </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth required error={!!productErrors.categoryId}>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    label="Category"
-                    value={productForm.categoryId || ''}
-                    onChange={(e) =>
-                      setProductForm({ ...productForm, categoryId: Number(e.target.value) })
-                    }
-                  >
-                    {categories.map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {productErrors.categoryId && (
-                    <FormHelperText>{productErrors.categoryId}</FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid item xs={6} sm={6} md={3}>
-                <TextField
-                  label="Stock"
-                  type="number"
-                  value={productForm.stock}
-                  onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
-                  fullWidth
-                  error={!!productErrors.stock}
-                  helperText={productErrors.stock}
-                />
-              </Grid>
-              <Grid item xs={6} sm={6} md={3}>
-                <TextField
-                  label="Weight"
-                  value={productForm.weight}
-                  onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
-                  fullWidth
-                  error={!!productErrors.weight}
-                  helperText={productErrors.weight}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={2}>
-                <FormControl fullWidth>
-                  <InputLabel>Unit</InputLabel>
-                  <Select
-                    label="Unit"
-                    value={productForm.unit}
-                    onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
-                  >
-                    <MenuItem value="g">g</MenuItem>
-                    <MenuItem value="kg">kg</MenuItem>
-                    <MenuItem value="pcs">pcs</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-            {allProductTags.length > 0 && (
-              <FormControl fullWidth>
-                <InputLabel>Tags</InputLabel>
-                <Select
-                  label="Tags"
-                  multiple
-                  value={selectedTagIds}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedTagIds(typeof val === 'string' ? val.split(',').map(Number) : (val as number[]));
-                  }}
-                  renderValue={(selected) =>
-                    (selected as number[])
-                      .map((id) => allProductTags.find((t) => t.id === id)?.name ?? id)
-                      .join(', ')
-                  }
-                >
-                  {allProductTags.map((tag) => (
-                    <MenuItem key={tag.id} value={tag.id}>{tag.name}</MenuItem>
-                  ))}
-                </Select>
-                <FormHelperText>Optional. Select tags for this product.</FormHelperText>
-              </FormControl>
-            )}
-            <Accordion disableGutters sx={{ boxShadow: 'none', border: '1px solid', borderColor: 'divider', '&:before': { display: 'none' } }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="subtitle2">SEO Settings</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField
-                    label="Meta Title"
-                    value={productForm.seoTitle || ''}
-                    onChange={(e) => setProductForm({ ...productForm, seoTitle: e.target.value })}
-                    fullWidth
-                    helperText="Page title for search engines (50-60 chars recommended)"
-                  />
-                  <TextField
-                    label="Meta Description"
-                    value={productForm.seoDescription || ''}
-                    onChange={(e) => setProductForm({ ...productForm, seoDescription: e.target.value })}
-                    fullWidth
-                    multiline
-                    rows={2}
-                    helperText="Page description for search engines (150-160 chars recommended)"
-                  />
-                  <TextField
-                    label="Meta Keywords"
-                    value={productForm.seoKeywords || ''}
-                    onChange={(e) => setProductForm({ ...productForm, seoKeywords: e.target.value })}
-                    fullWidth
-                    helperText="Comma-separated keywords"
-                  />
-                  <TextField
-                    label="OG Image URL"
-                    value={productForm.ogImageUrl || ''}
-                    onChange={(e) => setProductForm({ ...productForm, ogImageUrl: e.target.value })}
-                    fullWidth
-                    helperText="Image URL for social media sharing (1200x630px recommended)"
-                  />
-                  <TextField
-                    label="Canonical URL"
-                    value={productForm.canonicalUrl || ''}
-                    onChange={(e) => setProductForm({ ...productForm, canonicalUrl: e.target.value })}
-                    fullWidth
-                    helperText="Canonical URL if different from the default product page URL"
-                  />
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowProductDialog(false)} disabled={savingProduct}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSaveProduct}
-            disabled={savingProduct}
-          >
-            {savingProduct ? 'Saving…' : 'Save'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {}
-      <Dialog
-        open={showCategoryDialog}
-        onClose={() => !savingCategory && setShowCategoryDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{editingCategoryId ? 'Edit Category' : 'Add Category'}</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Name"
-              value={categoryForm.name}
-              onChange={(e) => handleCategoryNameChange(e.target.value)}
-              fullWidth
-              required
-              error={!!categoryErrors.name}
-              helperText={categoryErrors.name}
-            />
-            <TextField
-              label="Slug"
-              value={categoryForm.slug}
-              onChange={(e) => {
-                setSlugManuallyEdited(true);
-                setCategoryForm({ ...categoryForm, slug: e.target.value });
-              }}
-              fullWidth
-              error={!!categoryErrors.slug}
-              helperText={
-                categoryErrors.slug ??
-                'Auto-generated from name. Override to customize the URL slug.'
-              }
-            />
-            <FormControl fullWidth>
-              <InputLabel>Parent category</InputLabel>
-              <Select
-                label="Parent category"
-                value={categoryForm.parentId ?? ''}
-                onChange={(e) =>
-                  setCategoryForm({
-                    ...categoryForm,
-                    parentId: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
-              >
-                <MenuItem value="">No parent (top-level)</MenuItem>
-                {parentCategoryOptions.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>
-                {categoryErrors.parentId ?? 'Optional. Only top-level categories can be parents.'}
-              </FormHelperText>
-            </FormControl>
-            <TextField
-              label="Description"
-              value={categoryForm.description}
-              onChange={(e) =>
-                setCategoryForm({ ...categoryForm, description: e.target.value })
-              }
-              fullWidth
-              multiline
-              rows={2}
-              error={!!categoryErrors.description}
-              helperText={categoryErrors.description}
-            />
-            <TextField
-              label="Image URL"
-              value={categoryForm.imageUrl}
-              onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowCategoryDialog(false)} disabled={savingCategory}>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={handleSaveCategory} disabled={savingCategory}>
-            {savingCategory ? 'Saving…' : 'Save'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={confirmState.open}
-        title={confirmState.title}
-        message={confirmState.message}
-        loading={confirmState.loading}
-        confirmLabel="Confirm"
-        destructive
-        onConfirm={() => confirmState.onConfirm()}
-        onCancel={() =>
-          setConfirmState((s) => ({ ...s, open: false, loading: false }))
-        }
-      />
     </Container>
   );
 };

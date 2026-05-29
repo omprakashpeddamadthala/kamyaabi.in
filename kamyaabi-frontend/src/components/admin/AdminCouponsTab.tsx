@@ -1,20 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Card,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
   IconButton,
   InputAdornment,
-  InputLabel,
-  MenuItem,
   Pagination,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -23,40 +16,26 @@ import {
   TableRow,
   TextField,
   Typography,
-  Switch,
-  FormControlLabel,
 } from '@mui/material';
 import { Add, Edit, Delete, Search as SearchIcon } from '@mui/icons-material';
-import { adminApi, CouponFormRequest } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 import { Coupon, PageResponse } from '../../types';
 import { useToast } from '../common/ToastProvider';
 import { parseApiError } from '../../utils/apiError';
-import ConfirmDialog from '../common/ConfirmDialog';
+import InlineConfirmBar from './InlineConfirmBar';
 import TableSkeleton from '../common/TableSkeleton';
 
 interface AdminCouponsTabProps {
   active: boolean;
 }
 
-const initialForm: CouponFormRequest = {
-  code: '',
-  discountType: 'PERCENTAGE',
-  discountValue: 0,
-  isActive: true,
-  expiresAt: null,
-};
-
 const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
   const toast = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [coupons, setCoupons] = useState<PageResponse<Coupon> | null>(null);
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
-  const [form, setForm] = useState<CouponFormRequest>(initialForm);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
     couponId: number | null;
@@ -80,59 +59,6 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
     if (active) loadCoupons();
   }, [active, loadCoupons]);
 
-  const openCreateDialog = () => {
-    setEditingCoupon(null);
-    setForm(initialForm);
-    setFormErrors({});
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = (coupon: Coupon) => {
-    setEditingCoupon(coupon);
-    setForm({
-      code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      isActive: coupon.isActive,
-      expiresAt: coupon.expiresAt,
-    });
-    setFormErrors({});
-    setDialogOpen(true);
-  };
-
-  const validateForm = (): Record<string, string> => {
-    const errors: Record<string, string> = {};
-    if (!form.code.trim()) errors.code = 'Code is required';
-    if (form.discountValue <= 0) errors.discountValue = 'Must be > 0';
-    if (form.discountType === 'PERCENTAGE' && form.discountValue > 100) {
-      errors.discountValue = 'Cannot exceed 100%';
-    }
-    return errors;
-  };
-
-  const handleSave = async () => {
-    const errors = validateForm();
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-
-    setSaving(true);
-    try {
-      if (editingCoupon) {
-        await adminApi.updateCoupon(editingCoupon.id, form);
-        toast.showSuccess('Coupon updated');
-      } else {
-        await adminApi.createCoupon(form);
-        toast.showSuccess('Coupon created');
-      }
-      setDialogOpen(false);
-      loadCoupons();
-    } catch (err) {
-      toast.showError(parseApiError(err, 'Failed to save coupon').message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleDeactivate = async () => {
     if (!confirmState.couponId) return;
     setConfirmState((s) => ({ ...s, loading: true }));
@@ -149,25 +75,32 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
         <Typography variant="h6">Coupons</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={openCreateDialog}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/coupons/new')}>
           Create Coupon
         </Button>
       </Box>
 
+      <InlineConfirmBar
+        open={confirmState.open}
+        title="Deactivate coupon?"
+        message={`"${confirmState.couponCode}" will no longer be usable by customers.`}
+        confirmLabel="Deactivate"
+        loading={confirmState.loading}
+        onConfirm={handleDeactivate}
+        onCancel={() => setConfirmState({ open: false, couponId: null, couponCode: '', loading: false })}
+      />
+
       <Box sx={{ mb: 2 }}>
         <TextField
           size="small"
+          label="Search coupons"
           placeholder="Search by code..."
           value={searchQuery}
           onChange={(e) => {
@@ -189,7 +122,7 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
         <TableSkeleton rows={5} columns={7} />
       ) : (
         <>
-          <TableContainer component={Card}>
+          <TableContainer component={Card} sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -221,9 +154,7 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
                     </TableCell>
                     <TableCell>{coupon.discountType}</TableCell>
                     <TableCell>
-                      {coupon.discountType === 'PERCENTAGE'
-                        ? `${coupon.discountValue}%`
-                        : `₹${coupon.discountValue}`}
+                      {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -237,20 +168,20 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
                     </TableCell>
                     <TableCell>{formatDate(coupon.expiresAt)}</TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" onClick={() => openEditDialog(coupon)}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Edit coupon ${coupon.code}`}
+                        onClick={() => navigate(`/admin/coupons/edit/${coupon.id}`, { state: { coupon } })}
+                      >
                         <Edit fontSize="small" />
                       </IconButton>
                       {coupon.isActive && (
                         <IconButton
                           size="small"
                           color="error"
+                          aria-label={`Deactivate coupon ${coupon.code}`}
                           onClick={() =>
-                            setConfirmState({
-                              open: true,
-                              couponId: coupon.id,
-                              couponCode: coupon.code,
-                              loading: false,
-                            })
+                            setConfirmState({ open: true, couponId: coupon.id, couponCode: coupon.code, loading: false })
                           }
                         >
                           <Delete fontSize="small" />
@@ -265,87 +196,11 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
 
           {coupons && coupons.totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <Pagination
-                count={coupons.totalPages}
-                page={page + 1}
-                onChange={(_, p) => setPage(p - 1)}
-              />
+              <Pagination count={coupons.totalPages} page={page + 1} onChange={(_, p) => setPage(p - 1)} />
             </Box>
           )}
         </>
       )}
-
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingCoupon ? 'Edit Coupon' : 'Create Coupon'}</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Coupon Code"
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-              error={!!formErrors.code}
-              helperText={formErrors.code}
-              inputProps={{ style: { textTransform: 'uppercase' } }}
-            />
-            <FormControl>
-              <InputLabel>Discount Type</InputLabel>
-              <Select
-                value={form.discountType}
-                label="Discount Type"
-                onChange={(e) =>
-                  setForm({ ...form, discountType: e.target.value as 'PERCENTAGE' | 'FLAT' })
-                }
-              >
-                <MenuItem value="PERCENTAGE">Percentage (%)</MenuItem>
-                <MenuItem value="FLAT">Flat Amount (₹)</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label={form.discountType === 'PERCENTAGE' ? 'Discount (%)' : 'Discount (₹)'}
-              type="number"
-              value={form.discountValue}
-              onChange={(e) => setForm({ ...form, discountValue: Number(e.target.value) })}
-              error={!!formErrors.discountValue}
-              helperText={formErrors.discountValue}
-              inputProps={{ min: 0.01, step: 0.01 }}
-            />
-            <TextField
-              label="Expires At"
-              type="datetime-local"
-              value={form.expiresAt ? form.expiresAt.slice(0, 16) : ''}
-              onChange={(e) => setForm({ ...form, expiresAt: e.target.value || null })}
-              InputLabelProps={{ shrink: true }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.isActive ?? true}
-                  onChange={(_, v) => setForm({ ...form, isActive: v })}
-                />
-              }
-              label={form.isActive ? 'Active' : 'Inactive'}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editingCoupon ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Deactivate Confirm Dialog */}
-      <ConfirmDialog
-        open={confirmState.open}
-        title="Deactivate Coupon"
-        message={`Are you sure you want to deactivate coupon "${confirmState.couponCode}"? It will no longer be usable by customers.`}
-        onConfirm={handleDeactivate}
-        onCancel={() => setConfirmState({ open: false, couponId: null, couponCode: '', loading: false })}
-        destructive
-        loading={confirmState.loading}
-      />
     </Box>
   );
 };
