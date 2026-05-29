@@ -60,6 +60,9 @@ services:
         VITE_BRAND_DOMAIN: ${VITE_BRAND_DOMAIN:-kamyaabi.in}
         VITE_SUPPORT_EMAIL: ${VITE_SUPPORT_EMAIL:-sm.enterprises0121@gmail.com}
         VITE_SUPPORT_PHONE: ${VITE_SUPPORT_PHONE:-9848999072}
+        VITE_GA_ID: ${VITE_GA_ID:-G-M887QJRB53}
+        VITE_FACEBOOK_URL: ${VITE_FACEBOOK_URL:-}
+        VITE_INSTAGRAM_URL: ${VITE_INSTAGRAM_URL:-}
     container_name: kamyaabi-frontend
     restart: unless-stopped
     ports:

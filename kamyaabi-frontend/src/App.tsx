@@ -14,6 +14,7 @@ import SessionManager from './components/common/SessionManager';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ApiErrorNotifier from './components/common/ApiErrorNotifier';
 import { ToastProvider } from './components/common/ToastProvider';
+import SiteHead from './components/common/SiteHead';
 
 const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const App: React.FC = () => {
       <HelmetProvider>
         <ThemeProvider theme={theme}>
           <CssBaseline />
+          <SiteHead />
           <GlobalLoadingBar />
           <SessionManager />
           <ApiErrorNotifier />
