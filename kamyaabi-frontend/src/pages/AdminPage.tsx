@@ -79,6 +79,7 @@ import UsersTab from '../components/admin/UsersTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import AdminReviewsPanel from '../components/admin/AdminReviewsPanel';
 import AdminCouponsTab from '../components/admin/AdminCouponsTab';
+import HeroBannersTab from '../components/admin/HeroBannersTab';
 import { withCloudinaryTransform } from '../utils/cloudinary';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
@@ -171,7 +172,7 @@ const ORDER_STATUSES = [
   'PENDING',
 ] as const;
 
-const TAB_IDS = ['products', 'categories', 'orders', 'coupons', 'reviews', 'users', 'analytics', 'settings'] as const;
+const TAB_IDS = ['products', 'categories', 'orders', 'coupons', 'reviews', 'users', 'analytics', 'settings', 'hero-banners'] as const;
 type TabId = (typeof TAB_IDS)[number];
 
 const tabIndexOf = (id: string | null | undefined): number => {
@@ -872,6 +873,7 @@ const AdminPage: React.FC = () => {
           <Tab label="Users" />
           <Tab label="Analytics" />
           <Tab label="Settings" />
+          <Tab label="Hero Banners" />
         </Tabs>
       </Box>
 
@@ -1400,6 +1402,11 @@ const AdminPage: React.FC = () => {
       {}
       <TabPanel value={tabValue} index={7}>
         <SettingsTab active={tabId === 'settings'} />
+      </TabPanel>
+
+      {}
+      <TabPanel value={tabValue} index={8}>
+        <HeroBannersTab active={tabId === 'hero-banners'} />
       </TabPanel>
 
       {}
