@@ -15,15 +15,24 @@ import {
   TextField,
   CircularProgress,
   Chip,
+  Collapse,
+  IconButton,
 } from '@mui/material';
-import { Add, Close, LocalOffer } from '@mui/icons-material';
+import {
+  Add,
+  Close,
+  LocalOffer,
+  ExpandMore,
+  ExpandLess,
+  ContentCopy,
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart } from '../features/cart/cartSlice';
 import { createOrder } from '../features/order/orderSlice';
 import { addressApi } from '../api/addressApi';
 import { paymentApi } from '../api/paymentApi';
 import { couponApi } from '../api/couponApi';
-import { Address, CouponValidationResult } from '../types';
+import { Address, Coupon, CouponValidationResult } from '../types';
 import Loading from '../components/common/Loading';
 import AddressFormDialog from '../components/common/AddressFormDialog';
 
@@ -50,10 +59,13 @@ const CheckoutPage: React.FC = () => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponResult, setCouponResult] = useState<CouponValidationResult | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
+  const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCart());
     loadAddresses();
+    loadAvailableCoupons();
   }, [dispatch]);
 
   const loadAddresses = async () => {
@@ -68,25 +80,44 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleValidateCoupon = async () => {
-    if (!couponCode.trim()) return;
+  const loadAvailableCoupons = async () => {
+    try {
+      const res = await couponApi.getAvailable();
+      setAvailableCoupons(res.data.data || []);
+    } catch {
+      // Silently fail — available coupons is not critical
+    }
+  };
+
+  const handleValidateCoupon = async (code?: string) => {
+    const codeToValidate = code || couponCode;
+    if (!codeToValidate.trim()) return;
     setCouponLoading(true);
     setCouponError(null);
     setCouponResult(null);
     try {
-      const res = await couponApi.validate(couponCode.trim());
+      const res = await couponApi.validate(codeToValidate.trim());
       const result = res.data.data;
       if (result.valid) {
         setCouponResult(result);
+        setCouponCode(codeToValidate.trim().toUpperCase());
+        setCouponError(null);
       } else {
-        setCouponError(result.message);
+        setCouponError(result.message || 'This coupon code is not valid');
       }
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      setCouponError(e.response?.data?.message || 'Failed to validate coupon');
+      setCouponError(e.response?.data?.message || 'Failed to validate coupon. Please try again.');
     } finally {
       setCouponLoading(false);
     }
+  };
+
+  const handleApplyAvailableCoupon = (code: string) => {
+    setCouponCode(code);
+    setCouponError(null);
+    handleValidateCoupon(code);
+    setShowAvailableCoupons(false);
   };
 
   const handleRemoveCoupon = () => {
@@ -96,7 +127,8 @@ const CheckoutPage: React.FC = () => {
   };
 
   const discountAmount = couponResult?.discountAmount ?? 0;
-  const finalTotal = cart ? cart.totalAmount - discountAmount : 0;
+  const subtotal = cart?.totalAmount ?? 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount);
 
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
@@ -166,6 +198,13 @@ const CheckoutPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDiscountLabel = (coupon: Coupon) => {
+    if (coupon.discountType === 'PERCENTAGE') {
+      return `${coupon.discountValue}% OFF`;
+    }
+    return `₹${coupon.discountValue} OFF`;
   };
 
   if (!cart) return <Loading />;
@@ -271,7 +310,7 @@ const CheckoutPage: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography color="text.secondary">Subtotal</Typography>
-              <Typography>₹{cart.totalAmount}</Typography>
+              <Typography>₹{subtotal}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography color="text.secondary">Delivery</Typography>
@@ -281,56 +320,156 @@ const CheckoutPage: React.FC = () => {
             {/* Coupon / Promo Code Section */}
             <Divider sx={{ my: 2 }} />
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LocalOffer fontSize="small" /> Promo Code
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  mb: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  fontWeight: 600,
+                  color: 'primary.main',
+                }}
+              >
+                <LocalOffer fontSize="small" /> Apply Promo Code
               </Typography>
+
               {couponResult ? (
                 <Box>
-                  <Chip
-                    label={`${couponResult.code} — ₹${couponResult.discountAmount} off`}
-                    color="success"
-                    onDelete={handleRemoveCoupon}
-                    deleteIcon={<Close />}
+                  <Alert
+                    severity="success"
                     sx={{ mb: 1 }}
-                  />
-                  <Typography variant="body2" color="success.main">
-                    {couponResult.message}
-                  </Typography>
+                    action={
+                      <IconButton size="small" onClick={handleRemoveCoupon} color="inherit">
+                        <Close fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <Typography variant="body2" fontWeight={600}>
+                      {couponResult.code} applied!
+                    </Typography>
+                    <Typography variant="body2">
+                      You save ₹{couponResult.discountAmount}
+                      {couponResult.discountType === 'PERCENTAGE' && ` (${couponResult.discountValue}% off)`}
+                    </Typography>
+                  </Alert>
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    size="small"
-                    placeholder="Enter promo code"
-                    value={couponCode}
-                    onChange={(e) => {
-                      setCouponCode(e.target.value.toUpperCase());
-                      setCouponError(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleValidateCoupon();
-                    }}
-                    error={!!couponError}
-                    helperText={couponError}
-                    disabled={couponLoading}
-                    sx={{ flex: 1 }}
-                    inputProps={{ style: { textTransform: 'uppercase' } }}
-                  />
-                  <Button
-                    variant="outlined"
-                    onClick={handleValidateCoupon}
-                    disabled={couponLoading || !couponCode.trim()}
-                    sx={{ minWidth: 80, height: 40 }}
-                  >
-                    {couponLoading ? <CircularProgress size={20} /> : 'Apply'}
-                  </Button>
+                <Box>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                    <TextField
+                      size="small"
+                      placeholder="Enter promo code"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        if (couponError) setCouponError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleValidateCoupon();
+                      }}
+                      disabled={couponLoading}
+                      sx={{ flex: 1 }}
+                      inputProps={{ style: { textTransform: 'uppercase' } }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => handleValidateCoupon()}
+                      disabled={couponLoading || !couponCode.trim()}
+                      sx={{ minWidth: 80, height: 40 }}
+                    >
+                      {couponLoading ? <CircularProgress size={20} color="inherit" /> : 'Apply'}
+                    </Button>
+                  </Box>
+
+                  {couponError && (
+                    <Alert severity="error" sx={{ mb: 1, py: 0 }} variant="outlined">
+                      <Typography variant="body2">{couponError}</Typography>
+                    </Alert>
+                  )}
+
+                  {/* Available Coupons */}
+                  {availableCoupons.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                      <Button
+                        size="small"
+                        onClick={() => setShowAvailableCoupons(!showAvailableCoupons)}
+                        endIcon={showAvailableCoupons ? <ExpandLess /> : <ExpandMore />}
+                        sx={{ textTransform: 'none', px: 0 }}
+                      >
+                        {showAvailableCoupons ? 'Hide' : 'View'} Available Coupons ({availableCoupons.length})
+                      </Button>
+                      <Collapse in={showAvailableCoupons}>
+                        <Box
+                          sx={{
+                            mt: 1,
+                            maxHeight: 240,
+                            overflowY: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1,
+                          }}
+                        >
+                          {availableCoupons.map((coupon) => (
+                            <Box
+                              key={coupon.id}
+                              sx={{
+                                p: 1.5,
+                                border: '1px dashed',
+                                borderColor: 'primary.main',
+                                borderRadius: 1,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                bgcolor: 'action.hover',
+                              }}
+                            >
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Chip
+                                    label={coupon.code}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 700, fontFamily: 'monospace' }}
+                                  />
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(coupon.code);
+                                    }}
+                                    title="Copy code"
+                                  >
+                                    <ContentCopy sx={{ fontSize: 14 }} />
+                                  </IconButton>
+                                </Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                                  {formatDiscountLabel(coupon)}
+                                  {coupon.expiresAt && ` · Expires ${new Date(coupon.expiresAt).toLocaleDateString()}`}
+                                </Typography>
+                              </Box>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handleApplyAvailableCoupon(coupon.code)}
+                                disabled={couponLoading}
+                                sx={{ ml: 1, minWidth: 60, textTransform: 'none' }}
+                              >
+                                Apply
+                              </Button>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Collapse>
+                    </Box>
+                  )}
                 </Box>
               )}
             </Box>
 
             {discountAmount > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography color="success.main">Discount</Typography>
+                <Typography color="success.main" fontWeight={500}>Discount</Typography>
                 <Typography color="success.main" fontWeight={600}>
                   -₹{discountAmount}
                 </Typography>
@@ -340,9 +479,20 @@ const CheckoutPage: React.FC = () => {
             <Divider sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
               <Typography variant="h6">Total</Typography>
-              <Typography variant="h6" color="primary" fontWeight={700}>
-                ₹{finalTotal}
-              </Typography>
+              <Box sx={{ textAlign: 'right' }}>
+                {discountAmount > 0 && (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textDecoration: 'line-through' }}
+                  >
+                    ₹{subtotal}
+                  </Typography>
+                )}
+                <Typography variant="h6" color="primary" fontWeight={700}>
+                  ₹{finalTotal}
+                </Typography>
+              </Box>
             </Box>
             <Button
               variant="contained"
