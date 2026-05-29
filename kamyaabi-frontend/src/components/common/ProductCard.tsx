@@ -22,9 +22,11 @@ import { reviewApi } from '../../api/reviewApi';
 
 interface ProductCardProps {
   product: Product;
+  /** Renders a smaller, more compact card (e.g. for "You May Also Like" rails). */
+  compact?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -170,7 +172,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <Typography
           variant="h6"
           sx={{
-            fontSize: { xs: '0.85rem', sm: '0.95rem' },
+            fontSize: compact
+              ? { xs: '0.78rem', sm: '0.82rem' }
+              : { xs: '0.85rem', sm: '0.95rem' },
             fontWeight: 600,
             mb: 0.5,
             lineHeight: 1.3,
@@ -200,7 +204,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             mb: 1.5,
           }}
         >
-          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}>
+          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: compact ? { xs: '0.9rem', sm: '0.95rem' } : { xs: '1rem', sm: '1.1rem' } }}>
             ₹{hasDiscount ? product.discountPrice : product.price}
           </Typography>
           {hasDiscount && (
@@ -213,27 +217,31 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </Box>
         {(!user || user.role !== 'ADMIN') && (
-          <Button
-            variant="outlined"
-            size="small"
-            fullWidth
-            startIcon={getButtonIcon()}
-            onClick={handleAddToCart}
-            disabled={product.stock === 0 || isAdding}
-            color={justAdded ? 'success' : 'primary'}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-              py: 0.5,
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
-              '&:active': {
-                transform: 'scale(0.95)',
-              },
-            }}
-          >
-            {getButtonContent()}
-          </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={getButtonIcon()}
+              onClick={handleAddToCart}
+              disabled={product.stock === 0 || isAdding}
+              color={justAdded ? 'success' : 'primary'}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: compact ? '0.7rem' : '0.75rem',
+                py: 0.5,
+                px: 2,
+                width: '100%',
+                maxWidth: compact ? 200 : 240,
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
+                '&:active': {
+                  transform: 'scale(0.95)',
+                },
+              }}
+            >
+              {getButtonContent()}
+            </Button>
+          </Box>
         )}
       </CardContent>
     </Card>
