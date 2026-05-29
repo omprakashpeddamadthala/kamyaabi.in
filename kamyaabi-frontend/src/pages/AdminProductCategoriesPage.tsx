@@ -1,35 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Card, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Stack, IconButton, Tooltip, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField,
+  TableHead, TableRow, Button, Stack, IconButton, Tooltip,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-import { adminApi, CategoryRequest } from '../api/adminApi';
+import { adminApi } from '../api/adminApi';
 import { Category } from '../types';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
-import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
+import { useAppDispatch } from '../hooks/useAppDispatch';
 import { fetchCategories } from '../features/product/productSlice';
-
-const slugify = (raw: string): string =>
-  raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 const AdminProductCategoriesPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
-  const { categories: allCategories } = useAppSelector((state) => state.products);
   const [rows, setRows] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<CategoryRequest>({ name: '', slug: '', description: '', imageUrl: '', parentId: null });
-  const [slugManual, setSlugManual] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
@@ -50,67 +40,16 @@ const AdminProductCategoriesPage: React.FC = () => {
     loadRows();
   }, [dispatch, loadRows]);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm({ name: '', slug: '', description: '', imageUrl: '', parentId: null });
-    setSlugManual(false);
-    setDialogOpen(true);
-  };
-
-  const openEdit = (cat: Category) => {
-    setEditingId(cat.id);
-    setForm({
-      name: cat.name,
-      slug: cat.slug || '',
-      description: cat.description || '',
-      imageUrl: cat.imageUrl || '',
-      parentId: cat.parentId,
-    });
-    setSlugManual(true);
-    setDialogOpen(true);
-  };
-
-  const handleNameChange = (value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      name: value,
-      slug: slugManual ? prev.slug : slugify(value),
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!form.name.trim()) { showError('Name is required'); return; }
-    setSaving(true);
-    try {
-      const payload: CategoryRequest = {
-        ...form,
-        slug: form.slug || undefined,
-        parentId: form.parentId || null,
-      };
-      if (editingId) {
-        await adminApi.updateCategory(editingId, payload);
-        showSuccess('Category updated');
-      } else {
-        await adminApi.createCategory(payload);
-        showSuccess('Category created');
-      }
-      setDialogOpen(false);
-      dispatch(fetchCategories());
-      loadRows();
-    } catch (err) {
-      showError(parseApiError(err, 'Failed to save category').message);
-    } finally {
-      setSaving(false);
+  const requestDelete = (cat: Category) => {
+    if (cat.productCount > 0) {
+      showError(`Cannot delete "${cat.name}" — ${cat.productCount} product(s) assigned.`);
+      return;
     }
+    setDeleteTarget(cat);
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    if (deleteTarget.productCount > 0) {
-      showError(`Cannot delete "${deleteTarget.name}" — ${deleteTarget.productCount} product(s) assigned.`);
-      setConfirmOpen(false);
-      return;
-    }
     setConfirmLoading(true);
     try {
       await adminApi.deleteCategory(deleteTarget.id);
@@ -121,21 +60,28 @@ const AdminProductCategoriesPage: React.FC = () => {
       showError(parseApiError(err, 'Failed to delete category').message);
     } finally {
       setConfirmLoading(false);
-      setConfirmOpen(false);
       setDeleteTarget(null);
     }
   };
 
-  const parentOptions = allCategories.filter((c) => c.id !== editingId && !c.parentId);
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>Product Categories</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>Add Category</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/categories/new')}>Add Category</Button>
       </Stack>
 
-      <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
+      <InlineConfirmBar
+        open={!!deleteTarget}
+        title="Delete category?"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={confirmLoading}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -165,10 +111,12 @@ const AdminProductCategoriesPage: React.FC = () => {
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>
                       <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => openEdit(cat)}><Edit fontSize="small" /></IconButton>
+                        <IconButton size="small" aria-label={`Edit ${cat.name}`} onClick={() => navigate(`/admin/categories/edit/${cat.id}`)}>
+                          <Edit fontSize="small" />
+                        </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => { setDeleteTarget(cat); setConfirmOpen(true); }}>
+                        <IconButton size="small" color="error" aria-label={`Delete ${cat.name}`} onClick={() => requestDelete(cat)}>
                           <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -180,49 +128,6 @@ const AdminProductCategoriesPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? 'Edit Category' : 'New Category'}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Name" fullWidth value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
-            <TextField
-              label="Slug" fullWidth value={form.slug || ''}
-              onChange={(e) => { setForm({ ...form, slug: e.target.value }); setSlugManual(true); }}
-              helperText="Leave empty to auto-generate"
-            />
-            <TextField label="Description" fullWidth multiline rows={2} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            <TextField label="Image URL" fullWidth value={form.imageUrl || ''} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
-            <TextField
-              select label="Parent Category" fullWidth
-              value={form.parentId ?? ''}
-              onChange={(e) => setForm({ ...form, parentId: e.target.value ? Number(e.target.value) : null })}
-              SelectProps={{ native: true }}
-            >
-              <option value="">None (Top-level)</option>
-              {parentOptions.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </TextField>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Delete category?"
-        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        loading={confirmLoading}
-        destructive
-        onConfirm={handleDelete}
-        onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-      />
     </Container>
   );
 };

@@ -1,26 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Card, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Stack, IconButton, Tooltip, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField,
+  TableHead, TableRow, Button, Stack, IconButton, Tooltip,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-import { adminBlogApi, BlogTagRequest } from '../api/blogApi';
+import { adminBlogApi } from '../api/blogApi';
 import { BlogTag } from '../types';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
 
 const AdminBlogTagsPage: React.FC = () => {
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<BlogTagRequest>({ name: '' });
-  const [saving, setSaving] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<BlogTag | null>(null);
 
@@ -38,38 +34,6 @@ const AdminBlogTagsPage: React.FC = () => {
 
   useEffect(() => { loadTags(); }, [loadTags]);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm({ name: '' });
-    setDialogOpen(true);
-  };
-
-  const openEdit = (tag: BlogTag) => {
-    setEditingId(tag.id);
-    setForm({ name: tag.name, slug: tag.slug, description: tag.description || '' });
-    setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.name.trim()) { showError('Name is required'); return; }
-    setSaving(true);
-    try {
-      if (editingId) {
-        await adminBlogApi.updateTag(editingId, form);
-        showSuccess('Tag updated');
-      } else {
-        await adminBlogApi.createTag(form);
-        showSuccess('Tag created');
-      }
-      setDialogOpen(false);
-      loadTags();
-    } catch (err) {
-      showError(parseApiError(err, 'Failed to save tag').message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setConfirmLoading(true);
@@ -81,19 +45,28 @@ const AdminBlogTagsPage: React.FC = () => {
       showError(parseApiError(err, 'Failed to delete tag').message);
     } finally {
       setConfirmLoading(false);
-      setConfirmOpen(false);
       setDeleteTarget(null);
     }
   };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>Blog Tags</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>Add Tag</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/blog/tags/new')}>Add Tag</Button>
       </Stack>
 
-      <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
+      <InlineConfirmBar
+        open={!!deleteTarget}
+        title="Delete tag?"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={confirmLoading}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -121,10 +94,12 @@ const AdminBlogTagsPage: React.FC = () => {
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>
                       <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => openEdit(tag)}><Edit fontSize="small" /></IconButton>
+                        <IconButton size="small" aria-label={`Edit ${tag.name}`} onClick={() => navigate(`/admin/blog/tags/edit/${tag.id}`, { state: { tag } })}>
+                          <Edit fontSize="small" />
+                        </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => { setDeleteTarget(tag); setConfirmOpen(true); }}>
+                        <IconButton size="small" color="error" aria-label={`Delete ${tag.name}`} onClick={() => setDeleteTarget(tag)}>
                           <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -136,33 +111,6 @@ const AdminBlogTagsPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? 'Edit Tag' : 'New Tag'}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Name" fullWidth value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            <TextField label="Slug" fullWidth value={form.slug || ''} onChange={(e) => setForm({ ...form, slug: e.target.value })} helperText="Leave empty to auto-generate" />
-            <TextField label="Description" fullWidth multiline rows={2} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Delete tag?"
-        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        loading={confirmLoading}
-        destructive
-        onConfirm={handleDelete}
-        onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-      />
     </Container>
   );
 };

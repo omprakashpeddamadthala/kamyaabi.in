@@ -1,0 +1,120 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Box, TextField, Skeleton } from '@mui/material';
+import { adminProductTagApi, ProductTagRequest } from '../../api/productTagApi';
+import { parseApiError } from '../../utils/apiError';
+import { useToast } from '../../components/common/ToastProvider';
+import AdminFormShell from '../../components/admin/layout/AdminFormShell';
+import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
+
+const LIST_PATH = '/admin/products/tags';
+
+const AdminProductTagFormPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const editingId = id ? Number(id) : null;
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
+
+  const [loading, setLoading] = useState<boolean>(Boolean(editingId));
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<ProductTagRequest>({ name: '', slug: '' });
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editingId) return;
+    let active = true;
+    setLoading(true);
+    setLoadError(null);
+    adminProductTagApi
+      .getById(editingId)
+      .then((res) => {
+        if (active) setForm({ name: res.data.data.name, slug: res.data.data.slug });
+      })
+      .catch((err) => {
+        if (active) setLoadError(parseApiError(err, 'Failed to load tag').message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [editingId]);
+
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      setNameError('Name is required');
+      return;
+    }
+    setNameError(null);
+    setSaving(true);
+    try {
+      if (editingId) {
+        await adminProductTagApi.update(editingId, form);
+        showSuccess('Tag updated');
+      } else {
+        await adminProductTagApi.create(form);
+        showSuccess('Tag created');
+      }
+      navigate(LIST_PATH);
+    } catch (err) {
+      showError(parseApiError(err, 'Failed to save tag').message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 960, mx: 'auto' }}>
+        <Skeleton variant="text" width={180} height={40} />
+        <Skeleton variant="rounded" height={220} sx={{ mt: 2 }} />
+      </Box>
+    );
+  }
+
+  return (
+    <AdminFormShell
+      title={editingId ? 'Edit Tag' : 'New Tag'}
+      subtitle="Product tags group products across categories for filtering and merchandising."
+      onSubmit={handleSave}
+      onCancel={() => navigate(LIST_PATH)}
+      saving={saving}
+      submitLabel={editingId ? 'Update tag' : 'Create tag'}
+    >
+      {loadError && (
+        <InlineConfirmBar
+          open
+          severity="error"
+          title="Couldn't load tag"
+          message={loadError}
+          confirmLabel="Retry"
+          cancelLabel="Back to list"
+          onConfirm={() => navigate(0)}
+          onCancel={() => navigate(LIST_PATH)}
+        />
+      )}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <TextField
+          label="Name"
+          fullWidth
+          required
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          error={!!nameError}
+          helperText={nameError}
+        />
+        <TextField
+          label="Slug"
+          fullWidth
+          value={form.slug || ''}
+          onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          helperText="Leave empty to auto-generate"
+        />
+      </Box>
+    </AdminFormShell>
+  );
+};
+
+export default AdminProductTagFormPage;

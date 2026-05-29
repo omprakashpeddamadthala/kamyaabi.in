@@ -1,29 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Card, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Button, Stack, IconButton, Tooltip, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem,
+  TableHead, TableRow, Button, Stack, IconButton, Tooltip, Collapse,
+  FormControl, InputLabel, Select, MenuItem,
 } from '@mui/material';
-import { Add, Edit, Delete, MergeType } from '@mui/icons-material';
-import { adminProductTagApi, ProductTagRequest } from '../api/productTagApi';
+import { Add, Edit, Delete, MergeType, Close } from '@mui/icons-material';
+import { adminProductTagApi } from '../api/productTagApi';
 import { ProductTag } from '../types';
 import { parseApiError } from '../utils/apiError';
 import { useToast } from '../components/common/ToastProvider';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
 
 const AdminProductTagsPage: React.FC = () => {
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
   const [tags, setTags] = useState<ProductTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<ProductTagRequest>({ name: '' });
-  const [saving, setSaving] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ProductTag | null>(null);
-  const [mergeOpen, setMergeOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [mergeSource, setMergeSource] = useState<ProductTag | null>(null);
   const [mergeTargetId, setMergeTargetId] = useState<number | ''>('');
   const [merging, setMerging] = useState(false);
@@ -42,38 +38,6 @@ const AdminProductTagsPage: React.FC = () => {
 
   useEffect(() => { loadTags(); }, [loadTags]);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm({ name: '' });
-    setDialogOpen(true);
-  };
-
-  const openEdit = (tag: ProductTag) => {
-    setEditingId(tag.id);
-    setForm({ name: tag.name, slug: tag.slug });
-    setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.name.trim()) { showError('Name is required'); return; }
-    setSaving(true);
-    try {
-      if (editingId) {
-        await adminProductTagApi.update(editingId, form);
-        showSuccess('Tag updated');
-      } else {
-        await adminProductTagApi.create(form);
-        showSuccess('Tag created');
-      }
-      setDialogOpen(false);
-      loadTags();
-    } catch (err) {
-      showError(parseApiError(err, 'Failed to save tag').message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setConfirmLoading(true);
@@ -85,7 +49,6 @@ const AdminProductTagsPage: React.FC = () => {
       showError(parseApiError(err, 'Failed to delete tag').message);
     } finally {
       setConfirmLoading(false);
-      setConfirmOpen(false);
       setDeleteTarget(null);
     }
   };
@@ -96,7 +59,6 @@ const AdminProductTagsPage: React.FC = () => {
     try {
       await adminProductTagApi.merge(mergeSource.id, Number(mergeTargetId));
       showSuccess(`Merged "${mergeSource.name}" into target tag`);
-      setMergeOpen(false);
       setMergeSource(null);
       setMergeTargetId('');
       loadTags();
@@ -109,12 +71,59 @@ const AdminProductTagsPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>Product Tags</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>Add Tag</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/products/tags/new')}>Add Tag</Button>
       </Stack>
 
-      <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
+      <InlineConfirmBar
+        open={!!deleteTarget}
+        title="Delete tag?"
+        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={confirmLoading}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
+      <Collapse in={!!mergeSource} unmountOnExit>
+        <Card sx={{ p: 2, mb: 2, '&:hover': { transform: 'none' } }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Merge &ldquo;{mergeSource?.name}&rdquo; into another tag
+            </Typography>
+            <IconButton size="small" aria-label="Cancel merge" onClick={() => { setMergeSource(null); setMergeTargetId(''); }}>
+              <Close fontSize="small" />
+            </IconButton>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            All products with this tag will be reassigned to the selected target tag.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+            <FormControl fullWidth sx={{ maxWidth: { sm: 360 } }}>
+              <InputLabel id="merge-target-label">Target tag</InputLabel>
+              <Select
+                labelId="merge-target-label"
+                label="Target tag"
+                value={mergeTargetId}
+                onChange={(e) => setMergeTargetId(e.target.value as number)}
+              >
+                {tags.filter((t) => t.id !== mergeSource?.id).map((t) => (
+                  <MenuItem key={t.id} value={t.id}>{t.name} ({t.productCount ?? 0} products)</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Stack direction="row" spacing={1}>
+              <Button variant="contained" onClick={handleMerge} disabled={merging || !mergeTargetId}>
+                {merging ? 'Merging…' : 'Merge'}
+              </Button>
+              <Button onClick={() => { setMergeSource(null); setMergeTargetId(''); }}>Cancel</Button>
+            </Stack>
+          </Stack>
+        </Card>
+      </Collapse>
+
+      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -142,15 +151,17 @@ const AdminProductTagsPage: React.FC = () => {
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>
                       <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => openEdit(tag)}><Edit fontSize="small" /></IconButton>
+                        <IconButton size="small" aria-label={`Edit ${tag.name}`} onClick={() => navigate(`/admin/products/tags/edit/${tag.id}`, { state: { tag } })}>
+                          <Edit fontSize="small" />
+                        </IconButton>
                       </Tooltip>
                       <Tooltip title="Merge into another tag">
-                        <IconButton size="small" onClick={() => { setMergeSource(tag); setMergeTargetId(''); setMergeOpen(true); }}>
+                        <IconButton size="small" aria-label={`Merge ${tag.name}`} onClick={() => { setMergeSource(tag); setMergeTargetId(''); }}>
                           <MergeType fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => { setDeleteTarget(tag); setConfirmOpen(true); }}>
+                        <IconButton size="small" color="error" aria-label={`Delete ${tag.name}`} onClick={() => setDeleteTarget(tag)}>
                           <Delete fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -162,61 +173,6 @@ const AdminProductTagsPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Create / Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? 'Edit Tag' : 'New Tag'}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="Name" fullWidth value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-            <TextField label="Slug" fullWidth value={form.slug || ''} onChange={(e) => setForm({ ...form, slug: e.target.value })} helperText="Leave empty to auto-generate" />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Merge Dialog */}
-      <Dialog open={mergeOpen} onClose={() => setMergeOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Merge Tag</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Merge &ldquo;{mergeSource?.name}&rdquo; into another tag. All products with this tag will be reassigned.
-          </Typography>
-          <FormControl fullWidth>
-            <InputLabel>Target Tag</InputLabel>
-            <Select
-              label="Target Tag"
-              value={mergeTargetId}
-              onChange={(e) => setMergeTargetId(e.target.value as number)}
-            >
-              {tags.filter((t) => t.id !== mergeSource?.id).map((t) => (
-                <MenuItem key={t.id} value={t.id}>{t.name} ({t.productCount ?? 0} products)</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMergeOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleMerge} disabled={merging || !mergeTargetId}>
-            {merging ? 'Merging...' : 'Merge'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Delete tag?"
-        message={`Delete "${deleteTarget?.name}"? This cannot be undone.`}
-        loading={confirmLoading}
-        destructive
-        onConfirm={handleDelete}
-        onCancel={() => { setConfirmOpen(false); setDeleteTarget(null); }}
-      />
     </Container>
   );
 };
