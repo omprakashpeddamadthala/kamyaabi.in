@@ -14,7 +14,8 @@ import java.util.List;
 @Table(name = "orders", indexes = {
         @Index(name = "idx_orders_user_id", columnList = "user_id"),
         @Index(name = "idx_orders_status", columnList = "status"),
-        @Index(name = "idx_orders_created_at", columnList = "createdAt")
+        @Index(name = "idx_orders_created_at", columnList = "createdAt"),
+        @Index(name = "idx_orders_payment_method", columnList = "payment_method")
 })
 @Getter
 @Setter
@@ -44,9 +45,9 @@ public class Order {
     private OrderStatus status = OrderStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "payment_method", nullable = false, length = 32)
     @Builder.Default
-    private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
+    private PaymentMethod paymentMethod = PaymentMethod.PREPAID;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
@@ -93,6 +94,6 @@ public class Order {
     }
 
     public enum PaymentMethod {
-        ONLINE, COD
+        PREPAID, COD
     }
 }

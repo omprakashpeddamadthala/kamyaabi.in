@@ -35,6 +35,9 @@ const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'))
 const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
 const AdminOrdersPage = lazy(() => import('../pages/admin/AdminOrdersPage'));
+const AdminShiprocketDashboardPage = lazy(
+  () => import('../pages/admin/AdminShiprocketDashboardPage'),
+);
 const AdminCouponsPage = lazy(() => import('../pages/admin/AdminCouponsPage'));
 const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage'));
 const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage'));
@@ -159,6 +162,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/categories" element={<AdminCategoriesPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/shipping" element={<AdminShiprocketDashboardPage />} />
         <Route path="/admin/coupons" element={<AdminCouponsPage />} />
         <Route path="/admin/reviews" element={<AdminReviewsPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />

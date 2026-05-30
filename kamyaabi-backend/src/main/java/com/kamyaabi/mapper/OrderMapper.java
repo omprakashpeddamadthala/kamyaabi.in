@@ -30,7 +30,8 @@ public class OrderMapper {
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus().name())
-                .paymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod().name() : "ONLINE")
+                .paymentMethod(order.getPaymentMethod() != null
+                        ? order.getPaymentMethod().name() : Order.PaymentMethod.PREPAID.name())
                 .shippingAddress(order.getShippingAddress() != null
                         ? addressMapper.toResponse(order.getShippingAddress()) : null)
                 .payment(order.getPayment() != null

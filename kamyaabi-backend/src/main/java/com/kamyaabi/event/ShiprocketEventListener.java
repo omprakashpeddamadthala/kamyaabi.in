@@ -21,22 +21,20 @@ public class ShiprocketEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderEvent(OrderEvent event) {
-        boolean shouldSync = event.getEventType() == OrderEventType.PAYMENT_SUCCESS
-                || (event.getEventType() == OrderEventType.ORDER_CONFIRMED
-                    && event.getOrder().getPaymentMethod() == Order.PaymentMethod.COD);
-
-        if (!shouldSync) {
+        OrderEventType eventType = event.getEventType();
+        if (eventType != OrderEventType.PAYMENT_SUCCESS
+                && eventType != OrderEventType.COD_ORDER_PLACED) {
             return;
         }
 
         Order order = event.getOrder();
-        log.info("{} for order {} — triggering Shiprocket sync", event.getEventType(), order.getId());
+        log.info("Order {} ready for Shiprocket sync (event: {})", order.getId(), eventType);
 
         try {
             shiprocketService.syncOrderToShiprocket(order);
         } catch (Exception e) {
-            log.error("Shiprocket sync failed for order {} after payment success — will retry later: {}",
-                    order.getId(), e.getMessage(), e);
+            log.error("Shiprocket sync failed for order {} after event {} — will retry later: {}",
+                    order.getId(), eventType, e.getMessage(), e);
         }
     }
 }

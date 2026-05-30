@@ -78,7 +78,10 @@ app:
       auth: true
 
   shiprocket:
-    api-token: ${SHIPROCKET_API_TOKEN}
+    api-token: ${SHIPROCKET_API_TOKEN:}
+    email: ${SHIPROCKET_EMAIL:}
+    password: ${SHIPROCKET_PASSWORD:}
+    token-refresh-interval-seconds: ${SHIPROCKET_TOKEN_REFRESH_INTERVAL_SECONDS:777600}
     pickup-location: ${SHIPROCKET_PICKUP_LOCATION:Primary Warehouse}
     channel-id: ${SHIPROCKET_CHANNEL_ID:}
     webhook-secret: ${SHIPROCKET_WEBHOOK_SECRET:}

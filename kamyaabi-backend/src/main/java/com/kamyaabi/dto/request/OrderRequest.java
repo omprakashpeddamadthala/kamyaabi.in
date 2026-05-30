@@ -1,5 +1,6 @@
 package com.kamyaabi.dto.request;
 
+import com.kamyaabi.entity.Order;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
@@ -10,6 +11,6 @@ public record OrderRequest(
 
         String couponCode,
 
-        String paymentMethod
+        Order.PaymentMethod paymentMethod
 ) {
 }

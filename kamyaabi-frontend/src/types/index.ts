@@ -138,12 +138,14 @@ export interface Payment {
   createdAt: string;
 }
 
+export type PaymentMethod = 'PREPAID' | 'COD';
+
 export interface Order {
   id: number;
   items: OrderItem[];
   totalAmount: number;
   status: string;
-  paymentMethod: 'ONLINE' | 'COD';
+  paymentMethod: PaymentMethod;
   shippingAddress: Address | null;
   payment: Payment | null;
   shiprocketOrderId: string | null;
@@ -160,14 +162,16 @@ export interface Order {
   updatedAt: string;
 }
 
-export interface ShiprocketDashboard {
-  totalOrders: number;
-  shiprocketSyncedOrders: number;
-  pendingSyncOrders: number;
+export interface ShiprocketStats {
+  totalSynced: number;
+  syncPending: number;
+  pickupScheduled: number;
+  awbAssigned: number;
+  inTransit: number;
+  delivered: number;
+  cancelled: number;
   codOrders: number;
-  onlineOrders: number;
-  ordersByStatus: Record<string, number>;
-  shippingStatusBreakdown: Record<string, number>;
+  shiprocketConfigured: boolean;
 }
 
 export interface ApiResponse<T> {

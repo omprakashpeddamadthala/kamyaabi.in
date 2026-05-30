@@ -9,7 +9,7 @@ import {
   DashboardStats,
   AnalyticsResponse,
   AdminUser,
-  ShiprocketDashboard,
+  ShiprocketStats,
 } from '../types';
 
 export interface ProductRequest {
@@ -201,14 +201,20 @@ export const adminApi = {
   deactivateCoupon: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/coupons/${id}`),
 
-  // ── Shiprocket Dashboard ──────────────────────────────────
-  getShiprocketDashboard: () =>
-    axiosInstance.get<ApiResponse<ShiprocketDashboard>>('/api/admin/shiprocket/dashboard'),
+  // ── Shiprocket Admin Dashboard ────────────────────────
+  getShiprocketStats: () =>
+    axiosInstance.get<ApiResponse<ShiprocketStats>>('/api/admin/shiprocket/stats'),
 
-  getShiprocketOrders: (page = 0, size = 10) =>
+  getShiprocketOrders: (page = 0, size = 10, paymentMethod?: 'PREPAID' | 'COD') =>
     axiosInstance.get<ApiResponse<PageResponse<Order>>>('/api/admin/shiprocket/orders', {
-      params: { page, size },
+      params: { page, size, ...(paymentMethod ? { paymentMethod } : {}) },
     }),
+
+  syncShiprocketOrder: (orderId: number) =>
+    axiosInstance.post<ApiResponse<Order>>(`/api/admin/shiprocket/sync/${orderId}`),
+
+  trackShiprocketOrder: (orderId: number) =>
+    axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/admin/shiprocket/track/${orderId}`),
 };
 
 export interface CouponFormRequest {

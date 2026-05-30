@@ -161,6 +161,34 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void createOrder_codPaymentMethod_setsStatusConfirmedAndPublishesCodEvent() {
+        OrderRequest request = OrderRequest.builder()
+                .shippingAddressId(1L)
+                .paymentMethod(Order.PaymentMethod.COD)
+                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
+            Order o = inv.getArgument(0);
+            o.setId(99L);
+            return o;
+        });
+        when(orderMapper.toResponse(any(Order.class))).thenAnswer(inv -> {
+            Order o = inv.getArgument(0);
+            return OrderResponse.builder().id(o.getId()).status(o.getStatus().name()).build();
+        });
+
+        OrderResponse result = orderService.createOrder(1L, request);
+
+        assertThat(result.status()).isEqualTo("CONFIRMED");
+        verify(cartService).clearCart(1L);
+        verify(orderEventPublisher).publishOrderEvent(any(Order.class),
+                org.mockito.ArgumentMatchers.eq(OrderEventType.COD_ORDER_PLACED));
+        assertThat(product.getStock()).isEqualTo(98);
+    }
+
+    @Test
     void createOrder_productWithoutDiscount_shouldUseRegularPrice() {
         product.setDiscountPrice(null);
         OrderRequest request = OrderRequest.builder().shippingAddressId(1L).build();

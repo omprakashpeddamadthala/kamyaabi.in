@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { orderApi } from '../../api/orderApi';
-import { Order } from '../../types';
+import { Order, PaymentMethod } from '../../types';
 
 interface OrderState {
   orders: Order[];
@@ -27,7 +27,15 @@ const initialState: OrderState = {
 export const createOrder = createAsyncThunk(
   'orders/create',
   async (
-    { shippingAddressId, couponCode, paymentMethod }: { shippingAddressId: number; couponCode?: string; paymentMethod?: string },
+    {
+      shippingAddressId,
+      couponCode,
+      paymentMethod,
+    }: {
+      shippingAddressId: number;
+      couponCode?: string;
+      paymentMethod?: PaymentMethod;
+    },
     { rejectWithValue },
   ) => {
     try {

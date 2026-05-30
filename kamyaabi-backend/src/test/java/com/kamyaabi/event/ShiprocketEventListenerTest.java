@@ -68,6 +68,21 @@ class ShiprocketEventListenerTest {
     }
 
     @Test
+    void handleOrderEvent_codOrderPlaced_triggersSync() {
+        Order order = Order.builder().id(7L)
+                .totalAmount(new BigDecimal("249.00"))
+                .status(Order.OrderStatus.CONFIRMED)
+                .paymentMethod(Order.PaymentMethod.COD)
+                .items(new ArrayList<>())
+                .build();
+
+        OrderEvent event = new OrderEvent(this, order, OrderEventType.COD_ORDER_PLACED);
+        listener.handleOrderEvent(event);
+
+        verify(shiprocketService).syncOrderToShiprocket(order);
+    }
+
+    @Test
     void handleOrderEvent_syncFails_doesNotThrow() {
         Order order = Order.builder().id(1L)
                 .totalAmount(new BigDecimal("100.00"))

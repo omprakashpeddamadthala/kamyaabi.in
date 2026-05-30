@@ -224,29 +224,40 @@ const OrderDetailPage: React.FC = () => {
           )}
 
           {}
-          {order.payment && (
+          {(order.payment || order.paymentMethod === 'COD') && (
             <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Payment</Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">Status</Typography>
+                <Typography variant="body2" color="text.secondary">Method</Typography>
                 <Chip
-                  label={order.payment.status}
+                  label={order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online (Razorpay)'}
                   size="small"
-                  color={order.payment.status === 'COMPLETED' ? 'success' : 'warning'}
+                  color={order.paymentMethod === 'COD' ? 'warning' : 'info'}
+                  variant="outlined"
                 />
               </Box>
+              {order.payment && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Status</Typography>
+                  <Chip
+                    label={order.payment.status}
+                    size="small"
+                    color={order.payment.status === 'COMPLETED' ? 'success' : 'warning'}
+                  />
+                </Box>
+              )}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Amount</Typography>
-                <Typography fontWeight={600}>₹{order.payment.amount}</Typography>
+                <Typography fontWeight={600}>₹{order.payment ? order.payment.amount : order.totalAmount}</Typography>
               </Box>
-              {order.payment.razorpayPaymentId && (
+              {order.payment?.razorpayPaymentId && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Payment ID</Typography>
                   <Typography variant="body2">{order.payment.razorpayPaymentId}</Typography>
                 </Box>
               )}
 
-              {(order.payment.status === 'PENDING' || order.payment.status === 'FAILED') && order.status !== 'CANCELLED' && (
+              {order.payment && (order.payment.status === 'PENDING' || order.payment.status === 'FAILED') && order.status !== 'CANCELLED' && order.paymentMethod !== 'COD' && (
                 <Box sx={{ mt: 3 }}>
                   <Button
                     variant="contained"

@@ -42,5 +42,30 @@ class ShiprocketPropertiesTest {
         assertThat(props.getDefaultLength()).isEqualTo(10);
         assertThat(props.getDefaultBreadth()).isEqualTo(10);
         assertThat(props.getDefaultHeight()).isEqualTo(10);
+        assertThat(props.getTokenRefreshIntervalSeconds()).isEqualTo(9L * 24 * 60 * 60);
+    }
+
+    @Test
+    void isConfigured_loginCredentialsSet_returnsTrue() {
+        ShiprocketProperties props = new ShiprocketProperties();
+        props.setEmail("merchant@example.com");
+        props.setPassword("secret");
+        assertThat(props.isConfigured()).isTrue();
+        assertThat(props.hasLoginCredentials()).isTrue();
+        assertThat(props.hasStaticToken()).isFalse();
+    }
+
+    @Test
+    void hasLoginCredentials_emailMissing_returnsFalse() {
+        ShiprocketProperties props = new ShiprocketProperties();
+        props.setPassword("secret");
+        assertThat(props.hasLoginCredentials()).isFalse();
+    }
+
+    @Test
+    void hasLoginCredentials_passwordMissing_returnsFalse() {
+        ShiprocketProperties props = new ShiprocketProperties();
+        props.setEmail("merchant@example.com");
+        assertThat(props.hasLoginCredentials()).isFalse();
     }
 }

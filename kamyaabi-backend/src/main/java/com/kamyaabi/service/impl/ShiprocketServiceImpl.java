@@ -12,11 +12,14 @@ import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -28,6 +31,10 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     private final ShiprocketProperties properties;
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
+
+    private final Object tokenLock = new Object();
+    private volatile String cachedToken;
+    private volatile Instant cachedTokenExpiresAt;
 
     public ShiprocketServiceImpl(ShiprocketProperties properties,
                                  OrderRepository orderRepository) {
@@ -121,12 +128,13 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         try {
             log.info("Cancelling Shiprocket order for order {}", order.getId());
 
-            HttpHeaders headers = buildAuthHeaders();
             Map<String, Object> body = new HashMap<>();
             body.put("ids", List.of(Integer.parseInt(order.getShiprocketOrderId())));
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-            restTemplate.postForEntity(BASE_URL + "/orders/cancel", request, Map.class);
+            executeWithAuthRetry(() -> {
+                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
+                return restTemplate.postForEntity(BASE_URL + "/orders/cancel", request, Map.class);
+            });
 
             order.setShippingStatus("CANCELLED");
             orderRepository.save(order);
@@ -145,14 +153,14 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
 
         try {
-            HttpHeaders headers = buildAuthHeaders();
-            HttpEntity<Void> request = new HttpEntity<>(headers);
-
             @SuppressWarnings("unchecked")
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    BASE_URL + "/courier/track/awb/" + awbNumber,
-                    HttpMethod.GET, request,
-                    (Class<Map<String, Object>>) (Class<?>) Map.class);
+            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
+                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
+                return restTemplate.exchange(
+                        BASE_URL + "/courier/track/awb/" + awbNumber,
+                        HttpMethod.GET, request,
+                        (Class<Map<String, Object>>) (Class<?>) Map.class);
+            });
 
             return response.getBody() != null ? response.getBody() : Collections.emptyMap();
 
@@ -191,8 +199,6 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     // ── Shiprocket API methods ──────────────────────────────────────────────
 
     private Map<String, Object> createShiprocketOrder(Order order) {
-        HttpHeaders headers = buildAuthHeaders();
-
         Address addr = order.getShippingAddress();
         List<Map<String, Object>> items = new ArrayList<>();
 
@@ -240,14 +246,15 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         body.put("height", properties.getDefaultHeight());
         body.put("weight", properties.getDefaultWeight());
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
         log.debug("Shiprocket create order request for order {}: {}", order.getId(), body);
 
         @SuppressWarnings("unchecked")
-        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                BASE_URL + "/orders/create/adhoc", request,
-                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
+            return restTemplate.postForEntity(
+                    BASE_URL + "/orders/create/adhoc", request,
+                    (Class<Map<String, Object>>) (Class<?>) Map.class);
+        });
 
         log.debug("Shiprocket create order response for order {}: status={}, body={}",
                 order.getId(), response.getStatusCode(), response.getBody());
@@ -256,29 +263,28 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     }
 
     private Map<String, Object> assignAwb(String shipmentId) {
-        HttpHeaders headers = buildAuthHeaders();
-
         Map<String, Object> body = new HashMap<>();
         body.put("shipment_id", shipmentId);
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-
         @SuppressWarnings("unchecked")
-        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                BASE_URL + "/courier/assign/awb", request,
-                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
+            return restTemplate.postForEntity(
+                    BASE_URL + "/courier/assign/awb", request,
+                    (Class<Map<String, Object>>) (Class<?>) Map.class);
+        });
 
         return response.getBody();
     }
 
     private void requestPickup(String shipmentId) {
-        HttpHeaders headers = buildAuthHeaders();
-
         Map<String, Object> body = new HashMap<>();
         body.put("shipment_id", List.of(shipmentId));
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        restTemplate.postForEntity(BASE_URL + "/courier/generate/pickup", request, Map.class);
+        executeWithAuthRetry(() -> {
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
+            return restTemplate.postForEntity(BASE_URL + "/courier/generate/pickup", request, Map.class);
+        });
     }
 
     // ── Auth ────────────────────────────────────────────────────────────────
@@ -286,8 +292,94 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     private HttpHeaders buildAuthHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(properties.getApiToken());
+        headers.setBearerAuth(getToken());
         return headers;
+    }
+
+    /**
+     * Returns a valid Shiprocket bearer token. Logs in and caches the token if
+     * email/password credentials are configured; otherwise falls back to the
+     * static {@code apiToken} property (legacy behaviour).
+     */
+    String getToken() {
+        if (!properties.hasLoginCredentials()) {
+            return properties.getApiToken();
+        }
+
+        Instant now = Instant.now();
+        if (cachedToken != null && cachedTokenExpiresAt != null && now.isBefore(cachedTokenExpiresAt)) {
+            return cachedToken;
+        }
+
+        synchronized (tokenLock) {
+            if (cachedToken != null && cachedTokenExpiresAt != null && Instant.now().isBefore(cachedTokenExpiresAt)) {
+                return cachedToken;
+            }
+            return refreshToken();
+        }
+    }
+
+    /**
+     * Forces a fresh login against Shiprocket's auth endpoint and updates the
+     * cached token. Callers MUST hold {@link #tokenLock} when invoking this
+     * method directly, except for the initial cache-miss path which already
+     * holds the lock.
+     */
+    private String refreshToken() {
+        if (!properties.hasLoginCredentials()) {
+            // Fall back to static token; nothing to refresh.
+            return properties.getApiToken();
+        }
+
+        log.info("Refreshing Shiprocket auth token via /auth/login");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("email", properties.getEmail());
+        body.put("password", properties.getPassword());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
+
+        @SuppressWarnings("unchecked")
+        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
+                BASE_URL + "/auth/login", request,
+                (Class<Map<String, Object>>) (Class<?>) Map.class);
+
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null || responseBody.get("token") == null) {
+            throw new IllegalStateException("Shiprocket /auth/login returned no token");
+        }
+
+        String token = String.valueOf(responseBody.get("token"));
+        this.cachedToken = token;
+        this.cachedTokenExpiresAt = Instant.now().plusSeconds(properties.getTokenRefreshIntervalSeconds());
+        log.info("Shiprocket auth token refreshed; next refresh after {}", cachedTokenExpiresAt);
+        return token;
+    }
+
+    /**
+     * Runs the supplied Shiprocket API call. If it fails with HTTP 401 and we
+     * have login credentials configured, force a token refresh and retry the
+     * call exactly once. This covers the common case where the cached token
+     * (or an externally-rotated static token) has expired between scheduled
+     * sync runs.
+     */
+    private <T> T executeWithAuthRetry(Supplier<T> apiCall) {
+        try {
+            return apiCall.get();
+        } catch (HttpClientErrorException.Unauthorized e) {
+            if (!properties.hasLoginCredentials()) {
+                throw e;
+            }
+            log.warn("Shiprocket call returned 401 — forcing token refresh and retrying once");
+            synchronized (tokenLock) {
+                this.cachedToken = null;
+                this.cachedTokenExpiresAt = null;
+                refreshToken();
+            }
+            return apiCall.get();
+        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
