@@ -33,6 +33,7 @@ public class EmailTemplateEngine {
             case PAYMENT_SUCCESS -> "Payment Successful - Order #" + order.getId() + " | Kamyaabi";
             case PAYMENT_PENDING -> "Payment Pending - Order #" + order.getId() + " | Kamyaabi";
             case PAYMENT_FAILED -> "Payment Failed - Order #" + order.getId() + " | Kamyaabi";
+            case COD_ORDER_PLACED -> "Order Placed (Cash on Delivery) - #" + order.getId() + " | Kamyaabi";
         };
     }
 
@@ -58,6 +59,9 @@ public class EmailTemplateEngine {
             case PAYMENT_PENDING -> renderStatusChangeEmail(customerName, order, "Payment Pending",
                     "Your payment is being processed. We'll update you once it's confirmed.", "#FF9800");
             case PAYMENT_FAILED -> renderPaymentFailedEmail(customerName, order);
+            case COD_ORDER_PLACED -> renderStatusChangeEmail(customerName, order, "Confirmed (Cash on Delivery)",
+                    "Your order has been placed with Cash on Delivery. You'll pay the courier when your order arrives — we'll keep you posted as it ships.",
+                    "#4CAF50");
         };
     }
 

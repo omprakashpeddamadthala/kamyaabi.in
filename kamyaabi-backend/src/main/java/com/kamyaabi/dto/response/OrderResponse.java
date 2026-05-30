@@ -12,6 +12,7 @@ public record OrderResponse(
         List<OrderItemResponse> items,
         BigDecimal totalAmount,
         String status,
+        String paymentMethod,
         AddressResponse shippingAddress,
         PaymentResponse payment,
         String shiprocketOrderId,

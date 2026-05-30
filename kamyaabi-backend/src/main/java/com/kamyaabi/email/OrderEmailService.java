@@ -53,10 +53,11 @@ public class OrderEmailService {
 
         sendCustomerEmail(freshOrder, eventType);
 
-        if (eventType == OrderEventType.PAYMENT_SUCCESS) {
+        if (eventType == OrderEventType.PAYMENT_SUCCESS
+                || eventType == OrderEventType.COD_ORDER_PLACED) {
             sendAdminEmails(freshOrder, eventType);
         } else {
-            log.debug("Skipping admin email for event: {} order: {} — admin notified only on payment success", eventType, order.getId());
+            log.debug("Skipping admin email for event: {} order: {} — admin notified only on payment success / COD order", eventType, order.getId());
         }
     }
 
