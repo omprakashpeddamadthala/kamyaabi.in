@@ -179,7 +179,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
 
         List<Order> failedOrders = orderRepository.findByShiprocketSyncedFalseAndStatusIn(
-                List.of(Order.OrderStatus.PAID, Order.OrderStatus.CONFIRMED));
+                List.of(Order.OrderStatus.PAID, Order.OrderStatus.CONFIRMED, Order.OrderStatus.PROCESSING));
 
         if (failedOrders.isEmpty()) {
             return;

@@ -48,11 +48,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
 
+    long countByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
+
     Optional<Order> findByAwbNumber(String awbNumber);
 
     long countByShiprocketSyncedTrue();
-
-    long countByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
 
     long countByShippingStatus(String shippingStatus);
 

@@ -51,6 +51,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { label: 'Orders', to: '/admin/orders', icon: ReceiptLongOutlined },
       { label: 'Shipping', to: '/admin/shipping', icon: LocalShippingOutlined },
       { label: 'Coupons', to: '/admin/coupons', icon: ConfirmationNumberOutlined },
+      { label: 'Shiprocket', to: '/admin/shiprocket', icon: LocalShippingOutlined },
     ],
   },
   {
@@ -90,6 +91,7 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/orders': 'Orders',
   '/admin/shipping': 'Shipping',
   '/admin/coupons': 'Coupons',
+  '/admin/shiprocket': 'Shiprocket',
   '/admin/reviews': 'Reviews',
   '/admin/users': 'Users',
   '/admin/analytics': 'Analytics',
