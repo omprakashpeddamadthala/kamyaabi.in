@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
+    env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DATABASE_URL: ${DATABASE_URL}
@@ -32,9 +33,10 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SHIPROCKET_API_TOKEN: ${SHIPROCKET_API_TOKEN:-}
-      SHIPROCKET_EMAIL: ${SHIPROCKET_EMAIL:-}
-      SHIPROCKET_PASSWORD: ${SHIPROCKET_PASSWORD:-}
+      # SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD, and SHIPROCKET_API_TOKEN are
+      # intentionally NOT listed here — they are read directly from .env via
+      # env_file so that special characters ($, @, etc.) are never mangled by
+      # Docker Compose variable substitution.
       SHIPROCKET_TOKEN_REFRESH_INTERVAL_SECONDS: ${SHIPROCKET_TOKEN_REFRESH_INTERVAL_SECONDS:-777600}
       SHIPROCKET_PICKUP_LOCATION: ${SHIPROCKET_PICKUP_LOCATION:-Primary Warehouse}
       SHIPROCKET_CHANNEL_ID: ${SHIPROCKET_CHANNEL_ID:-}
