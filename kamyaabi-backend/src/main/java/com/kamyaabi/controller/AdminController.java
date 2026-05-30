@@ -72,23 +72,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(dashboardService.getStats()));
     }
 
-    @GetMapping("/shiprocket/dashboard")
-    @Operation(summary = "Shiprocket shipping dashboard",
-            description = "Returns shipping stats: total orders, synced count, COD/online breakdown, status breakdown.")
-    public ResponseEntity<ApiResponse<ShiprocketDashboardResponse>> getShiprocketDashboard() {
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getShiprocketDashboard()));
-    }
-
-    @GetMapping("/shiprocket/orders")
-    @Operation(summary = "Shiprocket synced orders",
-            description = "Paginated list of orders synced to Shiprocket.")
-    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getShiprocketOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(ApiResponse.success(dashboardService.getShiprocketOrders(pageable)));
-    }
-
     @GetMapping("/analytics")
     @Operation(summary = "Orders + revenue analytics",
             description = "Daily orders and revenue series for the inclusive range [startDate, endDate]. "

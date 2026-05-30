@@ -19,13 +19,12 @@ import {
 import {
   LocalShipping,
   Inventory,
-  CreditCard,
   Money,
   SyncProblem,
   CheckCircle,
 } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
-import { ShiprocketDashboard, Order } from '../../types';
+import { ShiprocketStats, Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
 import { useToast } from '../../components/common/ToastProvider';
 import TableSkeleton from '../../components/common/TableSkeleton';
@@ -43,7 +42,7 @@ const STATUS_COLORS: Record<string, 'default' | 'primary' | 'secondary' | 'succe
 
 const AdminShiprocketPage: React.FC = () => {
   const { showError } = useToast();
-  const [dashboard, setDashboard] = useState<ShiprocketDashboard | null>(null);
+  const [stats, setStats] = useState<ShiprocketStats | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -51,13 +50,13 @@ const AdminShiprocketPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const loadDashboard = useCallback(async () => {
+  const loadStats = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getShiprocketDashboard();
-      setDashboard(res.data.data);
+      const res = await adminApi.getShiprocketStats();
+      setStats(res.data.data);
     } catch (err) {
-      showError(parseApiError(err, 'Failed to load Shiprocket dashboard').message);
+      showError(parseApiError(err, 'Failed to load Shiprocket stats').message);
     } finally {
       setLoading(false);
     }
@@ -79,8 +78,8 @@ const AdminShiprocketPage: React.FC = () => {
   }, [page, showError]);
 
   useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+    loadStats();
+  }, [loadStats]);
 
   useEffect(() => {
     loadOrders();
@@ -89,27 +88,27 @@ const AdminShiprocketPage: React.FC = () => {
   const statCards = [
     {
       icon: <Inventory sx={{ fontSize: 36, color: 'primary.main' }} />,
-      value: loading ? '—' : (dashboard?.totalOrders ?? 0).toLocaleString('en-IN'),
-      label: 'Total Orders',
-    },
-    {
-      icon: <CheckCircle sx={{ fontSize: 36, color: 'success.main' }} />,
-      value: loading ? '—' : (dashboard?.shiprocketSyncedOrders ?? 0).toLocaleString('en-IN'),
+      value: loading ? '—' : (stats?.totalSynced ?? 0).toLocaleString('en-IN'),
       label: 'Shiprocket Synced',
     },
     {
       icon: <SyncProblem sx={{ fontSize: 36, color: 'warning.main' }} />,
-      value: loading ? '—' : (dashboard?.pendingSyncOrders ?? 0).toLocaleString('en-IN'),
+      value: loading ? '—' : (stats?.syncPending ?? 0).toLocaleString('en-IN'),
       label: 'Pending Sync',
     },
     {
-      icon: <CreditCard sx={{ fontSize: 36, color: 'info.main' }} />,
-      value: loading ? '—' : (dashboard?.onlineOrders ?? 0).toLocaleString('en-IN'),
-      label: 'Online Payments',
+      icon: <CheckCircle sx={{ fontSize: 36, color: 'success.main' }} />,
+      value: loading ? '—' : (stats?.delivered ?? 0).toLocaleString('en-IN'),
+      label: 'Delivered',
+    },
+    {
+      icon: <LocalShipping sx={{ fontSize: 36, color: 'info.main' }} />,
+      value: loading ? '—' : (stats?.inTransit ?? 0).toLocaleString('en-IN'),
+      label: 'In Transit',
     },
     {
       icon: <Money sx={{ fontSize: 36, color: 'secondary.main' }} />,
-      value: loading ? '—' : (dashboard?.codOrders ?? 0).toLocaleString('en-IN'),
+      value: loading ? '—' : (stats?.codOrders ?? 0).toLocaleString('en-IN'),
       label: 'Cash on Delivery',
     },
   ];
@@ -139,45 +138,6 @@ const AdminShiprocketPage: React.FC = () => {
           </Grid>
         ))}
       </Grid>
-
-      {/* Shipping Status Breakdown */}
-      {dashboard && Object.keys(dashboard.shippingStatusBreakdown).length > 0 && (
-        <Card sx={{ p: 3, mb: 4, '&:hover': { transform: 'none' } }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
-            Shipping Status Breakdown
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-            {Object.entries(dashboard.shippingStatusBreakdown).map(([status, count]) => (
-              <Chip
-                key={status}
-                label={`${status.replace(/_/g, ' ')} (${count})`}
-                color={STATUS_COLORS[status] || 'default'}
-                variant="outlined"
-                sx={{ fontWeight: 600, fontSize: '0.85rem' }}
-              />
-            ))}
-          </Box>
-        </Card>
-      )}
-
-      {/* Order Status Breakdown */}
-      {dashboard && Object.keys(dashboard.ordersByStatus).length > 0 && (
-        <Card sx={{ p: 3, mb: 4, '&:hover': { transform: 'none' } }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
-            Synced Orders by Status
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-            {Object.entries(dashboard.ordersByStatus).map(([status, count]) => (
-              <Chip
-                key={status}
-                label={`${status.replace(/_/g, ' ')} (${count})`}
-                variant="filled"
-                sx={{ fontWeight: 600, fontSize: '0.85rem' }}
-              />
-            ))}
-          </Box>
-        </Card>
-      )}
 
       {/* Shiprocket Orders Table */}
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
@@ -215,7 +175,7 @@ const AdminShiprocketPage: React.FC = () => {
                   <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
                   <TableCell>
                     <Chip
-                      label={o.paymentMethod === 'COD' ? 'COD' : 'Online'}
+                      label={o.paymentMethod === 'COD' ? 'COD' : 'Prepaid'}
                       size="small"
                       color={o.paymentMethod === 'COD' ? 'warning' : 'info'}
                       variant="outlined"
