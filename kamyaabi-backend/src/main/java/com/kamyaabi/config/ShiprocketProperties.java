@@ -1,10 +1,13 @@
 package com.kamyaabi.config;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 @ConfigurationProperties(prefix = "app.shiprocket")
 @Getter
@@ -22,6 +25,22 @@ public class ShiprocketProperties {
     private int defaultLength = 10;
     private int defaultBreadth = 10;
     private int defaultHeight = 10;
+
+    @PostConstruct
+    void logConfigurationStatus() {
+        if (isConfigured()) {
+            if (hasLoginCredentials()) {
+                log.info("Shiprocket configured via email/password credentials");
+            } else {
+                log.info("Shiprocket configured via static API token");
+            }
+        } else {
+            log.warn("Shiprocket is NOT configured — set SHIPROCKET_EMAIL + SHIPROCKET_PASSWORD "
+                    + "(or SHIPROCKET_API_TOKEN) in your environment. "
+                    + "email present: {}, password present: {}, apiToken present: {}",
+                    !sanitize(email).isEmpty(), !sanitize(password).isEmpty(), hasStaticToken());
+        }
+    }
 
     public boolean hasStaticToken() {
         return apiToken != null && !apiToken.isBlank();
