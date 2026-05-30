@@ -68,4 +68,22 @@ class ShiprocketPropertiesTest {
         props.setEmail("merchant@example.com");
         assertThat(props.hasLoginCredentials()).isFalse();
     }
+
+    @Test
+    void sanitize_stripsQuotesAndWhitespace() {
+        assertThat(ShiprocketProperties.sanitize("  \"user@test.com\"  ")).isEqualTo("user@test.com");
+        assertThat(ShiprocketProperties.sanitize("'password123'")).isEqualTo("password123");
+        assertThat(ShiprocketProperties.sanitize("  plain  ")).isEqualTo("plain");
+        assertThat(ShiprocketProperties.sanitize(null)).isEmpty();
+        assertThat(ShiprocketProperties.sanitize("")).isEmpty();
+        assertThat(ShiprocketProperties.sanitize("  ")).isEmpty();
+    }
+
+    @Test
+    void hasLoginCredentials_quotedValues_returnsTrue() {
+        ShiprocketProperties props = new ShiprocketProperties();
+        props.setEmail("  \"merchant@example.com\"");
+        props.setPassword("  \"secret\"  ");
+        assertThat(props.hasLoginCredentials()).isTrue();
+    }
 }

@@ -334,8 +334,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         log.info("Refreshing Shiprocket auth token via /auth/login");
 
         Map<String, String> body = new HashMap<>();
-        body.put("email", properties.getEmail());
-        body.put("password", properties.getPassword());
+        body.put("email", ShiprocketProperties.sanitize(properties.getEmail()));
+        body.put("password", ShiprocketProperties.sanitize(properties.getPassword()));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

@@ -28,11 +28,23 @@ public class ShiprocketProperties {
     }
 
     public boolean hasLoginCredentials() {
-        return email != null && !email.isBlank()
-                && password != null && !password.isBlank();
+        return email != null && !sanitize(email).isEmpty()
+                && password != null && !sanitize(password).isEmpty();
     }
 
     public boolean isConfigured() {
         return hasStaticToken() || hasLoginCredentials();
+    }
+
+    /** Strip surrounding quotes and whitespace that may leak in from .env files. */
+    public static String sanitize(String value) {
+        if (value == null) return "";
+        String trimmed = value.trim();
+        if (trimmed.length() >= 2
+                && ((trimmed.startsWith("\"") && trimmed.endsWith("\""))
+                 || (trimmed.startsWith("'") && trimmed.endsWith("'")))) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1).trim();
+        }
+        return trimmed;
     }
 }
