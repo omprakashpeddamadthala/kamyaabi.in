@@ -77,6 +77,7 @@ class AdminShiprocketControllerTest {
         Page<Order> page = new PageImpl<>(List.of(order));
         when(orderRepository.findByShiprocketOrderIdIsNotNullOrShippingStatusIsNotNull(any(Pageable.class)))
                 .thenReturn(page);
+        when(orderRepository.findAllWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(OrderResponse.builder().id(1L).build());
 
         ResponseEntity<ApiResponse<Page<OrderResponse>>> response =
@@ -128,6 +129,7 @@ class AdminShiprocketControllerTest {
         Order order = Order.builder().id(1L).build();
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(shiprocketService.isConfigured()).thenReturn(true);
+        when(orderRepository.findAllWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(order));
         when(orderMapper.toResponse(order)).thenReturn(OrderResponse.builder().id(1L).build());
 
         ResponseEntity<ApiResponse<OrderResponse>> response = controller.syncOrder(1L);
