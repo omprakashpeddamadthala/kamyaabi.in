@@ -77,6 +77,9 @@ class ShiprocketPropertiesTest {
         assertThat(ShiprocketProperties.sanitize(null)).isEmpty();
         assertThat(ShiprocketProperties.sanitize("")).isEmpty();
         assertThat(ShiprocketProperties.sanitize("  ")).isEmpty();
+        // Windows-style line endings
+        assertThat(ShiprocketProperties.sanitize("user@test.com\r")).isEqualTo("user@test.com");
+        assertThat(ShiprocketProperties.sanitize("'p@ss$word'\r\n")).isEqualTo("p@ss$word");
     }
 
     @Test

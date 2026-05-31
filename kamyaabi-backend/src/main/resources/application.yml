@@ -98,6 +98,17 @@ management:
     build:
       enabled: true
 
+# ---- Shiprocket defaults (overridden by profile-specific YAML) ----
+# Defined here so @ConfigurationProperties(prefix="app.shiprocket") binds
+# to the env-var-backed placeholders regardless of which Spring profile is
+# active.  Profile-specific files (application-prod.yml, etc.) may redefine
+# these same keys if needed.
+app:
+  shiprocket:
+    api-token: ${SHIPROCKET_API_TOKEN:}
+    email: ${SHIPROCKET_EMAIL:}
+    password: ${SHIPROCKET_PASSWORD:}
+
 info:
   app:
     name: ${spring.application.name}
