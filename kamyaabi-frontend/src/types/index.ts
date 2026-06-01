@@ -116,6 +116,8 @@ export interface OrderItem {
   price: number;
   subtotal: number;
   weightKg: number | null;
+  productWeight: string | null;
+  productUnit: string | null;
 }
 
 export interface Address {
