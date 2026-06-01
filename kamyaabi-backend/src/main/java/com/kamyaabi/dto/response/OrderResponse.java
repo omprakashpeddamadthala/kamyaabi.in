@@ -11,6 +11,7 @@ public record OrderResponse(
         Long id,
         List<OrderItemResponse> items,
         BigDecimal totalAmount,
+        BigDecimal totalWeightKg,
         String status,
         String paymentMethod,
         AddressResponse shippingAddress,

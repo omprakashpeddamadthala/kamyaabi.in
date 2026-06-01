@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/shipping")
-@Tag(name = "Shipping", description = "Shipment tracking endpoints")
+@Tag(name = "Shipping", description = "Shipment tracking endpoints (public, no auth required)")
 public class ShippingController {
 
     private final ShiprocketService shiprocketService;
@@ -30,7 +30,8 @@ public class ShippingController {
     }
 
     @GetMapping("/track/{orderId}")
-    @Operation(summary = "Track shipment", description = "Get real-time tracking info for an order's shipment")
+    @Operation(summary = "Track shipment by order ID",
+            description = "Get real-time tracking info for an order's shipment. No authentication required.")
     public ResponseEntity<ApiResponse<Map<String, Object>>> trackOrder(@PathVariable Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
@@ -38,6 +39,21 @@ public class ShippingController {
         if (order.getAwbNumber() == null || order.getAwbNumber().isBlank()) {
             throw new BadRequestException("Shipment tracking not available yet for this order");
         }
+
+        Map<String, Object> tracking = shiprocketService.trackShipment(order.getAwbNumber());
+        return ResponseEntity.ok(ApiResponse.success(tracking));
+    }
+
+    @GetMapping("/track")
+    @Operation(summary = "Track shipment by AWB code",
+            description = "Get real-time tracking info using an AWB/tracking number. No authentication required.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> trackByAwb(@RequestParam String awb) {
+        if (awb == null || awb.isBlank()) {
+            throw new BadRequestException("AWB code is required");
+        }
+
+        Order order = orderRepository.findByAwbNumber(awb)
+                .orElseThrow(() -> new ResourceNotFoundException("No order found for AWB: " + awb));
 
         Map<String, Object> tracking = shiprocketService.trackShipment(order.getAwbNumber());
         return ResponseEntity.ok(ApiResponse.success(tracking));

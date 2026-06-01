@@ -148,6 +148,7 @@ const AdminOrdersPage: React.FC = () => {
               <TableCell>Date</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Items</TableCell>
+              <TableCell>Weight</TableCell>
               <TableCell>Shipping Address</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
@@ -157,10 +158,10 @@ const AdminOrdersPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={9} />
+              <TableSkeleton rows={5} columns={10} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -191,6 +192,13 @@ const AdminOrdersPage: React.FC = () => {
                         ))}
                       </Box>
                     )}
+                  </TableCell>
+                  <TableCell sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                    {o.totalWeightKg != null
+                      ? o.totalWeightKg < 1
+                        ? `${(o.totalWeightKg * 1000).toFixed(0)} g`
+                        : `${o.totalWeightKg} kg`
+                      : '—'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.8rem', minWidth: 140 }}>
                     {o.shippingAddress ? (

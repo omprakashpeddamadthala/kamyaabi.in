@@ -192,27 +192,42 @@ public class EmailTemplateEngine {
         if (order.getItems() == null || order.getItems().isEmpty()) {
             return "";
         }
+        boolean hasWeight = order.getItems().stream().anyMatch(i -> i.getWeightKg() != null);
         String rows = order.getItems().stream()
-                .map(this::renderItemRow)
+                .map(i -> renderItemRow(i, hasWeight))
                 .collect(Collectors.joining());
 
         return "<table style=\"width:100%;border-collapse:collapse;margin:15px 0;\">"
                 + "<thead><tr style=\"background:#f0f0f0;\">"
                 + "<th style=\"padding:10px;text-align:left;border-bottom:2px solid #ddd;\">Item</th>"
                 + "<th style=\"padding:10px;text-align:center;border-bottom:2px solid #ddd;\">Qty</th>"
+                + (hasWeight ? "<th style=\"padding:10px;text-align:center;border-bottom:2px solid #ddd;\">Weight</th>" : "")
                 + "<th style=\"padding:10px;text-align:right;border-bottom:2px solid #ddd;\">Price</th>"
                 + "<th style=\"padding:10px;text-align:right;border-bottom:2px solid #ddd;\">Subtotal</th>"
-                + "</tr></thead><tbody>" + rows + "</tbody></table>";
+                + "</tr></thead><tbody>" + rows + "</tbody></table>"
+                + (hasWeight ? renderTotalWeightRow(order) : "");
     }
 
-    private String renderItemRow(OrderItem item) {
+    private String renderItemRow(OrderItem item, boolean showWeight) {
         BigDecimal subtotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
         return "<tr>"
                 + "<td style=\"padding:10px;border-bottom:1px solid #eee;color:#333;\">" + escapeHtml(item.getProduct().getName()) + "</td>"
                 + "<td style=\"padding:10px;text-align:center;border-bottom:1px solid #eee;color:#555;\">" + item.getQuantity() + "</td>"
+                + (showWeight ? "<td style=\"padding:10px;text-align:center;border-bottom:1px solid #eee;color:#555;\">" + formatWeight(item.getWeightKg()) + "</td>" : "")
                 + "<td style=\"padding:10px;text-align:right;border-bottom:1px solid #eee;color:#555;\">" + formatCurrency(item.getPrice()) + "</td>"
                 + "<td style=\"padding:10px;text-align:right;border-bottom:1px solid #eee;color:#333;font-weight:bold;\">" + formatCurrency(subtotal) + "</td>"
                 + "</tr>";
+    }
+
+    private String renderTotalWeightRow(Order order) {
+        BigDecimal totalWeight = order.getItems().stream()
+                .filter(i -> i.getWeightKg() != null)
+                .map(i -> i.getWeightKg().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalWeight.compareTo(BigDecimal.ZERO) == 0) return "";
+        return "<div style=\"text-align:right;margin:5px 0;padding:8px 15px;color:#555;font-size:14px;\">"
+                + "Total Weight: <strong>" + formatWeight(totalWeight) + "</strong>"
+                + "</div>";
     }
 
     private String renderTotalSection(Order order) {
@@ -270,6 +285,14 @@ public class EmailTemplateEngine {
                 + "<p style=\"margin:0;color:#bbb;font-size:11px;\">This is an automated email. Please do not reply directly.</p>"
                 + "</td></tr>"
                 + "</table></td></tr></table></body></html>";
+    }
+
+    private String formatWeight(BigDecimal weightKg) {
+        if (weightKg == null) return "\u2014";
+        if (weightKg.compareTo(BigDecimal.ONE) < 0) {
+            return weightKg.multiply(BigDecimal.valueOf(1000)).stripTrailingZeros().toPlainString() + " g";
+        }
+        return weightKg.stripTrailingZeros().toPlainString() + " kg";
     }
 
     private String formatCurrency(BigDecimal amount) {

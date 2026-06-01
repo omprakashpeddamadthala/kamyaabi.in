@@ -30,7 +30,7 @@ class OrderMapperTest {
                 .street("St").city("City").state("State").pincode("123456").isDefault(false).build();
         Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url").build();
         OrderItem orderItem = OrderItem.builder().id(1L).product(product).quantity(2)
-                .price(new BigDecimal("749.00")).build();
+                .price(new BigDecimal("749.00")).weightKg(new BigDecimal("0.500")).build();
         Order order = Order.builder().id(1L).user(user).shippingAddress(address)
                 .totalAmount(new BigDecimal("1498.00")).status(Order.OrderStatus.PENDING)
                 .items(new ArrayList<>(List.of(orderItem))).build();
@@ -39,10 +39,12 @@ class OrderMapperTest {
 
         assertThat(response.id()).isEqualTo(1L);
         assertThat(response.totalAmount()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.totalWeightKg()).isEqualByComparingTo(new BigDecimal("1.000"));
         assertThat(response.status()).isEqualTo("PENDING");
         assertThat(response.shippingAddress()).isNotNull();
         assertThat(response.shippingAddress().fullName()).isEqualTo("Test");
         assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).weightKg()).isEqualByComparingTo(new BigDecimal("0.500"));
     }
 
     @Test
@@ -77,7 +79,7 @@ class OrderMapperTest {
     void toItemResponse_shouldMapAllFields() {
         Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url").build();
         OrderItem item = OrderItem.builder().id(1L).product(product).quantity(2)
-                .price(new BigDecimal("749.00")).build();
+                .price(new BigDecimal("749.00")).weightKg(new BigDecimal("0.250")).build();
 
         OrderItemResponse response = orderMapper.toItemResponse(item);
 
@@ -87,5 +89,6 @@ class OrderMapperTest {
         assertThat(response.quantity()).isEqualTo(2);
         assertThat(response.price()).isEqualByComparingTo(new BigDecimal("749.00"));
         assertThat(response.subtotal()).isEqualByComparingTo(new BigDecimal("1498.00"));
+        assertThat(response.weightKg()).isEqualByComparingTo(new BigDecimal("0.250"));
     }
 }

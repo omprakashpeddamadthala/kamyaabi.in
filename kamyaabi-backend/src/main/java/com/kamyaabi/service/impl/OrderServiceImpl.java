@@ -113,6 +113,7 @@ public class OrderServiceImpl implements OrderService {
                     .product(product)
                     .quantity(cartItem.getQuantity())
                     .price(effectivePrice)
+                    .weightKg(parseWeightKg(product.getWeight(), product.getUnit()))
                     .build();
 
             orderItems.add(orderItem);
@@ -240,6 +241,20 @@ public class OrderServiceImpl implements OrderService {
         orderEventPublisher.publishOrderEvent(saved, eventType);
 
         return orderMapper.toResponse(saved);
+    }
+
+    static BigDecimal parseWeightKg(String weight, String unit) {
+        if (weight == null || weight.isBlank()) return null;
+        try {
+            BigDecimal value = new BigDecimal(weight.trim());
+            if (unit != null && unit.trim().toLowerCase().startsWith("g")
+                    && !unit.trim().toLowerCase().startsWith("kg")) {
+                return value.divide(BigDecimal.valueOf(1000), 3, java.math.RoundingMode.HALF_UP);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private OrderEventType mapStatusToEventType(Order.OrderStatus status) {

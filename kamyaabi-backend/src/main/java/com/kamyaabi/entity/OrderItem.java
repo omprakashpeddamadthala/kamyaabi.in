@@ -31,4 +31,7 @@ public class OrderItem {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
+
+    @Column(precision = 8, scale = 3)
+    private BigDecimal weightKg;
 }
