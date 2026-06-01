@@ -1,4 +1,5 @@
 import axiosInstance from './axiosInstance';
+import { config } from '../config';
 import {
   ApiResponse,
   Product,
@@ -146,6 +147,9 @@ export const adminApi = {
 
   updateOrderStatus: (id: number, status: string) =>
     axiosInstance.put<ApiResponse<Order>>(`/api/admin/orders/${id}/status`, { status }),
+
+  downloadInvoiceUrl: (id: number) =>
+    `${config.apiBaseUrl || ''}/api/admin/orders/${id}/invoice`,
 
   getDashboardStats: () =>
     axiosInstance.get<ApiResponse<DashboardStats>>('/api/admin/dashboard/stats'),

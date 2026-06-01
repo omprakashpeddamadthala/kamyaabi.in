@@ -18,6 +18,8 @@ import {
   InputLabel,
   Pagination,
   Stack,
+  Button,
+  CircularProgress,
 } from '@mui/material';
 import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
@@ -84,6 +86,7 @@ const AdminOrdersPage: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [invoiceDownloadingId, setInvoiceDownloadingId] = useState<number | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -103,6 +106,31 @@ const AdminOrdersPage: React.FC = () => {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  const handleDownloadInvoice = async (orderId: number) => {
+    setInvoiceDownloadingId(orderId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(adminApi.downloadInvoiceUrl(orderId), {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) throw new Error('invoice-download-failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice_${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      loadOrders();
+    } catch (err) {
+      showError(parseApiError(err, 'Invoice is available after payment confirmation').message);
+    } finally {
+      setInvoiceDownloadingId(null);
+    }
+  };
 
   const handleUpdateStatus = async (orderId: number, status: string) => {
     if (!status) return;
@@ -153,15 +181,16 @@ const AdminOrdersPage: React.FC = () => {
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Shipping</TableCell>
+              <TableCell>Invoice</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={10} />
+              <TableSkeleton rows={5} columns={11} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={11} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -236,6 +265,27 @@ const AdminOrdersPage: React.FC = () => {
                     ) : (
                       '—'
                     )}
+                  </TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>
+                    {(o.status === 'PAID' || o.status === 'CONFIRMED' || o.status === 'PROCESSING' || o.status === 'SHIPPED' || o.status === 'DELIVERED') ? (
+                      <Stack spacing={0.75} alignItems="flex-start">
+                        <Chip
+                          label={o.invoiceGenerated ? 'Generated' : 'Pending'}
+                          size="small"
+                          color={o.invoiceGenerated ? 'success' : 'warning'}
+                          variant="outlined"
+                        />
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleDownloadInvoice(o.id)}
+                          disabled={invoiceDownloadingId === o.id}
+                          startIcon={invoiceDownloadingId === o.id ? <CircularProgress size={14} /> : undefined}
+                        >
+                          Download
+                        </Button>
+                      </Stack>
+                    ) : '—'}
                   </TableCell>
                   <TableCell>
                     <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingId === o.id}>

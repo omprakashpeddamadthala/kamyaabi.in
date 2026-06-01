@@ -15,11 +15,20 @@ public class AsyncConfig {
 
     @Bean(name = "emailTaskExecutor")
     public Executor emailTaskExecutor() {
+        return taskExecutor("email-", 2, 5, 25);
+    }
+
+    @Bean(name = "invoiceTaskExecutor")
+    public Executor invoiceTaskExecutor() {
+        return taskExecutor("invoice-", 1, 3, 50);
+    }
+
+    private Executor taskExecutor(String threadNamePrefix, int corePoolSize, int maxPoolSize, int queueCapacity) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(25);
-        executor.setThreadNamePrefix("email-");
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
+        executor.setThreadNamePrefix(threadNamePrefix);
         executor.initialize();
         return executor;
     }

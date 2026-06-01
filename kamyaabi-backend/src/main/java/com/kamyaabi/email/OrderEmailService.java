@@ -3,7 +3,11 @@ package com.kamyaabi.email;
 import com.kamyaabi.config.EmailProperties;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.event.OrderEventType;
+import com.kamyaabi.invoice.InvoiceDocument;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.InvoiceService;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,17 +22,20 @@ public class OrderEmailService {
     private final EmailProperties emailProperties;
     private final OrderRepository orderRepository;
     private final AdminEmailResolver adminEmailResolver;
+    private final InvoiceService invoiceService;
 
     public OrderEmailService(EmailServiceFactory emailServiceFactory,
                              EmailTemplateEngine templateEngine,
                              EmailProperties emailProperties,
                              OrderRepository orderRepository,
-                             AdminEmailResolver adminEmailResolver) {
+                             AdminEmailResolver adminEmailResolver,
+                             InvoiceService invoiceService) {
         this.emailServiceFactory = emailServiceFactory;
         this.templateEngine = templateEngine;
         this.emailProperties = emailProperties;
         this.orderRepository = orderRepository;
         this.adminEmailResolver = adminEmailResolver;
+        this.invoiceService = invoiceService;
     }
 
     @Async("emailTaskExecutor")
@@ -67,7 +74,13 @@ public class OrderEmailService {
             String subject = templateEngine.getSubject(eventType, order);
             String htmlContent = templateEngine.renderCustomerEmail(eventType, order);
 
-            emailServiceFactory.getEmailService().sendEmail(to, subject, htmlContent);
+            if (eventType == OrderEventType.PAYMENT_SUCCESS || eventType == OrderEventType.COD_ORDER_PLACED) {
+                InvoiceDocument invoice = invoiceService.generateInvoice(order.getId());
+                emailServiceFactory.getEmailService().sendEmail(to, subject, htmlContent, List.of(
+                        new EmailAttachment(invoice.filename(), "application/pdf", invoice.content())));
+            } else {
+                emailServiceFactory.getEmailService().sendEmail(to, subject, htmlContent);
+            }
             log.info("Customer email sent for event: {} order: {} to: {}", eventType, order.getId(), to);
         } catch (Exception e) {
             log.error("Failed to send customer email for event: {} order: {}", eventType, order.getId(), e);
