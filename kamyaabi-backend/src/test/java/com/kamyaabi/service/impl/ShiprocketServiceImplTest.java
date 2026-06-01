@@ -132,6 +132,39 @@ class ShiprocketServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void syncOrderToShiprocket_nullOrderIdInResponse_marksSyncedFalse() {
+        Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
+
+        Map<String, Object> createResponse = new HashMap<>();
+        createResponse.put("order_id", null);
+        createResponse.put("shipment_id", null);
+        when(restTemplate.postForEntity(
+                contains("/orders/create/adhoc"),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(createResponse));
+
+        shiprocketService.syncOrderToShiprocket(order);
+
+        assertThat(order.getShiprocketSynced()).isFalse();
+        assertThat(order.getShiprocketOrderId()).isNull();
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void toSafeString_handlesNullAndStringNull() {
+        assertThat(ShiprocketServiceImpl.toSafeString(null)).isNull();
+        assertThat(ShiprocketServiceImpl.toSafeString("null")).isNull();
+        assertThat(ShiprocketServiceImpl.toSafeString("NULL")).isNull();
+        assertThat(ShiprocketServiceImpl.toSafeString("")).isNull();
+        assertThat(ShiprocketServiceImpl.toSafeString("  ")).isNull();
+        assertThat(ShiprocketServiceImpl.toSafeString(12345)).isEqualTo("12345");
+        assertThat(ShiprocketServiceImpl.toSafeString("AWB123")).isEqualTo("AWB123");
+    }
+
+    @Test
     void cancelShiprocketOrder_whenNotSynced_skips() {
         Order order = buildOrder();
         order.setShiprocketOrderId(null);
