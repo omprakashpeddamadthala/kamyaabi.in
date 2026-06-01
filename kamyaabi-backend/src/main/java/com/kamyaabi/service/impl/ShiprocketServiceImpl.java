@@ -283,7 +283,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         body.put("height", properties.getDefaultHeight());
         body.put("weight", properties.getDefaultWeight());
 
-        log.debug("Shiprocket create order request for order {}: {}", order.getId(), body);
+        log.info("Shiprocket create order request for order {}: {}", order.getId(), body);
 
         @SuppressWarnings("unchecked")
         ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {

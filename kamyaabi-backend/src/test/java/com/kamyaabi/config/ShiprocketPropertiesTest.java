@@ -37,7 +37,7 @@ class ShiprocketPropertiesTest {
     @Test
     void defaults_areSet() {
         ShiprocketProperties props = new ShiprocketProperties();
-        assertThat(props.getPickupLocation()).isEqualTo("Primary Warehouse");
+        assertThat(props.getPickupLocation()).isEqualTo("home");
         assertThat(props.getDefaultWeight()).isEqualTo(0.5);
         assertThat(props.getDefaultLength()).isEqualTo(10);
         assertThat(props.getDefaultBreadth()).isEqualTo(10);

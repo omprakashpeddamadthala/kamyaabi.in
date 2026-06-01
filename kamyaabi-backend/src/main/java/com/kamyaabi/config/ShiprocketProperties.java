@@ -18,7 +18,7 @@ public class ShiprocketProperties {
     private String email = "";
     private String password = "";
     private long tokenRefreshIntervalSeconds = 9L * 24 * 60 * 60;
-    private String pickupLocation = "Primary Warehouse";
+    private String pickupLocation = "home";
     private String channelId = "";
     private String webhookSecret = "";
     private double defaultWeight = 0.5;
