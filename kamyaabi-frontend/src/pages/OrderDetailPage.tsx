@@ -20,6 +20,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
 import { paymentApi } from '../api/paymentApi';
 import Loading from '../components/common/Loading';
+import TrackingWidget from '../components/common/TrackingWidget';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { Alert, Button, CircularProgress } from '@mui/material';
 
@@ -187,6 +188,9 @@ const OrderDetailPage: React.FC = () => {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Qty: {item.quantity} x ₹{item.price}
+                      {item.weightKg != null && (
+                        <> · {item.weightKg < 1 ? `${(item.weightKg * 1000).toFixed(0)} g` : `${item.weightKg} kg`} each</>
+                      )}
                     </Typography>
                   </Box>
                   <Typography fontWeight={600} sx={{ whiteSpace: 'nowrap' }}>
@@ -196,6 +200,13 @@ const OrderDetailPage: React.FC = () => {
                 <Divider />
               </Box>
             ))}
+            {order.totalWeightKg != null && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Total Weight: {order.totalWeightKg < 1 ? `${(order.totalWeightKg * 1000).toFixed(0)} g` : `${order.totalWeightKg} kg`}
+                </Typography>
+              </Box>
+            )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
               <Typography variant="h6">Total</Typography>
               <Typography variant="h6" color="primary" fontWeight={700}>
@@ -275,44 +286,15 @@ const OrderDetailPage: React.FC = () => {
           )}
 
           {}
-          {(order.awbNumber || order.courierName || order.shippingStatus) && (
-            <Card sx={{ p: 3, mt: 3, '&:hover': { transform: 'none' } }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>Shipping Details</Typography>
-              {order.courierName && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">Courier</Typography>
-                  <Typography variant="body2" fontWeight={600}>{order.courierName}</Typography>
-                </Box>
-              )}
-              {order.awbNumber && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">AWB / Tracking No.</Typography>
-                  <Typography variant="body2" fontWeight={600}>{order.awbNumber}</Typography>
-                </Box>
-              )}
-              {order.shippingStatus && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">Shipping Status</Typography>
-                  <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />
-                </Box>
-              )}
-              {order.pickupScheduledAt && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">Pickup Scheduled</Typography>
-                  <Typography variant="body2">
-                    {new Date(order.pickupScheduledAt).toLocaleDateString('en-IN')}
-                  </Typography>
-                </Box>
-              )}
-              {order.deliveredAt && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">Delivered On</Typography>
-                  <Typography variant="body2">
-                    {new Date(order.deliveredAt).toLocaleDateString('en-IN')}
-                  </Typography>
-                </Box>
-              )}
-            </Card>
+          {(order.awbNumber || order.shippingStatus) && (
+            <Box sx={{ mt: 3 }}>
+              <TrackingWidget
+                orderId={order.id}
+                awbNumber={order.awbNumber}
+                courierName={order.courierName}
+                shippingStatus={order.shippingStatus}
+              />
+            </Box>
           )}
 
           {}

@@ -281,7 +281,12 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         body.put("length", properties.getDefaultLength());
         body.put("breadth", properties.getDefaultBreadth());
         body.put("height", properties.getDefaultHeight());
-        body.put("weight", properties.getDefaultWeight());
+
+        double totalWeightKg = order.getItems().stream()
+                .filter(i -> i.getWeightKg() != null)
+                .mapToDouble(i -> i.getWeightKg().doubleValue() * i.getQuantity())
+                .sum();
+        body.put("weight", totalWeightKg > 0 ? totalWeightKg : properties.getDefaultWeight());
 
         log.info("Shiprocket create order request for order {}: {}", order.getId(), body);
 

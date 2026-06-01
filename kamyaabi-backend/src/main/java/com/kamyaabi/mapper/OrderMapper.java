@@ -25,10 +25,16 @@ public class OrderMapper {
                 .map(this::toItemResponse)
                 .toList();
 
+        BigDecimal totalWeight = order.getItems().stream()
+                .filter(i -> i.getWeightKg() != null)
+                .map(i -> i.getWeightKg().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
+                .totalWeightKg(totalWeight.compareTo(BigDecimal.ZERO) == 0 ? null : totalWeight)
                 .status(order.getStatus().name())
                 .paymentMethod(order.getPaymentMethod() != null
                         ? order.getPaymentMethod().name() : Order.PaymentMethod.PREPAID.name())
@@ -60,6 +66,7 @@ public class OrderMapper {
                 .quantity(item.getQuantity())
                 .price(item.getPrice())
                 .subtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .weightKg(item.getWeightKg())
                 .build();
     }
 }

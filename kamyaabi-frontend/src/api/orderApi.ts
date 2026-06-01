@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse, Order, PageResponse, PaymentMethod } from '../types';
+import { ApiResponse, Order, PageResponse, PaymentMethod, TrackingInfo } from '../types';
 
 export const orderApi = {
   create: (shippingAddressId: number, couponCode?: string, paymentMethod?: PaymentMethod) =>
@@ -18,5 +18,5 @@ export const orderApi = {
     axiosInstance.get<ApiResponse<Order>>(`/api/orders/${id}`),
 
   trackShipment: (orderId: number) =>
-    axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/shipping/track/${orderId}`),
+    axiosInstance.get<ApiResponse<TrackingInfo>>(`/api/shipping/track/${orderId}`),
 };

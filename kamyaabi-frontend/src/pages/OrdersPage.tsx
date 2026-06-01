@@ -15,7 +15,7 @@ import {
   Divider,
   Grid,
 } from '@mui/material';
-import { Receipt, ExpandMore, ExpandLess } from '@mui/icons-material';
+import { Receipt, ExpandMore, ExpandLess, LocalShipping } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrders } from '../features/order/orderSlice';
 import Loading from '../components/common/Loading';
@@ -195,11 +195,35 @@ const OrdersPage: React.FC = () => {
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>{item.productName}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Qty: {item.quantity} × ₹{item.price}
+                    {item.weightKg != null && (
+                      <> · {item.weightKg < 1 ? `${(item.weightKg * 1000).toFixed(0)} g` : `${item.weightKg} kg`}</>
+                    )}
                   </Typography>
                 </Box>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>₹{item.subtotal}</Typography>
               </Box>
             ))}
+
+            {order.totalWeightKg != null && (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right', mt: 1 }}>
+                Total Weight: {order.totalWeightKg < 1 ? `${(order.totalWeightKg * 1000).toFixed(0)} g` : `${order.totalWeightKg} kg`}
+              </Typography>
+            )}
+
+            {(order.awbNumber || order.shippingStatus) && (
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: '#f0f7ff', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <LocalShipping fontSize="small" color="primary" />
+                {order.shippingStatus && (
+                  <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />
+                )}
+                {order.courierName && (
+                  <Typography variant="body2" color="text.secondary">{order.courierName}</Typography>
+                )}
+                {order.awbNumber && (
+                  <Typography variant="body2" color="text.secondary">AWB: {order.awbNumber}</Typography>
+                )}
+              </Box>
+            )}
 
             {}
             <Grid container spacing={2} sx={{ mt: 1 }}>

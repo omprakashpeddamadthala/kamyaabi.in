@@ -115,6 +115,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   subtotal: number;
+  weightKg: number | null;
 }
 
 export interface Address {
@@ -140,10 +141,32 @@ export interface Payment {
 
 export type PaymentMethod = 'PREPAID' | 'COD';
 
+export interface TrackingEvent {
+  date: string;
+  status: string;
+  activity: string;
+  location: string;
+}
+
+export interface TrackingInfo {
+  tracking_data?: {
+    track_status?: number;
+    shipment_status?: number;
+    shipment_track?: Array<{
+      current_status: string;
+      courier_name: string;
+      edd: string | null;
+      awb_code: string;
+    }>;
+    shipment_track_activities?: TrackingEvent[];
+  };
+}
+
 export interface Order {
   id: number;
   items: OrderItem[];
   totalAmount: number;
+  totalWeightKg: number | null;
   status: string;
   paymentMethod: PaymentMethod;
   shippingAddress: Address | null;

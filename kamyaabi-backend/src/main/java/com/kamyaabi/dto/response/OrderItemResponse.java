@@ -12,6 +12,7 @@ public record OrderItemResponse(
         String productImageUrl,
         Integer quantity,
         BigDecimal price,
-        BigDecimal subtotal
+        BigDecimal subtotal,
+        BigDecimal weightKg
 ) {
 }
