@@ -34,6 +34,7 @@ import {
   ContactMail,
   Person,
   Article,
+  LocalShipping,
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
@@ -305,6 +306,10 @@ const Navbar: React.FC = () => {
                 <ListItemText primary={link.label} />
               </ListItem>
             ))}
+            <ListItem component={Link} to="/track-order">
+              <ListItemIcon><LocalShipping /></ListItemIcon>
+              <ListItemText primary="Track Order" />
+            </ListItem>
             {user && user.role !== 'ADMIN' && (
               <ListItem component={Link} to="/orders">
                 <ListItemIcon><Receipt /></ListItemIcon>

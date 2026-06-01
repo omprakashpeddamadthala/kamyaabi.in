@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  Box, Container, Typography, Grid, Button, Card, CardMedia,
+  Box, Container, Typography, Grid, Button, Card, CardMedia, TextField, InputAdornment,
 } from '@mui/material';
+import { LocalShipping, Search } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
@@ -58,12 +59,14 @@ const counters = [
 
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { featuredProducts, loading } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
   const isAdmin = user?.role === 'ADMIN';
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [heroBanners, setHeroBanners] = useState<HeroBanner[] | null>(null);
+  const [trackQuery, setTrackQuery] = useState('');
 
   useEffect(() => {
     dispatch(fetchFeaturedProducts());
@@ -220,6 +223,63 @@ const HomePage: React.FC = () => {
           </Container>
         </Box>
       )}
+
+      {/* Track Your Order */}
+      <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: '#f0ede6' }}>
+        <Container maxWidth="sm">
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <LocalShipping sx={{ fontSize: 44, color: 'primary.main', mb: 1 }} />
+            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 1 }}>
+              Track Your Order
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Enter your order number to check the delivery status — no login required
+            </Typography>
+          </Box>
+          <Box
+            component="form"
+            onSubmit={(e: React.FormEvent) => {
+              e.preventDefault();
+              const q = trackQuery.trim();
+              if (q) navigate(`/track-order?orderId=${encodeURIComponent(q)}`);
+            }}
+            sx={{ display: 'flex', gap: 1.5 }}
+          >
+            <TextField
+              fullWidth
+              placeholder="Enter Order ID (e.g. 1001)"
+              value={trackQuery}
+              onChange={(e) => setTrackQuery(e.target.value)}
+              type="number"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                bgcolor: '#fff',
+                borderRadius: 2,
+                '& .MuiOutlinedInput-root': { borderRadius: 2 },
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={!trackQuery.trim()}
+              sx={{ px: 4, borderRadius: 2, fontWeight: 600, textTransform: 'none', minWidth: 110 }}
+            >
+              Track
+            </Button>
+          </Box>
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Button component={Link} to="/track-order" variant="text" size="small" sx={{ textTransform: 'none', color: 'text.secondary' }}>
+              Or track using AWB / tracking number →
+            </Button>
+          </Box>
+        </Container>
+      </Box>
 
       {}
       <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>

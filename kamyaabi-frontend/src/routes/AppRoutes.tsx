@@ -31,6 +31,7 @@ const AdminBlogEditorPage = lazy(() => import('../pages/AdminBlogEditorPage'));
 const AdminBlogCategoriesPage = lazy(() => import('../pages/AdminBlogCategoriesPage'));
 const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
 const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
+const TrackOrderPage = lazy(() => import('../pages/TrackOrderPage'));
 
 const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
@@ -103,6 +104,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
+        <Route path="/track-order" element={<TrackOrderPage />} />
         <Route path="/login" element={<LoginPage />} />
 
         {/* Public Blog Routes */}
