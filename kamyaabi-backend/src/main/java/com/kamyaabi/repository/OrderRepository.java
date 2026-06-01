@@ -23,6 +23,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o JOIN FETCH o.user LEFT JOIN FETCH o.items WHERE o.id = :id")
     Optional<Order> findByIdWithUser(@Param("id") Long id);
 
+    @Query(value = "SELECT DISTINCT o FROM Order o "
+            + "LEFT JOIN FETCH o.items i "
+            + "LEFT JOIN FETCH i.product "
+            + "LEFT JOIN FETCH o.shippingAddress "
+            + "LEFT JOIN FETCH o.payment "
+            + "WHERE o.id IN :ids")
+    List<Order> findAllWithDetailsByIdIn(@Param("ids") List<Long> ids);
+
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status NOT IN :excluded")
     BigDecimal sumRevenueExcludingStatuses(@Param("excluded") List<Order.OrderStatus> excluded);
 

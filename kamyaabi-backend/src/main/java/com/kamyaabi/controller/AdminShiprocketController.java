@@ -13,14 +13,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Admin-only endpoints for monitoring and managing the Shiprocket integration.
@@ -86,6 +89,7 @@ public class AdminShiprocketController {
     }
 
     @GetMapping("/orders")
+    @Transactional(readOnly = true)
     @Operation(summary = "Orders synced (or pending sync) to Shiprocket",
             description = "Paginated list of orders that have shipping information or are awaiting sync, "
                     + "newest first. Optionally filter to COD-only via paymentMethod=COD.")
@@ -109,7 +113,23 @@ public class AdminShiprocketController {
             orders = orderRepository.findByShiprocketOrderIdIsNotNullOrShippingStatusIsNotNull(pageable);
         }
 
-        return ResponseEntity.ok(ApiResponse.success(orders.map(orderMapper::toResponse)));
+        List<Long> orderIds = orders.getContent().stream()
+                .map(Order::getId)
+                .toList();
+        if (orderIds.isEmpty()) {
+            return ResponseEntity.ok(ApiResponse.success(new PageImpl<>(
+                    List.of(), orders.getPageable(), orders.getTotalElements())));
+        }
+
+        Map<Long, Order> hydratedOrdersById = orderRepository.findAllWithDetailsByIdIn(orderIds).stream()
+                .collect(Collectors.toMap(Order::getId, order -> order));
+        List<OrderResponse> responses = orderIds.stream()
+                .map(hydratedOrdersById::get)
+                .map(orderMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(ApiResponse.success(new PageImpl<>(
+                responses, orders.getPageable(), orders.getTotalElements())));
     }
 
     @PostMapping("/sync/{orderId}")
@@ -127,7 +147,9 @@ public class AdminShiprocketController {
         log.info("Admin-triggered Shiprocket sync for order {}", orderId);
         shiprocketService.syncOrderToShiprocket(order);
 
-        Order refreshed = orderRepository.findById(orderId).orElse(order);
+        Order refreshed = orderRepository.findAllWithDetailsByIdIn(List.of(orderId)).stream()
+                .findFirst()
+                .orElse(order);
         return ResponseEntity.ok(ApiResponse.success("Shiprocket sync triggered", orderMapper.toResponse(refreshed)));
     }
 
