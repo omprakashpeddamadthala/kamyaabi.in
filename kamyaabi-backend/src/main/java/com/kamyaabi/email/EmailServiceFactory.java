@@ -41,5 +41,11 @@ public class EmailServiceFactory {
         public void sendEmail(String to, String subject, String htmlContent) {
             log.info("Email notification (no provider configured) - To: {}, Subject: {}", to, subject);
         }
+
+        @Override
+        public void sendEmail(String to, String subject, String htmlContent, java.util.List<EmailAttachment> attachments) {
+            log.info("Email notification (no provider configured) - To: {}, Subject: {}, Attachments: {}",
+                    to, subject, attachments.size());
+        }
     }
 }

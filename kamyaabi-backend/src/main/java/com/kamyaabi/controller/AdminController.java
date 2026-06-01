@@ -8,10 +8,12 @@ import com.kamyaabi.dto.request.SettingsUpdateRequest;
 import com.kamyaabi.dto.request.UpdateUserRoleRequest;
 import com.kamyaabi.dto.request.UpdateUserStatusRequest;
 import com.kamyaabi.dto.response.*;
+import com.kamyaabi.invoice.InvoiceDocument;
 import com.kamyaabi.security.CurrentUser;
 import com.kamyaabi.service.AdminUserService;
 import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.DashboardService;
+import com.kamyaabi.service.InvoiceService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ProductService;
 import com.kamyaabi.service.SettingsService;
@@ -23,6 +25,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +51,7 @@ public class AdminController {
     private final DashboardService dashboardService;
     private final AdminUserService adminUserService;
     private final SettingsService settingsService;
+    private final InvoiceService invoiceService;
     private final CurrentUser currentUser;
 
     public AdminController(ProductService productService,
@@ -55,6 +60,7 @@ public class AdminController {
                            DashboardService dashboardService,
                            AdminUserService adminUserService,
                            SettingsService settingsService,
+                           InvoiceService invoiceService,
                            CurrentUser currentUser) {
         this.productService = productService;
         this.categoryService = categoryService;
@@ -62,6 +68,7 @@ public class AdminController {
         this.dashboardService = dashboardService;
         this.adminUserService = adminUserService;
         this.settingsService = settingsService;
+        this.invoiceService = invoiceService;
         this.currentUser = currentUser;
     }
 
@@ -240,6 +247,19 @@ public class AdminController {
             @Valid @RequestBody OrderStatusRequest request) {
         OrderResponse order = orderService.updateOrderStatus(id, request.status());
         return ResponseEntity.ok(ApiResponse.success("Order status updated", order));
+    }
+
+    @GetMapping("/orders/{id}/invoice")
+    @Operation(summary = "Download order invoice", description = "Download a paid order invoice (Admin only)")
+    public ResponseEntity<byte[]> getOrderInvoice(@PathVariable Long id) {
+        InvoiceDocument invoice = invoiceService.getInvoice(id, currentUser.getUserId(), true);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(invoice.filename())
+                        .build()
+                        .toString())
+                .body(invoice.content());
     }
 
     @GetMapping("/users")

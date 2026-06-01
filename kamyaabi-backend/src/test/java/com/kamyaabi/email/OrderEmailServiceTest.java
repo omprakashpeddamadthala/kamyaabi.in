@@ -3,7 +3,9 @@ package com.kamyaabi.email;
 import com.kamyaabi.config.EmailProperties;
 import com.kamyaabi.entity.*;
 import com.kamyaabi.event.OrderEventType;
+import com.kamyaabi.invoice.InvoiceDocument;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.InvoiceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +40,9 @@ class OrderEmailServiceTest {
     @Mock
     private AdminEmailResolver adminEmailResolver;
 
+    @Mock
+    private InvoiceService invoiceService;
+
     private EmailProperties emailProperties;
     private OrderEmailService orderEmailService;
     private Order order;
@@ -47,7 +53,7 @@ class OrderEmailServiceTest {
         emailProperties.setEnabled(true);
 
         orderEmailService = new OrderEmailService(emailServiceFactory, templateEngine,
-                emailProperties, orderRepository, adminEmailResolver);
+                emailProperties, orderRepository, adminEmailResolver, invoiceService);
 
         User user = User.builder()
                 .id(1L).email("customer@test.com").name("Test Customer").role(User.Role.USER)
@@ -70,10 +76,12 @@ class OrderEmailServiceTest {
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
         when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Payment Confirmed");
         when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Admin</p>");
+        when(invoiceService.generateInvoice(order.getId())).thenReturn(new InvoiceDocument(order.getId(),
+                "INV-20260102-100", "/tmp/invoice.pdf", "invoice_100.pdf", "pdf".getBytes()));
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail("customer@test.com", "Payment Confirmed", "<p>Customer</p>");
+        verify(emailService).sendEmail(eq("customer@test.com"), eq("Payment Confirmed"), eq("<p>Customer</p>"), anyList());
         verify(emailService).sendEmail("admin@kamyaabi.in", "[Admin] Payment Confirmed", "<p>Admin</p>");
     }
 
@@ -102,11 +110,13 @@ class OrderEmailServiceTest {
         when(adminEmailResolver.getAdminEmails()).thenReturn(List.of());
         when(templateEngine.getSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("Payment Confirmed");
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>Customer</p>");
+        when(invoiceService.generateInvoice(order.getId())).thenReturn(new InvoiceDocument(order.getId(),
+                "INV-20260102-100", "/tmp/invoice.pdf", "invoice_100.pdf", "pdf".getBytes()));
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString());
-        verify(emailService).sendEmail("customer@test.com", "Payment Confirmed", "<p>Customer</p>");
+        verify(emailService, times(1)).sendEmail(anyString(), anyString(), anyString(), anyList());
+        verify(emailService).sendEmail(eq("customer@test.com"), eq("Payment Confirmed"), eq("<p>Customer</p>"), anyList());
     }
 
     @Test
@@ -134,6 +144,8 @@ class OrderEmailServiceTest {
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
         when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Subject");
         when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>A</p>");
+        when(invoiceService.generateInvoice(order.getId())).thenReturn(new InvoiceDocument(order.getId(),
+                "INV-20260102-100", "/tmp/invoice.pdf", "invoice_100.pdf", "pdf".getBytes()));
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
@@ -150,12 +162,14 @@ class OrderEmailServiceTest {
         when(templateEngine.renderCustomerEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>C</p>");
         when(templateEngine.getAdminSubject(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("[Admin] Subject");
         when(templateEngine.renderAdminEmail(OrderEventType.PAYMENT_SUCCESS, order)).thenReturn("<p>A</p>");
+        when(invoiceService.generateInvoice(order.getId())).thenReturn(new InvoiceDocument(order.getId(),
+                "INV-20260102-100", "/tmp/invoice.pdf", "invoice_100.pdf", "pdf".getBytes()));
         doThrow(new RuntimeException("Send failed")).when(emailService)
                 .sendEmail(eq("admin@kamyaabi.in"), anyString(), anyString());
 
         orderEmailService.sendOrderNotification(order, OrderEventType.PAYMENT_SUCCESS);
 
-        verify(emailService).sendEmail(eq("customer@test.com"), anyString(), anyString());
+        verify(emailService).sendEmail(eq("customer@test.com"), anyString(), anyString(), anyList());
     }
 
     @Test

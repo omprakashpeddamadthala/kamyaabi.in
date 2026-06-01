@@ -16,10 +16,12 @@ import com.kamyaabi.dto.response.OrderResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.entity.User;
+import com.kamyaabi.invoice.InvoiceDocument;
 import com.kamyaabi.security.CurrentUser;
 import com.kamyaabi.service.AdminUserService;
 import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.DashboardService;
+import com.kamyaabi.service.InvoiceService;
 import com.kamyaabi.service.OrderService;
 import com.kamyaabi.service.ProductService;
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,7 @@ class AdminControllerTest {
     @Mock private AdminUserService adminUserService;
     @Mock private CurrentUser currentUser;
     @Mock private com.kamyaabi.service.SettingsService settingsService;
+    @Mock private InvoiceService invoiceService;
 
     @InjectMocks private AdminController adminController;
 
@@ -239,6 +242,18 @@ class AdminControllerTest {
         ResponseEntity<?> response = adminController.updateOrderStatus(1L, request);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void getOrderInvoice_shouldReturnPdfBytes() {
+        when(currentUser.getUserId()).thenReturn(10L);
+        when(invoiceService.getInvoice(1L, 10L, true)).thenReturn(new InvoiceDocument(1L,
+                "INV-20260102-1", "/invoices/invoice_1.pdf", "invoice_1.pdf", "pdf".getBytes()));
+
+        ResponseEntity<byte[]> response = adminController.getOrderInvoice(1L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("pdf".getBytes());
     }
 
     @Test

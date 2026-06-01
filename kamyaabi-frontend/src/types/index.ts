@@ -183,6 +183,9 @@ export interface Order {
   shiprocketSynced: boolean | null;
   couponCode: string | null;
   discountAmount: number | null;
+  invoiceNumber: string | null;
+  invoiceUrl: string | null;
+  invoiceGenerated: boolean | null;
   createdAt: string;
   updatedAt: string;
 }

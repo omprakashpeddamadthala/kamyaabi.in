@@ -649,3 +649,28 @@ owner. No license is granted for redistribution, sublicensing, or
 commercial use without explicit written permission. If you would like to
 discuss licensing or partnership, please contact the repository owner via
 the support email configured in `.env` (defaults to `support@kamyaabi.in`).
+
+### Invoice Generation
+
+Paid orders automatically receive a PDF tax invoice after the payment-success order event commits. The flow is:
+
+1. `PaymentServiceImpl.verifyPayment()` marks the payment `COMPLETED`, marks the order `PAID`, saves both records, and publishes `OrderEventType.PAYMENT_SUCCESS`.
+2. `OrderEventListener` runs after commit, queues invoice generation on `invoiceTaskExecutor`, and keeps the existing email notification flow non-blocking.
+3. `InvoiceService` renders a professional A4 invoice PDF, stores it on disk, and persists `invoice_number` / `invoice_url` on the order. Generation is idempotent: if the stored PDF exists, the same invoice is reused.
+4. `OrderEmailService` attaches the invoice PDF to customer payment-success/COD emails. Admin notification emails remain unchanged.
+5. Customers can download invoices from `GET /api/orders/{orderId}/invoice` or request `?format=url`; admins can use `GET /api/admin/orders/{orderId}/invoice`.
+
+Invoice configuration lives under `app.invoice.*` and is backed by these environment variables:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `INVOICE_STORAGE_DIRECTORY` | Filesystem directory for generated PDFs. Use persistent storage in production. | `/app/invoices` |
+| `INVOICE_COMPANY_NAME` | Company name shown in invoice header. | `Kamyaabi` |
+| `INVOICE_COMPANY_ADDRESS` | Company address shown in invoice header. | `Premium Dry Fruits, India` |
+| `INVOICE_COMPANY_EMAIL` | Support email in invoice header/footer. | `support@kamyaabi.in` |
+| `INVOICE_COMPANY_PHONE` | Company phone shown in invoice header. | `+91 9848999072` |
+| `INVOICE_COMPANY_WEBSITE` | Company website shown in invoice header/footer. | `https://kamyaabi.in` |
+| `INVOICE_LOGO_URL` | Optional HTTPS logo image URL. If blank, a text logo placeholder is used. | blank |
+| `INVOICE_CURRENCY` | Currency symbol mapping for invoice totals. | `INR` |
+| `INVOICE_TAX_LABEL` / `INVOICE_TAX_RATE` | Tax label and display rate. | `GST` / `0%` |
+| `INVOICE_REFUND_POLICY_NOTE` | One-line refund/return note in the footer. | Kamyaabi refund policy note |

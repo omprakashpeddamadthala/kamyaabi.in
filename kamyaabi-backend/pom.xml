@@ -189,6 +189,23 @@
             <version>4.10.2</version>
         </dependency>
 
+        <!-- PDF + QR code generation for invoices -->
+        <dependency>
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>1.0.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
         <!-- Google API Client for ID token verification -->
         <dependency>
             <groupId>com.google.api-client</groupId>

@@ -19,6 +19,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
 import { paymentApi } from '../api/paymentApi';
+import { orderApi } from '../api/orderApi';
 import Loading from '../components/common/Loading';
 import TrackingWidget from '../components/common/TrackingWidget';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
@@ -56,12 +57,41 @@ const OrderDetailPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const [paymentProcessing, setPaymentProcessing] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = React.useState(false);
+  const [invoiceError, setInvoiceError] = React.useState<string | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (id) dispatch(fetchOrderById(Number(id)));
   }, [dispatch, id]);
+
+  const handleDownloadInvoice = async () => {
+    if (!order) return;
+    setInvoiceLoading(true);
+    setInvoiceError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(orderApi.downloadInvoiceUrl(order.id), {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) throw new Error('invoice-download-failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice_${order.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      dispatch(fetchOrderById(order.id));
+    } catch {
+      setInvoiceError('Invoice is available after payment confirmation. Please try again later.');
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
 
   const handleRetryPayment = async () => {
     if (!order) return;
@@ -137,8 +167,31 @@ const OrderDetailPage: React.FC = () => {
           {paymentError}
         </Alert>
       )}
+      {invoiceError && (
+        <Alert severity="warning" sx={{ mb: 3 }} onClose={() => setInvoiceError(null)}>
+          {invoiceError}
+        </Alert>
+      )}
 
-      {}
+      {(order.status === 'PAID' || order.status === 'CONFIRMED' || order.status === 'PROCESSING' || order.status === 'SHIPPED' || order.status === 'DELIVERED') && (
+        <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, '&:hover': { transform: 'none' }, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>Invoice</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {order.invoiceGenerated ? `Ready${order.invoiceNumber ? `: ${order.invoiceNumber}` : ''}` : 'Generating shortly after payment'}
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            onClick={handleDownloadInvoice}
+            disabled={invoiceLoading}
+            startIcon={invoiceLoading ? <CircularProgress size={16} /> : undefined}
+          >
+            Download Invoice
+          </Button>
+        </Card>
+      )}
+
       {order.status !== 'CANCELLED' && (
         <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, '&:hover': { transform: 'none' } }}>
           <Stepper

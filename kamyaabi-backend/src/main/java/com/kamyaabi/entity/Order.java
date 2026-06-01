@@ -83,6 +83,11 @@ public class Order {
     @Builder.Default
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
+    private String invoiceNumber;
+
+    @Column(length = 1000)
+    private String invoiceUrl;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

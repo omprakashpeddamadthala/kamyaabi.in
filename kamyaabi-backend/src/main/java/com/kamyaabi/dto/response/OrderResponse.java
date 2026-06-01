@@ -26,6 +26,9 @@ public record OrderResponse(
         Boolean shiprocketSynced,
         String couponCode,
         BigDecimal discountAmount,
+        String invoiceNumber,
+        String invoiceUrl,
+        Boolean invoiceGenerated,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

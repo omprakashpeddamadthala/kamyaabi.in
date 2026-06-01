@@ -1,8 +1,12 @@
 package com.kamyaabi.controller;
 
 import com.kamyaabi.dto.request.OrderRequest;
+import com.kamyaabi.dto.response.ApiResponse;
+import com.kamyaabi.dto.response.InvoiceUrlResponse;
 import com.kamyaabi.dto.response.OrderResponse;
+import com.kamyaabi.invoice.InvoiceDocument;
 import com.kamyaabi.security.CurrentUser;
+import com.kamyaabi.service.InvoiceService;
 import com.kamyaabi.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +29,7 @@ import static org.mockito.Mockito.when;
 class OrderControllerTest {
 
     @Mock private OrderService orderService;
+    @Mock private InvoiceService invoiceService;
     @Mock private CurrentUser currentUser;
 
     @InjectMocks private OrderController orderController;
@@ -61,5 +66,31 @@ class OrderControllerTest {
         ResponseEntity<?> response = orderController.getOrderById(1L);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void getInvoice_pdfDownload_shouldReturnPdfBytes() {
+        when(currentUser.getUserId()).thenReturn(1L);
+        when(invoiceService.getInvoice(1L, 1L, false)).thenReturn(new InvoiceDocument(1L,
+                "INV-20260102-1", "/invoices/invoice_1.pdf", "invoice_1.pdf", "pdf".getBytes()));
+
+        ResponseEntity<?> response = orderController.getInvoice(1L, null);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("pdf".getBytes());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getInvoice_urlFormat_shouldReturnInvoiceUrl() {
+        when(currentUser.getUserId()).thenReturn(1L);
+        when(invoiceService.getInvoice(1L, 1L, false)).thenReturn(new InvoiceDocument(1L,
+                "INV-20260102-1", "/invoices/invoice_1.pdf", "invoice_1.pdf", "pdf".getBytes()));
+
+        ResponseEntity<?> response = orderController.getInvoice(1L, "url");
+
+        ApiResponse<InvoiceUrlResponse> body = (ApiResponse<InvoiceUrlResponse>) response.getBody();
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(body.data().invoiceUrl()).isEqualTo("/invoices/invoice_1.pdf");
     }
 }

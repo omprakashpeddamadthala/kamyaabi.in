@@ -52,6 +52,9 @@ public class OrderMapper {
                 .shiprocketSynced(order.getShiprocketSynced())
                 .couponCode(order.getCouponCode())
                 .discountAmount(order.getDiscountAmount())
+                .invoiceNumber(order.getInvoiceNumber())
+                .invoiceUrl(order.getInvoiceUrl())
+                .invoiceGenerated(order.getInvoiceUrl() != null && !order.getInvoiceUrl().isBlank())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
