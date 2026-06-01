@@ -66,9 +66,10 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             return;
         }
 
-        // Skip if already synced successfully (idempotency guard)
+        // Skip if already synced with a real Shiprocket order ID (idempotency guard).
+        // Check for blank/"null" because String.valueOf(null) == "null".
         if (Boolean.TRUE.equals(managed.getShiprocketSynced())
-                && managed.getShiprocketOrderId() != null) {
+                && isPresent(managed.getShiprocketOrderId())) {
             log.info("Order {} already synced to Shiprocket (srOrderId={}), skipping duplicate sync",
                     managed.getId(), managed.getShiprocketOrderId());
             return;
@@ -80,11 +81,23 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             Map<String, Object> srResponse = createShiprocketOrder(managed);
             if (srResponse == null) {
                 log.error("Shiprocket createOrder returned null for order {}", managed.getId());
+                managed.setShiprocketSynced(false);
+                orderRepository.save(managed);
                 return;
             }
 
-            String srOrderId = String.valueOf(srResponse.get("order_id"));
-            String shipmentId = String.valueOf(srResponse.get("shipment_id"));
+            log.info("Shiprocket createOrder response for order {}: {}", managed.getId(), srResponse);
+
+            String srOrderId = toSafeString(srResponse.get("order_id"));
+            String shipmentId = toSafeString(srResponse.get("shipment_id"));
+
+            if (srOrderId == null) {
+                log.error("Shiprocket createOrder returned no order_id for order {} — response: {}",
+                        managed.getId(), srResponse);
+                managed.setShiprocketSynced(false);
+                orderRepository.save(managed);
+                return;
+            }
 
             managed.setShiprocketOrderId(srOrderId);
             managed.setShiprocketShipmentId(shipmentId);
@@ -92,39 +105,45 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             log.info("Shiprocket order created: orderId={}, shipmentId={} for order {}",
                     srOrderId, shipmentId, managed.getId());
 
-            try {
-                Map<String, Object> awbResponse = assignAwb(shipmentId);
-                if (awbResponse != null) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> awbData = (Map<String, Object>) awbResponse.get("response");
-                    if (awbData != null) {
+            if (shipmentId != null) {
+                try {
+                    Map<String, Object> awbResponse = assignAwb(shipmentId);
+                    if (awbResponse != null) {
                         @SuppressWarnings("unchecked")
-                        Map<String, Object> awbAssignData = (Map<String, Object>) awbData.get("data");
-                        if (awbAssignData != null) {
-                            String awb = String.valueOf(awbAssignData.get("awb_code"));
-                            String courier = String.valueOf(awbAssignData.get("courier_name"));
-                            managed.setAwbNumber(awb);
-                            managed.setCourierName(courier);
-                            managed.setShippingStatus("AWB_ASSIGNED");
-                            log.info("AWB assigned: {} via {} for order {}", awb, courier, managed.getId());
+                        Map<String, Object> awbData = (Map<String, Object>) awbResponse.get("response");
+                        if (awbData != null) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> awbAssignData = (Map<String, Object>) awbData.get("data");
+                            if (awbAssignData != null) {
+                                String awb = toSafeString(awbAssignData.get("awb_code"));
+                                String courier = toSafeString(awbAssignData.get("courier_name"));
+                                if (awb != null) {
+                                    managed.setAwbNumber(awb);
+                                    managed.setCourierName(courier);
+                                    managed.setShippingStatus("AWB_ASSIGNED");
+                                    log.info("AWB assigned: {} via {} for order {}", awb, courier, managed.getId());
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    log.warn("AWB assignment failed for order {} — can be retried later: {}",
+                            managed.getId(), e.getMessage());
                 }
-            } catch (Exception e) {
-                log.warn("AWB assignment failed for order {} — can be retried later: {}",
-                        managed.getId(), e.getMessage());
-            }
 
-            try {
-                if (managed.getShiprocketShipmentId() != null) {
-                    requestPickup(managed.getShiprocketShipmentId());
+                try {
+                    requestPickup(shipmentId);
                     managed.setPickupScheduledAt(LocalDateTime.now());
                     managed.setShippingStatus("PICKUP_SCHEDULED");
                     log.info("Pickup requested for order {}", managed.getId());
+                } catch (Exception e) {
+                    log.warn("Pickup request failed for order {} — can be retried later: {}",
+                            managed.getId(), e.getMessage());
                 }
-            } catch (Exception e) {
-                log.warn("Pickup request failed for order {} — can be retried later: {}",
-                        managed.getId(), e.getMessage());
+            } else {
+                log.warn("No shipment_id returned for order {} — AWB/pickup will be skipped; "
+                        + "order is synced but needs manual courier assignment in Shiprocket dashboard",
+                        managed.getId());
             }
 
             orderRepository.save(managed);
@@ -401,6 +420,21 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Converts an API response value to a non-blank String, or {@code null}
+     * if the value is Java-null, the literal string {@code "null"} (produced
+     * by {@code String.valueOf(null)}), or blank.
+     */
+    static String toSafeString(Object value) {
+        if (value == null) return null;
+        String s = String.valueOf(value).trim();
+        return (s.isEmpty() || "null".equalsIgnoreCase(s)) ? null : s;
+    }
+
+    private static boolean isPresent(String value) {
+        return value != null && !value.isBlank() && !"null".equalsIgnoreCase(value);
+    }
 
     private static String extractFirstName(String fullName) {
         if (fullName == null || fullName.isBlank()) return "";
