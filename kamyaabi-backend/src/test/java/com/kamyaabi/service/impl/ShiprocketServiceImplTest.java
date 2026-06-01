@@ -32,7 +32,7 @@ class ShiprocketServiceImplTest {
     void setUp() {
         properties = new ShiprocketProperties();
         properties.setApiToken("test-api-token-123");
-        properties.setPickupLocation("Primary Warehouse");
+        properties.setPickupLocation("home");
         properties.setDefaultWeight(0.5);
         properties.setDefaultLength(10);
         properties.setDefaultBreadth(10);

@@ -82,7 +82,7 @@ app:
     email: ${SHIPROCKET_EMAIL:}
     password: ${SHIPROCKET_PASSWORD:}
     token-refresh-interval-seconds: ${SHIPROCKET_TOKEN_REFRESH_INTERVAL_SECONDS:777600}
-    pickup-location: ${SHIPROCKET_PICKUP_LOCATION:Primary Warehouse}
+    pickup-location: ${SHIPROCKET_PICKUP_LOCATION:home}
     channel-id: ${SHIPROCKET_CHANNEL_ID:}
     webhook-secret: ${SHIPROCKET_WEBHOOK_SECRET:}
     default-weight: ${SHIPROCKET_DEFAULT_WEIGHT:0.5}
