@@ -28,7 +28,8 @@ class OrderMapperTest {
         User user = User.builder().id(1L).email("test@kamyaabi.in").build();
         Address address = Address.builder().id(1L).user(user).fullName("Test").phone("123")
                 .street("St").city("City").state("State").pincode("123456").isDefault(false).build();
-        Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url").build();
+        Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url")
+                .weight("500").unit("g").build();
         OrderItem orderItem = OrderItem.builder().id(1L).product(product).quantity(2)
                 .price(new BigDecimal("749.00")).weightKg(new BigDecimal("0.500")).build();
         Order order = Order.builder().id(1L).user(user).shippingAddress(address)
@@ -77,7 +78,8 @@ class OrderMapperTest {
 
     @Test
     void toItemResponse_shouldMapAllFields() {
-        Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url").build();
+        Product product = Product.builder().id(1L).name("Cashews").imageUrl("http://img.url")
+                .weight("250").unit("g").build();
         OrderItem item = OrderItem.builder().id(1L).product(product).quantity(2)
                 .price(new BigDecimal("749.00")).weightKg(new BigDecimal("0.250")).build();
 
@@ -90,5 +92,7 @@ class OrderMapperTest {
         assertThat(response.price()).isEqualByComparingTo(new BigDecimal("749.00"));
         assertThat(response.subtotal()).isEqualByComparingTo(new BigDecimal("1498.00"));
         assertThat(response.weightKg()).isEqualByComparingTo(new BigDecimal("0.250"));
+        assertThat(response.productWeight()).isEqualTo("250");
+        assertThat(response.productUnit()).isEqualTo("g");
     }
 }

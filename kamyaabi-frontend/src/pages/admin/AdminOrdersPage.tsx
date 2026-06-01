@@ -194,11 +194,16 @@ const AdminOrdersPage: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    {o.totalWeightKg != null
-                      ? o.totalWeightKg < 1
-                        ? `${(o.totalWeightKg * 1000).toFixed(0)} g`
-                        : `${o.totalWeightKg} kg`
-                      : '—'}
+                    {o.items.length === 0
+                      ? '—'
+                      : o.items
+                          .map((item) =>
+                            item.productWeight
+                              ? `${item.productWeight}${item.productUnit ? ' ' + item.productUnit : ''}`
+                              : null
+                          )
+                          .filter(Boolean)
+                          .join(', ') || '—'}
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.8rem', minWidth: 140 }}>
                     {o.shippingAddress ? (

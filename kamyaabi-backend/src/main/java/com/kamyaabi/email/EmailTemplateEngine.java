@@ -192,7 +192,8 @@ public class EmailTemplateEngine {
         if (order.getItems() == null || order.getItems().isEmpty()) {
             return "";
         }
-        boolean hasWeight = order.getItems().stream().anyMatch(i -> i.getWeightKg() != null);
+        boolean hasWeight = order.getItems().stream()
+                .anyMatch(i -> i.getProduct().getWeight() != null && !i.getProduct().getWeight().isBlank());
         String rows = order.getItems().stream()
                 .map(i -> renderItemRow(i, hasWeight))
                 .collect(Collectors.joining());
@@ -210,10 +211,11 @@ public class EmailTemplateEngine {
 
     private String renderItemRow(OrderItem item, boolean showWeight) {
         BigDecimal subtotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+        String productWeightDisplay = formatProductWeight(item.getProduct().getWeight(), item.getProduct().getUnit());
         return "<tr>"
                 + "<td style=\"padding:10px;border-bottom:1px solid #eee;color:#333;\">" + escapeHtml(item.getProduct().getName()) + "</td>"
                 + "<td style=\"padding:10px;text-align:center;border-bottom:1px solid #eee;color:#555;\">" + item.getQuantity() + "</td>"
-                + (showWeight ? "<td style=\"padding:10px;text-align:center;border-bottom:1px solid #eee;color:#555;\">" + formatWeight(item.getWeightKg()) + "</td>" : "")
+                + (showWeight ? "<td style=\"padding:10px;text-align:center;border-bottom:1px solid #eee;color:#555;\">" + productWeightDisplay + "</td>" : "")
                 + "<td style=\"padding:10px;text-align:right;border-bottom:1px solid #eee;color:#555;\">" + formatCurrency(item.getPrice()) + "</td>"
                 + "<td style=\"padding:10px;text-align:right;border-bottom:1px solid #eee;color:#333;font-weight:bold;\">" + formatCurrency(subtotal) + "</td>"
                 + "</tr>";
@@ -285,6 +287,12 @@ public class EmailTemplateEngine {
                 + "<p style=\"margin:0;color:#bbb;font-size:11px;\">This is an automated email. Please do not reply directly.</p>"
                 + "</td></tr>"
                 + "</table></td></tr></table></body></html>";
+    }
+
+    private String formatProductWeight(String weight, String unit) {
+        if (weight == null || weight.isBlank()) return "\u2014";
+        String u = (unit != null && !unit.isBlank()) ? " " + escapeHtml(unit.trim()) : "";
+        return escapeHtml(weight.trim()) + u;
     }
 
     private String formatWeight(BigDecimal weightKg) {

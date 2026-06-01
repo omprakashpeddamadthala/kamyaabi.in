@@ -67,6 +67,8 @@ public class OrderMapper {
                 .price(item.getPrice())
                 .subtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .weightKg(item.getWeightKg())
+                .productWeight(item.getProduct().getWeight())
+                .productUnit(item.getProduct().getUnit())
                 .build();
     }
 }
