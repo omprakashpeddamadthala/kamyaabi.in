@@ -56,23 +56,41 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             return;
         }
 
-        try {
-            log.info("Syncing order {} to Shiprocket", order.getId());
+        // Re-fetch order within this transaction to ensure all lazy associations
+        // (items, shippingAddress, user) are available. The Order passed in may
+        // be a detached entity from an @Async/@TransactionalEventListener context.
+        Order managed = orderRepository.findByIdWithShiprocketDetails(order.getId())
+                .orElse(null);
+        if (managed == null) {
+            log.error("Order {} not found in DB — cannot sync to Shiprocket", order.getId());
+            return;
+        }
 
-            Map<String, Object> srResponse = createShiprocketOrder(order);
+        // Skip if already synced successfully (idempotency guard)
+        if (Boolean.TRUE.equals(managed.getShiprocketSynced())
+                && managed.getShiprocketOrderId() != null) {
+            log.info("Order {} already synced to Shiprocket (srOrderId={}), skipping duplicate sync",
+                    managed.getId(), managed.getShiprocketOrderId());
+            return;
+        }
+
+        try {
+            log.info("Syncing order {} to Shiprocket", managed.getId());
+
+            Map<String, Object> srResponse = createShiprocketOrder(managed);
             if (srResponse == null) {
-                log.error("Shiprocket createOrder returned null for order {}", order.getId());
+                log.error("Shiprocket createOrder returned null for order {}", managed.getId());
                 return;
             }
 
             String srOrderId = String.valueOf(srResponse.get("order_id"));
             String shipmentId = String.valueOf(srResponse.get("shipment_id"));
 
-            order.setShiprocketOrderId(srOrderId);
-            order.setShiprocketShipmentId(shipmentId);
-            order.setShiprocketSynced(true);
+            managed.setShiprocketOrderId(srOrderId);
+            managed.setShiprocketShipmentId(shipmentId);
+            managed.setShiprocketSynced(true);
             log.info("Shiprocket order created: orderId={}, shipmentId={} for order {}",
-                    srOrderId, shipmentId, order.getId());
+                    srOrderId, shipmentId, managed.getId());
 
             try {
                 Map<String, Object> awbResponse = assignAwb(shipmentId);
@@ -85,36 +103,36 @@ public class ShiprocketServiceImpl implements ShiprocketService {
                         if (awbAssignData != null) {
                             String awb = String.valueOf(awbAssignData.get("awb_code"));
                             String courier = String.valueOf(awbAssignData.get("courier_name"));
-                            order.setAwbNumber(awb);
-                            order.setCourierName(courier);
-                            order.setShippingStatus("AWB_ASSIGNED");
-                            log.info("AWB assigned: {} via {} for order {}", awb, courier, order.getId());
+                            managed.setAwbNumber(awb);
+                            managed.setCourierName(courier);
+                            managed.setShippingStatus("AWB_ASSIGNED");
+                            log.info("AWB assigned: {} via {} for order {}", awb, courier, managed.getId());
                         }
                     }
                 }
             } catch (Exception e) {
                 log.warn("AWB assignment failed for order {} — can be retried later: {}",
-                        order.getId(), e.getMessage());
+                        managed.getId(), e.getMessage());
             }
 
             try {
-                if (order.getShiprocketShipmentId() != null) {
-                    requestPickup(order.getShiprocketShipmentId());
-                    order.setPickupScheduledAt(LocalDateTime.now());
-                    order.setShippingStatus("PICKUP_SCHEDULED");
-                    log.info("Pickup requested for order {}", order.getId());
+                if (managed.getShiprocketShipmentId() != null) {
+                    requestPickup(managed.getShiprocketShipmentId());
+                    managed.setPickupScheduledAt(LocalDateTime.now());
+                    managed.setShippingStatus("PICKUP_SCHEDULED");
+                    log.info("Pickup requested for order {}", managed.getId());
                 }
             } catch (Exception e) {
                 log.warn("Pickup request failed for order {} — can be retried later: {}",
-                        order.getId(), e.getMessage());
+                        managed.getId(), e.getMessage());
             }
 
-            orderRepository.save(order);
+            orderRepository.save(managed);
 
         } catch (Exception e) {
-            log.error("Failed to sync order {} to Shiprocket: {}", order.getId(), e.getMessage(), e);
-            order.setShiprocketSynced(false);
-            orderRepository.save(order);
+            log.error("Failed to sync order {} to Shiprocket: {}", managed.getId(), e.getMessage(), e);
+            managed.setShiprocketSynced(false);
+            orderRepository.save(managed);
         }
     }
 

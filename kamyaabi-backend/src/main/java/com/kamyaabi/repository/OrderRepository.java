@@ -54,6 +54,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                                              @Param("since") LocalDateTime since,
                                              @Param("excluded") List<Order.OrderStatus> excluded);
 
+    @Query("SELECT DISTINCT o FROM Order o "
+            + "LEFT JOIN FETCH o.items i "
+            + "LEFT JOIN FETCH i.product "
+            + "LEFT JOIN FETCH o.shippingAddress "
+            + "LEFT JOIN FETCH o.user "
+            + "WHERE o.id = :id")
+    Optional<Order> findByIdWithShiprocketDetails(@Param("id") Long id);
+
     List<Order> findByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);
 
     long countByShiprocketSyncedFalseAndStatusIn(List<Order.OrderStatus> statuses);

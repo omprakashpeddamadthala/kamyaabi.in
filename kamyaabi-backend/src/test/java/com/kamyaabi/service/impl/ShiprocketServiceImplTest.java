@@ -65,13 +65,14 @@ class ShiprocketServiceImplTest {
         Order order = buildOrder();
         shiprocketService.syncOrderToShiprocket(order);
         verifyNoInteractions(restTemplate);
-        verifyNoInteractions(orderRepository);
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void syncOrderToShiprocket_success_setsFieldsAndSaves() {
         Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
 
         Map<String, Object> createResponse = new HashMap<>();
         createResponse.put("order_id", 12345);
@@ -116,6 +117,7 @@ class ShiprocketServiceImplTest {
     @SuppressWarnings("unchecked")
     void syncOrderToShiprocket_createOrderFails_marksSyncedFalse() {
         Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
 
         when(restTemplate.postForEntity(
                 contains("/orders/create/adhoc"),
@@ -227,6 +229,7 @@ class ShiprocketServiceImplTest {
     @SuppressWarnings("unchecked")
     void syncOrderToShiprocket_awbAssignmentFails_stillSavesOrder() {
         Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
 
         Map<String, Object> createResponse = new HashMap<>();
         createResponse.put("order_id", 12345);
@@ -339,6 +342,7 @@ class ShiprocketServiceImplTest {
                 .thenReturn(ResponseEntity.ok(Map.of()));
 
         Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
         shiprocketService.syncOrderToShiprocket(order);
 
         assertThat(order.getShiprocketOrderId()).isEqualTo("12345");
@@ -371,6 +375,7 @@ class ShiprocketServiceImplTest {
                         new HttpHeaders(), new byte[0], null));
 
         Order order = buildOrder();
+        when(orderRepository.findByIdWithShiprocketDetails(order.getId())).thenReturn(Optional.of(order));
         shiprocketService.syncOrderToShiprocket(order);
 
         assertThat(order.getShiprocketSynced()).isFalse();

@@ -18,12 +18,16 @@ public class ShiprocketEventListener {
         this.shiprocketService = shiprocketService;
     }
 
+    private static final java.util.Set<OrderEventType> SYNC_TRIGGERS = java.util.Set.of(
+            OrderEventType.PAYMENT_SUCCESS,
+            OrderEventType.COD_ORDER_PLACED,
+            OrderEventType.ORDER_CONFIRMED);
+
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderEvent(OrderEvent event) {
         OrderEventType eventType = event.getEventType();
-        if (eventType != OrderEventType.PAYMENT_SUCCESS
-                && eventType != OrderEventType.COD_ORDER_PLACED) {
+        if (!SYNC_TRIGGERS.contains(eventType)) {
             return;
         }
 
