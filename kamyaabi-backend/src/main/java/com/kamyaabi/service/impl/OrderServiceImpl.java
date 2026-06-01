@@ -236,12 +236,8 @@ public class OrderServiceImpl implements OrderService {
         Order saved = orderRepository.save(order);
         log.info("Order {} status updated from {} to {}", orderId, previousStatus, status);
 
-        if (status == Order.OrderStatus.PAID) {
-            log.info("Skipping email for admin PAID status update on order {} — payment verification handles this", orderId);
-        } else {
-            OrderEventType eventType = mapStatusToEventType(status);
-            orderEventPublisher.publishOrderEvent(saved, eventType);
-        }
+        OrderEventType eventType = mapStatusToEventType(status);
+        orderEventPublisher.publishOrderEvent(saved, eventType);
 
         return orderMapper.toResponse(saved);
     }

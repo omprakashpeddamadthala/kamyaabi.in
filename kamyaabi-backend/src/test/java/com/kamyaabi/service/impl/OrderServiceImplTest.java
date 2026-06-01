@@ -261,14 +261,14 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void updateOrderStatus_toPaid_shouldSkipEmailEvent() {
+    void updateOrderStatus_toPaid_shouldPublishPaymentSuccessEvent() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
 
         orderService.updateOrderStatus(1L, Order.OrderStatus.PAID);
 
-        verifyNoInteractions(orderEventPublisher);
+        verify(orderEventPublisher).publishOrderEvent(order, OrderEventType.PAYMENT_SUCCESS);
     }
 
     @Test

@@ -54,7 +54,7 @@ class ShiprocketEventListenerTest {
     }
 
     @Test
-    void handleOrderEvent_orderConfirmed_doesNotTriggerSync() {
+    void handleOrderEvent_orderConfirmed_triggersSync() {
         Order order = Order.builder().id(1L)
                 .totalAmount(new BigDecimal("100.00"))
                 .status(Order.OrderStatus.CONFIRMED)
@@ -64,7 +64,7 @@ class ShiprocketEventListenerTest {
         OrderEvent event = new OrderEvent(this, order, OrderEventType.ORDER_CONFIRMED);
         listener.handleOrderEvent(event);
 
-        verifyNoInteractions(shiprocketService);
+        verify(shiprocketService).syncOrderToShiprocket(order);
     }
 
     @Test
