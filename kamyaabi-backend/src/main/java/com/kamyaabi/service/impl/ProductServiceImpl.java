@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = CacheNames.PRODUCTS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
         log.debug("Fetching grouped active products, page: {}", pageable.getPageNumber());
-        return productRepository.findGroupedActiveProducts(pageable)
+        return productRepository.findGroupedActiveProducts(unsorted(pageable))
                 .map(this::toResponseWithVariationCount);
     }
 
@@ -90,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
         log.debug("Fetching grouped products by category: {}", categoryId);
-        return productRepository.findGroupedByCategoryId(categoryId, pageable)
+        return productRepository.findGroupedByCategoryId(categoryId, unsorted(pageable))
                 .map(this::toResponseWithVariationCount);
     }
 
@@ -98,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProductsByTag(String tagSlug, Pageable pageable) {
         log.debug("Fetching grouped products by tag: {}", tagSlug);
-        return productRepository.findGroupedByTagSlug(tagSlug, pageable)
+        return productRepository.findGroupedByTagSlug(tagSlug, unsorted(pageable))
                 .map(this::toResponseWithVariationCount);
     }
 
@@ -106,7 +107,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> searchProducts(String keyword, Pageable pageable) {
         log.debug("Searching grouped products with keyword: {}", keyword);
-        return productRepository.searchGroupedByKeyword(keyword, pageable)
+        return productRepository.searchGroupedByKeyword(keyword, unsorted(pageable))
                 .map(this::toResponseWithVariationCount);
     }
 
@@ -460,5 +461,9 @@ public class ProductServiceImpl implements ProductService {
 
     public static String slugify(String name) {
         return Slugifier.slugify(name);
+    }
+
+    private static Pageable unsorted(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     }
 }
