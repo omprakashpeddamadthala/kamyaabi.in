@@ -70,7 +70,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (!requesterAdmin && (requesterUserId == null || !order.getUser().getId().equals(requesterUserId))) {
             throw new ResourceNotFoundException("Order", orderId);
         }
-        if (order.getInvoiceUrl() == null || order.getInvoiceUrl().isBlank()) {
+        if (order.getInvoiceUrl() == null || order.getInvoiceUrl().isBlank()
+                || !invoiceStorage.exists(order.getInvoiceUrl())) {
             return generateInvoice(orderId);
         }
         return readExisting(order);

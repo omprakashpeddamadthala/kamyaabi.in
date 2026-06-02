@@ -107,6 +107,22 @@ class InvoiceServiceImplTest {
     }
 
     @Test
+    void getInvoice_storedUrlButFileMissing_regeneratesInvoice() {
+        paidOrder.setInvoiceUrl("/invoices/gone.pdf");
+        when(orderRepository.findByIdWithInvoiceDetails(100L)).thenReturn(Optional.of(paidOrder));
+        when(invoiceStorage.exists("/invoices/gone.pdf")).thenReturn(false);
+        when(templateRenderer.invoiceNumber(paidOrder)).thenReturn("INV-20260102-100");
+        when(templateRenderer.render(paidOrder, "INV-20260102-100")).thenReturn("<html></html>");
+        when(pdfRenderer.render("<html></html>")).thenReturn("pdf".getBytes());
+        when(invoiceStorage.store(any(String.class), any(byte[].class))).thenReturn("/invoices/invoice_100_new.pdf");
+
+        InvoiceDocument invoice = invoiceService.getInvoice(100L, 7L, false);
+
+        assertThat(invoice.invoiceUrl()).isEqualTo("/invoices/invoice_100_new.pdf");
+        verify(pdfRenderer).render("<html></html>");
+    }
+
+    @Test
     void generateInvoiceAfterPayment_retriesAndThenSucceeds() {
         when(orderRepository.findByIdWithInvoiceDetails(100L)).thenReturn(Optional.of(paidOrder));
         when(templateRenderer.invoiceNumber(paidOrder)).thenReturn("INV-20260102-100");
