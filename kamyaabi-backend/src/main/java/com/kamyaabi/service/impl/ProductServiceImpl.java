@@ -80,34 +80,34 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheNames.PRODUCTS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getAllProducts(Pageable pageable) {
-        log.debug("Fetching all active products, page: {}", pageable.getPageNumber());
-        return productRepository.findByActiveTrue(pageable)
-                .map(productMapper::toResponse);
+        log.debug("Fetching grouped active products, page: {}", pageable.getPageNumber());
+        return productRepository.findGroupedActiveProducts(pageable)
+                .map(this::toResponseWithVariationCount);
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
-        log.debug("Fetching products by category: {}", categoryId);
-        return productRepository.findByCategoryIdAndActiveTrue(categoryId, pageable)
-                .map(productMapper::toResponse);
+        log.debug("Fetching grouped products by category: {}", categoryId);
+        return productRepository.findGroupedByCategoryId(categoryId, pageable)
+                .map(this::toResponseWithVariationCount);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProductsByTag(String tagSlug, Pageable pageable) {
-        log.debug("Fetching products by tag: {}", tagSlug);
-        return productRepository.findByTagSlug(tagSlug, pageable)
-                .map(productMapper::toResponse);
+        log.debug("Fetching grouped products by tag: {}", tagSlug);
+        return productRepository.findGroupedByTagSlug(tagSlug, pageable)
+                .map(this::toResponseWithVariationCount);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponse> searchProducts(String keyword, Pageable pageable) {
-        log.debug("Searching products with keyword: {}", keyword);
-        return productRepository.searchByKeyword(keyword, pageable)
-                .map(productMapper::toResponse);
+        log.debug("Searching grouped products with keyword: {}", keyword);
+        return productRepository.searchGroupedByKeyword(keyword, pageable)
+                .map(this::toResponseWithVariationCount);
     }
 
     @Override
@@ -117,7 +117,9 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Fetching product by id: {}", id);
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
-        return productMapper.toResponse(product);
+        List<Product> variations = productRepository.findVariations(
+                product.getName(), product.getCategory().getId());
+        return productMapper.toResponse(product, variations);
     }
 
     @Override
@@ -127,7 +129,27 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Fetching product by slug: {}", slug);
         Product product = productRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with slug '" + slug + "' not found"));
-        return productMapper.toResponse(product);
+        List<Product> variations = productRepository.findVariations(
+                product.getName(), product.getCategory().getId());
+        return productMapper.toResponse(product, variations);
+    }
+
+    private ProductResponse toResponseWithVariationCount(Product product) {
+        long count = productRepository.countVariations(
+                product.getName(), product.getCategory().getId());
+        ProductResponse response = productMapper.toResponse(product);
+        if (count <= 1) {
+            return response;
+        }
+        return new ProductResponse(
+                response.id(), response.name(), response.slug(), response.description(),
+                response.price(), response.discountPrice(), response.imageUrl(), response.mainImageUrl(),
+                response.images(), response.categoryId(), response.categoryName(), response.tags(),
+                response.stock(), response.weight(), response.unit(), response.shelfLife(),
+                response.nutritionalInfo(), response.howToUse(), response.storageTips(),
+                response.active(), response.createdAt(), response.seoTitle(), response.seoDescription(),
+                response.seoKeywords(), response.ogImageUrl(), response.canonicalUrl(),
+                null, (int) count);
     }
 
     @Override
@@ -137,7 +159,7 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         String slug = product.getSlug();
         if (slug == null || slug.isBlank()) {
-            slug = resolveSlug(null, product.getName(), product.getId());
+            slug = resolveSlug(null, slugBase(product.getName(), product.getWeight(), product.getUnit()), product.getId());
             product.setSlug(slug);
             productRepository.save(product);
         }
@@ -151,7 +173,7 @@ public class ProductServiceImpl implements ProductService {
         log.debug("Fetching featured products");
         return productRepository.findTop8ByActiveTrueOrderByCreatedAtDesc()
                 .stream()
-                .map(productMapper::toResponse)
+                .map(this::toResponseWithVariationCount)
                 .toList();
     }
 
@@ -181,7 +203,7 @@ public class ProductServiceImpl implements ProductService {
                 uploaded.add(cloudinaryService.uploadImage(file));
             }
                 Product product = productMapper.toEntity(request, category);
-                product.setSlug(resolveSlug(null, request.name(), null));
+                product.setSlug(resolveSlug(null, slugBase(request.name(), request.weight(), request.unit()), null));
                 applyTags(product, request.tagIds());
             for (int i = 0; i < uploaded.size(); i++) {
                 CloudinaryService.UploadResult ur = uploaded.get(i);
@@ -220,10 +242,15 @@ public class ProductServiceImpl implements ProductService {
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
         String previousName = product.getName();
+        String previousWeight = product.getWeight();
+        String previousUnit = product.getUnit();
         productMapper.updateEntity(product, request, category);
+        boolean nameChanged = previousName != null && !previousName.equals(request.name());
+        boolean weightChanged = !java.util.Objects.equals(previousWeight, request.weight());
+        boolean unitChanged = !java.util.Objects.equals(previousUnit, request.unit());
         if (product.getSlug() == null || product.getSlug().isBlank()
-                || (previousName != null && !previousName.equals(request.name()))) {
-            product.setSlug(resolveSlug(null, request.name(), product.getId()));
+                || nameChanged || weightChanged || unitChanged) {
+            product.setSlug(resolveSlug(null, slugBase(request.name(), request.weight(), request.unit()), product.getId()));
         }
         applyTags(product, request.tagIds());
 
@@ -388,6 +415,17 @@ public class ProductServiceImpl implements ProductService {
                 productImageRepository.save(newMain);
             }
         }
+    }
+
+    static String slugBase(String name, String weight, String unit) {
+        StringBuilder sb = new StringBuilder(name);
+        if (weight != null && !weight.isBlank()) {
+            sb.append(' ').append(weight.trim());
+            if (unit != null && !unit.isBlank()) {
+                sb.append(unit.trim());
+            }
+        }
+        return sb.toString();
     }
 
     String resolveSlug(String requested, String name, Long currentId) {

@@ -746,6 +746,74 @@ const ProductDetailPage: React.FC = () => {
               {inStock ? 'In stock' : 'Out of stock'}
             </Typography>
 
+            {/* Variation selector */}
+            {product.variations && product.variations.length > 1 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#0F1111' }}>
+                  Available Sizes:
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {product.variations.map((v) => {
+                    const isSelected = v.id === product.id;
+                    const vHasDiscount = v.discountPrice !== null && v.discountPrice > 0 && v.discountPrice < v.price;
+                    const vPrice = vHasDiscount ? v.discountPrice : v.price;
+                    const outOfStock = v.stock === 0;
+                    return (
+                      <Box
+                        key={v.id}
+                        onClick={() => {
+                          if (!isSelected && v.slug) navigate(`/products/${v.slug}`);
+                        }}
+                        sx={{
+                          border: '2px solid',
+                          borderColor: isSelected ? 'primary.main' : outOfStock ? '#E0E0E0' : '#D5D9D9',
+                          borderRadius: 2,
+                          px: 2,
+                          py: 1,
+                          cursor: outOfStock && !isSelected ? 'not-allowed' : 'pointer',
+                          bgcolor: isSelected ? 'primary.50' : outOfStock ? '#FAFAFA' : '#fff',
+                          opacity: outOfStock && !isSelected ? 0.6 : 1,
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            borderColor: outOfStock && !isSelected ? '#E0E0E0' : 'primary.main',
+                            boxShadow: outOfStock && !isSelected ? 'none' : '0 1px 5px rgba(0,0,0,0.1)',
+                          },
+                          minWidth: 80,
+                          textAlign: 'center',
+                          position: 'relative',
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: isSelected ? 700 : 500,
+                            color: isSelected ? 'primary.main' : '#0F1111',
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          {v.weight} {v.unit}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: isSelected ? 'primary.dark' : 'text.secondary',
+                            fontWeight: 500,
+                          }}
+                        >
+                          ₹{vPrice}
+                        </Typography>
+                        {outOfStock && (
+                          <Typography variant="caption" sx={{ display: 'block', color: '#CC0C39', fontSize: '0.65rem' }}>
+                            Out of stock
+                          </Typography>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
+
             {/* Category link */}
             {product.categoryName && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>

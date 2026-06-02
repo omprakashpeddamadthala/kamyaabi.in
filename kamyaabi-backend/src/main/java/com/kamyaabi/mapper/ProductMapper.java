@@ -6,6 +6,7 @@ import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductImageResponse;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.dto.response.ProductTagResponse;
+import com.kamyaabi.dto.response.ProductVariationResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
@@ -34,6 +35,10 @@ public class ProductMapper {
     }
 
     public ProductResponse toResponse(Product product) {
+        return toResponse(product, null);
+    }
+
+    public ProductResponse toResponse(Product product, List<Product> variations) {
         List<ProductImage> images = product.getImages() == null
                 ? Collections.emptyList()
                 : product.getImages();
@@ -51,6 +56,16 @@ public class ProductMapper {
                             .build())
                     .toList()
                 : Collections.emptyList();
+
+        List<ProductVariationResponse> variationResponses = null;
+        int variationCount = 0;
+        if (variations != null && !variations.isEmpty()) {
+            variationCount = variations.size();
+            variationResponses = variations.stream()
+                    .map(this::toVariationResponse)
+                    .toList();
+        }
+
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -78,6 +93,25 @@ public class ProductMapper {
                 .seoKeywords(product.getSeoKeywords())
                 .ogImageUrl(product.getOgImageUrl())
                 .canonicalUrl(product.getCanonicalUrl())
+                .variations(variationResponses)
+                .variationCount(variationCount)
+                .build();
+    }
+
+    public ProductVariationResponse toVariationResponse(Product product) {
+        List<ProductImage> images = product.getImages() == null
+                ? Collections.emptyList()
+                : product.getImages();
+        String mainImageUrl = resolveMainImageUrl(images, product.getImageUrl());
+        return ProductVariationResponse.builder()
+                .id(product.getId())
+                .slug(product.getSlug())
+                .weight(product.getWeight())
+                .unit(product.getUnit())
+                .price(product.getPrice())
+                .discountPrice(product.getDiscountPrice())
+                .stock(product.getStock())
+                .mainImageUrl(mainImageUrl)
                 .build();
     }
 

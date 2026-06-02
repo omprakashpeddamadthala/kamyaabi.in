@@ -232,6 +232,8 @@ const AdminProductsPage: React.FC = () => {
               <TableCell sx={{ width: 80 }}>Image</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Category</TableCell>
+              <TableCell>Weight</TableCell>
+              <TableCell>Unit</TableCell>
               <TableCell>Price (MRP)</TableCell>
               <TableCell>Discount Price</TableCell>
               <TableCell>Stock</TableCell>
@@ -241,10 +243,10 @@ const AdminProductsPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={8} />
+              <TableSkeleton rows={5} columns={10} />
             ) : products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     No products match the current filters.
                   </Typography>
@@ -269,6 +271,8 @@ const AdminProductsPage: React.FC = () => {
                     </TableCell>
                     <TableCell>{p.name}</TableCell>
                     <TableCell>{p.categoryName}</TableCell>
+                    <TableCell>{p.weight || '—'}</TableCell>
+                    <TableCell>{p.unit || '—'}</TableCell>
                     <TableCell>₹{p.price}</TableCell>
                     <TableCell>{p.discountPrice ? `₹${p.discountPrice}` : '—'}</TableCell>
                     <TableCell>{p.stock}</TableCell>

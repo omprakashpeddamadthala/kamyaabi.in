@@ -151,6 +151,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             }}
           />
         )}
+        {(product.variationCount ?? 0) > 1 && (
+          <Chip
+            label={`${product.variationCount} sizes`}
+            size="small"
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              left: 8,
+              fontWeight: 600,
+              fontSize: '0.6rem',
+              height: 20,
+              bgcolor: 'rgba(25,118,210,0.9)',
+              color: '#fff',
+              backdropFilter: 'blur(4px)',
+            }}
+          />
+        )}
         {hasDiscount && (
           <Chip
             label={`${discountPercent}% OFF`}
@@ -186,6 +203,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         >
           {product.name}
         </Typography>
+
+        {product.weight && (
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.25 }}>
+            {product.weight} {product.unit}
+            {(product.variationCount ?? 0) > 1 && ` + ${(product.variationCount ?? 0) - 1} more`}
+          </Typography>
+        )}
 
         {ratingInfo && ratingInfo.count > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
