@@ -87,7 +87,7 @@ const OrderDetailPage: React.FC = () => {
       window.URL.revokeObjectURL(url);
       dispatch(fetchOrderById(order.id));
     } catch {
-      setInvoiceError('Invoice is available after payment confirmation. Please try again later.');
+      setInvoiceError('Failed to download invoice. Please try again later.');
     } finally {
       setInvoiceLoading(false);
     }
@@ -173,12 +173,12 @@ const OrderDetailPage: React.FC = () => {
         </Alert>
       )}
 
-      {(order.status === 'PAID' || order.status === 'CONFIRMED' || order.status === 'PROCESSING' || order.status === 'SHIPPED' || order.status === 'DELIVERED') && (
+      {order.status !== 'CANCELLED' && (
         <Card sx={{ p: { xs: 2, sm: 3 }, mb: 4, '&:hover': { transform: 'none' }, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>Invoice</Typography>
             <Typography variant="body2" color="text.secondary">
-              {order.invoiceGenerated ? `Ready${order.invoiceNumber ? `: ${order.invoiceNumber}` : ''}` : 'Generating shortly after payment'}
+              {order.invoiceGenerated ? `Ready${order.invoiceNumber ? `: ${order.invoiceNumber}` : ''}` : 'Download your order invoice'}
             </Typography>
           </Box>
           <Button
