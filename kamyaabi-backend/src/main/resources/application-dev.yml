@@ -96,6 +96,7 @@ app:
     pickup-location: ${SHIPROCKET_PICKUP_LOCATION:home}
     channel-id: ${SHIPROCKET_CHANNEL_ID:}
     webhook-secret: ${SHIPROCKET_WEBHOOK_SECRET:}
+    pickup-pincode: ${SHIPROCKET_PICKUP_PINCODE:500081}
     default-weight: ${SHIPROCKET_DEFAULT_WEIGHT:0.5}
     default-length: ${SHIPROCKET_DEFAULT_LENGTH:10}
     default-breadth: ${SHIPROCKET_DEFAULT_BREADTH:10}

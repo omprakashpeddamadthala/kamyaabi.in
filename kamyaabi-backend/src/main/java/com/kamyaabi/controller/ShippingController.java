@@ -1,6 +1,7 @@
 package com.kamyaabi.controller;
 
 import com.kamyaabi.dto.response.ApiResponse;
+import com.kamyaabi.dto.response.PincodeServiceabilityResponse;
 import com.kamyaabi.dto.response.PublicOrderTrackingResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.exception.BadRequestException;
@@ -81,6 +82,18 @@ public class ShippingController {
         return ResponseEntity.ok(ApiResponse.success(buildPublicTracking(
                 orderRepository.findByAwbNumber(awb)
                         .orElseThrow(() -> new ResourceNotFoundException("No order found for AWB: " + awb)))));
+    }
+
+    @GetMapping("/serviceability")
+    @Operation(summary = "Check pincode serviceability",
+            description = "Check if delivery is available to the given pincode via Shiprocket. No authentication required.")
+    public ResponseEntity<ApiResponse<PincodeServiceabilityResponse>> checkServiceability(
+            @RequestParam String pincode,
+            @RequestParam(defaultValue = "0.5") double weight) {
+        if (pincode == null || !pincode.matches("^[1-9][0-9]{5}$")) {
+            throw new BadRequestException("Please enter a valid 6-digit pincode");
+        }
+        return ResponseEntity.ok(ApiResponse.success(shiprocketService.checkServiceability(pincode, weight)));
     }
 
     private PublicOrderTrackingResponse buildPublicTracking(Order order) {

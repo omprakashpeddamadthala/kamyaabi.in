@@ -1,6 +1,7 @@
 package com.kamyaabi.service.impl;
 
 import com.kamyaabi.config.ShiprocketProperties;
+import com.kamyaabi.dto.response.PincodeServiceabilityResponse;
 import com.kamyaabi.entity.Address;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.entity.OrderItem;
@@ -230,6 +231,108 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             } catch (Exception e) {
                 log.error("Retry failed for order {}: {}", order.getId(), e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public PincodeServiceabilityResponse checkServiceability(String pincode, double weight) {
+        if (!isConfigured()) {
+            return PincodeServiceabilityResponse.builder()
+                    .serviceable(false)
+                    .pincode(pincode)
+                    .message("Shipping service is not configured")
+                    .build();
+        }
+
+        String pickupPincode = properties.getPickupPincode();
+        if (pickupPincode == null || pickupPincode.isBlank()) {
+            return PincodeServiceabilityResponse.builder()
+                    .serviceable(false)
+                    .pincode(pincode)
+                    .message("Pickup pincode is not configured")
+                    .build();
+        }
+
+        try {
+            String url = BASE_URL + "/courier/serviceability/"
+                    + "?pickup_postcode=" + pickupPincode.trim()
+                    + "&delivery_postcode=" + pincode.trim()
+                    + "&weight=" + weight
+                    + "&cod=1";
+
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
+                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
+                return restTemplate.exchange(url, HttpMethod.GET, request,
+                        (Class<Map<String, Object>>) (Class<?>) Map.class);
+            });
+
+            Map<String, Object> body = response.getBody();
+            if (body == null) {
+                return PincodeServiceabilityResponse.builder()
+                        .serviceable(false)
+                        .pincode(pincode)
+                        .message("No response from shipping service")
+                        .build();
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) body.get("data");
+            if (data == null) {
+                return PincodeServiceabilityResponse.builder()
+                        .serviceable(false)
+                        .pincode(pincode)
+                        .message("Delivery is not available to this pincode")
+                        .build();
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> couriers = (List<Map<String, Object>>) data.get("available_courier_companies");
+            if (couriers == null || couriers.isEmpty()) {
+                return PincodeServiceabilityResponse.builder()
+                        .serviceable(false)
+                        .pincode(pincode)
+                        .message("Delivery is not available to this pincode")
+                        .build();
+            }
+
+            Map<String, Object> bestCourier = couriers.get(0);
+            Integer etd = parseEstimatedDays(bestCourier.get("estimated_delivery_days"));
+            String courierName = toSafeString(bestCourier.get("courier_name"));
+            String city = toSafeString(bestCourier.get("city"));
+            String state = toSafeString(bestCourier.get("state"));
+            Object codObj = bestCourier.get("cod");
+            String cod = codObj != null && ("1".equals(String.valueOf(codObj)) || Boolean.TRUE.equals(codObj))
+                    ? "Yes" : "No";
+
+            return PincodeServiceabilityResponse.builder()
+                    .serviceable(true)
+                    .pincode(pincode)
+                    .city(city)
+                    .state(state)
+                    .estimatedDays(etd)
+                    .courierName(courierName)
+                    .codAvailable(cod)
+                    .message("Delivery is available to this pincode")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Serviceability check failed for pincode {}: {}", pincode, e.getMessage());
+            return PincodeServiceabilityResponse.builder()
+                    .serviceable(false)
+                    .pincode(pincode)
+                    .message("Unable to verify delivery availability. Please try again.")
+                    .build();
+        }
+    }
+
+    private static Integer parseEstimatedDays(Object value) {
+        if (value == null) return null;
+        String s = String.valueOf(value).trim();
+        try {
+            return (int) Math.ceil(Double.parseDouble(s));
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

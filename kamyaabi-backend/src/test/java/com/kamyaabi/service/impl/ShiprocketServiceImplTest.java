@@ -424,6 +424,128 @@ class ShiprocketServiceImplTest {
                 any(Class.class));
     }
 
+    // ── checkServiceability tests ─────────────────────────────────────────
+
+    @Test
+    void checkServiceability_whenNotConfigured_returnsNotServiceable() {
+        properties.setApiToken("");
+        var result = shiprocketService.checkServiceability("500081", 0.5);
+        assertThat(result.serviceable()).isFalse();
+        assertThat(result.message()).contains("not configured");
+    }
+
+    @Test
+    void checkServiceability_whenPickupPincodeBlank_returnsNotServiceable() {
+        properties.setPickupPincode("");
+        var result = shiprocketService.checkServiceability("500081", 0.5);
+        assertThat(result.serviceable()).isFalse();
+        assertThat(result.message()).contains("Pickup pincode");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkServiceability_serviceable_returnsDetails() {
+        properties.setPickupPincode("500081");
+
+        Map<String, Object> courier = new LinkedHashMap<>();
+        courier.put("courier_name", "Delhivery");
+        courier.put("estimated_delivery_days", "3");
+        courier.put("city", "Hyderabad");
+        courier.put("state", "Telangana");
+        courier.put("cod", 1);
+
+        Map<String, Object> data = Map.of("available_courier_companies", List.of(courier));
+        Map<String, Object> body = Map.of("data", data);
+
+        when(restTemplate.exchange(
+                contains("/courier/serviceability"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        var result = shiprocketService.checkServiceability("400001", 0.5);
+        assertThat(result.serviceable()).isTrue();
+        assertThat(result.city()).isEqualTo("Hyderabad");
+        assertThat(result.state()).isEqualTo("Telangana");
+        assertThat(result.estimatedDays()).isEqualTo(3);
+        assertThat(result.courierName()).isEqualTo("Delhivery");
+        assertThat(result.codAvailable()).isEqualTo("Yes");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkServiceability_noCouriers_returnsNotServiceable() {
+        properties.setPickupPincode("500081");
+
+        Map<String, Object> data = Map.of("available_courier_companies", List.of());
+        Map<String, Object> body = Map.of("data", data);
+
+        when(restTemplate.exchange(
+                contains("/courier/serviceability"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        var result = shiprocketService.checkServiceability("999999", 0.5);
+        assertThat(result.serviceable()).isFalse();
+        assertThat(result.message()).contains("not available");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkServiceability_nullData_returnsNotServiceable() {
+        properties.setPickupPincode("500081");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", null);
+
+        when(restTemplate.exchange(
+                contains("/courier/serviceability"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        var result = shiprocketService.checkServiceability("400001", 0.5);
+        assertThat(result.serviceable()).isFalse();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkServiceability_apiException_returnsGracefulError() {
+        properties.setPickupPincode("500081");
+
+        when(restTemplate.exchange(
+                contains("/courier/serviceability"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenThrow(new RuntimeException("Network error"));
+
+        var result = shiprocketService.checkServiceability("400001", 0.5);
+        assertThat(result.serviceable()).isFalse();
+        assertThat(result.message()).contains("try again");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkServiceability_nullBody_returnsNotServiceable() {
+        properties.setPickupPincode("500081");
+
+        when(restTemplate.exchange(
+                contains("/courier/serviceability"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(null));
+
+        var result = shiprocketService.checkServiceability("400001", 0.5);
+        assertThat(result.serviceable()).isFalse();
+        assertThat(result.message()).contains("No response");
+    }
+
     private Order buildOrder() {
         User user = User.builder().id(1L).email("customer@test.com").name("Test User").build();
         Address address = Address.builder().id(1L).user(user)
