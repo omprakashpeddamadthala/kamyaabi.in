@@ -18,4 +18,8 @@ public interface ShiprocketService {
     void retryFailedOrders();
 
     PincodeServiceabilityResponse checkServiceability(String pincode, double weight);
+
+    void refreshShipmentStatus(Order order);
+
+    int refreshAllShipmentStatuses();
 }

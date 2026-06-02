@@ -133,9 +133,9 @@ public class AdminShiprocketController {
     }
 
     @PostMapping("/sync/{orderId}")
-    @Operation(summary = "Manually trigger Shiprocket sync",
-            description = "Force a re-sync of the given order to Shiprocket. Useful when the automatic "
-                    + "background retry hasn't picked up a failed order yet.")
+    @Operation(summary = "Manually trigger Shiprocket sync or status refresh",
+            description = "For unsynced orders, pushes the order to Shiprocket. For already-synced orders, "
+                    + "fetches the latest AWB, courier, and shipping status from Shiprocket.")
     public ResponseEntity<ApiResponse<OrderResponse>> syncOrder(@PathVariable Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
@@ -144,13 +144,33 @@ public class AdminShiprocketController {
             throw new BadRequestException("Shiprocket is not configured on this environment");
         }
 
-        log.info("Admin-triggered Shiprocket sync for order {}", orderId);
-        shiprocketService.syncOrderToShiprocket(order);
+        if (Boolean.TRUE.equals(order.getShiprocketSynced()) && order.getShiprocketOrderId() != null) {
+            log.info("Admin-triggered Shiprocket status refresh for order {}", orderId);
+            shiprocketService.refreshShipmentStatus(order);
+        } else {
+            log.info("Admin-triggered Shiprocket sync for order {}", orderId);
+            shiprocketService.syncOrderToShiprocket(order);
+        }
 
         Order refreshed = orderRepository.findAllWithDetailsByIdIn(List.of(orderId)).stream()
                 .findFirst()
                 .orElse(order);
         return ResponseEntity.ok(ApiResponse.success("Shiprocket sync triggered", orderMapper.toResponse(refreshed)));
+    }
+
+    @PostMapping("/refresh-all")
+    @Operation(summary = "Refresh shipment status for all synced orders",
+            description = "Fetches the latest AWB, courier, and shipping status from Shiprocket for all "
+                    + "synced orders that are not yet delivered or cancelled.")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> refreshAll() {
+        if (!shiprocketService.isConfigured()) {
+            throw new BadRequestException("Shiprocket is not configured on this environment");
+        }
+
+        log.info("Admin-triggered bulk Shiprocket status refresh");
+        int refreshed = shiprocketService.refreshAllShipmentStatuses();
+        return ResponseEntity.ok(ApiResponse.success("Refreshed " + refreshed + " orders",
+                Map.of("refreshedCount", refreshed)));
     }
 
     @GetMapping("/track/{orderId}")

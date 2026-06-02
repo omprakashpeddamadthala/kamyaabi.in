@@ -89,4 +89,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o WHERE o.paymentMethod = :method ORDER BY o.createdAt DESC")
     Page<Order> findByPaymentMethodOrderByCreatedAtDesc(@Param("method") Order.PaymentMethod method, Pageable pageable);
+
+    @Query("SELECT o FROM Order o WHERE o.shiprocketSynced = true AND o.shiprocketOrderId IS NOT NULL "
+            + "AND o.status NOT IN :terminalStatuses")
+    List<Order> findSyncedOrdersNotInTerminalStatus(@Param("terminalStatuses") List<Order.OrderStatus> terminalStatuses);
+
+    Optional<Order> findByShiprocketOrderId(String shiprocketOrderId);
 }

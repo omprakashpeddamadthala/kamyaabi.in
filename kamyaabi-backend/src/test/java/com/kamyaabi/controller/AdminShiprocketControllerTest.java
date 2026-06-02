@@ -125,8 +125,8 @@ class AdminShiprocketControllerTest {
     }
 
     @Test
-    void syncOrder_happyPath_invokesShiprocketSync() {
-        Order order = Order.builder().id(1L).build();
+    void syncOrder_unsyncedOrder_invokesShiprocketSync() {
+        Order order = Order.builder().id(1L).shiprocketSynced(false).build();
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(shiprocketService.isConfigured()).thenReturn(true);
         when(orderRepository.findAllWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(order));
@@ -136,6 +136,45 @@ class AdminShiprocketControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(shiprocketService).syncOrderToShiprocket(order);
+        verify(shiprocketService, never()).refreshShipmentStatus(any());
+    }
+
+    @Test
+    void syncOrder_alreadySynced_invokesRefreshShipmentStatus() {
+        Order order = Order.builder().id(1L)
+                .shiprocketSynced(true)
+                .shiprocketOrderId("12345")
+                .build();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(shiprocketService.isConfigured()).thenReturn(true);
+        when(orderRepository.findAllWithDetailsByIdIn(List.of(1L))).thenReturn(List.of(order));
+        when(orderMapper.toResponse(order)).thenReturn(OrderResponse.builder().id(1L).build());
+
+        ResponseEntity<ApiResponse<OrderResponse>> response = controller.syncOrder(1L);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(shiprocketService).refreshShipmentStatus(order);
+        verify(shiprocketService, never()).syncOrderToShiprocket(any());
+    }
+
+    @Test
+    void refreshAll_shiprocketNotConfigured_throws() {
+        when(shiprocketService.isConfigured()).thenReturn(false);
+
+        assertThatThrownBy(() -> controller.refreshAll())
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshAll_returnsRefreshedCount() {
+        when(shiprocketService.isConfigured()).thenReturn(true);
+        when(shiprocketService.refreshAllShipmentStatuses()).thenReturn(5);
+
+        ResponseEntity<ApiResponse<Map<String, Object>>> response = controller.refreshAll();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().data()).containsEntry("refreshedCount", 5);
     }
 
     @Test

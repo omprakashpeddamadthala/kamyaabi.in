@@ -336,6 +336,146 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
     }
 
+    @Override
+    @Transactional
+    public void refreshShipmentStatus(Order order) {
+        if (!isConfigured()) {
+            log.warn("Shiprocket not configured — skipping status refresh for order {}", order.getId());
+            return;
+        }
+
+        if (order.getShiprocketOrderId() == null || order.getShiprocketOrderId().isBlank()) {
+            log.warn("Order {} has no Shiprocket order ID — cannot refresh status", order.getId());
+            return;
+        }
+
+        try {
+            log.info("Refreshing shipment status from Shiprocket for order {} (srOrderId={})",
+                    order.getId(), order.getShiprocketOrderId());
+
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
+                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
+                return restTemplate.exchange(
+                        BASE_URL + "/orders/show/" + order.getShiprocketOrderId(),
+                        HttpMethod.GET, request,
+                        (Class<Map<String, Object>>) (Class<?>) Map.class);
+            });
+
+            Map<String, Object> body = response.getBody();
+            if (body == null) {
+                log.warn("Shiprocket returned empty body for order {}", order.getId());
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> orderData = (Map<String, Object>) body.get("data");
+            if (orderData == null) {
+                orderData = body;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> shipments = (List<Map<String, Object>>) orderData.get("shipments");
+            if (shipments != null && !shipments.isEmpty()) {
+                Map<String, Object> shipment = shipments.get(0);
+
+                String awb = toSafeString(shipment.get("awb_code"));
+                String courier = toSafeString(shipment.get("courier_name"));
+                String status = toSafeString(shipment.get("status"));
+                String shipmentId = toSafeString(shipment.get("id"));
+
+                boolean updated = false;
+
+                if (awb != null && (order.getAwbNumber() == null || order.getAwbNumber().isBlank())) {
+                    order.setAwbNumber(awb);
+                    updated = true;
+                }
+                if (courier != null && (order.getCourierName() == null || order.getCourierName().isBlank())) {
+                    order.setCourierName(courier);
+                    updated = true;
+                }
+                if (shipmentId != null && (order.getShiprocketShipmentId() == null || order.getShiprocketShipmentId().isBlank())) {
+                    order.setShiprocketShipmentId(shipmentId);
+                    updated = true;
+                }
+                if (status != null) {
+                    order.setShippingStatus(status);
+                    updated = true;
+                    mapShiprocketStatusToOrderStatus(order, status);
+                }
+
+                if (updated) {
+                    orderRepository.save(order);
+                    log.info("Order {} updated from Shiprocket: awb={}, courier={}, status={}",
+                            order.getId(), awb, courier, status);
+                } else {
+                    log.info("No new status data from Shiprocket for order {}", order.getId());
+                }
+            } else {
+                log.info("No shipments found in Shiprocket response for order {}", order.getId());
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to refresh shipment status for order {}: {}",
+                    order.getId(), e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public int refreshAllShipmentStatuses() {
+        if (!isConfigured()) {
+            return 0;
+        }
+
+        List<Order> orders = orderRepository.findSyncedOrdersNotInTerminalStatus(
+                List.of(Order.OrderStatus.DELIVERED, Order.OrderStatus.CANCELLED));
+
+        if (orders.isEmpty()) {
+            return 0;
+        }
+
+        log.info("Refreshing shipment status for {} synced orders", orders.size());
+        int refreshed = 0;
+        for (Order order : orders) {
+            try {
+                refreshShipmentStatus(order);
+                refreshed++;
+            } catch (Exception e) {
+                log.error("Status refresh failed for order {}: {}", order.getId(), e.getMessage());
+            }
+        }
+        return refreshed;
+    }
+
+    private void mapShiprocketStatusToOrderStatus(Order order, String shiprocketStatus) {
+        if (shiprocketStatus == null) return;
+        String statusUpper = shiprocketStatus.toUpperCase().trim();
+
+        switch (statusUpper) {
+            case "PICKED UP" -> order.setStatus(
+                    order.getStatus() != Order.OrderStatus.SHIPPED
+                            ? Order.OrderStatus.PROCESSING : order.getStatus());
+            case "IN TRANSIT", "SHIPPED" -> order.setStatus(Order.OrderStatus.SHIPPED);
+            case "OUT FOR DELIVERY" -> {
+                order.setStatus(Order.OrderStatus.SHIPPED);
+                order.setShippingStatus("OUT_FOR_DELIVERY");
+            }
+            case "DELIVERED" -> {
+                order.setStatus(Order.OrderStatus.DELIVERED);
+                if (order.getDeliveredAt() == null) {
+                    order.setDeliveredAt(LocalDateTime.now());
+                }
+            }
+            case "CANCELLED", "RTO INITIATED", "RTO" -> {
+                // Don't auto-cancel — let admin decide
+                log.info("Shiprocket status '{}' received for order {} — not auto-updating order status",
+                        shiprocketStatus, order.getId());
+            }
+            default -> log.debug("Unmapped Shiprocket status '{}' for order {}", shiprocketStatus, order.getId());
+        }
+    }
+
     // ── Shiprocket API methods ──────────────────────────────────────────────
 
     private Map<String, Object> createShiprocketOrder(Order order) {
