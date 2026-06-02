@@ -108,6 +108,8 @@ const AdminShiprocketDashboardPage: React.FC = () => {
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('');
   const [syncingOrderId, setSyncingOrderId] = useState<number | null>(null);
 
+  const [refreshingAll, setRefreshingAll] = useState(false);
+
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingData, setTrackingData] = useState<Record<string, unknown> | null>(null);
@@ -164,6 +166,20 @@ const AdminShiprocketDashboardPage: React.FC = () => {
     }
   };
 
+  const handleRefreshAll = async () => {
+    setRefreshingAll(true);
+    try {
+      const res = await adminApi.refreshAllShiprocketStatuses();
+      const count = res.data.data.refreshedCount;
+      showSuccess(`Refreshed shipment status for ${count} order(s)`);
+      await Promise.all([loadStats(), loadOrders()]);
+    } catch (err) {
+      showError(parseApiError(err, 'Failed to refresh shipment statuses').message);
+    } finally {
+      setRefreshingAll(false);
+    }
+  };
+
   const handleTrack = async (order: Order) => {
     setTrackingOrder(order);
     setTrackingData(null);
@@ -197,16 +213,16 @@ const AdminShiprocketDashboardPage: React.FC = () => {
             Monitor orders placed and shipping started across your Shiprocket account.
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshOutlined />}
-          onClick={() => {
-            loadStats();
-            loadOrders();
-          }}
-        >
-          Refresh
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshOutlined />}
+            onClick={handleRefreshAll}
+            disabled={refreshingAll || stats?.shiprocketConfigured === false}
+          >
+            {refreshingAll ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </Stack>
       </Stack>
 
       {stats && !stats.shiprocketConfigured && (
@@ -373,7 +389,7 @@ const AdminShiprocketDashboardPage: React.FC = () => {
                     </TableCell>
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Tooltip title="Re-sync to Shiprocket">
+                        <Tooltip title={o.shiprocketSynced ? 'Refresh status from Shiprocket' : 'Sync to Shiprocket'}>
                           <span>
                             <IconButton
                               size="small"

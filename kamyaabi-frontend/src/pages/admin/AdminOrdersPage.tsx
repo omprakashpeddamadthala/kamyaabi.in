@@ -20,7 +20,10 @@ import {
   Stack,
   Button,
   CircularProgress,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import { AutorenewOutlined } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
@@ -87,6 +90,7 @@ const AdminOrdersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [refreshingId, setRefreshingId] = useState<number | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -129,6 +133,19 @@ const AdminOrdersPage: React.FC = () => {
       showError(parseApiError(err, 'Failed to download invoice').message);
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const handleRefreshShipment = async (orderId: number) => {
+    setRefreshingId(orderId);
+    try {
+      await adminApi.syncShiprocketOrder(orderId);
+      showSuccess('Shipment status refreshed for order #' + orderId);
+      loadOrders();
+    } catch (err) {
+      showError(parseApiError(err, 'Failed to refresh shipment status').message);
+    } finally {
+      setRefreshingId(null);
     }
   };
 
@@ -180,15 +197,16 @@ const AdminOrdersPage: React.FC = () => {
               <TableCell>Shipping Address</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Shipping</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={9} />
+              <TableSkeleton rows={5} columns={10} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -250,6 +268,26 @@ const AdminOrdersPage: React.FC = () => {
                     <Chip label={o.status} size="small" />
                   </TableCell>
                   <TableCell>
+                    {o.shiprocketSynced ? (
+                      <Box sx={{ fontSize: '0.8rem' }}>
+                        {o.awbNumber && (
+                          <Box><strong>AWB:</strong> {o.awbNumber}</Box>
+                        )}
+                        {o.courierName && (
+                          <Box><strong>Courier:</strong> {o.courierName}</Box>
+                        )}
+                        {o.shippingStatus && (
+                          <Chip label={o.shippingStatus.replace(/_/g, ' ')} size="small" sx={{ mt: 0.5 }} />
+                        )}
+                        {!o.awbNumber && !o.courierName && !o.shippingStatus && (
+                          <Typography variant="caption" color="text.secondary">Synced</Typography>
+                        )}
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">—</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Stack spacing={0.75} alignItems="flex-start">
                       <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingId === o.id}>
                         <InputLabel>Update</InputLabel>
@@ -268,6 +306,23 @@ const AdminOrdersPage: React.FC = () => {
                       >
                         Download Invoice
                       </Button>
+                      {o.shiprocketSynced && (
+                        <Tooltip title="Refresh shipping status from Shiprocket">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleRefreshShipment(o.id)}
+                              disabled={refreshingId === o.id}
+                            >
+                              {refreshingId === o.id ? (
+                                <CircularProgress size={16} />
+                              ) : (
+                                <AutorenewOutlined fontSize="small" />
+                              )}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      )}
                     </Stack>
                   </TableCell>
                 </TableRow>

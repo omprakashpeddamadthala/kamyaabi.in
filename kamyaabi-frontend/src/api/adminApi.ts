@@ -217,6 +217,9 @@ export const adminApi = {
   syncShiprocketOrder: (orderId: number) =>
     axiosInstance.post<ApiResponse<Order>>(`/api/admin/shiprocket/sync/${orderId}`),
 
+  refreshAllShiprocketStatuses: () =>
+    axiosInstance.post<ApiResponse<{ refreshedCount: number }>>('/api/admin/shiprocket/refresh-all'),
+
   trackShiprocketOrder: (orderId: number) =>
     axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/admin/shiprocket/track/${orderId}`),
 };
