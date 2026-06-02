@@ -86,7 +86,7 @@ const AdminOrdersPage: React.FC = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
-  const [invoiceDownloadingId, setInvoiceDownloadingId] = useState<number | null>(null);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -108,7 +108,7 @@ const AdminOrdersPage: React.FC = () => {
   }, [loadOrders]);
 
   const handleDownloadInvoice = async (orderId: number) => {
-    setInvoiceDownloadingId(orderId);
+    setDownloadingId(orderId);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(adminApi.downloadInvoiceUrl(orderId), {
@@ -126,9 +126,9 @@ const AdminOrdersPage: React.FC = () => {
       window.URL.revokeObjectURL(url);
       loadOrders();
     } catch (err) {
-      showError(parseApiError(err, 'Invoice is available after payment confirmation').message);
+      showError(parseApiError(err, 'Failed to download invoice').message);
     } finally {
-      setInvoiceDownloadingId(null);
+      setDownloadingId(null);
     }
   };
 
@@ -180,17 +180,15 @@ const AdminOrdersPage: React.FC = () => {
               <TableCell>Shipping Address</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Shipping</TableCell>
-              <TableCell>Invoice</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={11} />
+              <TableSkeleton rows={5} columns={9} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -251,51 +249,26 @@ const AdminOrdersPage: React.FC = () => {
                   <TableCell>
                     <Chip label={o.status} size="small" />
                   </TableCell>
-                  <TableCell sx={{ fontSize: '0.8rem', minWidth: 120 }}>
-                    {o.awbNumber ? (
-                      <Box>
-                        {o.courierName && <Box sx={{ fontWeight: 600 }}>{o.courierName}</Box>}
-                        <Box>AWB: {o.awbNumber}</Box>
-                        {o.shippingStatus && (
-                          <Chip label={o.shippingStatus.replace(/_/g, ' ')} size="small" color="info" sx={{ mt: 0.5 }} />
-                        )}
-                      </Box>
-                    ) : o.shiprocketSynced === false && (o.status === 'PAID' || o.status === 'CONFIRMED') ? (
-                      <Chip label="Sync Pending" size="small" color="warning" />
-                    ) : (
-                      '—'
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ minWidth: 150 }}>
-                    {(o.status === 'PAID' || o.status === 'CONFIRMED' || o.status === 'PROCESSING' || o.status === 'SHIPPED' || o.status === 'DELIVERED') ? (
-                      <Stack spacing={0.75} alignItems="flex-start">
-                        <Chip
-                          label={o.invoiceGenerated ? 'Generated' : 'Pending'}
-                          size="small"
-                          color={o.invoiceGenerated ? 'success' : 'warning'}
-                          variant="outlined"
-                        />
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => handleDownloadInvoice(o.id)}
-                          disabled={invoiceDownloadingId === o.id}
-                          startIcon={invoiceDownloadingId === o.id ? <CircularProgress size={14} /> : undefined}
-                        >
-                          Download
-                        </Button>
-                      </Stack>
-                    ) : '—'}
-                  </TableCell>
                   <TableCell>
-                    <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingId === o.id}>
-                      <InputLabel>Update</InputLabel>
-                      <Select label="Update" value="" onChange={(e) => handleUpdateStatus(o.id, e.target.value)}>
-                        {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
-                          <MenuItem key={s} value={s}>{s}</MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <Stack spacing={0.75} alignItems="flex-start">
+                      <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingId === o.id}>
+                        <InputLabel>Update</InputLabel>
+                        <Select label="Update" value="" onChange={(e) => handleUpdateStatus(o.id, e.target.value)}>
+                          {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
+                            <MenuItem key={s} value={s}>{s}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleDownloadInvoice(o.id)}
+                        disabled={downloadingId === o.id}
+                        startIcon={downloadingId === o.id ? <CircularProgress size={14} /> : undefined}
+                      >
+                        Download Invoice
+                      </Button>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))
