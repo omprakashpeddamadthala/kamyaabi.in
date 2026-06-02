@@ -67,7 +67,7 @@ import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
 import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
 import ProductCard from '../components/common/ProductCard';
-import AmazonBanner from '../components/common/AmazonBanner';
+
 import { reviewApi } from '../api/reviewApi';
 import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
@@ -471,25 +471,7 @@ const ProductDetailPage: React.FC = () => {
 
   const descriptionBullets = parseDescriptionBullets(product.description);
 
-  const additionalInfoRows: Array<{ label: string; value: string }> = [];
-  if (product.weight || product.unit) {
-    additionalInfoRows.push({
-      label: 'Weight',
-      value: [product.weight, product.unit].filter(Boolean).join(' '),
-    });
-  }
-  if (product.categoryName) {
-    additionalInfoRows.push({ label: 'Category', value: product.categoryName });
-  }
-  if (product.shelfLife) {
-    additionalInfoRows.push({ label: 'Shelf Life', value: product.shelfLife });
-  }
-  if (typeof product.stock === 'number') {
-    additionalInfoRows.push({
-      label: 'Availability',
-      value: product.stock > 0 ? `In stock (${product.stock})` : 'Out of stock',
-    });
-  }
+
 
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
@@ -507,7 +489,7 @@ const ProductDetailPage: React.FC = () => {
   const defaultFaqs = [
     { id: -1, question: 'How fresh are the products when delivered?', answer: 'Every order is packed on demand from our climate-controlled storage and sealed in airtight, food-grade pouches. Most customers receive their order within 3–5 business days of dispatch.', displayOrder: 0 },
     { id: -2, question: 'How should I store this product?', answer: 'Keep the pack in a cool, dry place away from direct sunlight. Once opened, transfer the contents to an airtight container or reseal the pouch tightly to preserve crunch and flavor.', displayOrder: 1 },
-    { id: -3, question: 'Are these dry fruits raw, roasted, or salted?', answer: 'Preparation varies by product. Refer to the Description and Additional Information sections above for the exact processing details for this specific item.', displayOrder: 2 },
+    { id: -3, question: 'Are these dry fruits raw, roasted, or salted?', answer: 'Preparation varies by product. Refer to the Description section above for the exact processing details for this specific item.', displayOrder: 2 },
     { id: -4, question: 'Do you offer returns or refunds?', answer: 'Yes. If your order arrives damaged or you are not satisfied with the quality, contact us within 7 days of delivery and we will arrange a replacement or refund as per our return policy.', displayOrder: 3 },
     { id: -5, question: 'Is the packaging vegetarian and food-safe?', answer: 'Absolutely. All Kamyaabi products are 100% vegetarian and packed in FSSAI-compliant, food-grade materials that protect freshness without any added preservatives.', displayOrder: 4 },
   ];
@@ -710,7 +692,7 @@ const ProductDetailPage: React.FC = () => {
                   lineHeight: 1,
                 }}
               >
-                <Box component="sup" sx={{ fontSize: '0.55em', mr: 0.25, top: '-0.7em', position: 'relative' }}>₹</Box>
+                <Box component="span" sx={{ fontSize: '0.55em', mr: 0.25 }}>₹</Box>
                 {effectivePrice}
               </Typography>
               {pricePer100g != null && (
@@ -982,7 +964,6 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        <AmazonBanner variant="product" />
 
         {}
         {(tabKeys.length > 1 || product.description) && (
@@ -1067,51 +1048,7 @@ const ProductDetailPage: React.FC = () => {
                       </Box>
                     )}
 
-                    {}
-                    {additionalInfoRows.length > 0 && (
-                      <Box sx={{ mt: 4 }}>
-                        <Typography
-                          variant="h6"
-                          fontWeight={700}
-                          sx={{
-                            mb: 2,
-                            fontFamily: '"Playfair Display", serif',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                          }}
-                        >
-                          <DescriptionIcon fontSize="small" color="primary" />
-                          Additional Information
-                        </Typography>
-                        <Grid container spacing={1.5}>
-                          {additionalInfoRows.map(({ label, value }) => (
-                            <Grid item xs={12} sm={6} key={label}>
-                              <Box
-                                sx={{
-                                  p: 1.75,
-                                  borderRadius: 2,
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  bgcolor: '#fff',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  gap: 2,
-                                }}
-                              >
-                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                  {label}
-                                </Typography>
-                                <Typography variant="body2" fontWeight={700} sx={{ textAlign: 'right' }}>
-                                  {value}
-                                </Typography>
-                              </Box>
-                            </Grid>
-                          ))}
-                        </Grid>
-                      </Box>
-                    )}
+
                   </>
                 )}
 
