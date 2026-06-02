@@ -74,6 +74,7 @@ public class InvoiceTemplateRenderer {
                     .title { display: table-cell; font-size: 34px; font-weight: 800; color: #111827; letter-spacing: 1.8px; }
                     .meta { display: table-cell; text-align: right; color: #374151; line-height: 1.65; }
                     .paid { display: inline-block; background: #dcfce7; color: #166534; border: 1px solid #86efac; padding: 5px 11px; border-radius: 999px; font-weight: 800; margin-top: 4px; }
+                    .pending-badge { display: inline-block; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; padding: 5px 11px; border-radius: 999px; font-weight: 800; margin-top: 4px; }
                     .panel-row { display: table; width: 100%; margin-bottom: 18px; }
                     .panel { display: table-cell; width: 50%; background: #f8fafc; border: 1px solid #e5e7eb; padding: 13px; line-height: 1.55; vertical-align: top; }
                     .panel + .panel { border-left: 0; }
@@ -104,7 +105,7 @@ public class InvoiceTemplateRenderer {
                 <body>
                 """
                 + header()
-                + title(invoiceNumber, invoiceDate, dueDate)
+                + title(invoiceNumber, invoiceDate, dueDate, order.getStatus())
                 + billTo(order)
                 + itemsTable(order.getItems())
                 + totals(subtotal, discount, total)
@@ -127,12 +128,18 @@ public class InvoiceTemplateRenderer {
                 + html(invoiceProperties.getCompanyWebsite()) + "</div></div>";
     }
 
-    private String title(String invoiceNumber, LocalDate invoiceDate, LocalDate dueDate) {
+    private String title(String invoiceNumber, LocalDate invoiceDate, LocalDate dueDate, Order.OrderStatus status) {
+        String statusLabel = status == null ? "PENDING" : status.name().replace('_', ' ');
+        boolean paid = status == Order.OrderStatus.PAID || status == Order.OrderStatus.CONFIRMED
+                || status == Order.OrderStatus.PROCESSING || status == Order.OrderStatus.SHIPPED
+                || status == Order.OrderStatus.DELIVERED;
+        String badgeCss = paid ? "paid" : "pending-badge";
+        String badgeText = paid ? "PAID &#10003;" : html(statusLabel);
         return "<div class=\"title-row\"><div class=\"title\">TAX INVOICE</div><div class=\"meta\">"
                 + "<strong>Invoice #:</strong> " + html(invoiceNumber) + "<br/>"
                 + "<strong>Invoice date:</strong> " + invoiceDate.format(DISPLAY_DATE) + "<br/>"
                 + "<strong>Due date:</strong> " + dueDate.format(DISPLAY_DATE) + "<br/>"
-                + "<span class=\"paid\">PAID &#10003;</span>"
+                + "<span class=\"" + badgeCss + "\">" + badgeText + "</span>"
                 + "</div></div>";
     }
 
@@ -153,7 +160,9 @@ public class InvoiceTemplateRenderer {
                 + (phone.isBlank() ? "" : "<br/>Phone: " + html(phone))
                 + "</div><div class=\"panel\"><div class=\"section-title\">Order</div>"
                 + "Order ID: #" + order.getId() + "<br/>Customer ID: #" + order.getUser().getId() + "<br/>"
-                + "Payment status: PAID<br/>Currency: " + html(invoiceProperties.getCurrency())
+                + "Order status: " + html(order.getStatus() == null ? "PENDING" : order.getStatus().name().replace('_', ' ')) + "<br/>"
+                + "Payment method: " + html(order.getPaymentMethod() == null || order.getPaymentMethod() == Order.PaymentMethod.PREPAID ? "Online" : "COD") + "<br/>"
+                + "Currency: " + html(invoiceProperties.getCurrency())
                 + "</div></div>";
     }
 

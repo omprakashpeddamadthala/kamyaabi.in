@@ -92,13 +92,18 @@ class InvoiceServiceImplTest {
     }
 
     @Test
-    void generateInvoice_unpaidOrder_shouldReject() {
+    void generateInvoice_pendingOrder_shouldSucceed() {
         paidOrder.setStatus(Order.OrderStatus.PENDING);
         when(orderRepository.findByIdWithInvoiceDetails(100L)).thenReturn(Optional.of(paidOrder));
+        when(templateRenderer.invoiceNumber(paidOrder)).thenReturn("INV-20260102-100");
+        when(templateRenderer.render(paidOrder, "INV-20260102-100")).thenReturn("<html></html>");
+        when(pdfRenderer.render("<html></html>")).thenReturn("pdf".getBytes());
+        when(invoiceStorage.store(any(String.class), any(byte[].class))).thenReturn("/invoices/invoice_100.pdf");
 
-        assertThatThrownBy(() -> invoiceService.generateInvoice(100L))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("after payment");
+        InvoiceDocument invoice = invoiceService.generateInvoice(100L);
+
+        assertThat(invoice.invoiceNumber()).isEqualTo("INV-20260102-100");
+        verify(orderRepository).save(paidOrder);
     }
 
     @Test
