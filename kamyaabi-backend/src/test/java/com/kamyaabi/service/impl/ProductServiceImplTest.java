@@ -96,7 +96,8 @@ class ProductServiceImplTest {
     void getAllProducts_shouldReturnPageOfProducts() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Product> productPage = new PageImpl<>(List.of(product));
-        when(productRepository.findByActiveTrue(pageable)).thenReturn(productPage);
+        when(productRepository.findGroupedActiveProducts(pageable)).thenReturn(productPage);
+        when(productRepository.countVariations(product.getName(), product.getCategory().getId())).thenReturn(1L);
         when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         Page<ProductResponse> result = productService.getAllProducts(pageable);
@@ -109,7 +110,8 @@ class ProductServiceImplTest {
     void getProductsByCategory_shouldReturnPage() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Product> productPage = new PageImpl<>(List.of(product));
-        when(productRepository.findByCategoryIdAndActiveTrue(1L, pageable)).thenReturn(productPage);
+        when(productRepository.findGroupedByCategoryId(1L, pageable)).thenReturn(productPage);
+        when(productRepository.countVariations(product.getName(), product.getCategory().getId())).thenReturn(1L);
         when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         Page<ProductResponse> result = productService.getProductsByCategory(1L, pageable);
@@ -121,7 +123,8 @@ class ProductServiceImplTest {
     void searchProducts_shouldReturnPage() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Product> productPage = new PageImpl<>(List.of(product));
-        when(productRepository.searchByKeyword("cashew", pageable)).thenReturn(productPage);
+        when(productRepository.searchGroupedByKeyword("cashew", pageable)).thenReturn(productPage);
+        when(productRepository.countVariations(product.getName(), product.getCategory().getId())).thenReturn(1L);
         when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         Page<ProductResponse> result = productService.searchProducts("cashew", pageable);
@@ -131,8 +134,10 @@ class ProductServiceImplTest {
 
     @Test
     void getProductById_existing_shouldReturnProduct() {
+        List<Product> variations = List.of(product);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productMapper.toResponse(product)).thenReturn(productResponse);
+        when(productRepository.findVariations(product.getName(), product.getCategory().getId())).thenReturn(variations);
+        when(productMapper.toResponse(product, variations)).thenReturn(productResponse);
 
         ProductResponse result = productService.getProductById(1L);
 
@@ -150,6 +155,7 @@ class ProductServiceImplTest {
     @Test
     void getFeaturedProducts_shouldReturnList() {
         when(productRepository.findTop8ByActiveTrueOrderByCreatedAtDesc()).thenReturn(List.of(product));
+        when(productRepository.countVariations(product.getName(), product.getCategory().getId())).thenReturn(1L);
         when(productMapper.toResponse(product)).thenReturn(productResponse);
 
         List<ProductResponse> result = productService.getFeaturedProducts();
