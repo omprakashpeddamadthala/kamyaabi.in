@@ -546,6 +546,350 @@ class ShiprocketServiceImplTest {
         assertThat(result.message()).contains("No response");
     }
 
+    // ── refreshShipmentStatus tests ──────────────────────────────────────
+
+    @Test
+    void refreshShipmentStatus_whenNotConfigured_skips() {
+        properties.setApiToken("");
+        Order order = buildOrder();
+        shiprocketService.refreshShipmentStatus(order);
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    void refreshShipmentStatus_whenNoShiprocketOrderId_skips() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId(null);
+        shiprocketService.refreshShipmentStatus(order);
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_updatesAwbAndCourierAndStatus() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("id", "67890");
+        shipment.put("awb_code", "AWB999");
+        shipment.put("courier_name", "BlueDart");
+        shipment.put("status", "IN TRANSIT");
+
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("shipments", List.of(shipment));
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", orderData);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getAwbNumber()).isEqualTo("AWB999");
+        assertThat(order.getCourierName()).isEqualTo("BlueDart");
+        assertThat(order.getShippingStatus()).isEqualTo("IN TRANSIT");
+        assertThat(order.getShiprocketShipmentId()).isEqualTo("67890");
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.SHIPPED);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_noShipments_doesNotUpdate() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("shipments", List.of());
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", orderData);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getAwbNumber()).isNull();
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_apiException_handledGracefully() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenThrow(new RuntimeException("API error"));
+
+        shiprocketService.refreshShipmentStatus(order);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_nullBody_handledGracefully() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(null));
+
+        shiprocketService.refreshShipmentStatus(order);
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_deliveredStatus_setsDeliveredAt() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB111");
+        shipment.put("courier_name", "DTDC");
+        shipment.put("status", "DELIVERED");
+
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("shipments", List.of(shipment));
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", orderData);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.DELIVERED);
+        assertThat(order.getDeliveredAt()).isNotNull();
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_pickedUpStatus_setsProcessing() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB222");
+        shipment.put("courier_name", "FedEx");
+        shipment.put("status", "PICKED UP");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", Map.of("shipments", List.of(shipment)));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.PROCESSING);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_outForDelivery_setsShippedAndOverridesStatus() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB333");
+        shipment.put("courier_name", "Ecom");
+        shipment.put("status", "OUT FOR DELIVERY");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", Map.of("shipments", List.of(shipment)));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.SHIPPED);
+        assertThat(order.getShippingStatus()).isEqualTo("OUT_FOR_DELIVERY");
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_cancelledStatus_doesNotAutoCancel() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("status", "CANCELLED");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", Map.of("shipments", List.of(shipment)));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.PAID);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_dataAtTopLevel_worksWithoutNestedData() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB444");
+        shipment.put("courier_name", "Xpressbees");
+        shipment.put("status", "SHIPPED");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("shipments", List.of(shipment));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getAwbNumber()).isEqualTo("AWB444");
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.SHIPPED);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_doesNotOverwriteExistingAwb() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+        order.setAwbNumber("EXISTING_AWB");
+        order.setCourierName("ExistingCourier");
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "NEW_AWB");
+        shipment.put("courier_name", "NewCourier");
+        shipment.put("status", "IN TRANSIT");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", Map.of("shipments", List.of(shipment)));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getAwbNumber()).isEqualTo("EXISTING_AWB");
+        assertThat(order.getCourierName()).isEqualTo("ExistingCourier");
+        assertThat(order.getShippingStatus()).isEqualTo("IN TRANSIT");
+        verify(orderRepository).save(order);
+    }
+
+    // ── refreshAllShipmentStatuses tests ────────────────────────────────
+
+    @Test
+    void refreshAllShipmentStatuses_whenNotConfigured_returnsZero() {
+        properties.setApiToken("");
+        int result = shiprocketService.refreshAllShipmentStatuses();
+        assertThat(result).isZero();
+    }
+
+    @Test
+    void refreshAllShipmentStatuses_noOrders_returnsZero() {
+        when(orderRepository.findSyncedOrdersNotInTerminalStatus(anyList()))
+                .thenReturn(List.of());
+        int result = shiprocketService.refreshAllShipmentStatuses();
+        assertThat(result).isZero();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refreshAllShipmentStatuses_refreshesMultipleOrders() {
+        Order order1 = buildOrder();
+        order1.setShiprocketOrderId("111");
+        order1.setShiprocketSynced(true);
+
+        Order order2 = buildOrder();
+        order2.setId(2L);
+        order2.setShiprocketOrderId("222");
+        order2.setShiprocketSynced(true);
+
+        when(orderRepository.findSyncedOrdersNotInTerminalStatus(anyList()))
+                .thenReturn(List.of(order1, order2));
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB_BULK");
+        shipment.put("courier_name", "BulkCourier");
+        shipment.put("status", "IN TRANSIT");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", Map.of("shipments", List.of(shipment)));
+
+        when(restTemplate.exchange(
+                contains("/orders/show/"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        int result = shiprocketService.refreshAllShipmentStatuses();
+        assertThat(result).isEqualTo(2);
+        verify(orderRepository, times(2)).save(any());
+    }
+
     private Order buildOrder() {
         User user = User.builder().id(1L).email("customer@test.com").name("Test User").build();
         Address address = Address.builder().id(1L).user(user)
