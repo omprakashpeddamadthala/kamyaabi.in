@@ -374,10 +374,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
                 orderData = body;
             }
 
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> shipments = (List<Map<String, Object>>) orderData.get("shipments");
-            if (shipments != null && !shipments.isEmpty()) {
-                Map<String, Object> shipment = shipments.get(0);
+            Map<String, Object> shipment = extractFirstShipment(orderData);
+            if (shipment != null) {
 
                 String awb = toSafeString(shipment.get("awb_code"));
                 String courier = toSafeString(shipment.get("courier_name"));
@@ -678,6 +676,21 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         if (value == null) return null;
         String s = String.valueOf(value).trim();
         return (s.isEmpty() || "null".equalsIgnoreCase(s)) ? null : s;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> extractFirstShipment(Map<String, Object> orderData) {
+        Object shipmentsRaw = orderData.get("shipments");
+        if (shipmentsRaw == null) return null;
+
+        if (shipmentsRaw instanceof List<?> list) {
+            if (list.isEmpty()) return null;
+            return (Map<String, Object>) list.get(0);
+        }
+        if (shipmentsRaw instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        return null;
     }
 
     private static boolean isPresent(String value) {

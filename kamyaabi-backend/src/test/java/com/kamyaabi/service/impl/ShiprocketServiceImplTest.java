@@ -808,6 +808,39 @@ class ShiprocketServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
+    void refreshShipmentStatus_shipmentsAsSingleObject_handledCorrectly() {
+        Order order = buildOrder();
+        order.setShiprocketOrderId("12345");
+        order.setShiprocketSynced(true);
+
+        Map<String, Object> shipment = new HashMap<>();
+        shipment.put("awb_code", "AWB_SINGLE");
+        shipment.put("courier_name", "SingleCourier");
+        shipment.put("status", "IN TRANSIT");
+
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("shipments", shipment);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("data", orderData);
+
+        when(restTemplate.exchange(
+                contains("/orders/show/12345"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(Class.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        shiprocketService.refreshShipmentStatus(order);
+
+        assertThat(order.getAwbNumber()).isEqualTo("AWB_SINGLE");
+        assertThat(order.getCourierName()).isEqualTo("SingleCourier");
+        assertThat(order.getShippingStatus()).isEqualTo("IN TRANSIT");
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void refreshShipmentStatus_doesNotOverwriteExistingAwb() {
         Order order = buildOrder();
         order.setShiprocketOrderId("12345");
