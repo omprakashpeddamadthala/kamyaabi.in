@@ -69,6 +69,8 @@ import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
 import ProductCard from '../components/common/ProductCard';
 
 import { reviewApi } from '../api/reviewApi';
+import { shippingApi } from '../api/shippingApi';
+import type { PincodeServiceability } from '../api/shippingApi';
 import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';
@@ -257,6 +259,12 @@ const ProductDetailPage: React.FC = () => {
   const [reviewFormSuccess, setReviewFormSuccess] = useState('');
   const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
 
+  // Pincode serviceability state
+  const [pincode, setPincode] = useState('');
+  const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState('');
+
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -425,6 +433,28 @@ const ProductDetailPage: React.FC = () => {
       }
     });
   }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch, triggerFlyToCart]);
+
+  const handleCheckPincode = useCallback(async () => {
+    const trimmed = pincode.trim();
+    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
+      setPincodeError('Please enter a valid 6-digit pincode');
+      setPincodeResult(null);
+      return;
+    }
+    setPincodeError('');
+    setPincodeResult(null);
+    setPincodeLoading(true);
+    try {
+      const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
+      const weight = weightKg ? weightKg / 1000 : 0.5;
+      const res = await shippingApi.checkServiceability(trimmed, weight);
+      setPincodeResult(res.data.data);
+    } catch {
+      setPincodeError('Unable to check delivery availability. Please try again.');
+    } finally {
+      setPincodeLoading(false);
+    }
+  }, [pincode, product]);
 
   const handleBuyNow = useCallback(() => {
     if (!user) { navigate('/login'); return; }
@@ -948,6 +978,103 @@ const ProductDetailPage: React.FC = () => {
               <TrustBadge icon={<AssignmentReturnOutlined />} label="Non-Returnable" />
               <TrustBadge icon={<StorefrontOutlined />} label="Kamyaabi Delivered" />
               <TrustBadge icon={<ShieldOutlined />} label="Secure transaction" />
+            </Box>
+
+            {/* Pincode serviceability check */}
+            <Box sx={{ mt: 2, mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#0F1111' }}>
+                Delivery
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <TextField
+                  size="small"
+                  placeholder="Enter pincode"
+                  value={pincode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setPincode(val);
+                    if (pincodeResult) setPincodeResult(null);
+                    if (pincodeError) setPincodeError('');
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCheckPincode(); }}
+                  inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
+                  sx={{
+                    flex: 1,
+                    maxWidth: 200,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: '#F7F7F7',
+                    },
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleCheckPincode}
+                  disabled={pincodeLoading || pincode.trim().length !== 6}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    minWidth: 80,
+                    py: 0.9,
+                  }}
+                >
+                  {pincodeLoading ? <CircularProgress size={20} /> : 'Check'}
+                </Button>
+              </Box>
+
+              {pincodeError && (
+                <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: '0.8rem' }}>
+                  {pincodeError}
+                </Alert>
+              )}
+
+              {pincodeResult && (
+                <Box
+                  sx={{
+                    mt: 1,
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: pincodeResult.serviceable ? '#F0FFF4' : '#FFF5F5',
+                    border: '1px solid',
+                    borderColor: pincodeResult.serviceable ? '#C6F6D5' : '#FED7D7',
+                  }}
+                >
+                  {pincodeResult.serviceable ? (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                        <CheckCircle sx={{ color: '#38A169', fontSize: 18 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#276749' }}>
+                          Delivery available to {pincodeResult.pincode}
+                        </Typography>
+                      </Box>
+                      {pincodeResult.city && pincodeResult.state && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                          {pincodeResult.city}, {pincodeResult.state}
+                        </Typography>
+                      )}
+                      {pincodeResult.estimatedDays && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                          Estimated delivery: {pincodeResult.estimatedDays} day{pincodeResult.estimatedDays > 1 ? 's' : ''}
+                        </Typography>
+                      )}
+                      {pincodeResult.codAvailable === 'Yes' && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                          Cash on Delivery available
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Close sx={{ color: '#E53E3E', fontSize: 18 }} />
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#9B2C2C' }}>
+                        {pincodeResult.message || 'Delivery is not available to this pincode'}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              )}
             </Box>
 
             {/* Bought recently badge */}

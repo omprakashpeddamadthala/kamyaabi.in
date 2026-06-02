@@ -1,5 +1,6 @@
 package com.kamyaabi.controller;
 
+import com.kamyaabi.dto.response.PincodeServiceabilityResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
@@ -86,5 +87,40 @@ class ShippingControllerTest {
 
         assertThatThrownBy(() -> controller.trackByAwb("UNKNOWN"))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void checkServiceability_validPincode_shouldReturnResult() {
+        PincodeServiceabilityResponse mockResponse = PincodeServiceabilityResponse.builder()
+                .serviceable(true)
+                .pincode("500081")
+                .city("Hyderabad")
+                .state("Telangana")
+                .estimatedDays(3)
+                .courierName("Delhivery")
+                .codAvailable("Yes")
+                .message("Delivery is available to this pincode")
+                .build();
+
+        when(shiprocketService.checkServiceability("500081", 0.5)).thenReturn(mockResponse);
+
+        var response = controller.checkServiceability("500081", 0.5);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().data().serviceable()).isTrue();
+        assertThat(response.getBody().data().city()).isEqualTo("Hyderabad");
+    }
+
+    @Test
+    void checkServiceability_invalidPincode_shouldThrow() {
+        assertThatThrownBy(() -> controller.checkServiceability("123", 0.5))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
+    void checkServiceability_zeroPincode_shouldThrow() {
+        assertThatThrownBy(() -> controller.checkServiceability("000000", 0.5))
+                .isInstanceOf(BadRequestException.class);
     }
 }

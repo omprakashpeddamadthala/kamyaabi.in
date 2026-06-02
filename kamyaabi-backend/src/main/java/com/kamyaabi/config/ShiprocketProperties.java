@@ -21,6 +21,7 @@ public class ShiprocketProperties {
     private String pickupLocation = "home";
     private String channelId = "";
     private String webhookSecret = "";
+    private String pickupPincode = "";
     private double defaultWeight = 0.5;
     private int defaultLength = 10;
     private int defaultBreadth = 10;
