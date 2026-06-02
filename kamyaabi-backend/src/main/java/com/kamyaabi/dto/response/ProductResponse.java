@@ -34,6 +34,8 @@ public record ProductResponse(
         String seoDescription,
         String seoKeywords,
         String ogImageUrl,
-        String canonicalUrl
+        String canonicalUrl,
+        List<ProductVariationResponse> variations,
+        int variationCount
 ) {
 }

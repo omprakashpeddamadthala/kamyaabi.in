@@ -36,6 +36,17 @@ export interface ProductImage {
   displayOrder: number;
 }
 
+export interface ProductVariation {
+  id: number;
+  slug: string;
+  weight: string;
+  unit: string;
+  price: number;
+  discountPrice: number | null;
+  stock: number;
+  mainImageUrl: string | null;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -63,6 +74,8 @@ export interface Product {
   seoKeywords?: string | null;
   ogImageUrl?: string | null;
   canonicalUrl?: string | null;
+  variations?: ProductVariation[] | null;
+  variationCount?: number;
 }
 
 export interface Review {
