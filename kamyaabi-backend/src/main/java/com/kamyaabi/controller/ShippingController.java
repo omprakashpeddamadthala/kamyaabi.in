@@ -1,6 +1,7 @@
 package com.kamyaabi.controller;
 
 import com.kamyaabi.dto.response.ApiResponse;
+import com.kamyaabi.dto.response.PublicOrderTrackingResponse;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
@@ -57,5 +58,50 @@ public class ShippingController {
 
         Map<String, Object> tracking = shiprocketService.trackShipment(order.getAwbNumber());
         return ResponseEntity.ok(ApiResponse.success(tracking));
+    }
+
+    @GetMapping("/track/status/{orderId}")
+    @Operation(summary = "Public order tracking status",
+            description = "Returns order lifecycle status and Shiprocket tracking data if available. No authentication required.")
+    public ResponseEntity<ApiResponse<PublicOrderTrackingResponse>> getPublicOrderStatus(
+            @PathVariable Long orderId) {
+        return ResponseEntity.ok(ApiResponse.success(buildPublicTracking(
+                orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order", orderId)))));
+    }
+
+    @GetMapping("/track/status")
+    @Operation(summary = "Public order tracking status by AWB",
+            description = "Returns order lifecycle status by AWB/tracking number. No authentication required.")
+    public ResponseEntity<ApiResponse<PublicOrderTrackingResponse>> getPublicOrderStatusByAwb(
+            @RequestParam String awb) {
+        if (awb == null || awb.isBlank()) {
+            throw new BadRequestException("AWB code is required");
+        }
+        return ResponseEntity.ok(ApiResponse.success(buildPublicTracking(
+                orderRepository.findByAwbNumber(awb)
+                        .orElseThrow(() -> new ResourceNotFoundException("No order found for AWB: " + awb)))));
+    }
+
+    private PublicOrderTrackingResponse buildPublicTracking(Order order) {
+        PublicOrderTrackingResponse.PublicOrderTrackingResponseBuilder builder =
+                PublicOrderTrackingResponse.builder()
+                        .orderId(order.getId())
+                        .orderStatus(order.getStatus().name())
+                        .shippingStatus(order.getShippingStatus())
+                        .awbNumber(order.getAwbNumber())
+                        .courierName(order.getCourierName())
+                        .placedAt(order.getCreatedAt() != null ? order.getCreatedAt().toString() : null)
+                        .deliveredAt(order.getDeliveredAt() != null ? order.getDeliveredAt().toString() : null);
+
+        if (order.getAwbNumber() != null && !order.getAwbNumber().isBlank()) {
+            try {
+                builder.trackingData(shiprocketService.trackShipment(order.getAwbNumber()));
+            } catch (Exception e) {
+                log.warn("Failed to fetch Shiprocket tracking for order {}: {}",
+                        order.getId(), e.getMessage());
+            }
+        }
+        return builder.build();
     }
 }

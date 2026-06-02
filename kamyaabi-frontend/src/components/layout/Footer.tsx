@@ -64,6 +64,9 @@ const Footer: React.FC = () => {
               Support
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+              <MuiLink component={Link} to="/track-order" underline="hover" sx={{ color: '#BBB' }}>
+                Track Order
+              </MuiLink>
               <MuiLink
                 component={Link}
                 to="/refund-policy"

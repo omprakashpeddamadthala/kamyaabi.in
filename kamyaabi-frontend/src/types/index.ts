@@ -164,6 +164,17 @@ export interface TrackingInfo {
   };
 }
 
+export interface PublicOrderTracking {
+  orderId: number;
+  orderStatus: string;
+  shippingStatus: string | null;
+  awbNumber: string | null;
+  courierName: string | null;
+  placedAt: string | null;
+  deliveredAt: string | null;
+  trackingData: TrackingInfo | null;
+}
+
 export interface Order {
   id: number;
   items: OrderItem[];
