@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,15 +31,8 @@ class WishlistMapperTest {
                 .discountPrice(new BigDecimal("799.00"))
                 .stock(50)
                 .active(true)
-                .imageUrl("fallback.jpg")
-                .images(new ArrayList<>())
+                .imageUrl("cashews.jpg")
                 .build();
-
-        ProductImage mainImage = ProductImage.builder()
-                .id(1L).imageUrl("main.jpg").isMain(true).displayOrder(0).publicId("pid")
-                .build();
-        mainImage.setProduct(product);
-        product.setImages(List.of(mainImage));
 
         WishlistItem item = WishlistItem.builder()
                 .id(1L)
@@ -62,14 +54,14 @@ class WishlistMapperTest {
         assertThat(itemResponse.productId()).isEqualTo(10L);
         assertThat(itemResponse.productName()).isEqualTo("Cashews");
         assertThat(itemResponse.productSlug()).isEqualTo("cashews");
-        assertThat(itemResponse.productImageUrl()).isEqualTo("main.jpg");
+        assertThat(itemResponse.productImageUrl()).isEqualTo("cashews.jpg");
         assertThat(itemResponse.productPrice()).isEqualByComparingTo(new BigDecimal("899.00"));
         assertThat(itemResponse.productDiscountPrice()).isEqualByComparingTo(new BigDecimal("799.00"));
         assertThat(itemResponse.inStock()).isTrue();
     }
 
     @Test
-    void toItemResponse_noMainImage_shouldUseFallback() {
+    void toItemResponse_outOfStock_shouldSetInStockFalse() {
         Product product = Product.builder()
                 .id(5L)
                 .name("Almonds")
@@ -77,8 +69,7 @@ class WishlistMapperTest {
                 .price(new BigDecimal("499.00"))
                 .stock(0)
                 .active(true)
-                .imageUrl("fallback.jpg")
-                .images(new ArrayList<>())
+                .imageUrl("almonds.jpg")
                 .build();
 
         WishlistItem item = WishlistItem.builder()
@@ -89,7 +80,7 @@ class WishlistMapperTest {
 
         WishlistItemResponse response = mapper.toItemResponse(item);
 
-        assertThat(response.productImageUrl()).isEqualTo("fallback.jpg");
+        assertThat(response.productImageUrl()).isEqualTo("almonds.jpg");
         assertThat(response.inStock()).isFalse();
     }
 }
