@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves product slug/id fetching, review/FAQ APIs, pincode serviceability, variation/quantity selection, add-to-cart, fly-to-cart, lightbox, sticky CTA, and related products.
+ * - Visual-only tokenization of buy-box, image gallery, pincode, review, FAQ, and section backgrounds.
+ */
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {

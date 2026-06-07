@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves orders fetch/pagination, order expansion, status stepper, payment/shipping details, and navigation to products.
+ * - Visual-only redesign of order cards, status pills, price typography, and item surfaces.
+ */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

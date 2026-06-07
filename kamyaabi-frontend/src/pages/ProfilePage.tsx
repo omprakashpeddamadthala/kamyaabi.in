@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves profile fetch/update validation, address CRUD, default-address setting, and delete confirmation behavior.
+ * - Visual-only redesign of account shell, profile avatar, form surfaces, and address cards.
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,

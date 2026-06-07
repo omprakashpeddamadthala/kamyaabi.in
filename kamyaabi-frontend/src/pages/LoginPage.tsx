@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves Google OAuth login, dev quick login, session-expired notice, auth error display, and redirect behavior.
+ * - Visual-only tokenization of centered auth card, radius, and shadow.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves address loading/creation, coupon application, order creation, COD/prepaid payment selection, Razorpay load/open/verify flow, and navigation on success/cancel.
+ * - Adds visual-only progress indicator derived from existing checkout state; no new checkout state machine or backend calls.
+ */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
