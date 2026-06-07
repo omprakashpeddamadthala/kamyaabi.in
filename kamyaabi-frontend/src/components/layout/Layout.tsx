@@ -8,7 +8,7 @@ const Layout: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <Box component="main">
+      <Box component="main" id="main-content">
         <Outlet />
       </Box>
       <Footer />

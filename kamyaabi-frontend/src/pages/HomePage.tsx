@@ -119,7 +119,7 @@ const HomePage: React.FC = () => {
       {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', position: 'relative', overflow: 'hidden' }}>
         <Container maxWidth="lg">
-          <Grid container alignItems="center" sx={{ minHeight: { xs: 400, md: 500 } }}>
+          <Grid container alignItems="center" sx={{ minHeight: { xs: '50vh', md: '70vh' }, maxHeight: 700 }}>
             <Grid item xs={12} md={6} sx={{ py: { xs: 4, md: 6 }, position: 'relative', zIndex: 2 }}>
               <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: 'var(--color-text-primary)' }}>
                 {activeSlide.title}

@@ -128,7 +128,7 @@ const ProductsPage: React.FC = () => {
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      <Typography variant="h3" sx={{ mb: 1 }}>
+      <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: { xs: '1.6rem', md: '2rem' } }}>
         {selectedCategory ? selectedCategory.name : 'All Products'}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

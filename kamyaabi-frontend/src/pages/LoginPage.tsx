@@ -77,7 +77,7 @@ const LoginPage: React.FC = () => {
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <GoogleOAuthProvider clientId={clientId}>
-        <Card sx={{ p: 4, textAlign: 'center', '&:hover': { transform: 'none' } }}>
+        <Card sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center', '&:hover': { transform: 'none' }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
           <Typography
             variant="h3"
             sx={{

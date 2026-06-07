@@ -169,7 +169,7 @@ const CartPage: React.FC = () => {
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4 }}>
+      <Typography variant="h3" sx={{ mb: 4, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: { xs: '1.6rem', md: '2rem' } }}>
         Shopping Cart
       </Typography>
 
