@@ -15,7 +15,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         width: '100%',
         minHeight: 120,
         borderRadius: 'var(--radius-md)',
-        border: '1px solid rgba(108,71,255,0.22)',
+        border: '1px solid rgba(29, 78, 216,0.22)',
         padding: '12px 14px',
         font: 'inherit',
         color: 'var(--color-text-primary)',

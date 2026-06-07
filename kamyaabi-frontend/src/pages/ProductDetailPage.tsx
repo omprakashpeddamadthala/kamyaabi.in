@@ -676,7 +676,7 @@ const ProductDetailPage: React.FC = () => {
                 fontWeight: 600,
                 fontSize: { xs: '1.5rem', sm: '1.75rem', md: '1.9rem' },
                 lineHeight: 1.3,
-                fontFamily: '"Inter", "Roboto", sans-serif',
+                fontFamily: 'var(--font-display)',
               }}
             >
               {product.name}
@@ -902,21 +902,21 @@ const ProductDetailPage: React.FC = () => {
                     onClick={handleAddToCart}
                     disabled={!inStock || isAdding}
                     startIcon={
-                      isAdding ? <CircularProgress size={20} sx={{ color: '#0F1111' }} /> :
+                      isAdding ? <CircularProgress size={20} sx={{ color: '#FFFFFF' }} /> :
                       justAdded ? <Check /> : <ShoppingCart />
                     }
                     sx={{
                       bgcolor: 'var(--color-brand-primary)',
-                      color: '#0F1111',
+                      color: '#FFFFFF',
                       borderRadius: 2,
                       fontWeight: 600,
                       fontSize: '0.95rem',
                       textTransform: 'none',
                       py: 1.25,
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
-                      border: '1px solid #FCD200',
+                      border: '1px solid var(--color-brand-primary-dark)',
                       '&:hover': {
-                        bgcolor: '#5835cc',
+                        bgcolor: '#1E40AF',
                         boxShadow: '0 2px 6px rgba(213,217,217,.6)',
                       },
                       '&.Mui-disabled': {
@@ -947,9 +947,9 @@ const ProductDetailPage: React.FC = () => {
                       textTransform: 'none',
                       py: 1.25,
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
-                      border: '1px solid #FF8F00',
+                      border: '1px solid #B45309',
                       '&:hover': {
-                        bgcolor: '#e55a2a',
+                        bgcolor: '#B45309',
                         boxShadow: '0 2px 6px rgba(213,217,217,.6)',
                       },
                       '&.Mui-disabled': {
@@ -1165,7 +1165,7 @@ const ProductDetailPage: React.FC = () => {
                               border: '1px solid',
                               borderColor: 'divider',
                               transition: 'background-color 0.2s',
-                              '&:hover': { bgcolor: 'rgba(108,71,255,0.04)' },
+                              '&:hover': { bgcolor: 'rgba(29, 78, 216,0.04)' },
                             }}
                           >
                             <CheckCircle

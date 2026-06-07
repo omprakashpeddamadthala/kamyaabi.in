@@ -265,9 +265,9 @@ const CheckoutPage: React.FC = () => {
               gap: 1.25,
               p: 1.5,
               borderRadius: 'var(--radius-full)',
-              bgcolor: step.active ? 'rgba(108,71,255,0.08)' : 'var(--color-surface-card)',
+              bgcolor: step.active ? 'rgba(29, 78, 216,0.08)' : 'var(--color-surface-card)',
               border: '1px solid',
-              borderColor: step.active ? 'rgba(108,71,255,0.24)' : 'rgba(108,71,255,0.10)',
+              borderColor: step.active ? 'rgba(29, 78, 216,0.24)' : 'rgba(29, 78, 216,0.10)',
               boxShadow: step.active ? 'var(--shadow-card)' : 'none',
             }}
           >

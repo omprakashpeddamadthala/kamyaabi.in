@@ -149,7 +149,7 @@ const AdminLayout: React.FC = () => {
         <AppBar
           position="sticky"
           elevation={0}
-          sx={{ bgcolor: 'var(--color-surface-card)', color: 'var(--color-text-primary)', borderBottom: '1px solid rgba(108,71,255,0.08)' }}
+          sx={{ bgcolor: 'var(--color-surface-card)', color: 'var(--color-text-primary)', borderBottom: '1px solid rgba(29, 78, 216,0.08)' }}
         >
           <Toolbar sx={{ gap: 1, minHeight: { xs: 56, md: 64 } }}>
             <IconButton

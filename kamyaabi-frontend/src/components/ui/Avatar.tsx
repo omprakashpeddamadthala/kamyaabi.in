@@ -10,7 +10,7 @@ export type AvatarProps = MuiAvatarProps;
 export const Avatar: React.FC<AvatarProps> = ({ sx, ...props }) => (
   <MuiAvatar
     sx={{
-      boxShadow: '0 0 0 3px rgba(108,71,255,0.12)',
+      boxShadow: '0 0 0 3px rgba(29, 78, 216,0.12)',
       ...sx,
     }}
     {...props}

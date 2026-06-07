@@ -123,7 +123,7 @@ const Navbar: React.FC = () => {
       elevation={0}
       sx={{
         bgcolor: 'var(--color-surface-card)',
-        borderBottom: '1px solid rgba(108,71,255,0.08)',
+        borderBottom: '1px solid rgba(29, 78, 216,0.08)',
         backdropFilter: 'blur(12px)',
       }}
     >
@@ -184,7 +184,7 @@ const Navbar: React.FC = () => {
                     },
                     '&:hover': {
                       color: 'var(--color-brand-primary)',
-                      bgcolor: 'rgba(108,71,255,0.04)',
+                      bgcolor: 'rgba(29, 78, 216,0.04)',
                     },
                     '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
                   }}
@@ -200,7 +200,7 @@ const Navbar: React.FC = () => {
                   px: 1.5,
                   py: 1,
                   borderRadius: 'var(--radius-sm)',
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(108,71,255,0.04)' },
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.04)' },
                 }}>
                   Orders
                 </Button>
@@ -213,7 +213,7 @@ const Navbar: React.FC = () => {
                   px: 1.5,
                   py: 1,
                   borderRadius: 'var(--radius-sm)',
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(108,71,255,0.04)' },
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.04)' },
                 }}>
                   Admin
                 </Button>
@@ -325,7 +325,7 @@ const Navbar: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'none',
                   boxShadow: 'none',
-                  '&:hover': { bgcolor: '#5835cc', boxShadow: 'var(--shadow-hover)' },
+                  '&:hover': { bgcolor: '#1E40AF', boxShadow: 'var(--shadow-hover)' },
                 }}
               >
                 Sign In

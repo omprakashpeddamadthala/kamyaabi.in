@@ -118,13 +118,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         flexDirection: 'column',
         overflow: 'hidden',
         bgcolor: 'var(--color-surface-card)',
-        border: '1px solid rgba(108,71,255,0.10)',
+        border: '1px solid rgba(29, 78, 216,0.10)',
         boxShadow: 'var(--shadow-card)',
         transition: 'transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base)',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: 'var(--shadow-hover)',
-          borderColor: 'rgba(108,71,255,0.22)',
+          borderColor: 'rgba(29, 78, 216,0.22)',
         },
         '&:hover .product-card-image': {
           transform: 'scale(1.05)',
@@ -180,7 +180,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               fontWeight: 600,
               fontSize: '0.6rem',
               height: 20,
-              bgcolor: 'rgba(108,71,255,0.92)',
+              bgcolor: 'rgba(29, 78, 216,0.92)',
               color: '#fff',
               backdropFilter: 'blur(4px)',
             }}
