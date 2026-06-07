@@ -16,7 +16,7 @@ const AmazonWordmark: React.FC<{ light?: boolean }> = ({ light }) => (
     <Typography
       component="span"
       sx={{
-        fontFamily: '"Inter", sans-serif',
+        fontFamily: 'var(--font-display)',
         fontWeight: 700,
         fontSize: { xs: '1.4rem', sm: '1.7rem' },
         letterSpacing: '-0.02em',
@@ -77,7 +77,7 @@ const AmazonBanner: React.FC<AmazonBannerProps> = ({ variant = 'product' }) => {
             </Typography>
             <Typography
               variant="h4"
-              sx={{ color: '#fff', fontWeight: 700, mb: 1, fontFamily: '"Playfair Display", serif' }}
+              sx={{ color: '#fff', fontWeight: 700, mb: 1, fontFamily: 'var(--font-display)' }}
             >
               Find Us on Amazon
             </Typography>

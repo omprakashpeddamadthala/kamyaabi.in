@@ -111,7 +111,7 @@ const OrdersPage: React.FC = () => {
       {orders.map((order) => (
         <Card
           key={order.id}
-          sx={{ mb: 2, p: { xs: 1.5, sm: 3 }, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(108,71,255,0.10)', boxShadow: 'var(--shadow-card)', transition: 'transform var(--transition-base), box-shadow var(--transition-base)', '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-hover)' } }}
+          sx={{ mb: 2, p: { xs: 1.5, sm: 3 }, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(29, 78, 216,0.10)', boxShadow: 'var(--shadow-card)', transition: 'transform var(--transition-base), box-shadow var(--transition-base)', '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-hover)' } }}
         >
           <Box
             sx={{
@@ -216,7 +216,7 @@ const OrdersPage: React.FC = () => {
             )}
 
             {(order.awbNumber || order.shippingStatus) && (
-              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(108,71,255,0.04)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(29, 78, 216,0.04)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <LocalShipping fontSize="small" color="primary" />
                 {order.shippingStatus && (
                   <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />

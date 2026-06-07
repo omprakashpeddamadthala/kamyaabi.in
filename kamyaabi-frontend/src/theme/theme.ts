@@ -18,38 +18,38 @@ const theme = createTheme({
   },
   palette: {
     primary: {
-      main: '#6C47FF',
-      light: '#8E73FF',
-      dark: '#4E30C9',
+      main: '#1D4ED8',
+      light: '#3B82F6',
+      dark: '#1E40AF',
       contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#FF6B35',
-      light: '#FF936D',
-      dark: '#D94B18',
-      contrastText: '#FFFFFF',
+      main: '#F59E0B',
+      light: '#FBBF24',
+      dark: '#B45309',
+      contrastText: '#0F172A',
     },
     success: {
-      main: '#38A169',
-      light: '#00C9A7',
-      dark: '#287A4E',
+      main: '#16A34A',
+      light: '#22C55E',
+      dark: '#15803D',
     },
     warning: {
-      main: '#F6AD55',
+      main: '#D97706',
     },
     error: {
-      main: '#E53E3E',
+      main: '#DC2626',
     },
     background: {
-      default: '#F8F7FF',
+      default: '#F8FAFC',
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#12101F',
-      secondary: '#5A5770',
-      disabled: '#9B97B3',
+      primary: '#0F172A',
+      secondary: '#475569',
+      disabled: '#94A3B8',
     },
-    divider: 'rgba(108, 71, 255, 0.12)',
+    divider: 'rgba(29, 78, 216, 0.12)',
   },
   typography: {
     fontFamily: 'var(--font-body)',
@@ -111,7 +111,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 10,
   },
   shadows: [
     'none',
@@ -158,7 +158,7 @@ const theme = createTheme({
           height: 'auto',
         },
         'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible': {
-          outline: '3px solid rgba(0,201,167,0.45)',
+          outline: '3px solid rgba(29,78,216,0.45)',
           outlineOffset: 2,
         },
       },
@@ -200,8 +200,8 @@ const theme = createTheme({
       styleOverrides: {
         head: {
           fontWeight: 800,
-          color: '#12101F',
-          backgroundColor: '#F8F7FF',
+          color: '#0F172A',
+          backgroundColor: '#F1F5F9',
         },
       },
     },
@@ -230,7 +230,7 @@ const theme = createTheme({
           },
         },
         contained: {
-          boxShadow: '0 10px 24px rgba(108,71,255,0.22)',
+          boxShadow: '0 10px 24px rgba(29,78,216,0.22)',
           '&:hover': {
             boxShadow: 'var(--shadow-hover)',
           },
@@ -245,12 +245,12 @@ const theme = createTheme({
         root: {
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-card)',
-          border: '1px solid rgba(108,71,255,0.08)',
+          border: '1px solid rgba(29,78,216,0.08)',
           transition: 'transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base)',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: 'var(--shadow-hover)',
-            borderColor: 'rgba(108,71,255,0.18)',
+            borderColor: 'rgba(29,78,216,0.18)',
           },
         },
       },
@@ -266,8 +266,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: 'rgba(255,255,255,0.86)',
-          color: '#12101F',
-          boxShadow: '0 1px 0 rgba(108,71,255,0.12)',
+          color: '#0F172A',
+          boxShadow: '0 1px 0 rgba(29,78,216,0.12)',
           backdropFilter: 'blur(18px)',
         },
       },
@@ -292,7 +292,7 @@ const theme = createTheme({
           backgroundColor: '#FFFFFF',
           transition: 'box-shadow var(--transition-base), border-color var(--transition-base)',
           '&.Mui-focused': {
-            boxShadow: '0 0 0 4px rgba(108,71,255,0.10)',
+            boxShadow: '0 0 0 4px rgba(29,78,216,0.10)',
           },
         },
         input: {

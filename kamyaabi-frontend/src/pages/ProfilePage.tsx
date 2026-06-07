@@ -55,7 +55,7 @@ interface FormErrors {
 
 const ProfileSkeleton: React.FC = () => (
   <Container maxWidth="md" sx={{ py: 4 }}>
-    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', mb: 3, boxShadow: 'var(--shadow-card)', border: '1px solid rgba(108,71,255,0.10)' }}>
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', mb: 3, boxShadow: 'var(--shadow-card)', border: '1px solid rgba(29, 78, 216,0.10)' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <Skeleton variant="circular" width={64} height={64} animation="wave" />
         <Box>
@@ -73,7 +73,7 @@ const ProfileSkeleton: React.FC = () => (
         </Grid>
       </Grid>
     </Paper>
-    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', border: '1px solid rgba(108,71,255,0.10)' }}>
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', border: '1px solid rgba(29, 78, 216,0.10)' }}>
       <Skeleton variant="text" width={200} height={28} sx={{ mb: 2 }} animation="wave" />
       <Grid container spacing={2}>
         {[1, 2].map((i) => (
@@ -228,7 +228,7 @@ const ProfilePage: React.FC = () => {
           <Avatar
             src={user?.avatarUrl || undefined}
             alt={user?.name}
-            sx={{ width: { xs: 56, md: 72 }, height: { xs: 56, md: 72 }, bgcolor: 'var(--color-brand-primary)', boxShadow: '0 0 0 6px rgba(108,71,255,0.10)' }}
+            sx={{ width: { xs: 56, md: 72 }, height: { xs: 56, md: 72 }, bgcolor: 'var(--color-brand-primary)', boxShadow: '0 0 0 6px rgba(29, 78, 216,0.10)' }}
           >
             {user?.name?.charAt(0) || <Person />}
           </Avatar>
