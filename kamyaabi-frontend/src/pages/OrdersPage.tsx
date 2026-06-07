@@ -92,7 +92,7 @@ const OrdersPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      <Typography variant="h3" sx={{ mb: 1 }}>
+      <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: '1.75rem', md: '2.5rem' } }}>
         My Orders
       </Typography>
       {totalElements > 0 && (
@@ -106,7 +106,7 @@ const OrdersPage: React.FC = () => {
       {orders.map((order) => (
         <Card
           key={order.id}
-          sx={{ mb: 2, p: { xs: 1.5, sm: 3 }, '&:hover': { transform: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' } }}
+          sx={{ mb: 2, p: { xs: 1.5, sm: 3 }, borderRadius: 'var(--radius-lg)', border: '1px solid rgba(108,71,255,0.10)', boxShadow: 'var(--shadow-card)', transition: 'transform var(--transition-base), box-shadow var(--transition-base)', '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-hover)' } }}
         >
           <Box
             sx={{
@@ -140,9 +140,9 @@ const OrdersPage: React.FC = () => {
                   label={order.status}
                   color={statusColors[order.status] || 'default'}
                   size="small"
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 1, borderRadius: 'var(--radius-full)', fontWeight: 800 }}
                 />
-                <Typography variant="h6" color="primary" sx={{ whiteSpace: 'nowrap' }}>
+                <Typography variant="h6" color="primary" sx={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>
                   ₹{order.totalAmount}
                 </Typography>
               </Box>
@@ -182,7 +182,7 @@ const OrdersPage: React.FC = () => {
             {}
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>Items</Typography>
             {order.items.map((item) => (
-              <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: 'var(--color-surface-bg)', borderRadius: 1 }}>
+              <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-md)' }}>
                 {item.productImageUrl && (
                   <Box
                     component="img"
@@ -211,7 +211,7 @@ const OrdersPage: React.FC = () => {
             )}
 
             {(order.awbNumber || order.shippingStatus) && (
-              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(108,71,255,0.04)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(108,71,255,0.04)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <LocalShipping fontSize="small" color="primary" />
                 {order.shippingStatus && (
                   <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />

@@ -227,10 +227,65 @@ const CheckoutPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Typography
         variant="h3"
-        sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } }}
+        sx={{
+          mb: { xs: 2, sm: 3 },
+          fontFamily: 'var(--font-display)',
+          fontWeight: 800,
+          fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
+          letterSpacing: '-0.02em',
+        }}
       >
         Checkout
       </Typography>
+
+      <Box
+        aria-label="Checkout progress"
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+          gap: 1.5,
+          mb: { xs: 3, sm: 4 },
+        }}
+      >
+        {[
+          { label: 'Address', active: true, complete: Boolean(selectedAddressId) },
+          { label: 'Payment', active: Boolean(selectedAddressId), complete: Boolean(paymentMethod) },
+          { label: 'Review', active: Boolean(selectedAddressId && paymentMethod), complete: false },
+        ].map((step, index) => (
+          <Box
+            key={step.label}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              p: 1.5,
+              borderRadius: 'var(--radius-full)',
+              bgcolor: step.active ? 'rgba(108,71,255,0.08)' : 'var(--color-surface-card)',
+              border: '1px solid',
+              borderColor: step.active ? 'rgba(108,71,255,0.24)' : 'rgba(108,71,255,0.10)',
+              boxShadow: step.active ? 'var(--shadow-card)' : 'none',
+            }}
+          >
+            <Box
+              sx={{
+                width: 30,
+                height: 30,
+                borderRadius: 'var(--radius-full)',
+                display: 'grid',
+                placeItems: 'center',
+                fontWeight: 800,
+                bgcolor: step.complete ? 'var(--color-brand-accent)' : step.active ? 'var(--color-brand-primary)' : 'var(--color-surface-bg)',
+                color: step.active || step.complete ? '#fff' : 'var(--color-text-muted)',
+              }}
+            >
+              {step.complete ? '✓' : index + 1}
+            </Box>
+            <Typography fontWeight={800} color={step.active ? 'text.primary' : 'text.secondary'}>
+              {step.label}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
@@ -241,7 +296,7 @@ const CheckoutPage: React.FC = () => {
       <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
         <Grid item xs={12} md={8}>
           {}
-          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', '&:hover': { transform: 'none' } }}>
             <Box
               sx={{
                 display: 'flex',
@@ -291,7 +346,7 @@ const CheckoutPage: React.FC = () => {
           </Card>
 
           {/* Payment Method Selection */}
-          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Payment Method
             </Typography>
@@ -335,7 +390,7 @@ const CheckoutPage: React.FC = () => {
           </Card>
 
           {}
-          <Card sx={{ p: { xs: 2, sm: 3 }, '&:hover': { transform: 'none' } }}>
+          <Card sx={{ p: { xs: 2, sm: 3 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Order Items
             </Typography>

@@ -123,3 +123,31 @@
 .MuiTableBody-root .MuiTableCell-root {
   color: var(--color-text-primary);
 }
+
+/* Form micro-interactions */
+.MuiTextField-root .MuiOutlinedInput-root,
+.MuiFormControl-root .MuiOutlinedInput-root {
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused,
+.MuiFormControl-root .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 4px rgba(108, 71, 255, 0.10);
+}
+.MuiTextField-root .MuiInputLabel-root.Mui-focused,
+.MuiFormControl-root .MuiInputLabel-root.Mui-focused {
+  color: var(--color-brand-primary);
+}
+.MuiTextField-root .MuiOutlinedInput-root.Mui-error,
+.MuiFormControl-root .MuiOutlinedInput-root.Mui-error {
+  box-shadow: 0 0 0 4px rgba(229, 62, 62, 0.08);
+}
+.MuiButton-root {
+  transition: transform var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base) !important;
+}
+.MuiButton-root:not(.Mui-disabled):active {
+  transform: scale(0.98);
+}
+.MuiChip-root {
+  font-weight: 700;
+}

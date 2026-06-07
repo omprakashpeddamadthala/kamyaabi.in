@@ -50,7 +50,7 @@ interface FormErrors {
 
 const ProfileSkeleton: React.FC = () => (
   <Container maxWidth="md" sx={{ py: 4 }}>
-    <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', mb: 3, boxShadow: 'var(--shadow-card)', border: '1px solid rgba(108,71,255,0.10)' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <Skeleton variant="circular" width={64} height={64} animation="wave" />
         <Box>
@@ -68,7 +68,7 @@ const ProfileSkeleton: React.FC = () => (
         </Grid>
       </Grid>
     </Paper>
-    <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
+    <Paper elevation={0} sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', border: '1px solid rgba(108,71,255,0.10)' }}>
       <Skeleton variant="text" width={200} height={28} sx={{ mb: 2 }} animation="wave" />
       <Grid container spacing={2}>
         {[1, 2].map((i) => (
@@ -216,19 +216,19 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 2, md: 4 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <Avatar
             src={user?.avatarUrl || undefined}
             alt={user?.name}
-            sx={{ width: { xs: 48, md: 64 }, height: { xs: 48, md: 64 }, bgcolor: 'primary.main' }}
+            sx={{ width: { xs: 56, md: 72 }, height: { xs: 56, md: 72 }, bgcolor: 'var(--color-brand-primary)', boxShadow: '0 0 0 6px rgba(108,71,255,0.10)' }}
           >
             {user?.name?.charAt(0) || <Person />}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={700} noWrap>
+            <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={800} noWrap sx={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em' }}>
               My Profile
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
@@ -286,7 +286,7 @@ const ProfilePage: React.FC = () => {
               fullWidth={isMobile}
               startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <Save />}
               disabled={saving}
-              sx={{ px: 4, py: 1.5, borderRadius: 2, fontWeight: 600, textTransform: 'none', fontSize: '1rem' }}
+              sx={{ px: 4, py: 1.5, borderRadius: 'var(--radius-full)', fontWeight: 800, textTransform: 'none', fontSize: '1rem' }}
             >
               {saving ? 'Saving...' : 'Save Profile'}
             </Button>
@@ -337,7 +337,7 @@ const ProfilePage: React.FC = () => {
                     flexDirection: 'column',
                     borderColor: addr.isDefault ? 'primary.main' : 'divider',
                     borderWidth: addr.isDefault ? 2 : 1,
-                    transition: 'border-color 0.2s ease',
+                    borderRadius: 'var(--radius-lg)', boxShadow: addr.isDefault ? 'var(--shadow-card)' : 'none', transition: 'border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base)', '&:hover': { transform: 'translateY(-2px)', boxShadow: 'var(--shadow-hover)' },
                   }}
                 >
                   <CardContent sx={{ pb: 1, flexGrow: 1 }}>
