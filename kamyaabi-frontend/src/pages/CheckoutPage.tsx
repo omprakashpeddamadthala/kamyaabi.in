@@ -161,6 +161,10 @@ const CheckoutPage: React.FC = () => {
 
       setPaymentProcessing(true);
 
+      const razorpayThemeColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-brand-primary')
+        .trim();
+
       const options = {
         key: razorpayOrder.keyId,
         amount: razorpayOrder.amount,
@@ -195,7 +199,7 @@ const CheckoutPage: React.FC = () => {
           name: user?.name,
           email: user?.email,
         },
-        theme: { color: '#8B6914' },
+        theme: { color: razorpayThemeColor },
       };
 
       const { loadRazorpay } = await import('../utils/loadRazorpay');

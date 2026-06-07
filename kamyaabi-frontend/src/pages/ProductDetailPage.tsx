@@ -600,7 +600,7 @@ const ProductDetailPage: React.FC = () => {
                   order: { xs: 1, md: 2 },
                   borderRadius: 2,
                   overflow: 'hidden',
-                  bgcolor: '#F5F5F0',
+                  bgcolor: 'var(--color-surface-bg)',
                   position: 'relative',
                   cursor: 'zoom-in',
                   '&:hover .zoom-hint': { opacity: isZooming ? 0 : 1 },
@@ -876,7 +876,7 @@ const ProductDetailPage: React.FC = () => {
                     inputProps={{ 'aria-label': 'Quantity' }}
                     sx={{
                       borderRadius: 2,
-                      bgcolor: '#F7F7F7',
+                      bgcolor: 'var(--color-surface-bg)',
                       '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D5D9D9' },
                       '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#888C8C' },
                       '& .MuiSelect-select': { py: 1.1, pl: 2 },
@@ -901,7 +901,7 @@ const ProductDetailPage: React.FC = () => {
                       justAdded ? <Check /> : <ShoppingCart />
                     }
                     sx={{
-                      bgcolor: '#FFD814',
+                      bgcolor: 'var(--color-brand-primary)',
                       color: '#0F1111',
                       borderRadius: 2,
                       fontWeight: 600,
@@ -911,11 +911,11 @@ const ProductDetailPage: React.FC = () => {
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
                       border: '1px solid #FCD200',
                       '&:hover': {
-                        bgcolor: '#F7CA00',
+                        bgcolor: '#5835cc',
                         boxShadow: '0 2px 6px rgba(213,217,217,.6)',
                       },
                       '&.Mui-disabled': {
-                        bgcolor: '#F7F7F7',
+                        bgcolor: 'var(--color-surface-bg)',
                         color: '#A0A0A0',
                         border: '1px solid #E0E0E0',
                       },
@@ -934,7 +934,7 @@ const ProductDetailPage: React.FC = () => {
                     disabled={!inStock || isAdding}
                     startIcon={<FlashOn />}
                     sx={{
-                      bgcolor: '#FFA41C',
+                      bgcolor: 'var(--color-brand-secondary)',
                       color: '#0F1111',
                       borderRadius: 2,
                       fontWeight: 600,
@@ -944,11 +944,11 @@ const ProductDetailPage: React.FC = () => {
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
                       border: '1px solid #FF8F00',
                       '&:hover': {
-                        bgcolor: '#FA8900',
+                        bgcolor: '#e55a2a',
                         boxShadow: '0 2px 6px rgba(213,217,217,.6)',
                       },
                       '&.Mui-disabled': {
-                        bgcolor: '#F7F7F7',
+                        bgcolor: 'var(--color-surface-bg)',
                         color: '#A0A0A0',
                         border: '1px solid #E0E0E0',
                       },
@@ -1003,7 +1003,7 @@ const ProductDetailPage: React.FC = () => {
                     maxWidth: 200,
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
-                      bgcolor: '#F7F7F7',
+                      bgcolor: 'var(--color-surface-bg)',
                     },
                   }}
                 />
@@ -1156,11 +1156,11 @@ const ProductDetailPage: React.FC = () => {
                               gap: 1.25,
                               p: 1.25,
                               borderRadius: 2,
-                              bgcolor: '#FAFAF5',
+                              bgcolor: 'var(--color-surface-bg)',
                               border: '1px solid',
                               borderColor: 'divider',
                               transition: 'background-color 0.2s',
-                              '&:hover': { bgcolor: '#F4F1E6' },
+                              '&:hover': { bgcolor: 'rgba(108,71,255,0.04)' },
                             }}
                           >
                             <CheckCircle
@@ -1186,7 +1186,7 @@ const ProductDetailPage: React.FC = () => {
                         <Grid item xs={6} sm={4} key={label}>
                           <Box sx={{
                             p: 2,
-                            bgcolor: '#FAFAF5',
+                            bgcolor: 'var(--color-surface-bg)',
                             borderRadius: 2,
                             textAlign: 'center',
                             border: '1px solid',
@@ -1317,7 +1317,7 @@ const ProductDetailPage: React.FC = () => {
                             ))}
                           </Grid>
                         ) : (
-                          <Box sx={{ p: 3, borderRadius: 2, border: '1px dashed', borderColor: 'divider', bgcolor: '#FAFAF5', textAlign: 'center' }}>
+                          <Box sx={{ p: 3, borderRadius: 2, border: '1px dashed', borderColor: 'divider', bgcolor: 'var(--color-surface-bg)', textAlign: 'center' }}>
                             <Typography variant="body2" color="text.secondary">
                               No reviews yet. Be the first to review!
                             </Typography>
@@ -1395,7 +1395,7 @@ const ProductDetailPage: React.FC = () => {
                             </Box>
                           )
                         ) : (
-                          <Box sx={{ p: 3, borderRadius: 2, bgcolor: '#FAFAF5', textAlign: 'center', border: '1px solid', borderColor: 'divider' }}>
+                          <Box sx={{ p: 3, borderRadius: 2, bgcolor: 'var(--color-surface-bg)', textAlign: 'center', border: '1px solid', borderColor: 'divider' }}>
                             <Typography variant="body2" color="text.secondary">
                               <MuiLink component={Link} to="/login" underline="hover" color="primary" fontWeight={600}>
                                 Login

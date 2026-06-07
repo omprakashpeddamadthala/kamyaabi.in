@@ -158,7 +158,7 @@ const HeroBannersTab: React.FC<HeroBannersTabProps> = ({ active }) => {
                         component="img"
                         src={withCloudinaryTransform(banner.imageUrl) || banner.imageUrl}
                         alt={banner.altText ?? banner.title ?? 'Hero banner'}
-                        sx={{ width: 96, height: 54, objectFit: 'cover', borderRadius: 1, bgcolor: '#f0ede6' }}
+                        sx={{ width: 96, height: 54, objectFit: 'cover', borderRadius: 1, bgcolor: 'var(--color-surface-bg)' }}
                       />
                     </TableCell>
                     <TableCell sx={{ maxWidth: 280 }}>

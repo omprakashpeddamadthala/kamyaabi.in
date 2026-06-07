@@ -182,7 +182,7 @@ const OrdersPage: React.FC = () => {
             {}
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>Items</Typography>
             {order.items.map((item) => (
-              <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: '#f9f9f9', borderRadius: 1 }}>
+              <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: 'var(--color-surface-bg)', borderRadius: 1 }}>
                 {item.productImageUrl && (
                   <Box
                     component="img"
@@ -211,7 +211,7 @@ const OrdersPage: React.FC = () => {
             )}
 
             {(order.awbNumber || order.shippingStatus) && (
-              <Box sx={{ mt: 2, p: 1.5, bgcolor: '#f0f7ff', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(108,71,255,0.04)', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <LocalShipping fontSize="small" color="primary" />
                 {order.shippingStatus && (
                   <Chip label={order.shippingStatus.replace(/_/g, ' ')} size="small" color="info" />

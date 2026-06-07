@@ -188,7 +188,7 @@ const AdminHeroBannerFormPage: React.FC = () => {
               component="img"
               src={previewSrc}
               alt="Banner preview"
-              sx={{ display: 'block', mt: 1.5, width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 1, bgcolor: '#f0ede6' }}
+              sx={{ display: 'block', mt: 1.5, width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 1, bgcolor: 'var(--color-surface-bg)' }}
             />
           )}
         </Box>

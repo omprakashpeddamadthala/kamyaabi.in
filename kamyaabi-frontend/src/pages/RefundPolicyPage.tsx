@@ -106,7 +106,7 @@ const RefundPolicyPage: React.FC = () => {
   return (
     <Box>
       {}
-      <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
+      <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
             Customer Support
@@ -146,7 +146,7 @@ const RefundPolicyPage: React.FC = () => {
                       square={false}
                       sx={{
                         mb: 1.5,
-                        bgcolor: '#f9f9f9',
+                        bgcolor: 'var(--color-surface-bg)',
                         borderRadius: '8px !important',
                         boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
                         '&:before': { display: 'none' },

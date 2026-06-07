@@ -101,6 +101,10 @@ const OrderDetailPage: React.FC = () => {
       const paymentRes = await paymentApi.createOrder(order.id);
       const razorpayOrder = paymentRes.data.data;
 
+      const razorpayThemeColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-brand-primary')
+        .trim();
+
       const options = {
         key: razorpayOrder.keyId,
         amount: razorpayOrder.amount,
@@ -134,7 +138,7 @@ const OrderDetailPage: React.FC = () => {
           email: user?.email,
           contact: order.shippingAddress?.phone,
         },
-        theme: { color: '#8B6914' },
+        theme: { color: razorpayThemeColor },
       };
 
       const rzp = new window.Razorpay(options);

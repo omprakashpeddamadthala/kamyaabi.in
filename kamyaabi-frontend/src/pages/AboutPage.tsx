@@ -12,7 +12,7 @@ const AboutPage: React.FC = () => {
   return (
     <Box>
       {}
-      <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
+      <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>About Us</Typography>
           <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
@@ -44,7 +44,7 @@ const AboutPage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
+      <Box sx={{ py: 8, bgcolor: 'var(--color-surface-bg)' }}>
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}>
             Our Values
@@ -83,7 +83,7 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      <Box sx={{ py: 8, bgcolor: '#f0ede6', textAlign: 'center' }}>
+      <Box sx={{ py: 8, bgcolor: 'var(--color-surface-bg)', textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2 }}>
             Connect With Us
