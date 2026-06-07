@@ -41,6 +41,7 @@ const App: React.FC = () => {
         <HelmetProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
+            <a href="#main-content" className="skip-to-content">Skip to content</a>
             <SiteHead />
             <GlobalLoadingBar />
             <SessionManager />
