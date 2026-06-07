@@ -6,6 +6,7 @@ import { useAppSelector, useAppDispatch } from '../hooks/useAppDispatch';
 import { isSessionExpired, clearSession } from '../api/axiosInstance';
 import { logout } from '../features/auth/authSlice';
 import { clearCart } from '../features/cart/cartSlice';
+import { clearWishlist } from '../features/wishlist/wishlistSlice';
 
 const HomePage = lazy(() => import('../pages/HomePage'));
 const ProductsPage = lazy(() => import('../pages/ProductsPage'));
@@ -32,6 +33,7 @@ const AdminBlogCategoriesPage = lazy(() => import('../pages/AdminBlogCategoriesP
 const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
 const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
 const TrackOrderPage = lazy(() => import('../pages/TrackOrderPage'));
+const WishlistPage = lazy(() => import('../pages/WishlistPage'));
 
 const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
@@ -64,6 +66,7 @@ function useSessionGuard(): { authenticated: boolean } {
       clearSession(true);
       dispatch(logout());
       dispatch(clearCart());
+      dispatch(clearWishlist());
       setExpired(true);
     }
   }, [user, token, dispatch]);
@@ -113,6 +116,14 @@ const AppRoutes: React.FC = () => {
         <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
 
+        <Route
+          path="/wishlist"
+          element={
+            <CustomerRoute>
+              <WishlistPage />
+            </CustomerRoute>
+          }
+        />
         <Route
           path="/cart"
           element={

@@ -348,6 +348,26 @@ export interface ProductTag {
   createdAt: string;
 }
 
+// ── Wishlist Types ──────────────────────────────────────────
+
+export interface WishlistItem {
+  id: number;
+  productId: number;
+  productName: string;
+  productSlug: string;
+  productImageUrl: string;
+  productPrice: number;
+  productDiscountPrice: number | null;
+  inStock: boolean;
+  addedAt: string;
+}
+
+export interface Wishlist {
+  id: number;
+  items: WishlistItem[];
+  totalItems: number;
+}
+
 // ── Coupon Types ────────────────────────────────────────────
 
 export interface Coupon {
