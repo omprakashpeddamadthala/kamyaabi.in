@@ -22,8 +22,21 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  Link,
 } from '@mui/material';
-import { AutorenewOutlined } from '@mui/icons-material';
+import {
+  AutorenewOutlined,
+  VisibilityOutlined,
+  LocalShippingOutlined,
+  InventoryOutlined,
+  PhoneOutlined,
+  CloseOutlined,
+} from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
@@ -91,6 +104,15 @@ const AdminOrdersPage: React.FC = () => {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
+  const [detailOrder, setDetailOrder] = useState<Order | null>(null);
+  const [detailTab, setDetailTab] = useState<'items' | 'address'>('items');
+
+  const openDetail = (order: Order, tab: 'items' | 'address') => {
+    setDetailOrder(order);
+    setDetailTab(tab);
+  };
+
+  const closeDetail = () => setDetailOrder(null);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -186,27 +208,25 @@ const AdminOrdersPage: React.FC = () => {
       </Stack>
 
       <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Order ID</TableCell>
-              <TableCell>Date</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Order ID</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Date</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Items</TableCell>
-              <TableCell>Weight</TableCell>
-              <TableCell>Shipping Address</TableCell>
-              <TableCell>Total</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Total</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Shipping</TableCell>
-              <TableCell>Action</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableSkeleton rows={5} columns={10} />
+              <TableSkeleton rows={5} columns={8} />
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                   <Typography variant="body2" color="text.secondary">
                     {statusFilter ? `No orders for status: ${statusFilter.replace('_', ' ')}` : 'No orders yet.'}
                   </Typography>
@@ -214,9 +234,9 @@ const AdminOrdersPage: React.FC = () => {
               </TableRow>
             ) : (
               orders.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell>#{o.id}</TableCell>
-                  <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                <TableRow key={o.id} hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>#{o.id}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
                   <TableCell>
                     <Chip
                       label={o.paymentMethod === 'COD' ? 'COD' : 'Online'}
@@ -229,67 +249,50 @@ const AdminOrdersPage: React.FC = () => {
                     {o.items.length === 0 ? (
                       '—'
                     ) : (
-                      <Box component="ul" sx={{ m: 0, pl: 2, listStyle: 'disc' }}>
-                        {o.items.map((item) => (
-                          <Box component="li" key={item.id} sx={{ fontSize: '0.8rem', lineHeight: 1.5 }}>
-                            {item.productName} × {item.quantity}
-                          </Box>
-                        ))}
-                      </Box>
+                      <Tooltip title="View items">
+                        <Link
+                          component="button"
+                          underline="hover"
+                          variant="body2"
+                          onClick={() => openDetail(o, 'items')}
+                          sx={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                        >
+                          <InventoryOutlined sx={{ fontSize: 14 }} />
+                          {o.items.length} item{o.items.length > 1 ? 's' : ''}
+                        </Link>
+                      </Tooltip>
                     )}
                   </TableCell>
-                  <TableCell sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                    {o.items.length === 0
-                      ? '—'
-                      : o.items
-                          .map((item) =>
-                            item.productWeight
-                              ? `${item.productWeight}${item.productUnit ? ' ' + item.productUnit : ''}`
-                              : null
-                          )
-                          .filter(Boolean)
-                          .join(', ') || '—'}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: '0.8rem', minWidth: 140 }}>
-                    {o.shippingAddress ? (
-                      <Box>
-                        <Box sx={{ fontWeight: 600 }}>{o.shippingAddress.fullName}</Box>
-                        <Box>{o.shippingAddress.street}</Box>
-                        <Box>{o.shippingAddress.city}, {o.shippingAddress.state}</Box>
-                        <Box>{o.shippingAddress.pincode}</Box>
-                        {o.shippingAddress.phone && <Box>📞 {o.shippingAddress.phone}</Box>}
-                      </Box>
-                    ) : (
-                      '—'
-                    )}
-                  </TableCell>
-                  <TableCell>₹{o.totalAmount}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>₹{o.totalAmount}</TableCell>
                   <TableCell>
                     <Chip label={o.status} size="small" />
                   </TableCell>
                   <TableCell>
-                    {o.shiprocketSynced ? (
-                      <Box sx={{ fontSize: '0.8rem' }}>
-                        {o.awbNumber && (
-                          <Box><strong>AWB:</strong> {o.awbNumber}</Box>
-                        )}
-                        {o.courierName && (
-                          <Box><strong>Courier:</strong> {o.courierName}</Box>
-                        )}
-                        {o.shippingStatus && (
-                          <Chip label={o.shippingStatus.replace(/_/g, ' ')} size="small" sx={{ mt: 0.5 }} />
-                        )}
-                        {!o.awbNumber && !o.courierName && !o.shippingStatus && (
-                          <Typography variant="caption" color="text.secondary">Synced</Typography>
-                        )}
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary">—</Typography>
-                    )}
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      {o.shippingAddress ? (
+                        <Tooltip title="View address">
+                          <Link
+                            component="button"
+                            underline="hover"
+                            variant="body2"
+                            onClick={() => openDetail(o, 'address')}
+                            sx={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                          >
+                            <LocalShippingOutlined sx={{ fontSize: 14 }} />
+                            {o.shippingAddress.city}
+                          </Link>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">—</Typography>
+                      )}
+                      {o.shippingStatus && (
+                        <Chip label={o.shippingStatus.replace(/_/g, ' ')} size="small" />
+                      )}
+                    </Stack>
                   </TableCell>
                   <TableCell>
-                    <Stack spacing={0.75} alignItems="flex-start">
-                      <FormControl size="small" sx={{ minWidth: 130 }} disabled={updatingId === o.id}>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <FormControl size="small" sx={{ minWidth: 110 }} disabled={updatingId === o.id}>
                         <InputLabel>Update</InputLabel>
                         <Select label="Update" value="" onChange={(e) => handleUpdateStatus(o.id, e.target.value)}>
                           {['PAID', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
@@ -297,28 +300,26 @@ const AdminOrdersPage: React.FC = () => {
                           ))}
                         </Select>
                       </FormControl>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleDownloadInvoice(o.id)}
-                        disabled={downloadingId === o.id}
-                        startIcon={downloadingId === o.id ? <CircularProgress size={14} /> : undefined}
-                      >
-                        Download Invoice
-                      </Button>
+                      <Tooltip title="Download Invoice">
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownloadInvoice(o.id)}
+                            disabled={downloadingId === o.id}
+                          >
+                            {downloadingId === o.id ? <CircularProgress size={16} /> : <VisibilityOutlined fontSize="small" />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       {o.shiprocketSynced && (
-                        <Tooltip title="Refresh shipping status from Shiprocket">
+                        <Tooltip title="Refresh shipping status">
                           <span>
                             <IconButton
                               size="small"
                               onClick={() => handleRefreshShipment(o.id)}
                               disabled={refreshingId === o.id}
                             >
-                              {refreshingId === o.id ? (
-                                <CircularProgress size={16} />
-                              ) : (
-                                <AutorenewOutlined fontSize="small" />
-                              )}
+                              {refreshingId === o.id ? <CircularProgress size={16} /> : <AutorenewOutlined fontSize="small" />}
                             </IconButton>
                           </span>
                         </Tooltip>
@@ -331,6 +332,97 @@ const AdminOrdersPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Detail popup for Items / Shipping Address */}
+      <Dialog open={!!detailOrder} onClose={closeDetail} maxWidth="sm" fullWidth>
+        {detailOrder && (
+          <>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Order #{detailOrder.id} — {detailTab === 'items' ? 'Items' : 'Shipping Address'}
+              <IconButton size="small" onClick={closeDetail}><CloseOutlined fontSize="small" /></IconButton>
+            </DialogTitle>
+            <Box sx={{ display: 'flex', gap: 1, px: 3, pb: 1 }}>
+              <Chip
+                label="Items"
+                size="small"
+                variant={detailTab === 'items' ? 'filled' : 'outlined'}
+                color={detailTab === 'items' ? 'primary' : 'default'}
+                onClick={() => setDetailTab('items')}
+                sx={{ cursor: 'pointer' }}
+              />
+              <Chip
+                label="Address"
+                size="small"
+                variant={detailTab === 'address' ? 'filled' : 'outlined'}
+                color={detailTab === 'address' ? 'primary' : 'default'}
+                onClick={() => setDetailTab('address')}
+                sx={{ cursor: 'pointer' }}
+              />
+            </Box>
+            <DialogContent dividers>
+              {detailTab === 'items' ? (
+                detailOrder.items.length === 0 ? (
+                  <Typography color="text.secondary">No items</Typography>
+                ) : (
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Product</TableCell>
+                        <TableCell align="center">Qty</TableCell>
+                        <TableCell align="right">Weight</TableCell>
+                        <TableCell align="right">Price</TableCell>
+                        <TableCell align="right">Subtotal</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {detailOrder.items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.productName}</TableCell>
+                          <TableCell align="center">{item.quantity}</TableCell>
+                          <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                            {item.productWeight
+                              ? `${item.productWeight} ${item.productUnit || ''}`
+                              : '—'}
+                          </TableCell>
+                          <TableCell align="right">₹{item.price}</TableCell>
+                          <TableCell align="right">₹{item.subtotal}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )
+              ) : (
+                detailOrder.shippingAddress ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {detailOrder.shippingAddress.fullName}
+                    </Typography>
+                    <Divider />
+                    <Typography variant="body2">{detailOrder.shippingAddress.street}</Typography>
+                    {detailOrder.shippingAddress.addressLine2 && (
+                      <Typography variant="body2">{detailOrder.shippingAddress.addressLine2}</Typography>
+                    )}
+                    <Typography variant="body2">
+                      {detailOrder.shippingAddress.city}, {detailOrder.shippingAddress.state} — {detailOrder.shippingAddress.pincode}
+                    </Typography>
+                    {detailOrder.shippingAddress.phone && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                        <PhoneOutlined sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        <Typography variant="body2">{detailOrder.shippingAddress.phone}</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                ) : (
+                  <Typography color="text.secondary">No address</Typography>
+                )
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={closeDetail}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
 
       {(totalPages > 1 || totalElements > 0) && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
