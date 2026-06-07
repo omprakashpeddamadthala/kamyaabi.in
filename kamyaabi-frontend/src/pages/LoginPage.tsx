@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
           <Typography
             variant="h3"
             sx={{
-              fontFamily: '"Playfair Display", serif',
+              fontFamily: 'var(--font-display)',
               color: 'primary.main',
               mb: 1,
             }}

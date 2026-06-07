@@ -110,8 +110,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) =>
                       justifyContent: collapsed ? 'center' : 'flex-start',
                       px: collapsed ? 1 : 1.5,
                       color: active ? 'primary.main' : 'text.primary',
-                      bgcolor: active ? 'rgba(139, 105, 20, 0.10)' : 'transparent',
-                      '&:hover': { bgcolor: active ? 'rgba(139, 105, 20, 0.16)' : 'rgba(0,0,0,0.04)' },
+                      bgcolor: active ? 'rgba(108, 71, 255, 0.08)' : 'transparent',
+                      '&:hover': { bgcolor: active ? 'rgba(108, 71, 255, 0.14)' : 'rgba(0,0,0,0.04)' },
                     }}
                   >
                     <ListItemIcon

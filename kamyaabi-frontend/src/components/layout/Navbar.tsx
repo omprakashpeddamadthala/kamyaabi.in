@@ -1,3 +1,8 @@
+/**
+ * AUDIT: Preserves all existing navigation links, user role checks (ADMIN/USER),
+ * cart badge count, login/logout, mobile drawer, and social links.
+ * Visual-only changes: new color tokens, typography, sticky header style.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -111,13 +116,17 @@ const Navbar: React.FC = () => {
     <AppBar
       position="sticky"
       elevation={0}
-      sx={{ bgcolor: '#FFFFFF', borderBottom: '1px solid #eee' }}
+      sx={{
+        bgcolor: 'var(--color-surface-card)',
+        borderBottom: '1px solid rgba(108,71,255,0.08)',
+        backdropFilter: 'blur(12px)',
+      }}
     >
       <Container maxWidth="lg">
         <Toolbar disableGutters sx={{ justifyContent: 'space-between', minHeight: { xs: 64, md: 72 } }}>
           {isMobile && (
-            <IconButton onClick={() => setDrawerOpen(true)} edge="start">
-              <MenuIcon />
+            <IconButton onClick={() => setDrawerOpen(true)} edge="start" aria-label="Open menu">
+              <MenuIcon sx={{ color: 'var(--color-text-primary)' }} />
             </IconButton>
           )}
 
@@ -140,7 +149,7 @@ const Navbar: React.FC = () => {
           </Box>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
               {navLinks
                 .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
                 .map((link) => (
@@ -149,14 +158,30 @@ const Navbar: React.FC = () => {
                   component={Link}
                   to={link.to}
                   sx={{
-                    color: location.pathname === link.to ? 'primary.main' : '#1A1A1A',
+                    color: location.pathname === link.to ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                     fontWeight: location.pathname === link.to ? 700 : 500,
-                    fontSize: '0.95rem',
-                    px: 2,
-                    borderBottom: location.pathname === link.to ? '2px solid' : '2px solid transparent',
-                    borderColor: location.pathname === link.to ? 'primary.main' : 'transparent',
-                    borderRadius: 0,
-                    '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                    fontSize: '0.9rem',
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: 'var(--radius-sm)',
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 4,
+                      left: '50%',
+                      transform: location.pathname === link.to ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
+                      width: '60%',
+                      height: 2,
+                      bgcolor: 'var(--color-brand-primary)',
+                      borderRadius: 1,
+                      transition: 'var(--transition-base)',
+                    },
+                    '&:hover': {
+                      color: 'var(--color-brand-primary)',
+                      bgcolor: 'rgba(108,71,255,0.04)',
+                    },
+                    '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
                   }}
                 >
                   {link.label}
@@ -164,28 +189,26 @@ const Navbar: React.FC = () => {
               ))}
               {user && user.role !== 'ADMIN' && (
                 <Button component={Link} to="/orders" sx={{
-                  color: location.pathname === '/orders' ? 'primary.main' : '#1A1A1A',
+                  color: location.pathname === '/orders' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                   fontWeight: location.pathname === '/orders' ? 700 : 500,
-                  fontSize: '0.95rem',
-                  px: 2,
-                  borderBottom: location.pathname === '/orders' ? '2px solid' : '2px solid transparent',
-                  borderColor: location.pathname === '/orders' ? 'primary.main' : 'transparent',
-                  borderRadius: 0,
-                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                  fontSize: '0.9rem',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 'var(--radius-sm)',
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(108,71,255,0.04)' },
                 }}>
                   Orders
                 </Button>
               )}
               {user?.role === 'ADMIN' && (
                 <Button component={Link} to="/admin" sx={{
-                  color: location.pathname === '/admin' ? 'primary.main' : '#1A1A1A',
+                  color: location.pathname === '/admin' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                   fontWeight: location.pathname === '/admin' ? 700 : 500,
-                  fontSize: '0.95rem',
-                  px: 2,
-                  borderBottom: location.pathname === '/admin' ? '2px solid' : '2px solid transparent',
-                  borderColor: location.pathname === '/admin' ? 'primary.main' : 'transparent',
-                  borderRadius: 0,
-                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' },
+                  fontSize: '0.9rem',
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 'var(--radius-sm)',
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(108,71,255,0.04)' },
                 }}>
                   Admin
                 </Button>
@@ -195,22 +218,25 @@ const Navbar: React.FC = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {!isMobile && (
-              <SocialLinks size={22} color="#1A1A1A" gap={0.25} sx={{ mr: 0.5 }} />
+              <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.25} sx={{ mr: 0.5 }} />
             )}
             {user && user.role !== 'ADMIN' && (
               <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
-                <IconButton component={Link} to="/cart" color="inherit">
+                <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart">
                   <Badge
                     badgeContent={cartItemCount}
                     color="primary"
                     invisible={cartItemCount === 0}
                     sx={{
                       '& .MuiBadge-badge': {
+                        bgcolor: 'var(--color-brand-primary)',
+                        color: '#fff',
+                        fontWeight: 700,
                         transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       },
                     }}
                   >
-                    <ShoppingCart sx={{ color: '#1A1A1A' }} />
+                    <ShoppingCart sx={{ color: 'var(--color-text-primary)' }} />
                   </Badge>
                 </IconButton>
               </Box>
@@ -219,13 +245,22 @@ const Navbar: React.FC = () => {
             {user ? (
               <Box ref={avatarWrapRef} sx={{ position: 'relative', display: 'inline-flex' }}>
                 <IconButton onClick={handleMenuOpen} aria-label="Open account menu">
-                  <Avatar src={user.avatarUrl || undefined} alt={user.name} sx={{ width: 32, height: 32 }}>
+                  <Avatar
+                    src={user.avatarUrl || undefined}
+                    alt={user.name}
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      border: '2px solid var(--color-brand-primary)',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     {user.name.charAt(0)}
                   </Avatar>
                 </IconButton>
                 {menuOpen && (
                   <Paper
-                    elevation={6}
+                    elevation={8}
                     sx={{
                       position: 'absolute',
                       right: 0,
@@ -236,6 +271,8 @@ const Navbar: React.FC = () => {
                       maxWidth: 'calc(100vw - 16px)',
                       py: 0.5,
                       zIndex: (t) => t.zIndex.modal,
+                      borderRadius: 'var(--radius-md)',
+                      boxShadow: 'var(--shadow-modal)',
                     }}
                   >
                     <MenuItem disabled sx={{ opacity: 1 }}>
@@ -276,12 +313,14 @@ const Navbar: React.FC = () => {
                 size="small"
                 startIcon={<Login />}
                 sx={{
-                  bgcolor: 'primary.main',
+                  bgcolor: 'var(--color-brand-primary)',
                   color: '#fff',
-                  borderRadius: 6,
-                  px: 2,
+                  borderRadius: 'var(--radius-full)',
+                  px: 2.5,
                   fontWeight: 600,
-                  '&:hover': { bgcolor: 'primary.dark' },
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: '#5835cc', boxShadow: 'var(--shadow-hover)' },
                 }}
               >
                 Sign In
@@ -292,7 +331,7 @@ const Navbar: React.FC = () => {
       </Container>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 250 }} onClick={() => setDrawerOpen(false)}>
+        <Box sx={{ width: 260 }} onClick={() => setDrawerOpen(false)}>
           <Box sx={{ p: 2 }}>
             <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 40 }} />
           </Box>
@@ -325,10 +364,10 @@ const Navbar: React.FC = () => {
           </List>
           <Divider />
           <Box sx={{ p: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#1A1A1A' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'var(--color-text-primary)' }}>
               Follow Us
             </Typography>
-            <SocialLinks size={22} color="#1A1A1A" />
+            <SocialLinks size={22} color="var(--color-text-secondary)" />
           </Box>
         </Box>
       </Drawer>

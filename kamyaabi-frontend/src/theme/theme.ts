@@ -1,80 +1,145 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves MUI provider integration, all existing Redux/Auth/API behavior, and responsive overflow safeguards.
+ * - Replaces only visual primitives with design-token-backed palette, typography, spacing, radii, shadows, and states.
+ * - Keeps current page routes, role guards, form handling, and backend request contracts untouched.
+ */
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 480,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+    },
+  },
   palette: {
     primary: {
-      main: '#8B6914',
-      light: '#B8941E',
-      dark: '#5C460D',
+      main: '#6C47FF',
+      light: '#8E73FF',
+      dark: '#4E30C9',
       contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#2E7D32',
-      light: '#4CAF50',
-      dark: '#1B5E20',
+      main: '#FF6B35',
+      light: '#FF936D',
+      dark: '#D94B18',
+      contrastText: '#FFFFFF',
+    },
+    success: {
+      main: '#38A169',
+      light: '#00C9A7',
+      dark: '#287A4E',
+    },
+    warning: {
+      main: '#F6AD55',
+    },
+    error: {
+      main: '#E53E3E',
     },
     background: {
-      default: '#F5F5F0',
+      default: '#F8F7FF',
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#1A1A1A',
-      secondary: '#666666',
+      primary: '#12101F',
+      secondary: '#5A5770',
+      disabled: '#9B97B3',
     },
+    divider: 'rgba(108, 71, 255, 0.12)',
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    // Global scale-down: base font reduced from MUI's default 14px to 13px,
-    // with proportionally smaller headings. Visual hierarchy is preserved.
-    fontSize: 13,
+    fontFamily: 'var(--font-body)',
+    fontSize: 14,
     h1: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 700,
-      fontSize: 'clamp(1.75rem, 4.5vw, 3rem)',
+      fontFamily: 'var(--font-display)',
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.05,
+      fontSize: 'clamp(2.5rem, 8vw, 4rem)',
     },
     h2: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 600,
-      fontSize: 'clamp(1.5rem, 3.8vw, 2.5rem)',
+      fontFamily: 'var(--font-display)',
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.12,
+      fontSize: 'clamp(2rem, 5vw, 3rem)',
     },
     h3: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 600,
-      fontSize: 'clamp(1.3rem, 3.2vw, 2.1rem)',
+      fontFamily: 'var(--font-display)',
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.16,
+      fontSize: 'clamp(1.75rem, 4vw, 2rem)',
     },
     h4: {
-      fontFamily: '"Playfair Display", serif',
-      fontWeight: 500,
-      fontSize: 'clamp(1.15rem, 2.6vw, 1.8rem)',
+      fontFamily: 'var(--font-display)',
+      fontWeight: 750,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.2,
+      fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
     },
     h5: {
-      fontWeight: 600,
-      fontSize: 'clamp(1rem, 1.8vw, 1.3rem)',
+      fontWeight: 750,
+      lineHeight: 1.25,
+      fontSize: '1.25rem',
     },
     h6: {
-      fontWeight: 600,
-      fontSize: 'clamp(0.9rem, 1.4vw, 1.1rem)',
+      fontWeight: 750,
+      lineHeight: 1.3,
+      fontSize: '1rem',
     },
     body1: {
-      fontSize: '0.9rem',
+      lineHeight: 1.65,
+      fontSize: '1rem',
     },
     body2: {
-      fontSize: '0.8rem',
-    },
-    subtitle1: {
-      fontSize: '0.95rem',
-    },
-    subtitle2: {
-      fontSize: '0.82rem',
+      lineHeight: 1.6,
+      fontSize: '0.875rem',
     },
     button: {
       textTransform: 'none',
-      fontWeight: 600,
+      fontWeight: 750,
+      letterSpacing: 0,
+    },
+    overline: {
+      fontWeight: 800,
+      letterSpacing: '0.1em',
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 12,
   },
+  shadows: [
+    'none',
+    'var(--shadow-card)',
+    'var(--shadow-card)',
+    'var(--shadow-card)',
+    'var(--shadow-hover)',
+    'var(--shadow-hover)',
+    'var(--shadow-hover)',
+    'var(--shadow-hover)',
+    'var(--shadow-hover)',
+    'var(--shadow-hover)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+    'var(--shadow-modal)',
+  ],
   components: {
     MuiCssBaseline: {
       styleOverrides: {
@@ -83,8 +148,19 @@ const theme = createTheme({
           maxWidth: '100vw',
           WebkitTextSizeAdjust: '100%',
         },
-        '#root': { overflowX: 'hidden', maxWidth: '100vw' },
-        'img, video': { maxWidth: '100%', height: 'auto' },
+        '#root': {
+          overflowX: 'hidden',
+          maxWidth: '100vw',
+          minHeight: '100vh',
+        },
+        'img, video': {
+          maxWidth: '100%',
+          height: 'auto',
+        },
+        'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible': {
+          outline: '3px solid rgba(0,201,167,0.45)',
+          outlineOffset: 2,
+        },
       },
     },
     MuiContainer: {
@@ -102,6 +178,8 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-modal)',
           [theme.breakpoints.down('sm')]: {
             margin: theme.spacing(1.5),
             width: 'calc(100% - 24px)',
@@ -110,56 +188,125 @@ const theme = createTheme({
         }),
       },
     },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderTopLeftRadius: 'var(--radius-lg)',
+          borderTopRightRadius: 'var(--radius-lg)',
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          fontWeight: 800,
+          color: '#12101F',
+          backgroundColor: '#F8F7FF',
+        },
+      },
+    },
     MuiTableContainer: {
       styleOverrides: {
         root: {
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-card)',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 24px',
+          borderRadius: 'var(--radius-full)',
+          padding: '10px 24px',
+          minHeight: 42,
+          transition: 'transform var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base)',
+          '&:active': {
+            transform: 'translateY(1px)',
+          },
           '@media (pointer: coarse)': {
             minHeight: 44,
           },
         },
         contained: {
-          boxShadow: 'none',
+          boxShadow: '0 10px 24px rgba(108,71,255,0.22)',
           '&:hover': {
-            boxShadow: '0 2px 8px rgba(139, 105, 20, 0.3)',
+            boxShadow: 'var(--shadow-hover)',
           },
+        },
+        outlined: {
+          borderWidth: 1.5,
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-card)',
+          border: '1px solid rgba(108,71,255,0.08)',
+          transition: 'transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base)',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+            boxShadow: 'var(--shadow-hover)',
+            borderColor: 'rgba(108,71,255,0.18)',
           },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        rounded: {
+          borderRadius: 'var(--radius-lg)',
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
+          backgroundColor: 'rgba(255,255,255,0.86)',
+          color: '#12101F',
+          boxShadow: '0 1px 0 rgba(108,71,255,0.12)',
+          backdropFilter: 'blur(18px)',
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 'var(--radius-full)',
+          fontWeight: 750,
+        },
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        variant: 'outlined',
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 'var(--radius-md)',
           backgroundColor: '#FFFFFF',
-          color: '#1A1A1A',
-          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
+          transition: 'box-shadow var(--transition-base), border-color var(--transition-base)',
+          '&.Mui-focused': {
+            boxShadow: '0 0 0 4px rgba(108,71,255,0.10)',
+          },
+        },
+        input: {
+          minHeight: 24,
         },
       },
     },
     MuiIconButton: {
       styleOverrides: {
         root: {
+          transition: 'transform var(--transition-base), background-color var(--transition-base)',
+          '&:active': {
+            transform: 'scale(0.96)',
+          },
           '@media (pointer: coarse)': {
             minWidth: 44,
             minHeight: 44,

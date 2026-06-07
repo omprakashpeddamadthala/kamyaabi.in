@@ -117,14 +117,14 @@ const HomePage: React.FC = () => {
     <PageTransition>
     <Box>
       {}
-      <Box sx={{ bgcolor: '#f0ede6', position: 'relative', overflow: 'hidden' }}>
+      <Box sx={{ bgcolor: 'var(--color-surface-bg)', position: 'relative', overflow: 'hidden' }}>
         <Container maxWidth="lg">
           <Grid container alignItems="center" sx={{ minHeight: { xs: 400, md: 500 } }}>
             <Grid item xs={12} md={6} sx={{ py: { xs: 4, md: 6 }, position: 'relative', zIndex: 2 }}>
-              <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: '#1A1A1A' }}>
+              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: 'var(--color-text-primary)' }}>
                 {activeSlide.title}
               </Typography>
-              <Typography variant="body1" sx={{ mb: 4, color: '#666', lineHeight: 1.8, maxWidth: 500 }}>
+              <Typography variant="body1" sx={{ mb: 4, color: 'var(--color-text-secondary)', lineHeight: 1.8, maxWidth: 500 }}>
                 {activeSlide.desc}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mt: 3 }}>
@@ -167,15 +167,15 @@ const HomePage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#fff' }}>
+      <Box sx={{ py: 8, bgcolor: 'var(--color-surface-card)' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
               <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>Welcome to Kamyaabi</Typography>
-              <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 3, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
+              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 3, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
                 Kamyaabi: Where Freshness Meets Flavor
               </Typography>
-              <Typography variant="body1" sx={{ color: '#666', lineHeight: 1.8, mb: 4 }}>
+              <Typography variant="body1" sx={{ color: 'var(--color-text-secondary)', lineHeight: 1.8, mb: 4 }}>
                 Kamyaabi is dedicated to offering the finest premium dry fruits, carefully handpicked for freshness and quality. We ensure each product retains its natural goodness and rich flavor, providing you with a healthy, flavorful snacking experience.
               </Typography>
               <Grid container spacing={2}>
@@ -195,12 +195,12 @@ const HomePage: React.FC = () => {
 
       {}
       {!isAdmin && (
-        <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
+        <Box sx={{ py: 8, bgcolor: 'var(--color-surface-bg)' }}>
           <Container maxWidth="lg">
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8 }} />
               <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>Our Products</Typography>
-              <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Our Products</Typography>
+              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Our Products</Typography>
             </Box>
             <Grid container spacing={3}>
               {showProductSkeletons
@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
                   ))}
             </Grid>
             <Box sx={{ textAlign: 'center', mt: 4 }}>
-              <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: '#1A1A1A', color: '#1A1A1A', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: '#1A1A1A', color: '#fff' } }}>
+              <Button component={Link} to="/products" variant="outlined" size="large" sx={{ borderColor: 'var(--color-brand-primary)', color: 'var(--color-text-primary)', px: 4, py: 1.5, borderRadius: 0, fontWeight: 600, '&:hover': { bgcolor: 'var(--color-text-primary)', color: '#fff' } }}>
                 View All Products
               </Button>
             </Box>
@@ -225,11 +225,11 @@ const HomePage: React.FC = () => {
       )}
 
       {/* Track Your Order */}
-      <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: '#f0ede6' }}>
+      <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: 'var(--color-surface-bg)' }}>
         <Container maxWidth="sm">
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <LocalShipping sx={{ fontSize: 44, color: 'primary.main', mb: 1 }} />
-            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 1 }}>
+            <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 1 }}>
               Track Your Order
             </Typography>
             <Typography variant="body1" color="text.secondary">
@@ -259,7 +259,7 @@ const HomePage: React.FC = () => {
                 ),
               }}
               sx={{
-                bgcolor: '#fff',
+                bgcolor: 'var(--color-surface-card)',
                 borderRadius: 2,
                 '& .MuiOutlinedInput-root': { borderRadius: 2 },
               }}
@@ -282,11 +282,11 @@ const HomePage: React.FC = () => {
       </Box>
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#1A1A1A', color: '#fff' }}>
+      <Box sx={{ py: 8, bgcolor: 'var(--color-text-primary)', color: '#fff' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8, filter: 'brightness(2)' }} />
-            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>Your Gateway to Premium Dry Fruits</Typography>
+            <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Your Gateway to Premium Dry Fruits</Typography>
             <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mt: 1 }}>Meeting the Growing Demand for Premium Dry Fruits</Typography>
           </Box>
           <Grid container spacing={4} justifyContent="center">
@@ -306,17 +306,17 @@ const HomePage: React.FC = () => {
       <AmazonBanner variant="home" />
 
       {}
-      <Box sx={{ py: 8, bgcolor: '#fff' }}>
+      <Box sx={{ py: 8, bgcolor: 'var(--color-surface-card)' }}>
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>CLIENT TESTIMONIAL</Typography>
-            <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
               What Does The Customer Have To Say?
             </Typography>
           </Box>
-          <Box sx={{ bgcolor: '#f9f9f9', p: 4, borderRadius: 3, minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
+          <Box sx={{ bgcolor: 'var(--color-surface-bg)', p: 4, borderRadius: 3, minHeight: 200, display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{testimonials[currentTestimonial].name}</Typography>
-            <Typography variant="body1" sx={{ color: '#666', lineHeight: 1.8, fontStyle: 'italic' }}>{testimonials[currentTestimonial].text}</Typography>
+            <Typography variant="body1" sx={{ color: 'var(--color-text-secondary)', lineHeight: 1.8, fontStyle: 'italic' }}>{testimonials[currentTestimonial].text}</Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
             {testimonials.map((_, i) => (
