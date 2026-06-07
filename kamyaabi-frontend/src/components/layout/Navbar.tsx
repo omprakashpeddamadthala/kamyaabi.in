@@ -45,11 +45,13 @@ import {
   Person,
   Article,
   LocalShipping,
+  FavoriteBorder,
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
 import { useFlyToCart } from '../common/FlyToCartAnimation';
 import SocialLinks from '../common/SocialLinks';
+import { fetchWishlistProductIds } from '../../features/wishlist/wishlistSlice';
 
 const navLinks = [
   { label: 'Home', to: '/' },
@@ -68,7 +70,14 @@ const Navbar: React.FC = () => {
 
   const { user } = useAppSelector((state) => state.auth);
   const { cart } = useAppSelector((state) => state.cart);
+  const { productIds: wishlistProductIds } = useAppSelector((state) => state.wishlist);
   const { cartIconRef } = useFlyToCart();
+
+  useEffect(() => {
+    if (user && user.role !== 'ADMIN') {
+      dispatch(fetchWishlistProductIds());
+    }
+  }, [user, dispatch]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropUp, setDropUp] = useState(false);
@@ -226,6 +235,24 @@ const Navbar: React.FC = () => {
               <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.25} sx={{ mr: 0.5 }} />
             )}
             {user && user.role !== 'ADMIN' && (
+              <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist">
+                <Badge
+                  badgeContent={wishlistProductIds.length}
+                  color="primary"
+                  invisible={wishlistProductIds.length === 0}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      bgcolor: 'var(--color-brand-primary)',
+                      color: '#fff',
+                      fontWeight: 700,
+                    },
+                  }}
+                >
+                  <FavoriteBorder sx={{ color: 'var(--color-text-primary)' }} />
+                </Badge>
+              </IconButton>
+            )}
+            {user && user.role !== 'ADMIN' && (
               <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
                 <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart">
                   <Badge
@@ -354,6 +381,12 @@ const Navbar: React.FC = () => {
               <ListItemIcon><LocalShipping /></ListItemIcon>
               <ListItemText primary="Track Order" />
             </ListItem>
+            {user && user.role !== 'ADMIN' && (
+              <ListItem component={Link} to="/wishlist">
+                <ListItemIcon><FavoriteBorder /></ListItemIcon>
+                <ListItemText primary="Wishlist" />
+              </ListItem>
+            )}
             {user && user.role !== 'ADMIN' && (
               <ListItem component={Link} to="/orders">
                 <ListItemIcon><Receipt /></ListItemIcon>

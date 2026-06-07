@@ -59,6 +59,8 @@ import {
   RateReview,
   Delete as DeleteIcon,
   PhotoCamera,
+  Favorite,
+  FavoriteBorder,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -68,6 +70,7 @@ import {
   fetchProducts,
 } from '../features/product/productSlice';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
+import { toggleWishlistItem } from '../features/wishlist/wishlistSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
 import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
@@ -220,6 +223,54 @@ function parseWeightInGrams(weight: string | undefined, unit: string | undefined
   if (['g', 'gm', 'gms', 'gram', 'grams'].includes(u) || u === '') return num;
   return null;
 }
+
+const WishlistToggleButton: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { user } = useAppSelector((s) => s.auth);
+  const { selectedProduct: product } = useAppSelector((s) => s.products);
+  const { productIds: wishlistProductIds, togglingProductIds } = useAppSelector((s) => s.wishlist);
+
+  if (!product) return null;
+  const isWishlisted = wishlistProductIds.includes(product.id);
+  const isToggling = togglingProductIds.includes(product.id);
+
+  const handleClick = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (isToggling) return;
+    dispatch(toggleWishlistItem({ productId: product.id, isInWishlist: isWishlisted }));
+  };
+
+  return (
+    <Button
+      fullWidth
+      variant="outlined"
+      size="large"
+      startIcon={isWishlisted ? <Favorite sx={{ color: '#e53935' }} /> : <FavoriteBorder />}
+      onClick={handleClick}
+      disabled={isToggling}
+      sx={{
+        mt: 1.5,
+        borderRadius: 2,
+        fontWeight: 600,
+        fontSize: '0.9rem',
+        textTransform: 'none',
+        py: 1,
+        color: isWishlisted ? '#e53935' : 'var(--color-text-primary)',
+        borderColor: isWishlisted ? '#e53935' : 'rgba(0,0,0,0.23)',
+        '&:hover': {
+          borderColor: '#e53935',
+          bgcolor: 'rgba(229,57,53,0.04)',
+        },
+      }}
+    >
+      {isToggling ? 'Updating...' : isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+    </Button>
+  );
+};
 
 const ProductDetailPage: React.FC = () => {
   const { slug: slugParam } = useParams<{ slug: string }>();
@@ -962,6 +1013,9 @@ const ProductDetailPage: React.FC = () => {
                     Buy Now
                   </Button>
                 </Box>
+
+                {/* Wishlist toggle */}
+                <WishlistToggleButton />
               </Box>
             )}
 

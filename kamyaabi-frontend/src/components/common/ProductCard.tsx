@@ -16,11 +16,13 @@ import {
   Button,
   CircularProgress,
   Rating,
+  IconButton,
 } from '@mui/material';
-import { ShoppingCart, Check } from '@mui/icons-material';
+import { ShoppingCart, Check, Favorite, FavoriteBorder } from '@mui/icons-material';
 import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
+import { toggleWishlistItem } from '../../features/wishlist/wishlistSlice';
 import { useFlyToCart } from './FlyToCartAnimation';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
@@ -37,6 +39,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { addingProductIds } = useAppSelector((state) => state.cart);
+  const { productIds: wishlistProductIds, togglingProductIds } = useAppSelector((state) => state.wishlist);
+  const isWishlisted = wishlistProductIds.includes(product.id);
+  const isTogglingWishlist = togglingProductIds.includes(product.id);
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
   const [justAdded, setJustAdded] = React.useState(false);
@@ -64,6 +69,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
       .catch(() => {});
     return () => { cancelled = true; };
   }, [product.id]);
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (isTogglingWishlist) return;
+    dispatch(toggleWishlistItem({ productId: product.id, isInWishlist: isWishlisted }));
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -186,14 +201,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             }}
           />
         )}
-        {hasDiscount && (
+        {hasDiscount && !compact && (
           <Chip
             label={`${discountPercent}% OFF`}
             color="secondary"
             size="small"
-            sx={{ position: 'absolute', top: 8, right: 8, fontWeight: 600, fontSize: '0.65rem', height: 22 }}
+            sx={{ position: 'absolute', top: 8, right: 40, fontWeight: 600, fontSize: '0.65rem', height: 22 }}
           />
         )}
+        <IconButton
+          onClick={handleToggleWishlist}
+          size="small"
+          disabled={isTogglingWishlist}
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            bgcolor: 'rgba(255,255,255,0.88)',
+            backdropFilter: 'blur(4px)',
+            width: 30,
+            height: 30,
+            '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+          }}
+        >
+          {isWishlisted
+            ? <Favorite sx={{ fontSize: 18, color: '#e53935' }} />
+            : <FavoriteBorder sx={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
+          }
+        </IconButton>
         {lowStock && (
           <Chip
             label="Low stock"
