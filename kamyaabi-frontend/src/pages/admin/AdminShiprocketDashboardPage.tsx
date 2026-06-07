@@ -239,7 +239,7 @@ const AdminShiprocketDashboardPage: React.FC = () => {
             icon={Inventory2Outlined}
             label="Orders synced"
             value={stats?.totalSynced ?? 0}
-            color="#2E7D32"
+            color="var(--color-brand-accent)"
             loading={statsLoading}
           />
         </Grid>
@@ -275,7 +275,7 @@ const AdminShiprocketDashboardPage: React.FC = () => {
             icon={CheckCircleOutlined}
             label="Delivered"
             value={stats?.delivered ?? 0}
-            color="#2E7D32"
+            color="var(--color-brand-accent)"
             loading={statsLoading}
           />
         </Grid>

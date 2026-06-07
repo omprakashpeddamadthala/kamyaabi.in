@@ -10,7 +10,7 @@ const ContactPage: React.FC = () => {
   return (
     <Box>
       {}
-      <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
+      <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography
             variant="overline"

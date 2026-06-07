@@ -95,3 +95,31 @@
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Admin/customer table consistency */
+.MuiTableContainer-root {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-card) !important;
+  border: 1px solid rgba(108, 71, 255, 0.08);
+}
+.MuiTableHead-root .MuiTableCell-root {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-bg);
+  color: var(--color-text-primary);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+  background: rgba(108, 71, 255, 0.025);
+}
+.MuiTableBody-root .MuiTableRow-root {
+  transition: background-color var(--transition-base);
+}
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background: rgba(108, 71, 255, 0.06);
+}
+.MuiTableBody-root .MuiTableCell-root {
+  color: var(--color-text-primary);
+}
