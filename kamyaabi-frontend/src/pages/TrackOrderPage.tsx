@@ -165,7 +165,7 @@ const TrackOrderPage: React.FC = () => {
             <Typography
               variant="h4"
               sx={{
-                fontFamily: '"Playfair Display", serif',
+                fontFamily: 'var(--font-display)',
                 fontWeight: 700,
                 mb: 1,
               }}

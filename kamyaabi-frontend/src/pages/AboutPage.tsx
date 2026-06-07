@@ -15,7 +15,7 @@ const AboutPage: React.FC = () => {
       <Box sx={{ bgcolor: '#f0ede6', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>About Us</Typography>
-          <Typography variant="h3" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mt: 1 }}>
+          <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
             Kamyaabi: Where Freshness Meets Flavor
           </Typography>
         </Container>
@@ -26,7 +26,7 @@ const AboutPage: React.FC = () => {
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 3 }}>
+              <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 3 }}>
                 Who We Are
               </Typography>
               <Typography variant="body1" sx={{ color: '#666', lineHeight: 1.8, mb: 3 }}>
@@ -46,7 +46,7 @@ const AboutPage: React.FC = () => {
       {}
       <Box sx={{ py: 8, bgcolor: '#f9f9f9' }}>
         <Container maxWidth="lg">
-          <Typography variant="h4" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
+          <Typography variant="h4" align="center" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}>
             Our Values
           </Typography>
           <Grid container spacing={4}>
@@ -70,7 +70,7 @@ const AboutPage: React.FC = () => {
       {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
-          <Typography variant="h4" align="center" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}>
+          <Typography variant="h4" align="center" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}>
             Our Gallery
           </Typography>
           <Grid container spacing={2}>
@@ -85,7 +85,7 @@ const AboutPage: React.FC = () => {
 
       <Box sx={{ py: 8, bgcolor: '#f0ede6', textAlign: 'center' }}>
         <Container maxWidth="md">
-          <Typography variant="h4" sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 2 }}>
+          <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2 }}>
             Connect With Us
           </Typography>
           <Typography variant="body1" sx={{ color: '#666', mb: 3 }}>

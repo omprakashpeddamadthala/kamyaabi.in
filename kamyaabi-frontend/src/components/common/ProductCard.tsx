@@ -1,3 +1,9 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves product navigation to /products/:slug-or-id, auth redirect to /login, optimistic cart update, fly-to-cart animation, and addToCart payload.
+ * - Preserves existing product fields: image/mainImage, category, discountPrice, stock, variationCount, rating summary API, and review count display.
+ * - Visual-only changes: tokenized card, responsive media ratio, low-stock badge, hover actions, and add-to-cart micro-interaction styling.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -42,6 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
+  const lowStock = product.stock > 0 && product.stock < 5;
 
   const cardImageSource = product.mainImageUrl || product.imageUrl || '';
   const cardImageUrl = withCloudinaryTransform(cardImageSource);
@@ -109,13 +116,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        overflow: 'hidden',
+        bgcolor: 'var(--color-surface-card)',
+        border: '1px solid rgba(108,71,255,0.10)',
+        boxShadow: 'var(--shadow-card)',
+        transition: 'transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base)',
         '&:hover': {
           transform: 'translateY(-4px)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          boxShadow: 'var(--shadow-hover)',
+          borderColor: 'rgba(108,71,255,0.22)',
         },
         '&:hover .product-card-image': {
           transform: 'scale(1.05)',
+        },
+        '&:hover .product-card-actions': {
+          opacity: 1,
+          transform: 'translateY(0)',
         },
       }}
       onClick={() => navigate(`/products/${product.slug ?? product.id}`)}
@@ -129,9 +145,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           alt={product.name}
           sx={{
             objectFit: 'cover',
-            aspectRatio: '1/1',
+            aspectRatio: '4/3',
             width: '100%',
-            transition: 'transform 0.3s ease',
+            transition: 'transform 420ms cubic-bezier(0.4,0,0.2,1)',
+            bgcolor: 'var(--color-surface-bg)',
           }}
           loading="lazy"
         />
@@ -146,7 +163,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               fontWeight: 600,
               fontSize: '0.65rem',
               height: 22,
-              bgcolor: 'rgba(255,255,255,0.9)',
+              bgcolor: 'rgba(255,255,255,0.92)',
+              color: 'var(--color-text-primary)',
               backdropFilter: 'blur(4px)',
             }}
           />
@@ -162,7 +180,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               fontWeight: 600,
               fontSize: '0.6rem',
               height: 20,
-              bgcolor: 'rgba(25,118,210,0.9)',
+              bgcolor: 'rgba(108,71,255,0.92)',
               color: '#fff',
               backdropFilter: 'blur(4px)',
             }}
@@ -171,9 +189,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         {hasDiscount && (
           <Chip
             label={`${discountPercent}% OFF`}
-            color="error"
+            color="secondary"
             size="small"
             sx={{ position: 'absolute', top: 8, right: 8, fontWeight: 600, fontSize: '0.65rem', height: 22 }}
+          />
+        )}
+        {lowStock && (
+          <Chip
+            label="Low stock"
+            size="small"
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              right: 8,
+              fontWeight: 800,
+              fontSize: '0.68rem',
+              height: 24,
+              bgcolor: 'var(--color-warning)',
+              color: 'var(--color-surface-dark)',
+            }}
           />
         )}
       </Box>
@@ -193,6 +227,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               ? { xs: '0.78rem', sm: '0.82rem' }
               : { xs: '0.85rem', sm: '0.95rem' },
             fontWeight: 600,
+            letterSpacing: '-0.01em',
             mb: 0.5,
             lineHeight: 1.3,
             display: '-webkit-box',
@@ -228,13 +263,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             mb: 1.5,
           }}
         >
-          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: compact ? { xs: '0.9rem', sm: '0.95rem' } : { xs: '1rem', sm: '1.1rem' } }}>
+          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: compact ? { xs: '0.9rem', sm: '0.95rem' } : { xs: '1rem', sm: '1.1rem' }, fontFamily: 'var(--font-mono)' }}>
             ₹{hasDiscount ? product.discountPrice : product.price}
           </Typography>
           {hasDiscount && (
             <Typography
               variant="body2"
-              sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: '0.8rem' }}
+              sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
             >
               ₹{product.price}
             </Typography>
@@ -249,15 +284,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               onClick={handleAddToCart}
               disabled={product.stock === 0 || isAdding}
               color={justAdded ? 'success' : 'primary'}
+              className="product-card-actions"
               sx={{
                 textTransform: 'none',
-                fontWeight: 600,
+                fontWeight: 750,
                 fontSize: compact ? '0.7rem' : '0.75rem',
                 py: 0.5,
                 px: 2,
                 width: '100%',
                 maxWidth: compact ? 200 : 240,
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease',
+                minHeight: { xs: 44, md: compact ? 36 : 42 },
+                opacity: { xs: 1, md: 0.94 },
+                transform: { xs: 'none', md: 'translateY(4px)' },
+                borderRadius: 'var(--radius-full)',
+                transition: 'opacity var(--transition-base), transform var(--transition-base), background-color var(--transition-base), box-shadow var(--transition-base)',
                 '&:active': {
                   transform: 'scale(0.95)',
                 },

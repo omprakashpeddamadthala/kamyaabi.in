@@ -20,7 +20,7 @@ const ContactPage: React.FC = () => {
           </Typography>
           <Typography
             variant="h3"
-            sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mt: 1 }}
+            sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}
           >
             Get In Touch
           </Typography>
@@ -38,7 +38,7 @@ const ContactPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <Typography
                 variant="h4"
-                sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}
+                sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}
               >
                 Visit Us
               </Typography>
@@ -62,7 +62,7 @@ const ContactPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <Typography
                 variant="h4"
-                sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700, mb: 4 }}
+                sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}
               >
                 Contact Information
               </Typography>
