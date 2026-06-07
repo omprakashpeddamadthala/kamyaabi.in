@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves static about content, images, and routing.
+ * - Visual-only tokenization of section backgrounds and typography.
+ */
 import React from 'react';
 import { Box, Container, Typography, Grid } from '@mui/material';
 import SocialLinks from '../components/common/SocialLinks';

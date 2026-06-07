@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves all nav links, role-based Admin/Product visibility, cart badge, login/logout, account menu, social links, and mobile drawer.
+ * - Visual-only redesign with tokenized sticky header, active state, and menu styling.
+ */
 /**
  * AUDIT: Preserves all existing navigation links, user role checks (ADMIN/USER),
  * cart badge count, login/logout, mobile drawer, and social links.

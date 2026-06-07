@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves cart fetch/update/remove, optimistic quantity updates, address loading/selection, address dialog, and checkout navigation requirements.
+ * - Visual-only tokenization of cart heading, address cards, line items, and order summary.
+ */
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {

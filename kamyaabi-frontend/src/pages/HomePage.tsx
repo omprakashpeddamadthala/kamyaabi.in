@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves hero banner API/fallback behavior, featured products, categories dispatch, track-order form, testimonials, WhatsApp link, and admin product-section visibility.
+ * - Visual-only tokenization of hero, sections, cards, typography, and responsive heights.
+ */
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {

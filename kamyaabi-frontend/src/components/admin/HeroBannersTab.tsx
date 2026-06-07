@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves existing hero banner admin data, actions, status toggles, and image rendering.
+ * - Visual-only tokenization of image placeholder surface.
+ */
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves ADMIN_NAV-driven route links, active route matching, collapsed tooltips, and mobile close callback.
+ * - Visual-only tokenization of active/hover sidebar states.
+ */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {

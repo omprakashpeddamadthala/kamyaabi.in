@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves static refund policy content and route.
+ * - Visual-only tokenization of policy section backgrounds and cards.
+ */
 import React from 'react';
 import {
   Box,

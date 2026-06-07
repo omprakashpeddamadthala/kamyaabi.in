@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves admin auth shell, collapsible sidebar, mobile drawer, breadcrumbs, low-stock notification, storefront link, and logout behavior.
+ * - Visual-only tokenization of app bar, content surface, and borders.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {

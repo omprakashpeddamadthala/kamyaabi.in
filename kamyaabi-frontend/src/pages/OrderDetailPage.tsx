@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves order detail fetching, invoice/download behavior, payment retry, Razorpay verification, and status/payment rendering.
+ * - Visual-only tokenization of Razorpay theme color from design tokens.
+ */
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {

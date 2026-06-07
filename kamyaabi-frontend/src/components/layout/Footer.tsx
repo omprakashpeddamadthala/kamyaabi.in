@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves all footer links, contact details, WhatsApp link, and social links.
+ * - Visual-only tokenization of dark surface, muted text, spacing, and responsive layout.
+ */
 import React from 'react';
 import { Box, Container, Typography, Link as MuiLink, Grid, Divider } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';

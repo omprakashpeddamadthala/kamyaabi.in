@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves search, sort, category/tag URL params, pagination, public settings page size, and product API dispatch behavior.
+ * - Visual-only redesign of headings, filter surfaces, and responsive product presentation.
+ */
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {

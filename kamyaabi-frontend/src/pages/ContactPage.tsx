@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves contact content, contact links, and routing.
+ * - Visual-only tokenization of section backgrounds and typography.
+ */
 import React from 'react';
 import { Box, Container, Typography, Grid, Link as MuiLink } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';

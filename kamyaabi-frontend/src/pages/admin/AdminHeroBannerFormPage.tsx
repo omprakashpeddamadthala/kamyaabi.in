@@ -1,3 +1,8 @@
+/*
+ * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
+ * - Preserves admin hero banner create/edit form fields, validation, upload preview, and submission behavior.
+ * - Visual-only tokenization of preview placeholder surface.
+ */
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
