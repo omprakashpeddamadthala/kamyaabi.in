@@ -41,16 +41,31 @@
   --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --font-size-12: 12px;
-  --font-size-14: 14px;
-  --font-size-16: 16px;
-  --font-size-18: 18px;
-  --font-size-20: 20px;
-  --font-size-24: 24px;
-  --font-size-30: 30px;
-  --font-size-36: 36px;
-  --font-size-48: 48px;
-  --font-size-64: 64px;
+  /* Fluid type scale — clamp(min, preferred, max) */
+  --text-xs:   clamp(0.65rem, 1vw, 0.75rem);
+  --text-sm:   clamp(0.75rem, 1.2vw, 0.875rem);
+  --text-base: clamp(0.8rem, 1.5vw, 1rem);
+  --text-lg:   clamp(0.9rem, 1.8vw, 1.125rem);
+  --text-xl:   clamp(1rem, 2vw, 1.25rem);
+  --text-2xl:  clamp(1.1rem, 2.5vw, 1.5rem);
+  --text-3xl:  clamp(1.25rem, 3vw, 1.875rem);
+  --text-4xl:  clamp(1.5rem, 4vw, 2.25rem);
+  --text-5xl:  clamp(1.75rem, 5vw, 3rem);
+
+  /* Legacy aliases (mapped to fluid scale) */
+  --font-size-12: var(--text-xs);
+  --font-size-14: var(--text-sm);
+  --font-size-16: var(--text-base);
+  --font-size-18: var(--text-lg);
+  --font-size-20: var(--text-xl);
+  --font-size-24: var(--text-2xl);
+  --font-size-30: var(--text-3xl);
+  --font-size-36: var(--text-4xl);
+  --font-size-48: var(--text-5xl);
+  --font-size-64: clamp(2rem, 6vw, 4rem);
+
+  /* Wishlist icon sizing */
+  --icon-wishlist: clamp(14px, 2vw, 18px);
 
   --line-height-body: 1.5;
   --line-height-display: 1.2;
@@ -102,18 +117,32 @@ html {
   scroll-behavior: smooth;
 }
 
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   background:
     radial-gradient(circle at top left, rgba(var(--rgb-brand-primary), 0.10), transparent 32rem),
     var(--color-surface-bg);
   color: var(--color-text-primary);
   font-family: var(--font-body);
+  font-size: var(--text-base);
 }
 
 body,
 #root {
   min-width: 0;
   overflow-x: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }
 
 img,
