@@ -119,7 +119,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
               bgcolor: 'rgba(0,0,0,0.7)',
               color: '#fff',
               fontWeight: 600,
-              fontSize: '0.7rem',
+              fontSize: 'var(--text-xs)',
             }}
           />
         )}
@@ -171,7 +171,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
               bgcolor: 'var(--color-brand-primary)',
               color: '#fff',
               fontWeight: 600,
-              fontSize: '0.8rem',
+              fontSize: 'var(--text-sm)',
               textTransform: 'none',
               borderRadius: 2,
               '&:hover': { bgcolor: 'var(--color-brand-dark)' },
@@ -244,7 +244,7 @@ const WishlistPage: React.FC = () => {
               border: '1px solid rgba(29, 78, 216,0.08)',
             }}
           >
-            <FavoriteBorder sx={{ fontSize: 64, color: 'var(--color-text-secondary)', mb: 2 }} />
+            <FavoriteBorder sx={{ fontSize: 48, color: 'var(--color-text-secondary)', mb: 2 }} />
             <Typography variant="h6" sx={{ color: 'var(--color-text-primary)', mb: 1 }}>
               Your wishlist is empty
             </Typography>
