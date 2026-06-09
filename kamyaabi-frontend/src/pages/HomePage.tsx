@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
         <Container maxWidth="lg">
           <Grid container alignItems="center" sx={{ minHeight: { xs: '50vh', md: '70vh' }, maxHeight: 700 }}>
             <Grid item xs={12} md={6} sx={{ py: { xs: 4, md: 6 }, position: 'relative', zIndex: 2 }}>
-              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.5rem' }, color: 'var(--color-text-primary)' }}>
+              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 2, color: 'var(--color-text-primary)' }}>
                 {activeSlide.title}
               </Typography>
               <Typography variant="body1" sx={{ mb: 4, color: 'var(--color-text-secondary)', lineHeight: 1.8, maxWidth: 500 }}>
@@ -161,8 +161,8 @@ const HomePage: React.FC = () => {
                   <CardMedia component="img" image={item.image} alt={item.name} sx={{ height: { xs: 140, sm: 180, md: 200 }, objectFit: 'cover' }} />
                   <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
                     <Box component="img" src="/assets/img/product/c.webp" alt="" sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, mx: 'auto', mb: 1 }} />
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#fff', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>{item.name}</Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: { xs: '0.7rem', sm: '0.75rem' }, mt: 0.5 }}>{item.desc}</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#fff' }}>{item.name}</Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5 }}>{item.desc}</Typography>
                   </Box>
                 </Card>
               </Grid>
@@ -177,7 +177,7 @@ const HomePage: React.FC = () => {
           <Grid container spacing={6} alignItems="center">
             <Grid item xs={12} md={6}>
               <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>Welcome to Kamyaabi</Typography>
-              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 3, fontSize: { xs: '1.8rem', md: '2.5rem' } }}>
+              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 3 }}>
                 Kamyaabi: Where Freshness Meets Flavor
               </Typography>
               <Typography variant="body1" sx={{ color: 'var(--color-text-secondary)', lineHeight: 1.8, mb: 4 }}>

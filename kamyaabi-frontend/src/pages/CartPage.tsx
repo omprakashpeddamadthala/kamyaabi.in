@@ -174,7 +174,7 @@ const CartPage: React.FC = () => {
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 4, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: { xs: '1.6rem', md: '2rem' } }}>
+      <Typography variant="h3" sx={{ mb: 4, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
         Shopping Cart
       </Typography>
 
@@ -239,7 +239,7 @@ const CartPage: React.FC = () => {
                             {addr.fullName}
                           </Typography>
                           {addr.isDefault && (
-                            <Chip label="Default" color="primary" size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                            <Chip label="Default" color="primary" size="small" sx={{ height: 20, fontSize: 'var(--text-xs)' }} />
                           )}
                         </Box>
                         <Typography variant="body2" color="text.secondary">
@@ -305,7 +305,7 @@ const CartPage: React.FC = () => {
                   <Typography
                     variant="h6"
                     sx={{
-                      fontSize: { xs: '0.95rem', sm: '1rem' },
+                      fontSize: 'var(--text-base)',
                       cursor: 'pointer',
                       lineHeight: 1.3,
                       overflow: 'hidden',
@@ -365,7 +365,7 @@ const CartPage: React.FC = () => {
                     gridArea: 'price',
                     minWidth: { sm: 80 },
                     textAlign: 'right',
-                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                    fontSize: 'var(--text-xl)',
                     whiteSpace: 'nowrap',
                   }}
                 >

@@ -239,7 +239,7 @@ const AdminLayout: React.FC = () => {
                     <ListItemText
                       primary={`${lowStockCount} product${lowStockCount === 1 ? '' : 's'} low on stock`}
                       secondary="Review inventory"
-                      primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
+                      primaryTypographyProps={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}
                     />
                   </ListItem>
                 </List>

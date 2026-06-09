@@ -97,7 +97,7 @@ const OrdersPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em', fontSize: { xs: '1.75rem', md: '2.5rem' } }}>
+      <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
         My Orders
       </Typography>
       {totalElements > 0 && (
@@ -125,7 +125,7 @@ const OrdersPage: React.FC = () => {
             onClick={(e) => toggleExpand(order.id, e)}
           >
             <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
-              <Typography variant="h6" sx={{ fontSize: { xs: '0.95rem', sm: '1rem' } }}>
+              <Typography variant="h6" sx={{ fontSize: 'var(--text-base)' }}>
                 Order #{order.id}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -166,7 +166,7 @@ const OrdersPage: React.FC = () => {
                   sx={{
                     minWidth: { xs: 480, sm: 'auto' },
                     '& .MuiStepLabel-label': {
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontSize: 'var(--text-xs)',
                     },
                   }}
                 >
