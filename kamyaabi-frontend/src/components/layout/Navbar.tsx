@@ -174,7 +174,7 @@ const Navbar: React.FC = () => {
                   sx={{
                     color: location.pathname === link.to ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                     fontWeight: location.pathname === link.to ? 700 : 500,
-                    fontSize: '0.9rem',
+                    fontSize: 'var(--text-sm)',
                     px: 1.5,
                     py: 1,
                     borderRadius: 'var(--radius-sm)',
@@ -205,7 +205,7 @@ const Navbar: React.FC = () => {
                 <Button component={Link} to="/orders" sx={{
                   color: location.pathname === '/orders' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                   fontWeight: location.pathname === '/orders' ? 700 : 500,
-                  fontSize: '0.9rem',
+                  fontSize: 'var(--text-sm)',
                   px: 1.5,
                   py: 1,
                   borderRadius: 'var(--radius-sm)',
@@ -218,7 +218,7 @@ const Navbar: React.FC = () => {
                 <Button component={Link} to="/admin" sx={{
                   color: location.pathname === '/admin' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                   fontWeight: location.pathname === '/admin' ? 700 : 500,
-                  fontSize: '0.9rem',
+                  fontSize: 'var(--text-sm)',
                   px: 1.5,
                   py: 1,
                   borderRadius: 'var(--radius-sm)',
@@ -248,7 +248,7 @@ const Navbar: React.FC = () => {
                     },
                   }}
                 >
-                  <FavoriteBorder sx={{ color: 'var(--color-text-primary)' }} />
+                  <FavoriteBorder sx={{ color: 'var(--color-text-primary)', fontSize: 'var(--icon-wishlist)' }} />
                 </Badge>
               </IconButton>
             )}
@@ -284,7 +284,7 @@ const Navbar: React.FC = () => {
                       width: 34,
                       height: 34,
                       border: '2px solid var(--color-brand-primary)',
-                      fontSize: '0.85rem',
+                      fontSize: 'var(--text-sm)',
                     }}
                   >
                     {user.name.charAt(0)}

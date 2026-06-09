@@ -245,7 +245,7 @@ const OrderDetailPage: React.FC = () => {
                     }}
                   />
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                    <Typography fontWeight={600} sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    <Typography fontWeight={600} sx={{ fontSize: 'var(--text-base)' }}>
                       {item.productName}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">

@@ -92,7 +92,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) =>
                   fontWeight: 700,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  fontSize: '0.65rem',
+                  fontSize: 'var(--text-xs)',
                 }}
               >
                 {section.heading}
@@ -132,7 +132,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) =>
                     {!collapsed && (
                       <ListItemText
                         primary={item.label}
-                        primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: active ? 700 : 500 }}
+                        primaryTypographyProps={{ fontSize: 'var(--text-sm)', fontWeight: active ? 700 : 500 }}
                       />
                     )}
                   </ListItemButton>

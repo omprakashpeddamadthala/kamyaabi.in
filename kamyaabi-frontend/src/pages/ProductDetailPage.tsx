@@ -249,14 +249,14 @@ const WishlistToggleButton: React.FC = () => {
       fullWidth
       variant="outlined"
       size="large"
-      startIcon={isWishlisted ? <Favorite sx={{ color: '#e53935' }} /> : <FavoriteBorder />}
+      startIcon={isWishlisted ? <Favorite sx={{ color: '#e53935', fontSize: 'var(--icon-wishlist)' }} /> : <FavoriteBorder sx={{ fontSize: 'var(--icon-wishlist)' }} />}
       onClick={handleClick}
       disabled={isToggling}
       sx={{
         mt: 1.5,
         borderRadius: 2,
         fontWeight: 600,
-        fontSize: '0.9rem',
+        fontSize: 'var(--text-base)',
         textTransform: 'none',
         py: 1,
         color: isWishlisted ? '#e53935' : 'var(--color-text-primary)',
@@ -725,7 +725,7 @@ const ProductDetailPage: React.FC = () => {
               sx={{
                 mb: 1,
                 fontWeight: 600,
-                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '1.9rem' },
+                fontSize: 'var(--text-3xl)',
                 lineHeight: 1.3,
                 fontFamily: 'var(--font-display)',
               }}
@@ -773,7 +773,7 @@ const ProductDetailPage: React.FC = () => {
                 variant="h4"
                 sx={{
                   fontWeight: 600,
-                  fontSize: { xs: '1.8rem', md: '2.1rem' },
+                  fontSize: 'var(--text-4xl)',
                   color: '#0F1111',
                   lineHeight: 1,
                 }}
@@ -856,7 +856,7 @@ const ProductDetailPage: React.FC = () => {
                           sx={{
                             fontWeight: isSelected ? 700 : 500,
                             color: isSelected ? 'primary.main' : '#0F1111',
-                            fontSize: '0.85rem',
+                            fontSize: 'var(--text-sm)',
                           }}
                         >
                           {v.weight} {v.unit}
@@ -871,7 +871,7 @@ const ProductDetailPage: React.FC = () => {
                           ₹{vPrice}
                         </Typography>
                         {outOfStock && (
-                          <Typography variant="caption" sx={{ display: 'block', color: '#CC0C39', fontSize: '0.65rem' }}>
+                          <Typography variant="caption" sx={{ display: 'block', color: '#CC0C39', fontSize: 'var(--text-xs)' }}>
                             Out of stock
                           </Typography>
                         )}
@@ -912,7 +912,7 @@ const ProductDetailPage: React.FC = () => {
                     component={Link}
                     to={`/products?tag=${tag.slug}`}
                     clickable
-                    sx={{ fontSize: '0.75rem' }}
+                    sx={{ fontSize: 'var(--text-sm)' }}
                   />
                 ))}
               </Box>
@@ -961,7 +961,7 @@ const ProductDetailPage: React.FC = () => {
                       color: '#FFFFFF',
                       borderRadius: 2,
                       fontWeight: 600,
-                      fontSize: '0.95rem',
+                      fontSize: 'var(--text-base)',
                       textTransform: 'none',
                       py: 1.25,
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
@@ -994,7 +994,7 @@ const ProductDetailPage: React.FC = () => {
                       color: '#0F1111',
                       borderRadius: 2,
                       fontWeight: 600,
-                      fontSize: '0.95rem',
+                      fontSize: 'var(--text-base)',
                       textTransform: 'none',
                       py: 1.25,
                       boxShadow: '0 2px 5px rgba(213,217,217,.5)',
@@ -1084,7 +1084,7 @@ const ProductDetailPage: React.FC = () => {
               </Box>
 
               {pincodeError && (
-                <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: '0.8rem' }}>
+                <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: 'var(--text-sm)' }}>
                   {pincodeError}
                 </Alert>
               )}

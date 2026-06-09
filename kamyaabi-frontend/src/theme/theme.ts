@@ -13,7 +13,7 @@ const theme = createTheme({
       sm: 480,
       md: 768,
       lg: 1024,
-      xl: 1280,
+      xl: 1440,
     },
   },
   palette: {
@@ -59,55 +59,68 @@ const theme = createTheme({
       fontWeight: 800,
       letterSpacing: '-0.02em',
       lineHeight: 1.05,
-      fontSize: 'clamp(2.5rem, 8vw, 4rem)',
+      fontSize: 'var(--text-5xl)',
     },
     h2: {
       fontFamily: 'var(--font-display)',
       fontWeight: 800,
       letterSpacing: '-0.02em',
       lineHeight: 1.12,
-      fontSize: 'clamp(2rem, 5vw, 3rem)',
+      fontSize: 'var(--text-4xl)',
     },
     h3: {
       fontFamily: 'var(--font-display)',
       fontWeight: 800,
       letterSpacing: '-0.02em',
       lineHeight: 1.16,
-      fontSize: 'clamp(1.75rem, 4vw, 2rem)',
+      fontSize: 'var(--text-3xl)',
     },
     h4: {
       fontFamily: 'var(--font-display)',
       fontWeight: 750,
       letterSpacing: '-0.02em',
       lineHeight: 1.2,
-      fontSize: 'clamp(1.5rem, 3vw, 1.75rem)',
+      fontSize: 'var(--text-2xl)',
     },
     h5: {
       fontWeight: 750,
       lineHeight: 1.25,
-      fontSize: '1.25rem',
+      fontSize: 'var(--text-xl)',
     },
     h6: {
       fontWeight: 750,
       lineHeight: 1.3,
-      fontSize: '1rem',
+      fontSize: 'var(--text-base)',
+    },
+    subtitle1: {
+      fontSize: 'var(--text-base)',
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontSize: 'var(--text-sm)',
+      fontWeight: 600,
     },
     body1: {
       lineHeight: 1.65,
-      fontSize: '1rem',
+      fontSize: 'var(--text-base)',
     },
     body2: {
       lineHeight: 1.6,
-      fontSize: '0.875rem',
+      fontSize: 'var(--text-sm)',
+    },
+    caption: {
+      fontSize: 'var(--text-xs)',
+    },
+    overline: {
+      fontWeight: 800,
+      letterSpacing: '0.1em',
+      fontSize: 'var(--text-xs)',
     },
     button: {
       textTransform: 'none',
       fontWeight: 750,
       letterSpacing: 0,
-    },
-    overline: {
-      fontWeight: 800,
-      letterSpacing: '0.1em',
+      fontSize: 'var(--text-sm)',
     },
   },
   shape: {
@@ -152,6 +165,8 @@ const theme = createTheme({
           overflowX: 'hidden',
           maxWidth: '100vw',
           minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
         },
         'img, video': {
           maxWidth: '100%',
@@ -173,6 +188,12 @@ const theme = createTheme({
             paddingRight: theme.spacing(3),
           },
         }),
+        maxWidthLg: {
+          maxWidth: '1280px !important',
+        },
+        maxWidthXl: {
+          maxWidth: '1440px !important',
+        },
       },
     },
     MuiDialog: {

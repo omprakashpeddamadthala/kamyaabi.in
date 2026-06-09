@@ -236,7 +236,7 @@ const CheckoutPage: React.FC = () => {
           mb: { xs: 2, sm: 3 },
           fontFamily: 'var(--font-display)',
           fontWeight: 800,
-          fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' },
+          fontSize: 'var(--text-5xl)',
           letterSpacing: '-0.02em',
         }}
       >

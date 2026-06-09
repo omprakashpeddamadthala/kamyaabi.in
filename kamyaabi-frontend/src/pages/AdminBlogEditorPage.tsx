@@ -344,7 +344,7 @@ const AdminBlogEditorPage: React.FC = () => {
                   size="small"
                   variant={btn.active ? 'contained' : 'outlined'}
                   onClick={btn.cmd}
-                  sx={{ minWidth: 36, px: 1, fontSize: '0.75rem' }}
+                  sx={{ minWidth: 36, px: 1, fontSize: 'var(--text-sm)' }}
                 >
                   {btn.label}
                 </Button>
@@ -539,7 +539,7 @@ const AdminBlogEditorPage: React.FC = () => {
                     <Typography variant="caption" sx={{ color: '#006621' }}>
                       {config.brandDomain}/blog/{slug}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: 'var(--text-sm)' }}>
                       {seoDescription || excerpt || 'Post description will appear here...'}
                     </Typography>
                   </Paper>

@@ -18,7 +18,7 @@ const AmazonWordmark: React.FC<{ light?: boolean }> = ({ light }) => (
       sx={{
         fontFamily: 'var(--font-display)',
         fontWeight: 700,
-        fontSize: { xs: '1.4rem', sm: '1.7rem' },
+        fontSize: 'var(--text-3xl)',
         letterSpacing: '-0.02em',
         color: light ? '#fff' : '#131921',
       }}

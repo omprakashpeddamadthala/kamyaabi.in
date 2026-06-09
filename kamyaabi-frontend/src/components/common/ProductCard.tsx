@@ -176,7 +176,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               top: 8,
               left: 8,
               fontWeight: 600,
-              fontSize: '0.65rem',
+              fontSize: 'var(--text-xs)',
               height: 22,
               bgcolor: 'rgba(255,255,255,0.92)',
               color: 'var(--color-text-primary)',
@@ -193,7 +193,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               bottom: 8,
               left: 8,
               fontWeight: 600,
-              fontSize: '0.6rem',
+              fontSize: 'var(--text-xs)',
               height: 20,
               bgcolor: 'rgba(29, 78, 216,0.92)',
               color: '#fff',
@@ -206,7 +206,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             label={`${discountPercent}% OFF`}
             color="secondary"
             size="small"
-            sx={{ position: 'absolute', top: 8, right: 40, fontWeight: 600, fontSize: '0.65rem', height: 22 }}
+            sx={{ position: 'absolute', top: 8, right: 40, fontWeight: 600, fontSize: 'var(--text-xs)', height: 22 }}
           />
         )}
         <IconButton
@@ -219,14 +219,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             right: 6,
             bgcolor: 'rgba(255,255,255,0.88)',
             backdropFilter: 'blur(4px)',
-            width: 30,
-            height: 30,
+            width: 44,
+            height: 44,
+            padding: '10px',
             '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
           }}
         >
           {isWishlisted
-            ? <Favorite sx={{ fontSize: 18, color: '#e53935' }} />
-            : <FavoriteBorder sx={{ fontSize: 18, color: 'var(--color-text-secondary)' }} />
+            ? <Favorite sx={{ fontSize: 'var(--icon-wishlist)', color: '#e53935' }} />
+            : <FavoriteBorder sx={{ fontSize: 'var(--icon-wishlist)', color: 'var(--color-text-secondary)' }} />
           }
         </IconButton>
         {lowStock && (
@@ -238,7 +239,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               bottom: 8,
               right: 8,
               fontWeight: 800,
-              fontSize: '0.68rem',
+              fontSize: 'var(--text-xs)',
               height: 24,
               bgcolor: 'var(--color-warning)',
               color: 'var(--color-surface-dark)',
@@ -258,9 +259,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         <Typography
           variant="h6"
           sx={{
-            fontSize: compact
-              ? { xs: '0.78rem', sm: '0.82rem' }
-              : { xs: '0.85rem', sm: '0.95rem' },
+            fontSize: compact ? 'var(--text-sm)' : 'var(--text-base)',
             fontWeight: 600,
             letterSpacing: '-0.01em',
             mb: 0.5,
@@ -283,7 +282,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
 
         {ratingInfo && ratingInfo.count > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-            <Rating value={ratingInfo.avg} precision={0.5} readOnly size="small" sx={{ fontSize: '0.9rem' }} />
+            <Rating value={ratingInfo.avg} precision={0.5} readOnly size="small" sx={{ fontSize: 'var(--text-base)' }} />
             <Typography variant="caption" color="text.secondary">({ratingInfo.count})</Typography>
           </Box>
         )}
@@ -298,13 +297,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             mb: 1.5,
           }}
         >
-          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: compact ? { xs: '0.9rem', sm: '0.95rem' } : { xs: '1rem', sm: '1.1rem' }, fontFamily: 'var(--font-mono)' }}>
+          <Typography variant="h6" color="primary" fontWeight={700} sx={{ fontSize: compact ? 'var(--text-base)' : 'var(--text-lg)', fontFamily: 'var(--font-mono)' }}>
             ₹{hasDiscount ? product.discountPrice : product.price}
           </Typography>
           {hasDiscount && (
             <Typography
               variant="body2"
-              sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+              sx={{ textDecoration: 'line-through', color: 'text.secondary', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-mono)' }}
             >
               ₹{product.price}
             </Typography>
@@ -323,7 +322,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               sx={{
                 textTransform: 'none',
                 fontWeight: 750,
-                fontSize: compact ? '0.7rem' : '0.75rem',
+                fontSize: compact ? 'var(--text-xs)' : 'var(--text-sm)',
                 py: 0.5,
                 px: 2,
                 width: '100%',

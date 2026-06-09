@@ -189,7 +189,7 @@ const AddressFormDialog: React.FC<AddressFormDialogProps> = ({
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           {serverError && (
-            <Box sx={{ color: 'error.main', fontSize: '0.875rem' }}>{serverError}</Box>
+            <Box sx={{ color: 'error.main', fontSize: 'var(--text-sm)' }}>{serverError}</Box>
           )}
           <TextField
             label="Full Name"

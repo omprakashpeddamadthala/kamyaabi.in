@@ -9,8 +9,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-24);
+  width: 100%;
 }
 
+/* Mobile: 320px – 767px  (1 col on small, 2 col on wider mobile) */
 @media (max-width: 479px) {
   .product-grid {
     grid-template-columns: 1fr;
@@ -24,12 +26,14 @@
   }
 }
 
+/* Tablet: 768px – 1023px */
 @media (min-width: 768px) and (max-width: 1023px) {
   .product-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
+/* Laptop+: 1024px+ */
 @media (min-width: 1024px) {
   .product-grid {
     grid-template-columns: repeat(4, 1fr);
@@ -150,4 +154,27 @@
 }
 .MuiChip-root {
   font-weight: 700;
+}
+
+/* Responsive container: full-width with appropriate padding */
+@media (max-width: 767px) {
+  .MuiContainer-root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+/* Ensure tables scroll on small screens */
+@media (max-width: 767px) {
+  .MuiTableContainer-root {
+    max-width: 100vw;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Full-bleed sections: backgrounds extend to viewport edges */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
 }

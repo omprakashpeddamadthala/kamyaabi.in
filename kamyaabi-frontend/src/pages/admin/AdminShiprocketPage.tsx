@@ -186,7 +186,7 @@ const AdminShiprocketPage: React.FC = () => {
                     <Chip label={o.status} size="small" />
                   </TableCell>
                   <TableCell>{o.courierName || '—'}</TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                  <TableCell sx={{ fontFamily: 'monospace', fontSize: 'var(--text-sm)' }}>
                     {o.awbNumber || '—'}
                   </TableCell>
                   <TableCell>
