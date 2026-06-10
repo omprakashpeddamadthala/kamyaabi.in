@@ -83,6 +83,13 @@ const Navbar: React.FC = () => {
   const [dropUp, setDropUp] = useState(false);
   const avatarWrapRef = useRef<HTMLDivElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleMenuOpen = () => {
     const el = avatarWrapRef.current;
@@ -134,6 +141,8 @@ const Navbar: React.FC = () => {
         bgcolor: 'var(--color-surface-card)',
         borderBottom: '1px solid rgba(29, 78, 216,0.08)',
         backdropFilter: 'blur(12px)',
+        boxShadow: scrolled ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
+        transition: 'box-shadow 0.3s ease',
       }}
     >
       <Container maxWidth="lg">
@@ -163,7 +172,7 @@ const Navbar: React.FC = () => {
           </Box>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
               {navLinks
                 .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
                 .map((link) => (
@@ -175,10 +184,12 @@ const Navbar: React.FC = () => {
                     color: location.pathname === link.to ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                     fontWeight: location.pathname === link.to ? 700 : 500,
                     fontSize: 'var(--text-sm)',
-                    px: 1.5,
-                    py: 1,
+                    letterSpacing: '0.01em',
+                    px: 2,
+                    py: 1.25,
                     borderRadius: 'var(--radius-sm)',
                     position: 'relative',
+                    transition: 'color 0.2s ease, background-color 0.2s ease',
                     '&::after': {
                       content: '""',
                       position: 'absolute',
@@ -189,7 +200,7 @@ const Navbar: React.FC = () => {
                       height: 2,
                       bgcolor: 'var(--color-brand-primary)',
                       borderRadius: 1,
-                      transition: 'var(--transition-base)',
+                      transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
                     },
                     '&:hover': {
                       color: 'var(--color-brand-primary)',
