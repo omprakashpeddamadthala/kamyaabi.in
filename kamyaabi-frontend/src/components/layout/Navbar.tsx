@@ -410,7 +410,7 @@ const Navbar: React.FC = () => {
       </Container>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 260 }} onClick={() => setDrawerOpen(false)}>
+        <Box sx={{ width: 260 }}>
           <Box sx={{ p: 2 }}>
             <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 40 }} />
           </Box>
@@ -419,29 +419,45 @@ const Navbar: React.FC = () => {
             {navLinks
               .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
               .map((link) => (
-              <ListItem key={link.to} component={Link} to={link.to}>
+              <ListItem
+                key={link.to}
+                onClick={() => { setDrawerOpen(false); navigate(link.to); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon>{drawerIcons[link.to]}</ListItemIcon>
                 <ListItemText primary={link.label} />
               </ListItem>
             ))}
-            <ListItem component={Link} to="/track-order">
+            <ListItem
+              onClick={() => { setDrawerOpen(false); navigate('/track-order'); }}
+              sx={{ cursor: 'pointer' }}
+            >
               <ListItemIcon><LocalShipping /></ListItemIcon>
               <ListItemText primary="Track Order" />
             </ListItem>
             {user && user.role !== 'ADMIN' && (
-              <ListItem component={Link} to="/wishlist">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/wishlist'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><FavoriteBorder /></ListItemIcon>
                 <ListItemText primary="Wishlist" />
               </ListItem>
             )}
             {user && user.role !== 'ADMIN' && (
-              <ListItem component={Link} to="/orders">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/orders'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><Receipt /></ListItemIcon>
                 <ListItemText primary="Orders" />
               </ListItem>
             )}
             {user?.role === 'ADMIN' && (
-              <ListItem component={Link} to="/admin">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><Dashboard /></ListItemIcon>
                 <ListItemText primary="Admin" />
               </ListItem>
