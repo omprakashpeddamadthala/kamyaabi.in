@@ -18,4 +18,10 @@ export const shippingApi = {
       '/api/shipping/serviceability',
       { params: { pincode, weight } },
     ),
+
+  getDeliveryEstimate: (pincode: string, productId: number) =>
+    axiosInstance.get<ApiResponse<PincodeServiceability>>(
+      '/api/delivery/estimate',
+      { params: { pincode, productId } },
+    ),
 };

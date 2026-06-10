@@ -79,6 +79,7 @@ import ProductCard from '../components/common/ProductCard';
 import { reviewApi } from '../api/reviewApi';
 import { shippingApi } from '../api/shippingApi';
 import type { PincodeServiceability } from '../api/shippingApi';
+import { addressApi } from '../api/addressApi';
 import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';
@@ -320,6 +321,7 @@ const ProductDetailPage: React.FC = () => {
   const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
+  const [addressLoaded, setAddressLoaded] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -384,6 +386,35 @@ const ProductDetailPage: React.FC = () => {
       .catch(() => { if (!cancelled) setFaqs([]); });
     return () => { cancelled = true; };
   }, [product?.id]);
+
+  // Auto-fetch user's default address pincode and check delivery estimate
+  useEffect(() => {
+    if (!user || !product || addressLoaded) return;
+    let cancelled = false;
+    addressApi.getAll()
+      .then((res) => {
+        if (cancelled) return;
+        const addresses = res.data.data ?? [];
+        const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
+        if (defaultAddr?.pincode && /^[1-9][0-9]{5}$/.test(defaultAddr.pincode)) {
+          setPincode(defaultAddr.pincode);
+          setPincodeLoading(true);
+          shippingApi.getDeliveryEstimate(defaultAddr.pincode, product.id)
+            .then((estimateRes) => {
+              if (!cancelled) setPincodeResult(estimateRes.data.data);
+            })
+            .catch(() => {
+              if (!cancelled) setPincodeError('Unable to check delivery availability.');
+            })
+            .finally(() => {
+              if (!cancelled) setPincodeLoading(false);
+            });
+        }
+        setAddressLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setAddressLoaded(true); });
+    return () => { cancelled = true; };
+  }, [user, product, addressLoaded]);
 
   const userAlreadyReviewed = user && reviews.some((r) => r.userId === user.id);
 
@@ -501,16 +532,21 @@ const ProductDetailPage: React.FC = () => {
     setPincodeResult(null);
     setPincodeLoading(true);
     try {
-      const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
-      const weight = weightKg ? weightKg / 1000 : 0.5;
-      const res = await shippingApi.checkServiceability(trimmed, weight);
-      setPincodeResult(res.data.data);
+      if (user && product) {
+        const res = await shippingApi.getDeliveryEstimate(trimmed, product.id);
+        setPincodeResult(res.data.data);
+      } else {
+        const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
+        const weight = weightKg ? weightKg / 1000 : 0.5;
+        const res = await shippingApi.checkServiceability(trimmed, weight);
+        setPincodeResult(res.data.data);
+      }
     } catch {
       setPincodeError('Unable to check delivery availability. Please try again.');
     } finally {
       setPincodeLoading(false);
     }
-  }, [pincode, product]);
+  }, [pincode, product, user]);
 
   const handleBuyNow = useCallback(() => {
     if (!user) { navigate('/login'); return; }
