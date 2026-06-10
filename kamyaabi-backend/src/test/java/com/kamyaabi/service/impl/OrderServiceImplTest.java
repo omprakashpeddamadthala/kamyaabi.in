@@ -261,6 +261,21 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getOrdersByStatuses_shouldReturnFilteredPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        order.setStatus(Order.OrderStatus.PAID);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        java.util.List<Order.OrderStatus> statuses = java.util.List.of(Order.OrderStatus.PAID, Order.OrderStatus.SHIPPED);
+        when(orderRepository.findByStatusInOrderByCreatedAtDesc(statuses, pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        Page<OrderResponse> result = orderService.getOrdersByStatuses(statuses, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findByStatusInOrderByCreatedAtDesc(statuses, pageable);
+    }
+
+    @Test
     void updateOrderStatus_toPaid_shouldPublishPaymentSuccessEvent() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
