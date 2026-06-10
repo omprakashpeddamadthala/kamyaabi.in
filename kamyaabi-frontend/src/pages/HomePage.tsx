@@ -204,7 +204,6 @@ const HomePage: React.FC = () => {
           <Container maxWidth="lg">
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <img src="/assets/img/fav.svg" alt="" style={{ width: 30, marginBottom: 8 }} />
-              <Typography variant="overline" sx={{ display: 'block', color: 'primary.main', fontWeight: 700 }}>Our Products</Typography>
               <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Our Products</Typography>
             </Box>
             <Grid container spacing={3}>
