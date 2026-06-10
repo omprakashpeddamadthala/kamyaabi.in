@@ -160,7 +160,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           alt={product.name}
           sx={{
             objectFit: 'cover',
-            aspectRatio: '4/3',
+            aspectRatio: { xs: '3/4', sm: '4/3' },
             width: '100%',
             transition: 'transform 420ms cubic-bezier(0.4,0,0.2,1)',
             bgcolor: 'var(--color-surface-bg)',
