@@ -167,7 +167,7 @@ const Navbar: React.FC = () => {
               component="img"
               src="/assets/img/klogo1.webp"
               alt="Kamyaabi"
-              sx={{ height: { xs: 36, sm: 42, md: 50 }, width: 'auto' }}
+              sx={{ height: 40, width: 'auto' }}
             />
           </Box>
 

@@ -67,7 +67,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed, onNavigate }) =>
         }}
       >
         <Box component={Link} to="/admin" onClick={onNavigate} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <Box component="img" src="/assets/img/klogo1.webp" alt="Kamyaabi" sx={{ height: 32, width: 'auto' }} />
+          <Box component="img" src="/assets/img/klogo1.webp" alt="Kamyaabi" sx={{ height: 36, width: 'auto' }} />
           {!collapsed && (
             <Typography variant="subtitle2" sx={{ ml: 1, fontWeight: 700, color: 'primary.main' }}>
               Admin

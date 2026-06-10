@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
                 component="img"
                 src="/assets/img/klogo1.webp"
                 alt="Kamyaabi"
-                sx={{ height: { xs: 42, sm: 50 }, width: 'auto' }}
+                sx={{ height: 32, width: 'auto' }}
               />
             </Box>
             <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', lineHeight: 1.8, maxWidth: 360 }}>
