@@ -201,14 +201,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             }}
           />
         )}
-        {hasDiscount && !compact && (
-          <Chip
-            label={`${discountPercent}% OFF`}
-            color="secondary"
-            size="small"
-            sx={{ position: 'absolute', top: 8, right: 40, fontWeight: 600, fontSize: 'var(--text-xs)', height: 22 }}
-          />
-        )}
+
         <IconButton
           onClick={handleToggleWishlist}
           size="small"
@@ -287,6 +280,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           </Box>
         )}
 
+        {hasDiscount && discountPercent > 0 && (
+          <Chip
+            label={`${discountPercent}% OFF`}
+            size="small"
+            sx={{
+              alignSelf: 'flex-start',
+              fontWeight: 700,
+              fontSize: 'var(--text-xs)',
+              height: 22,
+              bgcolor: '#16a34a',
+              color: '#fff',
+              borderRadius: 'var(--radius-sm)',
+              mb: 0.5,
+            }}
+          />
+        )}
         <Box
           sx={{
             display: 'flex',
