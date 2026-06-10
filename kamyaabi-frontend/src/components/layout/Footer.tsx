@@ -61,6 +61,9 @@ const Footer: React.FC = () => {
               <MuiLink component={Link} to="/contact" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
                 Contact
               </MuiLink>
+              <MuiLink component={Link} to="/blog" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
+                Blogs
+              </MuiLink>
             </Box>
           </Grid>
 
