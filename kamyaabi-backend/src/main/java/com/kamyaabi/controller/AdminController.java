@@ -219,7 +219,7 @@ public class AdminController {
     }
 
     @GetMapping("/orders")
-    @Operation(summary = "Get all orders", description = "Get paginated list of all orders with optional status filter (Admin only)")
+    @Operation(summary = "Get all orders", description = "Get paginated list of all orders with optional status filter (single or comma-separated, e.g. PAID,SHIPPED,DELIVERED)")
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -227,11 +227,20 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page, size);
         Page<OrderResponse> orders;
         if (status != null && !status.isBlank()) {
-            try {
-                com.kamyaabi.entity.Order.OrderStatus orderStatus =
-                        com.kamyaabi.entity.Order.OrderStatus.valueOf(status.toUpperCase());
-                orders = orderService.getOrdersByStatus(orderStatus, pageable);
-            } catch (IllegalArgumentException e) {
+            String[] parts = status.split(",");
+            List<com.kamyaabi.entity.Order.OrderStatus> statuses = new java.util.ArrayList<>();
+            for (String part : parts) {
+                try {
+                    statuses.add(com.kamyaabi.entity.Order.OrderStatus.valueOf(part.trim().toUpperCase()));
+                } catch (IllegalArgumentException ignored) {
+                    // skip invalid status values
+                }
+            }
+            if (statuses.size() == 1) {
+                orders = orderService.getOrdersByStatus(statuses.get(0), pageable);
+            } else if (statuses.size() > 1) {
+                orders = orderService.getOrdersByStatuses(statuses, pageable);
+            } else {
                 orders = orderService.getAllOrders(pageable);
             }
         } else {

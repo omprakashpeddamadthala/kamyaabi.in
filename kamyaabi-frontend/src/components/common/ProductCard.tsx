@@ -210,12 +210,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             position: 'absolute',
             top: 6,
             right: 6,
-            bgcolor: 'rgba(255,255,255,0.88)',
-            backdropFilter: 'blur(4px)',
+            bgcolor: 'transparent',
             width: 44,
             height: 44,
             padding: '10px',
-            '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+            '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' },
           }}
         >
           {isWishlisted

@@ -100,7 +100,7 @@ const AdminOrdersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('PAID,SHIPPED,DELIVERED');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
@@ -200,6 +200,7 @@ const AdminOrdersPage: React.FC = () => {
             }}
           >
             <MenuItem value="">All Orders</MenuItem>
+            <MenuItem value="PAID,SHIPPED,DELIVERED">Active Orders (Paid / Shipped / Delivered)</MenuItem>
             {ORDER_STATUSES.map((s) => (
               <MenuItem key={s} value={s}>{s.replace('_', ' ')}</MenuItem>
             ))}

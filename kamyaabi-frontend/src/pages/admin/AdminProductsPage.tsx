@@ -23,8 +23,9 @@ import {
   Stack,
   InputAdornment,
   Switch,
+  CircularProgress,
 } from '@mui/material';
-import { Edit, Delete, Add, Search as SearchIcon } from '@mui/icons-material';
+import { Edit, Delete, Add, Search as SearchIcon, FileDownload, FileUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { fetchCategories } from '../../features/product/productSlice';
 import { adminApi } from '../../api/adminApi';
@@ -32,6 +33,7 @@ import { PageResponse, Product } from '../../types';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { parseApiError } from '../../utils/apiError';
 import { useToast } from '../../components/common/ToastProvider';
+import { config } from '../../config';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
@@ -92,6 +94,8 @@ const AdminProductsPage: React.FC = () => {
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const csvFileRef = React.useRef<HTMLInputElement>(null);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -220,6 +224,70 @@ const AdminProductsPage: React.FC = () => {
           </Select>
         </FormControl>
         <Box sx={{ flex: 1 }} />
+        <Button
+          variant="outlined"
+          startIcon={<FileDownload />}
+          onClick={() => {
+            const token = localStorage.getItem('token');
+            const url = `${config.apiBaseUrl || ''}/api/admin/products/export/csv`;
+            fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : undefined })
+              .then((r) => r.blob())
+              .then((blob) => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'products.csv';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              })
+              .catch(() => showError('Failed to export CSV'));
+          }}
+        >
+          Export CSV
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={importing ? <CircularProgress size={18} /> : <FileUpload />}
+          disabled={importing}
+          onClick={() => csvFileRef.current?.click()}
+        >
+          {importing ? 'Importing...' : 'Import CSV'}
+        </Button>
+        <input
+          ref={csvFileRef}
+          type="file"
+          accept=".csv"
+          hidden
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setImporting(true);
+            try {
+              const formData = new FormData();
+              formData.append('file', file);
+              const token = localStorage.getItem('token');
+              const url = `${config.apiBaseUrl || ''}/api/admin/products/import/csv`;
+              const res = await fetch(url, {
+                method: 'POST',
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                body: formData,
+              });
+              const json = await res.json();
+              if (json.success) {
+                const d = json.data;
+                showSuccess(`${d.updated} updated, ${d.created} created${d.errors?.length ? `, ${d.errors.length} errors` : ''}`);
+                loadProducts();
+              } else {
+                showError(json.message || 'Import failed');
+              }
+            } catch {
+              showError('Failed to import CSV');
+            } finally {
+              setImporting(false);
+              if (csvFileRef.current) csvFileRef.current.value = '';
+            }
+          }}
+        />
         <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/products/new')}>
           Add Product
         </Button>

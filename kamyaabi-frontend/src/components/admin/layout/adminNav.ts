@@ -14,6 +14,7 @@ import {
   BookmarksOutlined,
   SettingsOutlined,
   LocalShippingOutlined,
+  PhotoLibraryOutlined,
 } from '@mui/icons-material';
 
 export interface AdminNavItem {
@@ -60,6 +61,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
       { label: 'Blog Posts', to: '/admin/blog', icon: ArticleOutlined },
       { label: 'Blog Categories', to: '/admin/blog/categories', icon: CategoryOutlined },
       { label: 'Blog Tags', to: '/admin/blog/tags', icon: BookmarksOutlined },
+      { label: 'Gallery', to: '/admin/gallery', icon: PhotoLibraryOutlined },
     ],
   },
   {
@@ -100,6 +102,7 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/blog/categories': 'Blog Categories',
   '/admin/blog/tags': 'Blog Tags',
   '/admin/products/tags': 'Product Tags',
+  '/admin/gallery': 'Gallery',
   '/admin/products/new': 'New Product',
   '/admin/categories/new': 'New Category',
   '/admin/coupons/new': 'New Coupon',

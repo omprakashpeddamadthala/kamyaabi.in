@@ -3,17 +3,27 @@
  * - Preserves static about content, images, and routing.
  * - Visual-only tokenization of section backgrounds and typography.
  */
-import React from 'react';
-import { Box, Container, Typography, Grid } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Container, Typography, Grid, Skeleton } from '@mui/material';
 import SocialLinks from '../components/common/SocialLinks';
+import { galleryApi, GalleryImage } from '../api/galleryApi';
 
-const galleryImages = [
+const fallbackGalleryImages = [
   '/assets/img/categorie/gallery1.webp', '/assets/img/categorie/gallery2.webp',
   '/assets/img/categorie/gallery3.webp', '/assets/img/categorie/gallery4.webp',
   '/assets/img/categorie/gallery5.webp', '/assets/img/categorie/gallery6.webp',
 ];
 
 const AboutPage: React.FC = () => {
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+
+  useEffect(() => {
+    galleryApi.getAll()
+      .then((res) => setGalleryImages(res.data.data ?? []))
+      .catch(() => setGalleryImages([]))
+      .finally(() => setGalleryLoading(false));
+  }, []);
   return (
     <Box>
       {}
@@ -79,9 +89,15 @@ const AboutPage: React.FC = () => {
             Our Gallery
           </Typography>
           <Grid container spacing={2}>
-            {galleryImages.map((img, idx) => (
-              <Grid item xs={6} sm={4} key={idx}>
-                <Box component="img" src={img} alt={`Gallery ${idx + 1}`} sx={{ width: '100%', height: { xs: 150, md: 220 }, objectFit: 'cover', borderRadius: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }} />
+            {galleryLoading ? (
+              Array.from({ length: 6 }).map((_, idx) => (
+                <Grid item xs={6} sm={4} key={idx}>
+                  <Skeleton variant="rectangular" sx={{ width: '100%', height: { xs: 150, md: 220 }, borderRadius: 2 }} />
+                </Grid>
+              ))
+            ) : (galleryImages.length > 0 ? galleryImages : fallbackGalleryImages.map((url, i) => ({ id: i, imageUrl: url, publicId: null, displayOrder: i, uploadedAt: '' }))).map((img) => (
+              <Grid item xs={6} sm={4} key={img.id}>
+                <Box component="img" src={img.imageUrl} alt={`Gallery ${img.id}`} sx={{ width: '100%', height: { xs: 150, md: 220 }, objectFit: 'cover', borderRadius: 2, transition: 'transform 0.3s', '&:hover': { transform: 'scale(1.05)' } }} />
               </Grid>
             ))}
           </Grid>

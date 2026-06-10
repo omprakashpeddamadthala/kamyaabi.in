@@ -322,6 +322,7 @@ const ProductDetailPage: React.FC = () => {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
   const [addressLoaded, setAddressLoaded] = useState(false);
+  const [hasNoAddress, setHasNoAddress] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -396,6 +397,11 @@ const ProductDetailPage: React.FC = () => {
         if (cancelled) return;
         const addresses = res.data.data ?? [];
         const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
+        if (!defaultAddr) {
+          setHasNoAddress(true);
+          setAddressLoaded(true);
+          return;
+        }
         if (defaultAddr?.pincode && /^[1-9][0-9]{5}$/.test(defaultAddr.pincode)) {
           setPincode(defaultAddr.pincode);
           setPincodeLoading(true);
@@ -1082,6 +1088,32 @@ const ProductDetailPage: React.FC = () => {
               </Typography>
               {user ? (
                 <>
+                  {hasNoAddress && !pincodeResult && !pincode && (
+                    <Box
+                      sx={{
+                        p: 2,
+                        mb: 1,
+                        borderRadius: 2,
+                        bgcolor: '#FFFBEB',
+                        border: '1px solid #FEF3C7',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <LocalShippingOutlined sx={{ fontSize: 28, color: '#D97706', mb: 0.5 }} />
+                      <Typography variant="body2" sx={{ color: '#92400E', mb: 1.5 }}>
+                        Add your delivery address to see estimated delivery date
+                      </Typography>
+                      <Button
+                        component={Link}
+                        to="/profile"
+                        variant="contained"
+                        size="small"
+                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 3 }}
+                      >
+                        Add Address
+                      </Button>
+                    </Box>
+                  )}
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                     <TextField
                       size="small"
@@ -1151,11 +1183,16 @@ const ProductDetailPage: React.FC = () => {
                               {pincodeResult.city}, {pincodeResult.state}
                             </Typography>
                           )}
-                          {pincodeResult.estimatedDays && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                              Estimated delivery: {pincodeResult.estimatedDays} day{pincodeResult.estimatedDays > 1 ? 's' : ''}
-                            </Typography>
-                          )}
+                          {pincodeResult.estimatedDays && (() => {
+                            const edd = new Date();
+                            edd.setDate(edd.getDate() + pincodeResult.estimatedDays!);
+                            const formatted = edd.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                            return (
+                              <Typography variant="caption" sx={{ display: 'block', ml: 2.8, color: '#276749', fontWeight: 600 }}>
+                                Estimated delivery by {formatted}
+                              </Typography>
+                            );
+                          })()}
                           {pincodeResult.codAvailable === 'Yes' && (
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
                               Cash on Delivery available
