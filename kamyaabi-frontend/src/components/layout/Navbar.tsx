@@ -175,9 +175,7 @@ const Navbar: React.FC = () => {
 
           {!isMobile && (
             <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-              {navLinks
-                .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
-                .map((link) => {
+              {navLinks.map((link) => {
                 const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
                 return (
                 <Button
@@ -416,9 +414,7 @@ const Navbar: React.FC = () => {
           </Box>
           <Divider />
           <List>
-            {navLinks
-              .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
-              .map((link) => (
+            {navLinks.map((link) => (
               <ListItem
                 key={link.to}
                 onClick={() => { setDrawerOpen(false); navigate(link.to); }}
