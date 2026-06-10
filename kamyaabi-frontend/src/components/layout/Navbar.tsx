@@ -138,11 +138,11 @@ const Navbar: React.FC = () => {
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: 'var(--color-surface-card)',
-        borderBottom: '1px solid rgba(29, 78, 216,0.08)',
-        backdropFilter: 'blur(12px)',
-        boxShadow: scrolled ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
-        transition: 'box-shadow 0.3s ease',
+        bgcolor: scrolled ? 'rgba(255,255,255,0.95)' : 'var(--color-surface-card)',
+        borderBottom: scrolled ? '1px solid rgba(29, 78, 216,0.12)' : '1px solid rgba(29, 78, 216,0.06)',
+        backdropFilter: 'blur(14px)',
+        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.08)' : 'none',
+        transition: 'box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease',
       }}
     >
       <Container maxWidth="lg">
@@ -161,79 +161,113 @@ const Navbar: React.FC = () => {
               alignItems: 'center',
               textDecoration: 'none',
               flexShrink: 0,
+              transition: 'transform 0.2s ease',
+              '&:hover': { transform: 'scale(1.03)' },
             }}
           >
             <Box
               component="img"
               src="/assets/img/klogo1.webp"
               alt="Kamyaabi"
-              sx={{ height: 40, width: 'auto' }}
+              sx={{ height: 42, width: 'auto' }}
             />
           </Box>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center' }}>
-              {navLinks
-                .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
-                .map((link) => (
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
+                return (
                 <Button
                   key={link.to}
                   component={Link}
                   to={link.to}
                   sx={{
-                    color: location.pathname === link.to ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                    fontWeight: location.pathname === link.to ? 700 : 500,
+                    color: isActive ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                    fontWeight: isActive ? 700 : 500,
                     fontSize: 'var(--text-sm)',
                     letterSpacing: '0.01em',
                     px: 2,
                     py: 1.25,
                     borderRadius: 'var(--radius-sm)',
                     position: 'relative',
-                    transition: 'color 0.2s ease, background-color 0.2s ease',
+                    transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
                     '&::after': {
                       content: '""',
                       position: 'absolute',
                       bottom: 4,
                       left: '50%',
-                      transform: location.pathname === link.to ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
+                      transform: isActive ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
                       width: '60%',
-                      height: 2,
+                      height: 2.5,
                       bgcolor: 'var(--color-brand-primary)',
-                      borderRadius: 1,
+                      borderRadius: 2,
                       transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
                     },
                     '&:hover': {
                       color: 'var(--color-brand-primary)',
-                      bgcolor: 'rgba(29, 78, 216,0.04)',
+                      bgcolor: 'rgba(29, 78, 216,0.05)',
+                      transform: 'translateY(-1px)',
                     },
                     '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
                   }}
                 >
                   {link.label}
                 </Button>
-              ))}
+                );
+              })}
               {user && user.role !== 'ADMIN' && (
                 <Button component={Link} to="/orders" sx={{
-                  color: location.pathname === '/orders' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                  fontWeight: location.pathname === '/orders' ? 700 : 500,
+                  color: location.pathname.startsWith('/orders') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                  fontWeight: location.pathname.startsWith('/orders') ? 700 : 500,
                   fontSize: 'var(--text-sm)',
-                  px: 1.5,
-                  py: 1,
+                  px: 2,
+                  py: 1.25,
                   borderRadius: 'var(--radius-sm)',
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.04)' },
+                  position: 'relative',
+                  transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 4,
+                    left: '50%',
+                    transform: location.pathname.startsWith('/orders') ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
+                    width: '60%',
+                    height: 2.5,
+                    bgcolor: 'var(--color-brand-primary)',
+                    borderRadius: 2,
+                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+                  },
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.05)', transform: 'translateY(-1px)' },
+                  '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
                 }}>
                   Orders
                 </Button>
               )}
               {user?.role === 'ADMIN' && (
                 <Button component={Link} to="/admin" sx={{
-                  color: location.pathname === '/admin' ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                  fontWeight: location.pathname === '/admin' ? 700 : 500,
+                  color: location.pathname.startsWith('/admin') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                  fontWeight: location.pathname.startsWith('/admin') ? 700 : 500,
                   fontSize: 'var(--text-sm)',
-                  px: 1.5,
-                  py: 1,
+                  px: 2,
+                  py: 1.25,
                   borderRadius: 'var(--radius-sm)',
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.04)' },
+                  position: 'relative',
+                  transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 4,
+                    left: '50%',
+                    transform: location.pathname.startsWith('/admin') ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
+                    width: '60%',
+                    height: 2.5,
+                    bgcolor: 'var(--color-brand-primary)',
+                    borderRadius: 2,
+                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+                  },
+                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.05)', transform: 'translateY(-1px)' },
+                  '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
                 }}>
                   Admin
                 </Button>
@@ -241,12 +275,12 @@ const Navbar: React.FC = () => {
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
             {!isMobile && (
               <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.25} sx={{ mr: 0.5 }} />
             )}
             {user && user.role !== 'ADMIN' && (
-              <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist">
+              <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist" sx={{ transition: 'transform 0.2s ease', '&:hover': { transform: 'scale(1.1)' } }}>
                 <Badge
                   badgeContent={wishlistProductIds.length}
                   color="primary"
@@ -265,7 +299,7 @@ const Navbar: React.FC = () => {
             )}
             {user && user.role !== 'ADMIN' && (
               <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
-                <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart">
+                <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart" sx={{ transition: 'transform 0.2s ease', '&:hover': { transform: 'scale(1.1)' } }}>
                   <Badge
                     badgeContent={cartItemCount}
                     color="primary"
@@ -374,38 +408,52 @@ const Navbar: React.FC = () => {
       </Container>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 260 }} onClick={() => setDrawerOpen(false)}>
+        <Box sx={{ width: 260 }}>
           <Box sx={{ p: 2 }}>
             <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 40 }} />
           </Box>
           <Divider />
           <List>
-            {navLinks
-              .filter((link) => !(user?.role === 'ADMIN' && link.to === '/products'))
-              .map((link) => (
-              <ListItem key={link.to} component={Link} to={link.to}>
+            {navLinks.map((link) => (
+              <ListItem
+                key={link.to}
+                onClick={() => { setDrawerOpen(false); navigate(link.to); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon>{drawerIcons[link.to]}</ListItemIcon>
                 <ListItemText primary={link.label} />
               </ListItem>
             ))}
-            <ListItem component={Link} to="/track-order">
+            <ListItem
+              onClick={() => { setDrawerOpen(false); navigate('/track-order'); }}
+              sx={{ cursor: 'pointer' }}
+            >
               <ListItemIcon><LocalShipping /></ListItemIcon>
               <ListItemText primary="Track Order" />
             </ListItem>
             {user && user.role !== 'ADMIN' && (
-              <ListItem component={Link} to="/wishlist">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/wishlist'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><FavoriteBorder /></ListItemIcon>
                 <ListItemText primary="Wishlist" />
               </ListItem>
             )}
             {user && user.role !== 'ADMIN' && (
-              <ListItem component={Link} to="/orders">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/orders'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><Receipt /></ListItemIcon>
                 <ListItemText primary="Orders" />
               </ListItem>
             )}
             {user?.role === 'ADMIN' && (
-              <ListItem component={Link} to="/admin">
+              <ListItem
+                onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
+                sx={{ cursor: 'pointer' }}
+              >
                 <ListItemIcon><Dashboard /></ListItemIcon>
                 <ListItemText primary="Admin" />
               </ListItem>
