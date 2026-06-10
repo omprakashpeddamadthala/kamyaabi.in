@@ -55,6 +55,7 @@ const AdminHeroBannerFormPage = lazy(() => import('../pages/admin/AdminHeroBanne
 const AdminProductTagFormPage = lazy(() => import('../pages/admin/AdminProductTagFormPage'));
 const AdminBlogCategoryFormPage = lazy(() => import('../pages/admin/AdminBlogCategoryFormPage'));
 const AdminBlogTagFormPage = lazy(() => import('../pages/admin/AdminBlogTagFormPage'));
+const AdminGalleryPage = lazy(() => import('../pages/admin/AdminGalleryPage'));
 
 function useSessionGuard(): { authenticated: boolean } {
   const dispatch = useAppDispatch();
@@ -181,6 +182,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
         <Route path="/admin/settings" element={<AdminSettingsPage />} />
         <Route path="/admin/hero-banners" element={<AdminHeroBannersPage />} />
+        <Route path="/admin/gallery" element={<AdminGalleryPage />} />
         <Route path="/admin/shiprocket" element={<AdminShiprocketDashboardPage />} />
 
         <Route path="/admin/products/new" element={<AdminProductFormPage />} />

@@ -65,7 +65,7 @@ const counters = [
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { featuredProducts, loading } = useAppSelector((state) => state.products);
+  const { featuredProducts, categories, loading } = useAppSelector((state) => state.products);
   const { user } = useAppSelector((state) => state.auth);
   const isAdmin = user?.role === 'ADMIN';
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -157,7 +157,15 @@ const HomePage: React.FC = () => {
           <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center">
             {productShowcase.map((item, idx) => (
               <Grid item xs={6} sm={4} md={4} lg={2.4} key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Card sx={{ width: '100%', maxWidth: 240, bgcolor: item.bg, borderRadius: 3, overflow: 'hidden', textAlign: 'center', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}>
+                <Card
+                  sx={{ width: '100%', maxWidth: 240, bgcolor: item.bg, borderRadius: 3, overflow: 'hidden', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-8px)' } }}
+                  onClick={() => {
+                    const match = categories.find(
+                      (c) => c.name.toLowerCase() === item.name.toLowerCase(),
+                    );
+                    navigate(match ? `/products?category=${match.id}` : '/products');
+                  }}
+                >
                   <CardMedia component="img" image={item.image} alt={item.name} sx={{ height: { xs: 140, sm: 180, md: 200 }, objectFit: 'cover' }} />
                   <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
                     <Box component="img" src="/assets/img/product/c.webp" alt="" sx={{ width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 }, mx: 'auto', mb: 1 }} />

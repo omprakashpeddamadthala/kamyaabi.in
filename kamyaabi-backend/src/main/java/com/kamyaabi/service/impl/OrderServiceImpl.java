@@ -201,6 +201,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrdersByStatuses(java.util.List<Order.OrderStatus> statuses, Pageable pageable) {
+        log.debug("Fetching orders with statuses: {}", statuses);
+        return orderRepository.findByStatusInOrderByCreatedAtDesc(statuses, pageable)
+                .map(orderMapper::toResponse);
+    }
+
+    @Override
     public OrderResponse updateOrderStatus(Long orderId, Order.OrderStatus status) {
         log.info("Updating order {} status to: {}", orderId, status);
         Order order = orderRepository.findById(orderId)
