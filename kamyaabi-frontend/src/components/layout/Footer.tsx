@@ -8,7 +8,7 @@ import { Box, Container, Typography, Link as MuiLink, Grid, Divider } from '@mui
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+
 import { Link } from 'react-router-dom';
 import { config } from '../../config';
 import SocialLinks from '../common/SocialLinks';
@@ -127,17 +127,7 @@ const Footer: React.FC = () => {
                 {config.supportPhoneDisplay}
               </MuiLink>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-              <WhatsAppIcon sx={{ color: 'var(--color-text-muted)', fontSize: 18 }} aria-hidden="true" />
-              <MuiLink
-                href={config.whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ color: 'var(--color-text-muted)', '&:hover': { color: '#fff' } }}
-              >
-                {config.supportPhoneDisplay}
-              </MuiLink>
-            </Box>
+
           </Grid>
         </Grid>
 
