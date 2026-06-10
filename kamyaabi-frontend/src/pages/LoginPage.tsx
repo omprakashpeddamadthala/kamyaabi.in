@@ -83,16 +83,12 @@ const LoginPage: React.FC = () => {
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <GoogleOAuthProvider clientId={clientId}>
         <Card sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center', '&:hover': { transform: 'none' }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
-          <Typography
-            variant="h3"
-            sx={{
-              fontFamily: 'var(--font-display)',
-              color: 'primary.main',
-              mb: 1,
-            }}
-          >
-            KAMYAABI
-          </Typography>
+          <Box
+            component="img"
+            src="/assets/img/klogo1.webp"
+            alt="Kamyaabi"
+            sx={{ height: 56, width: 'auto', mb: 1, mx: 'auto', display: 'block' }}
+          />
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
             Premium Dry Fruits Store
           </Typography>

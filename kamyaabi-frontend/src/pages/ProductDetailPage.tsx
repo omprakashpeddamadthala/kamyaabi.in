@@ -79,6 +79,7 @@ import ProductCard from '../components/common/ProductCard';
 import { reviewApi } from '../api/reviewApi';
 import { shippingApi } from '../api/shippingApi';
 import type { PincodeServiceability } from '../api/shippingApi';
+import { addressApi } from '../api/addressApi';
 import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';
@@ -320,6 +321,7 @@ const ProductDetailPage: React.FC = () => {
   const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
+  const [addressLoaded, setAddressLoaded] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -384,6 +386,35 @@ const ProductDetailPage: React.FC = () => {
       .catch(() => { if (!cancelled) setFaqs([]); });
     return () => { cancelled = true; };
   }, [product?.id]);
+
+  // Auto-fetch user's default address pincode and check delivery estimate
+  useEffect(() => {
+    if (!user || !product || addressLoaded) return;
+    let cancelled = false;
+    addressApi.getAll()
+      .then((res) => {
+        if (cancelled) return;
+        const addresses = res.data.data ?? [];
+        const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
+        if (defaultAddr?.pincode && /^[1-9][0-9]{5}$/.test(defaultAddr.pincode)) {
+          setPincode(defaultAddr.pincode);
+          setPincodeLoading(true);
+          shippingApi.getDeliveryEstimate(defaultAddr.pincode, product.id)
+            .then((estimateRes) => {
+              if (!cancelled) setPincodeResult(estimateRes.data.data);
+            })
+            .catch(() => {
+              if (!cancelled) setPincodeError('Unable to check delivery availability.');
+            })
+            .finally(() => {
+              if (!cancelled) setPincodeLoading(false);
+            });
+        }
+        setAddressLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setAddressLoaded(true); });
+    return () => { cancelled = true; };
+  }, [user, product, addressLoaded]);
 
   const userAlreadyReviewed = user && reviews.some((r) => r.userId === user.id);
 
@@ -501,16 +532,21 @@ const ProductDetailPage: React.FC = () => {
     setPincodeResult(null);
     setPincodeLoading(true);
     try {
-      const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
-      const weight = weightKg ? weightKg / 1000 : 0.5;
-      const res = await shippingApi.checkServiceability(trimmed, weight);
-      setPincodeResult(res.data.data);
+      if (user && product) {
+        const res = await shippingApi.getDeliveryEstimate(trimmed, product.id);
+        setPincodeResult(res.data.data);
+      } else {
+        const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
+        const weight = weightKg ? weightKg / 1000 : 0.5;
+        const res = await shippingApi.checkServiceability(trimmed, weight);
+        setPincodeResult(res.data.data);
+      }
     } catch {
       setPincodeError('Unable to check delivery availability. Please try again.');
     } finally {
       setPincodeLoading(false);
     }
-  }, [pincode, product]);
+  }, [pincode, product, user]);
 
   const handleBuyNow = useCallback(() => {
     if (!user) { navigate('/login'); return; }
@@ -1039,99 +1075,128 @@ const ProductDetailPage: React.FC = () => {
               <TrustBadge icon={<ShieldOutlined />} label="Secure transaction" />
             </Box>
 
-            {/* Pincode serviceability check */}
+            {/* Delivery section */}
             <Box sx={{ mt: 2, mb: 1 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#0F1111' }}>
                 Delivery
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                <TextField
-                  size="small"
-                  placeholder="Enter pincode"
-                  value={pincode}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setPincode(val);
-                    if (pincodeResult) setPincodeResult(null);
-                    if (pincodeError) setPincodeError('');
-                  }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleCheckPincode(); }}
-                  inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
-                  sx={{
-                    flex: 1,
-                    maxWidth: 200,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      bgcolor: 'var(--color-surface-bg)',
-                    },
-                  }}
-                />
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleCheckPincode}
-                  disabled={pincodeLoading || pincode.trim().length !== 6}
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    minWidth: 80,
-                    py: 0.9,
-                  }}
-                >
-                  {pincodeLoading ? <CircularProgress size={20} /> : 'Check'}
-                </Button>
-              </Box>
+              {user ? (
+                <>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                    <TextField
+                      size="small"
+                      placeholder="Enter pincode"
+                      value={pincode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setPincode(val);
+                        if (pincodeResult) setPincodeResult(null);
+                        if (pincodeError) setPincodeError('');
+                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleCheckPincode(); }}
+                      inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
+                      sx={{
+                        flex: 1,
+                        maxWidth: 200,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          bgcolor: 'var(--color-surface-bg)',
+                        },
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleCheckPincode}
+                      disabled={pincodeLoading || pincode.trim().length !== 6}
+                      sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        minWidth: 80,
+                        py: 0.9,
+                      }}
+                    >
+                      {pincodeLoading ? <CircularProgress size={20} /> : 'Check'}
+                    </Button>
+                  </Box>
 
-              {pincodeError && (
-                <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: 'var(--text-sm)' }}>
-                  {pincodeError}
-                </Alert>
-              )}
+                  {pincodeError && (
+                    <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: 'var(--text-sm)' }}>
+                      {pincodeError}
+                    </Alert>
+                  )}
 
-              {pincodeResult && (
-                <Box
-                  sx={{
-                    mt: 1,
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: pincodeResult.serviceable ? '#F0FFF4' : '#FFF5F5',
-                    border: '1px solid',
-                    borderColor: pincodeResult.serviceable ? '#C6F6D5' : '#FED7D7',
-                  }}
-                >
-                  {pincodeResult.serviceable ? (
-                    <>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                        <CheckCircle sx={{ color: '#38A169', fontSize: 18 }} />
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#276749' }}>
-                          Delivery available to {pincodeResult.pincode}
-                        </Typography>
-                      </Box>
-                      {pincodeResult.city && pincodeResult.state && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                          {pincodeResult.city}, {pincodeResult.state}
-                        </Typography>
+                  {pincodeResult && (
+                    <Box
+                      sx={{
+                        mt: 1,
+                        p: 1.5,
+                        borderRadius: 2,
+                        bgcolor: pincodeResult.serviceable ? '#F0FFF4' : '#FFF5F5',
+                        border: '1px solid',
+                        borderColor: pincodeResult.serviceable ? '#C6F6D5' : '#FED7D7',
+                      }}
+                    >
+                      {pincodeResult.serviceable ? (
+                        <>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                            <CheckCircle sx={{ color: '#38A169', fontSize: 18 }} />
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#276749' }}>
+                              Delivery available to {pincodeResult.pincode}
+                            </Typography>
+                          </Box>
+                          {pincodeResult.city && pincodeResult.state && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                              {pincodeResult.city}, {pincodeResult.state}
+                            </Typography>
+                          )}
+                          {pincodeResult.estimatedDays && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                              Estimated delivery: {pincodeResult.estimatedDays} day{pincodeResult.estimatedDays > 1 ? 's' : ''}
+                            </Typography>
+                          )}
+                          {pincodeResult.codAvailable === 'Yes' && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
+                              Cash on Delivery available
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Close sx={{ color: '#E53E3E', fontSize: 18 }} />
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#9B2C2C' }}>
+                            {pincodeResult.message || 'Delivery is not available to this pincode'}
+                          </Typography>
+                        </Box>
                       )}
-                      {pincodeResult.estimatedDays && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                          Estimated delivery: {pincodeResult.estimatedDays} day{pincodeResult.estimatedDays > 1 ? 's' : ''}
-                        </Typography>
-                      )}
-                      {pincodeResult.codAvailable === 'Yes' && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                          Cash on Delivery available
-                        </Typography>
-                      )}
-                    </>
-                  ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Close sx={{ color: '#E53E3E', fontSize: 18 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#9B2C2C' }}>
-                        {pincodeResult.message || 'Delivery is not available to this pincode'}
-                      </Typography>
                     </Box>
                   )}
+                </>
+              ) : (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    bgcolor: 'var(--color-surface-bg)',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    textAlign: 'center',
+                  }}
+                >
+                  <LocalShippingOutlined sx={{ fontSize: 28, color: 'text.secondary', mb: 0.5 }} />
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    Log in to see estimated delivery for your location
+                  </Typography>
+                  <Button
+                    component={Link}
+                    to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`}
+                    variant="contained"
+                    size="small"
+                    sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 3 }}
+                  >
+                    Login
+                  </Button>
                 </Box>
               )}
             </Box>
