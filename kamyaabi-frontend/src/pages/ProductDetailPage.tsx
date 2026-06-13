@@ -1,9 +1,4 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves product slug/id fetching, review/FAQ APIs, pincode serviceability, variation/quantity selection, add-to-cart, fly-to-cart, lightbox, sticky CTA, and related products.
- * - Visual-only tokenization of buy-box, image gallery, pincode, review, FAQ, and section backgrounds.
- */
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Container,
@@ -13,265 +8,60 @@ import {
   Button,
   Chip,
   Divider,
-  IconButton,
-  Breadcrumbs,
-  Link as MuiLink,
-  Skeleton,
   CircularProgress,
   Tab,
   Tabs,
   Rating,
-  Dialog,
   useMediaQuery,
   useTheme,
-  Slide,
   Select,
   MenuItem,
   FormControl,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  TextField,
-  Alert,
+  Link as MuiLink,
+  Breadcrumbs,
 } from '@mui/material';
 import {
   ShoppingCart,
   Check,
   CheckCircle,
-  Close,
   Star,
   NavigateNext,
-  ZoomIn,
   Restaurant,
   Kitchen,
   Description as DescriptionIcon,
-  ChevronLeft,
-  ChevronRight,
   FlashOn,
   LocalShippingOutlined,
   AssignmentReturnOutlined,
   StorefrontOutlined,
   ShieldOutlined,
   KeyboardArrowDown,
-  ExpandMore,
   HelpOutline,
   LocalOffer,
   RateReview,
-  Delete as DeleteIcon,
-  PhotoCamera,
-  Favorite,
-  FavoriteBorder,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import {
-  fetchProductById,
-  fetchProductBySlug,
-  clearSelectedProduct,
-  fetchProducts,
-} from '../features/product/productSlice';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
-import { toggleWishlistItem } from '../features/wishlist/wishlistSlice';
 import { useFlyToCart } from '../components/common/FlyToCartAnimation';
 import PageTransition from '../components/common/PageTransition';
-import { cloudinarySrcSet, withCloudinaryTransform } from '../utils/cloudinary';
-import ProductCard from '../components/common/ProductCard';
-
-import { reviewApi } from '../api/reviewApi';
-import { shippingApi } from '../api/shippingApi';
-import type { PincodeServiceability } from '../api/shippingApi';
-import { addressApi } from '../api/addressApi';
-import type { Review, ReviewSummary, Faq } from '../types';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';
-
-function useRevealOnScroll(threshold = 0.15) {
-  const [visible, setVisible] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-
-  const ref = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-      if (!node) return;
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) setVisible(true);
-        },
-        { threshold },
-      );
-      observer.observe(node);
-      observerRef.current = observer;
-    },
-    [threshold],
-  );
-
-  useEffect(
-    () => () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-    },
-    [],
-  );
-
-  return { ref, visible };
-}
-
-const revealSx = (visible: boolean) => ({
-  opacity: visible ? 1 : 0,
-  transform: visible ? 'translateY(0)' : 'translateY(24px)',
-  transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
-});
-
-const ProductDetailSkeleton: React.FC = () => (
-  <Container maxWidth="lg" sx={{ py: 4 }}>
-    <Skeleton variant="text" width={250} height={24} sx={{ mb: 3 }} animation="wave" />
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={5}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, flexDirection: 'column', gap: 1 }}>
-            {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} variant="rectangular" width={56} height={56} sx={{ borderRadius: 1 }} animation="wave" />
-            ))}
-          </Box>
-          <Skeleton variant="rectangular" sx={{ flex: 1, height: 460, borderRadius: 2 }} animation="wave" />
-        </Box>
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <Skeleton variant="text" width="40%" height={20} sx={{ mb: 1 }} animation="wave" />
-        <Skeleton variant="text" width="90%" height={36} sx={{ mb: 1 }} animation="wave" />
-        <Skeleton variant="text" width="60%" height={24} sx={{ mb: 2 }} animation="wave" />
-        <Skeleton variant="text" width="50%" height={32} sx={{ mb: 2 }} animation="wave" />
-        <Skeleton variant="text" width="100%" height={20} animation="wave" />
-        <Skeleton variant="text" width="95%" height={20} animation="wave" />
-        <Skeleton variant="text" width="80%" height={20} sx={{ mb: 3 }} animation="wave" />
-      </Grid>
-      <Grid item xs={12} md={3}>
-        <Skeleton variant="rectangular" height={420} sx={{ borderRadius: 2 }} animation="wave" />
-      </Grid>
-    </Grid>
-  </Container>
-);
-
-interface TrustBadgeProps {
-  icon: React.ReactNode;
-  label: string;
-}
-const TrustBadge: React.FC<TrustBadgeProps> = ({ icon, label }) => (
-  <Box sx={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 0.5,
-    flex: '1 1 0',
-    minWidth: 80,
-    textAlign: 'center',
-  }}>
-    <Box sx={{ color: 'secondary.main', fontSize: 28, display: 'flex' }}>{icon}</Box>
-    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ lineHeight: 1.2 }}>
-      {label}
-    </Typography>
-  </Box>
-);
-
-interface TabPanelProps {
-  children: React.ReactNode;
-  value: number;
-  index: number;
-}
-const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
-  <Box role="tabpanel" hidden={value !== index} id={`product-tabpanel-${index}`} aria-labelledby={`product-tab-${index}`}>
-    {value === index && <Box sx={{ pt: 2.5 }}>{children}</Box>}
-  </Box>
-);
-
-function parseDescriptionBullets(raw: string): string[] {
-  if (!raw) return [];
-  const trimmed = raw.trim();
-  const explicit = trimmed
-    .split(/\r?\n|(?:^|\s)[-•*]\s+/gm)
-    .map((s) => s.replace(/^[-•*]\s*/, '').trim())
-    .filter((s) => s.length > 2);
-  if (explicit.length > 1) return explicit;
-  const sentences = trimmed
-    .split(/(?<=[.!?])\s+(?=[A-Z(\"'])/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 2);
-  return sentences.length > 0 ? sentences : [trimmed];
-}
-
-function formatRelativeDate(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return '';
-  const diff = Date.now() - then;
-  const day = 86_400_000;
-  if (diff < day) return 'today';
-  if (diff < day * 2) return 'yesterday';
-  if (diff < day * 30) return `${Math.floor(diff / day)} days ago`;
-  if (diff < day * 365) return `${Math.floor(diff / (day * 30))} months ago`;
-  return `${Math.floor(diff / (day * 365))} years ago`;
-}
-
-function parseWeightInGrams(weight: string | undefined, unit: string | undefined): number | null {
-  if (!weight) return null;
-  const num = parseFloat(String(weight).replace(/[^\d.]/g, ''));
-  if (!isFinite(num) || num <= 0) return null;
-  const u = (unit || '').toLowerCase().trim();
-  if (['kg', 'kgs', 'kilogram', 'kilograms'].includes(u)) return num * 1000;
-  if (['g', 'gm', 'gms', 'gram', 'grams'].includes(u) || u === '') return num;
-  return null;
-}
-
-const WishlistToggleButton: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
-  const { user } = useAppSelector((s) => s.auth);
-  const { selectedProduct: product } = useAppSelector((s) => s.products);
-  const { productIds: wishlistProductIds, togglingProductIds } = useAppSelector((s) => s.wishlist);
-
-  if (!product) return null;
-  const isWishlisted = wishlistProductIds.includes(product.id);
-  const isToggling = togglingProductIds.includes(product.id);
-
-  const handleClick = () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    if (isToggling) return;
-    dispatch(toggleWishlistItem({ productId: product.id, isInWishlist: isWishlisted }));
-  };
-
-  return (
-    <Button
-      fullWidth
-      variant="outlined"
-      size="large"
-      startIcon={isWishlisted ? <Favorite sx={{ color: '#e53935', fontSize: 'var(--icon-wishlist)' }} /> : <FavoriteBorder sx={{ fontSize: 'var(--icon-wishlist)' }} />}
-      onClick={handleClick}
-      disabled={isToggling}
-      sx={{
-        mt: 1.5,
-        borderRadius: 2,
-        fontWeight: 600,
-        fontSize: 'var(--text-base)',
-        textTransform: 'none',
-        py: 1,
-        color: isWishlisted ? '#e53935' : 'var(--color-text-primary)',
-        borderColor: isWishlisted ? '#e53935' : 'rgba(0,0,0,0.23)',
-        '&:hover': {
-          borderColor: '#e53935',
-          bgcolor: 'rgba(229,57,53,0.04)',
-        },
-      }}
-    >
-      {isToggling ? 'Updating...' : isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-    </Button>
-  );
-};
+import { useProductData } from '../hooks/useProductData';
+import { useProductReviews } from '../hooks/useProductReviews';
+import { usePincodeCheck } from '../hooks/usePincodeCheck';
+import { revealSx, useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { parseDescriptionBullets, parseWeightInGrams } from '../utils/productDetail';
+import ProductDetailSkeleton from '../components/product/ProductDetailSkeleton';
+import ProductImageGallery from '../components/product/ProductImageGallery';
+import TrustBadge from '../components/product/TrustBadge';
+import TabPanel from '../components/product/TabPanel';
+import WishlistToggleButton from '../components/product/WishlistToggleButton';
+import DeliverySection from '../components/product/DeliverySection';
+import ProductReviewsTab from '../components/product/ProductReviewsTab';
+import ProductFaqTab from '../components/product/ProductFaqTab';
+import RelatedProductsSection from '../components/product/RelatedProductsSection';
+import ImageLightboxDialog from '../components/product/ImageLightboxDialog';
+import ReviewImageLightboxDialog from '../components/product/ReviewImageLightboxDialog';
+import StickyAddToCartBar from '../components/product/StickyAddToCartBar';
 
 const ProductDetailPage: React.FC = () => {
   const { slug: slugParam } = useParams<{ slug: string }>();
@@ -281,9 +71,7 @@ const ProductDetailPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  const paramIsNumericId = !!slugParam && /^\d+$/.test(slugParam);
-
-  const { selectedProduct: product, products } = useAppSelector((s) => s.products);
+  const { product, products } = useProductData(slugParam);
   const { user } = useAppSelector((s) => s.auth);
   const { addingProductIds } = useAppSelector((s) => s.cart);
   const publicSettings = usePublicSettings();
@@ -291,6 +79,10 @@ const ProductDetailPage: React.FC = () => {
     publicSettings == null
       ? true
       : String(publicSettings.show_bought_recently_badge ?? 'true').toLowerCase() !== 'false';
+
+  const reviewState = useProductReviews(product, user);
+  const { reviewSummary, faqs } = reviewState;
+  const pincodeState = usePincodeCheck(product, user);
 
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
@@ -300,29 +92,7 @@ const ProductDetailPage: React.FC = () => {
   const [stickyVisible, setStickyVisible] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
-
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [faqs, setFaqs] = useState<Faq[]>([]);
-
-  // Review form state
-  const [reviewFormRating, setReviewFormRating] = useState<number | null>(null);
-  const [reviewFormTitle, setReviewFormTitle] = useState('');
-  const [reviewFormText, setReviewFormText] = useState('');
-  const [reviewFormImages, setReviewFormImages] = useState<File[]>([]);
-  const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false);
-  const [reviewFormError, setReviewFormError] = useState('');
-  const [reviewFormSuccess, setReviewFormSuccess] = useState('');
   const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
-
-  // Pincode serviceability state
-  const [pincode, setPincode] = useState('');
-  const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
-  const [pincodeLoading, setPincodeLoading] = useState(false);
-  const [pincodeError, setPincodeError] = useState('');
-  const [addressLoaded, setAddressLoaded] = useState(false);
-  const [hasNoAddress, setHasNoAddress] = useState(false);
 
   const { triggerFlyToCart } = useFlyToCart();
   const imageRef = useRef<HTMLImageElement>(null);
@@ -331,148 +101,10 @@ const ProductDetailPage: React.FC = () => {
   const isAdding = product ? addingProductIds.includes(product.id) : false;
 
   useEffect(() => {
-    if (slugParam) {
-      if (paramIsNumericId) {
-        dispatch(fetchProductById(Number(slugParam)));
-      } else {
-        dispatch(fetchProductBySlug(slugParam));
-      }
-      setSelectedImageIdx(0);
-      setQuantity(1);
-      setTabValue(0);
-    }
-    return () => { dispatch(clearSelectedProduct()); };
-  }, [dispatch, slugParam, paramIsNumericId]);
-
-  useEffect(() => {
-    if (paramIsNumericId && product?.slug) {
-      navigate(`/products/${product.slug}`, { replace: true });
-    }
-  }, [paramIsNumericId, product?.slug, navigate]);
-
-  useEffect(() => {
-    if (product) {
-      dispatch(fetchProducts({ page: 0, size: 12 }));
-    }
-  }, [dispatch, product?.id]);
-
-  useEffect(() => {
-    const productId = product?.id;
-    if (!productId) return;
-    let cancelled = false;
-    setReviewsLoading(true);
-    Promise.all([reviewApi.list(productId, 0, 50), reviewApi.summary(productId)])
-      .then(([listRes, sumRes]) => {
-        if (cancelled) return;
-        setReviews(listRes.data.data?.content ?? []);
-        setReviewSummary(sumRes.data.data ?? null);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setReviews([]);
-        setReviewSummary(null);
-      })
-      .finally(() => {
-        if (!cancelled) setReviewsLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [product?.id]);
-
-  useEffect(() => {
-    const productId = product?.id;
-    if (!productId) return;
-    let cancelled = false;
-    reviewApi.getFaqs(productId)
-      .then((res) => { if (!cancelled) setFaqs(res.data.data ?? []); })
-      .catch(() => { if (!cancelled) setFaqs([]); });
-    return () => { cancelled = true; };
-  }, [product?.id]);
-
-  // Auto-fetch user's default address pincode and check delivery estimate
-  useEffect(() => {
-    if (!user || !product || addressLoaded) return;
-    let cancelled = false;
-    addressApi.getAll()
-      .then((res) => {
-        if (cancelled) return;
-        const addresses = res.data.data ?? [];
-        const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
-        if (!defaultAddr) {
-          setHasNoAddress(true);
-          setAddressLoaded(true);
-          return;
-        }
-        if (defaultAddr?.pincode && /^[1-9][0-9]{5}$/.test(defaultAddr.pincode)) {
-          setPincode(defaultAddr.pincode);
-          setPincodeLoading(true);
-          shippingApi.getDeliveryEstimate(defaultAddr.pincode, product.id)
-            .then((estimateRes) => {
-              if (!cancelled) setPincodeResult(estimateRes.data.data);
-            })
-            .catch(() => {
-              if (!cancelled) setPincodeError('Unable to check delivery availability.');
-            })
-            .finally(() => {
-              if (!cancelled) setPincodeLoading(false);
-            });
-        }
-        setAddressLoaded(true);
-      })
-      .catch(() => { if (!cancelled) setAddressLoaded(true); });
-    return () => { cancelled = true; };
-  }, [user, product, addressLoaded]);
-
-  const userAlreadyReviewed = user && reviews.some((r) => r.userId === user.id);
-
-  const handleReviewSubmit = async () => {
-    if (!product || !user) return;
-    if (!reviewFormRating) { setReviewFormError('Please select a rating'); return; }
-    if (reviewFormText.length < 20) { setReviewFormError('Review text must be at least 20 characters'); return; }
-    setReviewFormError('');
-    setReviewFormSubmitting(true);
-    try {
-      const res = await reviewApi.create(product.id, {
-        rating: reviewFormRating,
-        title: reviewFormTitle || undefined,
-        text: reviewFormText,
-      }, reviewFormImages.length > 0 ? reviewFormImages : undefined);
-      setReviews((prev) => [res.data.data, ...prev]);
-      setReviewSummary((prev) => prev ? {
-        ...prev,
-        totalReviews: prev.totalReviews + 1,
-        averageRating: Math.round(((prev.averageRating * prev.totalReviews + reviewFormRating) / (prev.totalReviews + 1)) * 10) / 10,
-      } : prev);
-      setReviewFormRating(null);
-      setReviewFormTitle('');
-      setReviewFormText('');
-      setReviewFormImages([]);
-      setReviewFormSuccess('Review submitted successfully!');
-      setTimeout(() => setReviewFormSuccess(''), 4000);
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to submit review';
-      setReviewFormError(msg);
-    } finally {
-      setReviewFormSubmitting(false);
-    }
-  };
-
-  const handleDeleteReview = async (reviewId: number) => {
-    if (!window.confirm('Delete this review? This cannot be undone.')) return;
-    try {
-      await reviewApi.deleteReview(reviewId);
-      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-      setReviewSummary((prev) => prev && prev.totalReviews > 1 ? {
-        ...prev,
-        totalReviews: prev.totalReviews - 1,
-      } : prev);
-    } catch { /* silently handle */ }
-  };
-
-  const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const valid = files.filter((f) => f.size <= 5 * 1024 * 1024 && /image\/(jpeg|png|webp)/.test(f.type));
-    setReviewFormImages((prev) => [...prev, ...valid].slice(0, 5));
-  };
+    setSelectedImageIdx(0);
+    setQuantity(1);
+    setTabValue(0);
+  }, [slugParam]);
 
   useEffect(() => {
     const el = ctaRef.current;
@@ -527,33 +159,6 @@ const ProductDetailPage: React.FC = () => {
     });
   }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch, triggerFlyToCart]);
 
-  const handleCheckPincode = useCallback(async () => {
-    const trimmed = pincode.trim();
-    if (!/^[1-9][0-9]{5}$/.test(trimmed)) {
-      setPincodeError('Please enter a valid 6-digit pincode');
-      setPincodeResult(null);
-      return;
-    }
-    setPincodeError('');
-    setPincodeResult(null);
-    setPincodeLoading(true);
-    try {
-      if (user && product) {
-        const res = await shippingApi.getDeliveryEstimate(trimmed, product.id);
-        setPincodeResult(res.data.data);
-      } else {
-        const weightKg = product ? parseWeightInGrams(product.weight, product.unit) : null;
-        const weight = weightKg ? weightKg / 1000 : 0.5;
-        const res = await shippingApi.checkServiceability(trimmed, weight);
-        setPincodeResult(res.data.data);
-      }
-    } catch {
-      setPincodeError('Unable to check delivery availability. Please try again.');
-    } finally {
-      setPincodeLoading(false);
-    }
-  }, [pincode, product, user]);
-
   const handleBuyNow = useCallback(() => {
     if (!user) { navigate('/login'); return; }
     if (isAdding || !product) return;
@@ -579,8 +184,6 @@ const ProductDetailPage: React.FC = () => {
 
   const trustReveal = useRevealOnScroll();
   const tabsReveal = useRevealOnScroll();
-  const reviewsReveal = useRevealOnScroll();
-  const relatedReveal = useRevealOnScroll();
 
   if (!product) return <ProductDetailSkeleton />;
 
@@ -599,8 +202,6 @@ const ProductDetailPage: React.FC = () => {
 
   const descriptionBullets = parseDescriptionBullets(product.description);
 
-
-
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
   const hasNutrition = !!product.nutritionalInfo && Object.keys(product.nutritionalInfo).length > 0;
@@ -614,18 +215,8 @@ const ProductDetailPage: React.FC = () => {
   tabKeys.push('faq');
   const safeTabValue = Math.min(tabValue, tabKeys.length - 1);
 
-  const defaultFaqs = [
-    { id: -1, question: 'How fresh are the products when delivered?', answer: 'Every order is packed on demand from our climate-controlled storage and sealed in airtight, food-grade pouches. Most customers receive their order within 3–5 business days of dispatch.', displayOrder: 0 },
-    { id: -2, question: 'How should I store this product?', answer: 'Keep the pack in a cool, dry place away from direct sunlight. Once opened, transfer the contents to an airtight container or reseal the pouch tightly to preserve crunch and flavor.', displayOrder: 1 },
-    { id: -3, question: 'Are these dry fruits raw, roasted, or salted?', answer: 'Preparation varies by product. Refer to the Description section above for the exact processing details for this specific item.', displayOrder: 2 },
-    { id: -4, question: 'Do you offer returns or refunds?', answer: 'Yes. If your order arrives damaged or you are not satisfied with the quality, contact us within 7 days of delivery and we will arrange a replacement or refund as per our return policy.', displayOrder: 3 },
-    { id: -5, question: 'Is the packaging vegetarian and food-safe?', answer: 'Absolutely. All Kamyaabi products are 100% vegetarian and packed in FSSAI-compliant, food-grade materials that protect freshness without any added preservatives.', displayOrder: 4 },
-  ];
-  const displayFaqs = faqs.length > 0 ? faqs : defaultFaqs;
-
   return (
     <PageTransition>
-      {}
       <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 3 }, pb: 0 }}>
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
@@ -635,132 +226,24 @@ const ProductDetailPage: React.FC = () => {
       </Container>
 
       <Container maxWidth="lg" sx={{ pb: { xs: 2, md: 3 } }}>
-        {/* 2-column layout: Gallery | Details + Actions */}
         <Grid container spacing={{ xs: 2, md: 4 }} alignItems="flex-start">
-          {/* COLUMN 1: GALLERY (vertical thumbs + main image) */}
           <Grid item xs={12} md={6}>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                flexDirection: { xs: 'column', md: 'row' },
-              }}
-            >
-              {/* Vertical thumbnails (left on desktop, below on mobile) */}
-              {galleryImages.length > 1 && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'row', md: 'column' },
-                    gap: 1,
-                    order: { xs: 2, md: 1 },
-                    flexWrap: { xs: 'wrap', md: 'nowrap' },
-                  }}
-                >
-                  {galleryImages.map((img, idx) => (
-                    <Box
-                      key={img.id ?? idx}
-                      component="img"
-                      src={withCloudinaryTransform(img.imageUrl, 'w_120,h_120,c_fill,q_auto,f_auto')}
-                      alt={`${product.name} thumbnail ${idx + 1}`}
-                      onMouseEnter={() => setSelectedImageIdx(idx)}
-                      onClick={() => setSelectedImageIdx(idx)}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`View image ${idx + 1}`}
-                      onKeyDown={(e: React.KeyboardEvent) => {
-                        if (e.key === 'Enter' || e.key === ' ') setSelectedImageIdx(idx);
-                      }}
-                      sx={{
-                        width: { xs: 60, md: 56 },
-                        height: { xs: 60, md: 56 },
-                        objectFit: 'cover',
-                        borderRadius: 1,
-                        cursor: 'pointer',
-                        border: '1px solid',
-                        borderColor: idx === safeIdx ? 'primary.main' : 'divider',
-                        outline: idx === safeIdx ? '2px solid' : 'none',
-                        outlineColor: 'primary.main',
-                        outlineOffset: 1,
-                        transition: 'border-color 0.2s ease, outline 0.2s ease',
-                        '&:hover': { borderColor: 'primary.main' },
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-
-              {/* Main image */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  order: { xs: 1, md: 2 },
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                  bgcolor: 'var(--color-surface-bg)',
-                  position: 'relative',
-                  cursor: 'zoom-in',
-                  '&:hover .zoom-hint': { opacity: isZooming ? 0 : 1 },
-                }}
-                onMouseEnter={() => setIsZooming(true)}
-                onMouseLeave={() => setIsZooming(false)}
-                onMouseMove={handleMouseMove}
-                onClick={() => setLightboxOpen(true)}
-              >
-                <Box
-                  component="img"
-                  ref={imageRef}
-                  src={withCloudinaryTransform(primaryImageSource, 'w_800,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
-                  srcSet={cloudinarySrcSet(primaryImageSource) || undefined}
-                  sizes="(max-width: 900px) 100vw, 500px"
-                  width={800}
-                  height={520}
-                  alt={product.name}
-                  sx={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: 520,
-                    aspectRatio: '1 / 1',
-                    objectFit: 'cover',
-                    display: 'block',
-                    transition: 'transform 0.3s ease, opacity 0.3s ease',
-                    transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    transform: isZooming ? 'scale(1.5)' : 'scale(1)',
-                  }}
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                />
-                <Box
-                  className="zoom-hint"
-                  sx={{
-                    position: 'absolute',
-                    bottom: 12,
-                    right: 12,
-                    bgcolor: 'rgba(0,0,0,0.6)',
-                    color: '#fff',
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    opacity: 0,
-                    transition: 'opacity 0.2s',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  <ZoomIn fontSize="small" />
-                  <Typography variant="caption">Click to expand</Typography>
-                </Box>
-              </Box>
-            </Box>
+            <ProductImageGallery
+              product={product}
+              galleryImages={galleryImages}
+              safeIdx={safeIdx}
+              primaryImageSource={primaryImageSource}
+              isZooming={isZooming}
+              zoomPosition={zoomPosition}
+              imageRef={imageRef}
+              onSelectIdx={setSelectedImageIdx}
+              onZoomChange={setIsZooming}
+              onMouseMove={handleMouseMove}
+              onOpenLightbox={() => setLightboxOpen(true)}
+            />
           </Grid>
 
-          {/* COLUMN 2: PRODUCT DETAILS + ACTIONS */}
           <Grid item xs={12} md={6}>
-            {/* Title */}
             <Typography
               variant="h4"
               component="h1"
@@ -775,7 +258,6 @@ const ProductDetailPage: React.FC = () => {
               {product.name}
             </Typography>
 
-            {/* Rating (only when reviews exist) */}
             {hasRating && reviewSummary && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
                 <Typography variant="body2" fontWeight={600}>
@@ -801,7 +283,6 @@ const ProductDetailPage: React.FC = () => {
 
             <Divider sx={{ mb: 2 }} />
 
-            {/* Discount + Price block */}
             <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
               {hasDiscount && (
                 <Typography
@@ -843,7 +324,6 @@ const ProductDetailPage: React.FC = () => {
               Inclusive of all taxes
             </Typography>
 
-            {/* Stock indicator */}
             <Typography
               variant="subtitle1"
               sx={{
@@ -856,7 +336,6 @@ const ProductDetailPage: React.FC = () => {
               {inStock ? 'In stock' : 'Out of stock'}
             </Typography>
 
-            {/* Variation selector */}
             {product.variations && product.variations.length > 1 && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#0F1111' }}>
@@ -924,7 +403,6 @@ const ProductDetailPage: React.FC = () => {
               </Box>
             )}
 
-            {/* Category link */}
             {product.categoryName && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Category:</Typography>
@@ -941,7 +419,6 @@ const ProductDetailPage: React.FC = () => {
               </Box>
             )}
 
-            {/* Tag pills */}
             {product.tags && product.tags.length > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
                 <LocalOffer sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -960,10 +437,8 @@ const ProductDetailPage: React.FC = () => {
               </Box>
             )}
 
-            {/* Quantity + Add to Cart + Buy Now */}
             {(!user || user.role !== 'ADMIN') && (
               <Box ref={ctaRef} sx={{ mb: 2 }}>
-                {/* Quantity */}
                 <FormControl size="small" sx={{ mb: 2, minWidth: 180 }}>
                   <Select
                     id="qty-select"
@@ -988,7 +463,6 @@ const ProductDetailPage: React.FC = () => {
                 </FormControl>
 
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5 }}>
-                  {/* Add to Cart */}
                   <Button
                     fullWidth
                     size="large"
@@ -1024,7 +498,6 @@ const ProductDetailPage: React.FC = () => {
                      justAdded ? 'Added to Cart!' : 'Add to Cart'}
                   </Button>
 
-                  {/* Buy Now */}
                   <Button
                     fullWidth
                     size="large"
@@ -1056,12 +529,10 @@ const ProductDetailPage: React.FC = () => {
                   </Button>
                 </Box>
 
-                {/* Wishlist toggle */}
                 <WishlistToggleButton />
               </Box>
             )}
 
-            {/* Trust icons row (Free Delivery / Non-Returnable / Delivered / Secure) */}
             <Box
               ref={trustReveal.ref}
               sx={{
@@ -1081,164 +552,19 @@ const ProductDetailPage: React.FC = () => {
               <TrustBadge icon={<ShieldOutlined />} label="Secure transaction" />
             </Box>
 
-            {/* Delivery section */}
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#0F1111' }}>
-                Delivery
-              </Typography>
-              {user ? (
-                <>
-                  {hasNoAddress && !pincodeResult && !pincode && (
-                    <Box
-                      sx={{
-                        p: 2,
-                        mb: 1,
-                        borderRadius: 2,
-                        bgcolor: '#FFFBEB',
-                        border: '1px solid #FEF3C7',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <LocalShippingOutlined sx={{ fontSize: 28, color: '#D97706', mb: 0.5 }} />
-                      <Typography variant="body2" sx={{ color: '#92400E', mb: 1.5 }}>
-                        Add your delivery address to see estimated delivery date
-                      </Typography>
-                      <Button
-                        component={Link}
-                        to="/profile"
-                        variant="contained"
-                        size="small"
-                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 3 }}
-                      >
-                        Add Address
-                      </Button>
-                    </Box>
-                  )}
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                    <TextField
-                      size="small"
-                      placeholder="Enter pincode"
-                      value={pincode}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                        setPincode(val);
-                        if (pincodeResult) setPincodeResult(null);
-                        if (pincodeError) setPincodeError('');
-                      }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleCheckPincode(); }}
-                      inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
-                      sx={{
-                        flex: 1,
-                        maxWidth: 200,
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                          bgcolor: 'var(--color-surface-bg)',
-                        },
-                      }}
-                    />
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleCheckPincode}
-                      disabled={pincodeLoading || pincode.trim().length !== 6}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        minWidth: 80,
-                        py: 0.9,
-                      }}
-                    >
-                      {pincodeLoading ? <CircularProgress size={20} /> : 'Check'}
-                    </Button>
-                  </Box>
+            <DeliverySection
+              user={user}
+              pincode={pincodeState.pincode}
+              setPincode={pincodeState.setPincode}
+              pincodeResult={pincodeState.pincodeResult}
+              setPincodeResult={pincodeState.setPincodeResult}
+              pincodeLoading={pincodeState.pincodeLoading}
+              pincodeError={pincodeState.pincodeError}
+              setPincodeError={pincodeState.setPincodeError}
+              hasNoAddress={pincodeState.hasNoAddress}
+              onCheckPincode={pincodeState.handleCheckPincode}
+            />
 
-                  {pincodeError && (
-                    <Alert severity="error" sx={{ mt: 1, py: 0, fontSize: 'var(--text-sm)' }}>
-                      {pincodeError}
-                    </Alert>
-                  )}
-
-                  {pincodeResult && (
-                    <Box
-                      sx={{
-                        mt: 1,
-                        p: 1.5,
-                        borderRadius: 2,
-                        bgcolor: pincodeResult.serviceable ? '#F0FFF4' : '#FFF5F5',
-                        border: '1px solid',
-                        borderColor: pincodeResult.serviceable ? '#C6F6D5' : '#FED7D7',
-                      }}
-                    >
-                      {pincodeResult.serviceable ? (
-                        <>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                            <CheckCircle sx={{ color: '#38A169', fontSize: 18 }} />
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#276749' }}>
-                              Delivery available to {pincodeResult.pincode}
-                            </Typography>
-                          </Box>
-                          {pincodeResult.city && pincodeResult.state && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                              {pincodeResult.city}, {pincodeResult.state}
-                            </Typography>
-                          )}
-                          {pincodeResult.estimatedDays && (() => {
-                            const edd = new Date();
-                            edd.setDate(edd.getDate() + pincodeResult.estimatedDays!);
-                            const formatted = edd.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-                            return (
-                              <Typography variant="caption" sx={{ display: 'block', ml: 2.8, color: '#276749', fontWeight: 600 }}>
-                                Estimated delivery by {formatted}
-                              </Typography>
-                            );
-                          })()}
-                          {pincodeResult.codAvailable === 'Yes' && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 2.8 }}>
-                              Cash on Delivery available
-                            </Typography>
-                          )}
-                        </>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <Close sx={{ color: '#E53E3E', fontSize: 18 }} />
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#9B2C2C' }}>
-                            {pincodeResult.message || 'Delivery is not available to this pincode'}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                </>
-              ) : (
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: 'var(--color-surface-bg)',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    textAlign: 'center',
-                  }}
-                >
-                  <LocalShippingOutlined sx={{ fontSize: 28, color: 'text.secondary', mb: 0.5 }} />
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    Log in to see estimated delivery for your location
-                  </Typography>
-                  <Button
-                    component={Link}
-                    to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`}
-                    variant="contained"
-                    size="small"
-                    sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 3 }}
-                  >
-                    Login
-                  </Button>
-                </Box>
-              )}
-            </Box>
-
-            {/* Bought recently badge */}
             {showBoughtRecentlyBadge && reviewSummary && reviewSummary.recentBuyersCount > 0 && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
                 <Star sx={{ color: '#F59E0B', fontSize: 18 }} />
@@ -1252,8 +578,6 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
         </Grid>
 
-
-        {}
         {(tabKeys.length > 1 || product.description) && (
           <Box ref={tabsReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(tabsReveal.visible) }}>
             <Tabs
@@ -1292,52 +616,46 @@ const ProductDetailPage: React.FC = () => {
 
             {tabKeys.map((key, idx) => (
               <TabPanel key={key} value={safeTabValue} index={idx}>
-                {key === 'description' && (
-                  <>
-                    {descriptionBullets.length > 0 && (
+                {key === 'description' && descriptionBullets.length > 0 && (
+                  <Box
+                    component="ul"
+                    sx={{
+                      listStyle: 'none',
+                      p: 0,
+                      mt: 0,
+                      mb: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1.25,
+                    }}
+                  >
+                    {descriptionBullets.map((point, i) => (
                       <Box
-                        component="ul"
+                        key={i}
+                        component="li"
                         sx={{
-                          listStyle: 'none',
-                          p: 0,
-                          mt: 0,
-                          mb: 0,
                           display: 'flex',
-                          flexDirection: 'column',
+                          alignItems: 'flex-start',
                           gap: 1.25,
+                          p: 1.25,
+                          borderRadius: 2,
+                          bgcolor: 'var(--color-surface-bg)',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          transition: 'background-color 0.2s',
+                          '&:hover': { bgcolor: 'rgba(29, 78, 216,0.04)' },
                         }}
                       >
-                        {descriptionBullets.map((point, i) => (
-                          <Box
-                            key={i}
-                            component="li"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: 1.25,
-                              p: 1.25,
-                              borderRadius: 2,
-                              bgcolor: 'var(--color-surface-bg)',
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              transition: 'background-color 0.2s',
-                              '&:hover': { bgcolor: 'rgba(29, 78, 216,0.04)' },
-                            }}
-                          >
-                            <CheckCircle
-                              fontSize="small"
-                              sx={{ color: 'secondary.main', mt: '3px', flexShrink: 0 }}
-                            />
-                            <Typography variant="body1" sx={{ lineHeight: 1.7, color: 'text.primary' }}>
-                              {point}
-                            </Typography>
-                          </Box>
-                        ))}
+                        <CheckCircle
+                          fontSize="small"
+                          sx={{ color: 'secondary.main', mt: '3px', flexShrink: 0 }}
+                        />
+                        <Typography variant="body1" sx={{ lineHeight: 1.7, color: 'text.primary' }}>
+                          {point}
+                        </Typography>
                       </Box>
-                    )}
-
-
-                  </>
+                    ))}
+                  </Box>
                 )}
 
                 {key === 'nutrition' && product.nutritionalInfo && (
@@ -1389,388 +707,49 @@ const ProductDetailPage: React.FC = () => {
                 )}
 
                 {key === 'reviews' && (
-                  <>
-                    {reviewsLoading ? (
-                      <Grid container spacing={3}>
-                        {[0, 1, 2].map((i) => (
-                          <Grid item xs={12} sm={6} md={4} key={i}>
-                            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2 }} animation="wave" />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    ) : (
-                      <>
-                        {hasRating && reviewSummary && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <Typography variant="h3" fontWeight={700} color="primary.main">
-                              {reviewSummary.averageRating.toFixed(1)}
-                            </Typography>
-                            <Box>
-                              <Rating value={reviewSummary.averageRating} precision={0.5} readOnly />
-                              <Typography variant="body2" color="text.secondary">
-                                Based on {reviewSummary.totalReviews}
-                                {' '}{reviewSummary.totalReviews === 1 ? 'review' : 'reviews'}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        )}
-
-                        {reviews.length > 0 ? (
-                          <Grid container spacing={3}>
-                            {reviews.map((review) => (
-                              <Grid item xs={12} sm={6} md={4} key={review.id}>
-                                <Box sx={{
-                                  p: 3,
-                                  borderRadius: 2,
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  height: '100%',
-                                  bgcolor: 'background.paper',
-                                  transition: 'box-shadow 0.2s ease',
-                                  '&:hover': { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-                                  position: 'relative',
-                                }}>
-                                  {user?.role === 'ADMIN' && (
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => handleDeleteReview(review.id)}
-                                      sx={{ position: 'absolute', top: 8, right: 8, color: 'error.main' }}
-                                      aria-label="Delete review"
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  )}
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <Rating value={review.rating} readOnly size="small" />
-                                    {review.title && (
-                                      <Typography variant="subtitle2" fontWeight={600}>{review.title}</Typography>
-                                    )}
-                                  </Box>
-                                  {review.text && (
-                                    <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.6, fontStyle: 'italic' }}>
-                                      &ldquo;{review.text}&rdquo;
-                                    </Typography>
-                                  )}
-                                  {review.images && review.images.length > 0 && (
-                                    <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                                      {review.images.map((img, imgIdx) => (
-                                        <Box
-                                          key={imgIdx}
-                                          component="img"
-                                          src={img}
-                                          alt={`Review image ${imgIdx + 1}`}
-                                          onClick={() => setLightboxImageUrl(img)}
-                                          sx={{
-                                            width: 56, height: 56, objectFit: 'cover',
-                                            borderRadius: 1, cursor: 'pointer',
-                                            border: '1px solid', borderColor: 'divider',
-                                          }}
-                                        />
-                                      ))}
-                                    </Box>
-                                  )}
-                                  <Typography variant="caption" fontWeight={600}>{review.authorName}</Typography>
-                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                    · {formatRelativeDate(review.createdAt)}
-                                  </Typography>
-                                </Box>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        ) : (
-                          <Box sx={{ p: 3, borderRadius: 2, border: '1px dashed', borderColor: 'divider', bgcolor: 'var(--color-surface-bg)', textAlign: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              No reviews yet. Be the first to review!
-                            </Typography>
-                          </Box>
-                        )}
-
-                        {/* Review submission form */}
-                        <Divider sx={{ my: 4 }} />
-                        {user ? (
-                          userAlreadyReviewed ? (
-                            <Alert severity="info" sx={{ borderRadius: 2 }}>
-                              You have already reviewed this product.
-                            </Alert>
-                          ) : (
-                            <Box sx={{ maxWidth: 600 }}>
-                              <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Write a Review</Typography>
-                              {reviewFormError && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>{reviewFormError}</Alert>}
-                              {reviewFormSuccess && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{reviewFormSuccess}</Alert>}
-                              <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" sx={{ mb: 0.5 }}>Rating *</Typography>
-                                <Rating
-                                  value={reviewFormRating}
-                                  onChange={(_, v) => setReviewFormRating(v)}
-                                  size="large"
-                                />
-                              </Box>
-                              <TextField
-                                label="Title (optional)"
-                                fullWidth
-                                size="small"
-                                value={reviewFormTitle}
-                                onChange={(e) => setReviewFormTitle(e.target.value.slice(0, 100))}
-                                sx={{ mb: 2 }}
-                                inputProps={{ maxLength: 100 }}
-                              />
-                              <TextField
-                                label="Your review *"
-                                fullWidth
-                                multiline
-                                rows={4}
-                                value={reviewFormText}
-                                onChange={(e) => setReviewFormText(e.target.value.slice(0, 1000))}
-                                sx={{ mb: 1 }}
-                                helperText={`${reviewFormText.length}/1000 (min 20)`}
-                                inputProps={{ maxLength: 1000 }}
-                              />
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                                <Button
-                                  component="label"
-                                  variant="outlined"
-                                  size="small"
-                                  startIcon={<PhotoCamera />}
-                                  disabled={reviewFormImages.length >= 5}
-                                >
-                                  Add Images ({reviewFormImages.length}/5)
-                                  <input type="file" hidden multiple accept="image/jpeg,image/png,image/webp" onChange={handleReviewImageChange} />
-                                </Button>
-                                {reviewFormImages.map((f, fi) => (
-                                  <Chip
-                                    key={fi}
-                                    label={f.name.slice(0, 20)}
-                                    size="small"
-                                    onDelete={() => setReviewFormImages((prev) => prev.filter((_, i) => i !== fi))}
-                                  />
-                                ))}
-                              </Box>
-                              <Button
-                                variant="contained"
-                                onClick={handleReviewSubmit}
-                                disabled={reviewFormSubmitting}
-                                startIcon={reviewFormSubmitting ? <CircularProgress size={18} color="inherit" /> : <RateReview />}
-                              >
-                                {reviewFormSubmitting ? 'Submitting...' : 'Submit Review'}
-                              </Button>
-                            </Box>
-                          )
-                        ) : (
-                          <Box sx={{ p: 3, borderRadius: 2, bgcolor: 'var(--color-surface-bg)', textAlign: 'center', border: '1px solid', borderColor: 'divider' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              <MuiLink component={Link} to="/login" underline="hover" color="primary" fontWeight={600}>
-                                Login
-                              </MuiLink>{' '}to write a review
-                            </Typography>
-                          </Box>
-                        )}
-                      </>
-                    )}
-                  </>
+                  <ProductReviewsTab
+                    data={reviewState}
+                    user={user}
+                    onSelectLightboxImage={setLightboxImageUrl}
+                  />
                 )}
 
-                {key === 'faq' && (
-                  <>
-                    {displayFaqs.map((item, idx) => (
-                      <Accordion
-                        key={item.id ?? idx}
-                        disableGutters
-                        square
-                        sx={{
-                          mb: 1.25,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 2,
-                          bgcolor: 'background.paper',
-                          boxShadow: 'none',
-                          '&::before': { display: 'none' },
-                          '&.Mui-expanded': { boxShadow: '0 4px 16px rgba(0,0,0,0.06)' },
-                        }}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ExpandMore />}
-                          aria-controls={`faq-content-${idx}`}
-                          id={`faq-header-${idx}`}
-                          sx={{ px: 2, py: 0.5 }}
-                        >
-                          <Typography variant="subtitle1" fontWeight={600}>{item.question}</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ px: 2, pb: 2, pt: 0 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                            {item.answer}
-                          </Typography>
-                        </AccordionDetails>
-                      </Accordion>
-                    ))}
-                  </>
-                )}
+                {key === 'faq' && <ProductFaqTab faqs={faqs} />}
               </TabPanel>
             ))}
           </Box>
         )}
 
-        {}
-        {relatedProducts.length > 0 && (
-          <Box ref={relatedReveal.ref} sx={{ mt: { xs: 4, md: 5 }, ...revealSx(relatedReveal.visible) }}>
-            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>You May Also Like</Typography>
-            <Box sx={{
-              display: 'flex',
-              gap: 2.5,
-              overflowX: 'auto',
-              pb: 2,
-              scrollSnapType: 'x mandatory',
-              '&::-webkit-scrollbar': { height: 6 },
-              '&::-webkit-scrollbar-thumb': { bgcolor: 'primary.light', borderRadius: 3 },
-            }}>
-              {relatedProducts.map((rp) => (
-                <Box
-                  key={rp.id}
-                  sx={{
-                    minWidth: { xs: 150, sm: 180 },
-                    maxWidth: { xs: 160, sm: 190 },
-                    scrollSnapAlign: 'start',
-                    flexShrink: 0,
-                  }}
-                >
-                  <ProductCard product={rp} compact />
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        )}
+        <RelatedProductsSection products={relatedProducts} />
       </Container>
 
-      {}
-      <Dialog
+      <ImageLightboxDialog
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
-        maxWidth="lg"
-        fullWidth
-        PaperProps={{
-          sx: { bgcolor: 'rgba(0,0,0,0.95)', boxShadow: 'none', m: { xs: 1, md: 2 } },
-        }}
-      >
-        <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: '60vh', md: '80vh' } }}>
-          <IconButton
-            onClick={() => setLightboxOpen(false)}
-            aria-label="Close lightbox"
-            sx={{ position: 'absolute', top: 8, right: 8, color: '#fff', zIndex: 2 }}
-          >
-            <Close />
-          </IconButton>
-          {galleryImages.length > 1 && (
-            <>
-              <IconButton
-                onClick={lightboxPrev}
-                aria-label="Previous image"
-                sx={{ position: 'absolute', left: 8, color: '#fff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
-              >
-                <ChevronLeft fontSize="large" />
-              </IconButton>
-              <IconButton
-                onClick={lightboxNext}
-                aria-label="Next image"
-                sx={{ position: 'absolute', right: 8, color: '#fff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
-              >
-                <ChevronRight fontSize="large" />
-              </IconButton>
-            </>
-          )}
-          <Box
-            component="img"
-            src={withCloudinaryTransform(primaryImageSource, 'w_1600,c_limit,q_auto,f_auto') || PRODUCT_PLACEHOLDER_IMAGE}
-            alt={product.name}
-            decoding="async"
-            sx={{
-              maxWidth: '90%',
-              maxHeight: '85vh',
-              objectFit: 'contain',
-              borderRadius: 1,
-            }}
-          />
-          {galleryImages.length > 1 && (
-            <Box sx={{
-              position: 'absolute',
-              bottom: 16,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 1,
-            }}>
-              {galleryImages.map((_, idx) => (
-                <Box
-                  key={idx}
-                  onClick={() => setSelectedImageIdx(idx)}
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: idx === safeIdx ? '#fff' : 'rgba(255,255,255,0.4)',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                  }}
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
-      </Dialog>
+        galleryImages={galleryImages}
+        safeIdx={safeIdx}
+        primaryImageSource={primaryImageSource}
+        productName={product.name}
+        onPrev={lightboxPrev}
+        onNext={lightboxNext}
+        onSelectIdx={setSelectedImageIdx}
+      />
 
-      {/* Review image lightbox */}
-      <Dialog
-        open={!!lightboxImageUrl}
+      <ReviewImageLightboxDialog
+        imageUrl={lightboxImageUrl}
         onClose={() => setLightboxImageUrl(null)}
-        maxWidth="md"
-        PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.95)', boxShadow: 'none' } }}
-      >
-        <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-          <IconButton
-            onClick={() => setLightboxImageUrl(null)}
-            sx={{ position: 'absolute', top: 8, right: 8, color: '#fff' }}
-          >
-            <Close />
-          </IconButton>
-          {lightboxImageUrl && (
-            <Box component="img" src={lightboxImageUrl} alt="Review image" sx={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }} />
-          )}
-        </Box>
-      </Dialog>
+      />
 
-      {}
       {isTablet && (!user || user.role !== 'ADMIN') && (
-        <Slide direction="up" in={stickyVisible} mountOnEnter unmountOnExit>
-          <Box sx={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            bgcolor: 'background.paper',
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            px: 2,
-            py: 1.5,
-            zIndex: 1200,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            boxShadow: '0 -2px 12px rgba(0,0,0,0.1)',
-          }}>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} noWrap>{product.name}</Typography>
-              <Typography variant="subtitle1" color="primary" fontWeight={700}>₹{effectivePrice}</Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={isAdding ? <CircularProgress size={18} color="inherit" /> : justAdded ? <Check /> : <ShoppingCart />}
-              onClick={handleAddToCart}
-              disabled={product.stock === 0 || isAdding}
-              color={justAdded ? 'success' : 'primary'}
-              sx={{ whiteSpace: 'nowrap', fontWeight: 700, px: 3 }}
-            >
-              {product.stock === 0 ? 'Out of Stock' : justAdded ? 'Added!' : 'Add to Cart'}
-            </Button>
-          </Box>
-        </Slide>
+        <StickyAddToCartBar
+          show={stickyVisible}
+          productName={product.name}
+          price={effectivePrice}
+          outOfStock={product.stock === 0}
+          isAdding={isAdding}
+          justAdded={justAdded}
+          onAddToCart={handleAddToCart}
+        />
       )}
     </PageTransition>
   );
