@@ -33,6 +33,7 @@ export const errorApi = {
         withCredentials: false,
       });
     } catch {
+      // Swallow — error reporting must never throw
     }
   },
 };

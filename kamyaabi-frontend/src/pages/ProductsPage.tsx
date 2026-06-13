@@ -18,7 +18,6 @@ import {
   Select,
   MenuItem,
   Chip,
-  Divider,
 } from '@mui/material';
 import { Search, LocalOffer } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';

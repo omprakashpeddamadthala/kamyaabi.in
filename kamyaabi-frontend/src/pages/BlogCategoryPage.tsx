@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link as RouterLink } from 'react-router-dom';
 import {
   Container, Typography, Grid, Card, CardMedia, CardContent, CardActionArea,
-  Chip, Box, Pagination, Skeleton, Stack, Breadcrumbs, Link,
+  Box, Pagination, Skeleton, Stack, Breadcrumbs, Link,
 } from '@mui/material';
 import { AccessTime } from '@mui/icons-material';
 import { Helmet } from 'react-helmet-async';
