@@ -6,6 +6,7 @@ import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
+import com.kamyaabi.util.JsonFieldConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ class ProductMapperTest {
     @BeforeEach
     void setUp() {
         imageMapper = new ProductImageMapper();
-        mapper = new ProductMapper(imageMapper, new ObjectMapper());
+        mapper = new ProductMapper(imageMapper, new JsonFieldConverter(new ObjectMapper()));
         category = Category.builder().id(1L).name("Cashews").build();
     }
 

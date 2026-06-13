@@ -1,7 +1,6 @@
 package com.kamyaabi.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductImageResponse;
 import com.kamyaabi.dto.response.ProductResponse;
@@ -11,7 +10,7 @@ import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
 import com.kamyaabi.entity.ProductTag;
-import lombok.extern.slf4j.Slf4j;
+import com.kamyaabi.util.JsonFieldConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -19,7 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @Component
 public class ProductMapper {
 
@@ -27,11 +25,11 @@ public class ProductMapper {
     private static final TypeReference<List<String>> LIST_TYPE = new TypeReference<>() {};
 
     private final ProductImageMapper productImageMapper;
-    private final ObjectMapper objectMapper;
+    private final JsonFieldConverter jsonFieldConverter;
 
-    public ProductMapper(ProductImageMapper productImageMapper, ObjectMapper objectMapper) {
+    public ProductMapper(ProductImageMapper productImageMapper, JsonFieldConverter jsonFieldConverter) {
         this.productImageMapper = productImageMapper;
-        this.objectMapper = objectMapper;
+        this.jsonFieldConverter = jsonFieldConverter;
     }
 
     public ProductResponse toResponse(Product product) {
@@ -116,45 +114,15 @@ public class ProductMapper {
     }
 
     private Map<String, String> readMap(String json) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(json, MAP_TYPE);
-        } catch (Exception e) {
-            log.warn("Failed to parse JSON map field, returning null: {}", e.getMessage());
-            return null;
-        }
+        return jsonFieldConverter.read(json, MAP_TYPE);
     }
 
     private List<String> readList(String json) {
-        if (json == null || json.isBlank()) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(json, LIST_TYPE);
-        } catch (Exception e) {
-            log.warn("Failed to parse JSON list field, returning null: {}", e.getMessage());
-            return null;
-        }
+        return jsonFieldConverter.read(json, LIST_TYPE);
     }
 
     private String writeJson(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Map<?, ?> m && m.isEmpty()) {
-            return null;
-        }
-        if (value instanceof List<?> l && l.isEmpty()) {
-            return null;
-        }
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (Exception e) {
-            log.warn("Failed to serialize JSON field, storing null: {}", e.getMessage());
-            return null;
-        }
+        return jsonFieldConverter.write(value);
     }
 
     private String resolveMainImageUrl(List<ProductImage> images, String legacyImageUrl) {
