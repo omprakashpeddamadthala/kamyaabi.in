@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -119,10 +118,5 @@ public class DashboardServiceImpl implements DashboardService {
         if (raw instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
         if (raw instanceof LocalDateTime ldt) return ldt.toLocalDate();
         throw new IllegalStateException("Unexpected date type: " + raw.getClass());
-    }
-
-    @SuppressWarnings("unused")
-    private static LocalDateTime endOfDay(LocalDate date) {
-        return LocalDateTime.of(date, LocalTime.MAX);
     }
 }

@@ -10,8 +10,8 @@ public class CurrentUser {
 
     public User getUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            return (User) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            return user;
         }
         return null;
     }
