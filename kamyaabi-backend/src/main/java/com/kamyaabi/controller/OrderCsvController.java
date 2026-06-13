@@ -17,6 +17,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -55,6 +56,7 @@ public class OrderCsvController {
     }
 
     @GetMapping("/export/csv")
+    @Transactional(readOnly = true)
     @Operation(summary = "Export orders CSV",
             description = "Streams a CSV download of all orders with product details and SEO fields.")
     public void exportCsv(HttpServletResponse response) throws IOException {
