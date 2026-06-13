@@ -32,8 +32,8 @@ import { adminApi } from '../../api/adminApi';
 import { PageResponse, Product } from '../../types';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { parseApiError } from '../../utils/apiError';
+import { triggerBlobDownload } from '../../utils/download';
 import { useToast } from '../../components/common/ToastProvider';
-import { config } from '../../config';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
@@ -227,20 +227,13 @@ const AdminProductsPage: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<FileDownload />}
-          onClick={() => {
-            const token = localStorage.getItem('token');
-            const url = `${config.apiBaseUrl || ''}/api/admin/products/export/csv`;
-            fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : undefined })
-              .then((r) => r.blob())
-              .then((blob) => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'products.csv';
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-              })
-              .catch(() => showError('Failed to export CSV'));
+          onClick={async () => {
+            try {
+              const res = await adminApi.exportProductsCsv();
+              triggerBlobDownload(res.data, 'products.csv');
+            } catch {
+              showError('Failed to export CSV');
+            }
           }}
         >
           Export CSV
@@ -263,16 +256,8 @@ const AdminProductsPage: React.FC = () => {
             if (!file) return;
             setImporting(true);
             try {
-              const formData = new FormData();
-              formData.append('file', file);
-              const token = localStorage.getItem('token');
-              const url = `${config.apiBaseUrl || ''}/api/admin/products/import/csv`;
-              const res = await fetch(url, {
-                method: 'POST',
-                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-                body: formData,
-              });
-              const json = await res.json();
+              const res = await adminApi.importProductsCsv(file);
+              const json = res.data;
               if (json.success) {
                 const d = json.data;
                 showSuccess(`${d.updated} updated, ${d.created} created${d.errors?.length ? `, ${d.errors.length} errors` : ''}`);

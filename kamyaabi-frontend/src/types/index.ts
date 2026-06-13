@@ -401,3 +401,9 @@ export interface OrderImportResult {
   skippedRows: number;
   errors: string[];
 }
+
+export interface ProductImportResult {
+  updated: number;
+  created: number;
+  errors?: string[];
+}

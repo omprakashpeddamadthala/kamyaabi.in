@@ -42,6 +42,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
+import { triggerBlobDownload } from '../../utils/download';
 import { useToast } from '../../components/common/ToastProvider';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
@@ -141,20 +142,8 @@ const AdminOrdersPage: React.FC = () => {
   const handleDownloadInvoice = async (orderId: number) => {
     setDownloadingId(orderId);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(adminApi.downloadInvoiceUrl(orderId), {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!response.ok) throw new Error('invoice-download-failed');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice_${orderId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      const response = await adminApi.downloadInvoice(orderId);
+      triggerBlobDownload(response.data, `invoice_${orderId}.pdf`);
       loadOrders();
     } catch (err) {
       showError(parseApiError(err, 'Failed to download invoice').message);
@@ -193,20 +182,8 @@ const AdminOrdersPage: React.FC = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(adminApi.exportOrdersCsvUrl(), {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!response.ok) throw new Error('Export failed');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `orders_export_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const response = await adminApi.exportOrdersCsv();
+      triggerBlobDownload(response.data, `orders_export_${Date.now()}.csv`);
       showSuccess('Orders exported successfully');
     } catch (err) {
       showError(parseApiError(err, 'Failed to export orders').message);

@@ -1,5 +1,4 @@
 import axiosInstance from './axiosInstance';
-import { config } from '../config';
 import { ApiResponse, Order, PageResponse, PaymentMethod, TrackingInfo } from '../types';
 
 export const orderApi = {
@@ -23,8 +22,8 @@ export const orderApi = {
       params: { format: 'url' },
     }),
 
-  downloadInvoiceUrl: (id: number) =>
-    `${config.apiBaseUrl || ''}/api/orders/${id}/invoice`,
+  downloadInvoice: (id: number) =>
+    axiosInstance.get<Blob>(`/api/orders/${id}/invoice`, { responseType: 'blob' }),
 
   trackShipment: (orderId: number) =>
     axiosInstance.get<ApiResponse<TrackingInfo>>(`/api/shipping/track/${orderId}`),
