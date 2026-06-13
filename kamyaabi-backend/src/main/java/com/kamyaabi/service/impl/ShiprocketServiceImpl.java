@@ -2,47 +2,36 @@ package com.kamyaabi.service.impl;
 
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.dto.response.PincodeServiceabilityResponse;
-import com.kamyaabi.entity.Address;
 import com.kamyaabi.entity.Order;
-import com.kamyaabi.entity.OrderItem;
-import com.kamyaabi.entity.Product;
 import com.kamyaabi.repository.OrderRepository;
 import com.kamyaabi.service.ShiprocketService;
+import com.kamyaabi.service.shiprocket.ShiprocketApiClient;
+import com.kamyaabi.service.shiprocket.ShiprocketResponseParser;
+import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ShiprocketServiceImpl implements ShiprocketService {
 
-    private static final String BASE_URL = "https://apiv2.shiprocket.in/v1/external";
-    private static final DateTimeFormatter SR_DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String STATUS_AWB_ASSIGNED = "AWB_ASSIGNED";
+    private static final String STATUS_PICKUP_SCHEDULED = "PICKUP_SCHEDULED";
+    private static final String STATUS_CANCELLED = "CANCELLED";
 
     private final ShiprocketProperties properties;
     private final OrderRepository orderRepository;
-    private final RestTemplate restTemplate;
-
-    private final Object tokenLock = new Object();
-    private volatile String cachedToken;
-    private volatile Instant cachedTokenExpiresAt;
-
-    public ShiprocketServiceImpl(ShiprocketProperties properties,
-                                 OrderRepository orderRepository) {
-        this.properties = properties;
-        this.orderRepository = orderRepository;
-        this.restTemplate = new RestTemplate();
-    }
+    private final ShiprocketApiClient apiClient;
+    private final ShiprocketStatusMapper statusMapper;
 
     @Override
     public boolean isConfigured() {
@@ -57,9 +46,6 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             return;
         }
 
-        // Re-fetch order within this transaction to ensure all lazy associations
-        // (items, shippingAddress, user) are available. The Order passed in may
-        // be a detached entity from an @Async/@TransactionalEventListener context.
         Order managed = orderRepository.findByIdWithShiprocketDetails(order.getId())
                 .orElse(null);
         if (managed == null) {
@@ -67,10 +53,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             return;
         }
 
-        // Skip if already synced with a real Shiprocket order ID (idempotency guard).
-        // Check for blank/"null" because String.valueOf(null) == "null".
         if (Boolean.TRUE.equals(managed.getShiprocketSynced())
-                && isPresent(managed.getShiprocketOrderId())) {
+                && ShiprocketResponseParser.isPresent(managed.getShiprocketOrderId())) {
             log.info("Order {} already synced to Shiprocket (srOrderId={}), skipping duplicate sync",
                     managed.getId(), managed.getShiprocketOrderId());
             return;
@@ -79,7 +63,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         try {
             log.info("Syncing order {} to Shiprocket", managed.getId());
 
-            Map<String, Object> srResponse = createShiprocketOrder(managed);
+            Map<String, Object> srResponse = apiClient.createOrder(managed);
             if (srResponse == null) {
                 log.error("Shiprocket createOrder returned null for order {}", managed.getId());
                 managed.setShiprocketSynced(false);
@@ -89,8 +73,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
 
             log.info("Shiprocket createOrder response for order {}: {}", managed.getId(), srResponse);
 
-            String srOrderId = toSafeString(srResponse.get("order_id"));
-            String shipmentId = toSafeString(srResponse.get("shipment_id"));
+            String srOrderId = ShiprocketResponseParser.toSafeString(srResponse.get("order_id"));
+            String shipmentId = ShiprocketResponseParser.toSafeString(srResponse.get("shipment_id"));
 
             if (srOrderId == null) {
                 log.error("Shiprocket createOrder returned no order_id for order {} — response: {}",
@@ -107,40 +91,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
                     srOrderId, shipmentId, managed.getId());
 
             if (shipmentId != null) {
-                try {
-                    Map<String, Object> awbResponse = assignAwb(shipmentId);
-                    if (awbResponse != null) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> awbData = (Map<String, Object>) awbResponse.get("response");
-                        if (awbData != null) {
-                            @SuppressWarnings("unchecked")
-                            Map<String, Object> awbAssignData = (Map<String, Object>) awbData.get("data");
-                            if (awbAssignData != null) {
-                                String awb = toSafeString(awbAssignData.get("awb_code"));
-                                String courier = toSafeString(awbAssignData.get("courier_name"));
-                                if (awb != null) {
-                                    managed.setAwbNumber(awb);
-                                    managed.setCourierName(courier);
-                                    managed.setShippingStatus("AWB_ASSIGNED");
-                                    log.info("AWB assigned: {} via {} for order {}", awb, courier, managed.getId());
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn("AWB assignment failed for order {} — can be retried later: {}",
-                            managed.getId(), e.getMessage());
-                }
-
-                try {
-                    requestPickup(shipmentId);
-                    managed.setPickupScheduledAt(LocalDateTime.now());
-                    managed.setShippingStatus("PICKUP_SCHEDULED");
-                    log.info("Pickup requested for order {}", managed.getId());
-                } catch (Exception e) {
-                    log.warn("Pickup request failed for order {} — can be retried later: {}",
-                            managed.getId(), e.getMessage());
-                }
+                assignAwbToOrder(managed, shipmentId);
+                schedulePickup(managed, shipmentId);
             } else {
                 log.warn("No shipment_id returned for order {} — AWB/pickup will be skipped; "
                         + "order is synced but needs manual courier assignment in Shiprocket dashboard",
@@ -156,6 +108,48 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
     }
 
+    private void assignAwbToOrder(Order managed, String shipmentId) {
+        try {
+            Map<String, Object> awbResponse = apiClient.assignAwb(shipmentId);
+            if (awbResponse == null) {
+                return;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> awbData = (Map<String, Object>) awbResponse.get("response");
+            if (awbData == null) {
+                return;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> awbAssignData = (Map<String, Object>) awbData.get("data");
+            if (awbAssignData == null) {
+                return;
+            }
+            String awb = ShiprocketResponseParser.toSafeString(awbAssignData.get("awb_code"));
+            String courier = ShiprocketResponseParser.toSafeString(awbAssignData.get("courier_name"));
+            if (awb != null) {
+                managed.setAwbNumber(awb);
+                managed.setCourierName(courier);
+                managed.setShippingStatus(STATUS_AWB_ASSIGNED);
+                log.info("AWB assigned: {} via {} for order {}", awb, courier, managed.getId());
+            }
+        } catch (Exception e) {
+            log.warn("AWB assignment failed for order {} — can be retried later: {}",
+                    managed.getId(), e.getMessage());
+        }
+    }
+
+    private void schedulePickup(Order managed, String shipmentId) {
+        try {
+            apiClient.requestPickup(shipmentId);
+            managed.setPickupScheduledAt(LocalDateTime.now());
+            managed.setShippingStatus(STATUS_PICKUP_SCHEDULED);
+            log.info("Pickup requested for order {}", managed.getId());
+        } catch (Exception e) {
+            log.warn("Pickup request failed for order {} — can be retried later: {}",
+                    managed.getId(), e.getMessage());
+        }
+    }
+
     @Override
     @Transactional
     public void cancelShiprocketOrder(Order order) {
@@ -165,19 +159,10 @@ public class ShiprocketServiceImpl implements ShiprocketService {
 
         try {
             log.info("Cancelling Shiprocket order for order {}", order.getId());
-
-            Map<String, Object> body = new HashMap<>();
-            body.put("ids", List.of(Integer.parseInt(order.getShiprocketOrderId())));
-
-            executeWithAuthRetry(() -> {
-                HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
-                return restTemplate.postForEntity(BASE_URL + "/orders/cancel", request, Map.class);
-            });
-
-            order.setShippingStatus("CANCELLED");
+            apiClient.cancelOrder(order.getShiprocketOrderId());
+            order.setShippingStatus(STATUS_CANCELLED);
             orderRepository.save(order);
             log.info("Shiprocket order cancelled for order {}", order.getId());
-
         } catch (Exception e) {
             log.error("Failed to cancel Shiprocket order for order {}: {}",
                     order.getId(), e.getMessage(), e);
@@ -191,17 +176,8 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         }
 
         try {
-            @SuppressWarnings("unchecked")
-            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
-                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
-                return restTemplate.exchange(
-                        BASE_URL + "/courier/track/awb/" + awbNumber,
-                        HttpMethod.GET, request,
-                        (Class<Map<String, Object>>) (Class<?>) Map.class);
-            });
-
-            return response.getBody() != null ? response.getBody() : Collections.emptyMap();
-
+            Map<String, Object> body = apiClient.trackByAwb(awbNumber);
+            return body != null ? body : Collections.emptyMap();
         } catch (Exception e) {
             log.error("Failed to track AWB {}: {}", awbNumber, e.getMessage());
             return Collections.emptyMap();
@@ -237,103 +213,63 @@ public class ShiprocketServiceImpl implements ShiprocketService {
     @Override
     public PincodeServiceabilityResponse checkServiceability(String pincode, double weight) {
         if (!isConfigured()) {
-            return PincodeServiceabilityResponse.builder()
-                    .serviceable(false)
-                    .pincode(pincode)
-                    .message("Shipping service is not configured")
-                    .build();
+            return notServiceable(pincode, "Shipping service is not configured");
         }
 
         String pickupPincode = properties.getPickupPincode();
         if (pickupPincode == null || pickupPincode.isBlank()) {
-            return PincodeServiceabilityResponse.builder()
-                    .serviceable(false)
-                    .pincode(pincode)
-                    .message("Pickup pincode is not configured")
-                    .build();
+            return notServiceable(pincode, "Pickup pincode is not configured");
         }
 
         try {
-            String url = BASE_URL + "/courier/serviceability/"
-                    + "?pickup_postcode=" + pickupPincode.trim()
-                    + "&delivery_postcode=" + pincode.trim()
-                    + "&weight=" + weight
-                    + "&cod=1";
-
-            @SuppressWarnings("unchecked")
-            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
-                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
-                return restTemplate.exchange(url, HttpMethod.GET, request,
-                        (Class<Map<String, Object>>) (Class<?>) Map.class);
-            });
-
-            Map<String, Object> body = response.getBody();
+            Map<String, Object> body = apiClient.getServiceability(pincode, weight);
             if (body == null) {
-                return PincodeServiceabilityResponse.builder()
-                        .serviceable(false)
-                        .pincode(pincode)
-                        .message("No response from shipping service")
-                        .build();
+                return notServiceable(pincode, "No response from shipping service");
             }
 
             @SuppressWarnings("unchecked")
             Map<String, Object> data = (Map<String, Object>) body.get("data");
             if (data == null) {
-                return PincodeServiceabilityResponse.builder()
-                        .serviceable(false)
-                        .pincode(pincode)
-                        .message("Delivery is not available to this pincode")
-                        .build();
+                return notServiceable(pincode, "Delivery is not available to this pincode");
             }
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> couriers = (List<Map<String, Object>>) data.get("available_courier_companies");
             if (couriers == null || couriers.isEmpty()) {
-                return PincodeServiceabilityResponse.builder()
-                        .serviceable(false)
-                        .pincode(pincode)
-                        .message("Delivery is not available to this pincode")
-                        .build();
+                return notServiceable(pincode, "Delivery is not available to this pincode");
             }
 
-            Map<String, Object> bestCourier = couriers.get(0);
-            Integer etd = parseEstimatedDays(bestCourier.get("estimated_delivery_days"));
-            String courierName = toSafeString(bestCourier.get("courier_name"));
-            String city = toSafeString(bestCourier.get("city"));
-            String state = toSafeString(bestCourier.get("state"));
-            Object codObj = bestCourier.get("cod");
-            String cod = codObj != null && ("1".equals(String.valueOf(codObj)) || Boolean.TRUE.equals(codObj))
-                    ? "Yes" : "No";
-
-            return PincodeServiceabilityResponse.builder()
-                    .serviceable(true)
-                    .pincode(pincode)
-                    .city(city)
-                    .state(state)
-                    .estimatedDays(etd)
-                    .courierName(courierName)
-                    .codAvailable(cod)
-                    .message("Delivery is available to this pincode")
-                    .build();
+            return toServiceableResponse(pincode, couriers.get(0));
 
         } catch (Exception e) {
             log.error("Serviceability check failed for pincode {}: {}", pincode, e.getMessage());
-            return PincodeServiceabilityResponse.builder()
-                    .serviceable(false)
-                    .pincode(pincode)
-                    .message("Unable to verify delivery availability. Please try again.")
-                    .build();
+            return notServiceable(pincode, "Unable to verify delivery availability. Please try again.");
         }
     }
 
-    private static Integer parseEstimatedDays(Object value) {
-        if (value == null) return null;
-        String s = String.valueOf(value).trim();
-        try {
-            return (int) Math.ceil(Double.parseDouble(s));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+    private PincodeServiceabilityResponse toServiceableResponse(String pincode, Map<String, Object> bestCourier) {
+        Object codObj = bestCourier.get("cod");
+        String cod = codObj != null && ("1".equals(String.valueOf(codObj)) || Boolean.TRUE.equals(codObj))
+                ? "Yes" : "No";
+
+        return PincodeServiceabilityResponse.builder()
+                .serviceable(true)
+                .pincode(pincode)
+                .city(ShiprocketResponseParser.toSafeString(bestCourier.get("city")))
+                .state(ShiprocketResponseParser.toSafeString(bestCourier.get("state")))
+                .estimatedDays(ShiprocketResponseParser.parseEstimatedDays(bestCourier.get("estimated_delivery_days")))
+                .courierName(ShiprocketResponseParser.toSafeString(bestCourier.get("courier_name")))
+                .codAvailable(cod)
+                .message("Delivery is available to this pincode")
+                .build();
+    }
+
+    private PincodeServiceabilityResponse notServiceable(String pincode, String message) {
+        return PincodeServiceabilityResponse.builder()
+                .serviceable(false)
+                .pincode(pincode)
+                .message(message)
+                .build();
     }
 
     @Override
@@ -353,16 +289,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
             log.info("Refreshing shipment status from Shiprocket for order {} (srOrderId={})",
                     order.getId(), order.getShiprocketOrderId());
 
-            @SuppressWarnings("unchecked")
-            ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
-                HttpEntity<Void> request = new HttpEntity<>(buildAuthHeaders());
-                return restTemplate.exchange(
-                        BASE_URL + "/orders/show/" + order.getShiprocketOrderId(),
-                        HttpMethod.GET, request,
-                        (Class<Map<String, Object>>) (Class<?>) Map.class);
-            });
-
-            Map<String, Object> body = response.getBody();
+            Map<String, Object> body = apiClient.showOrder(order.getShiprocketOrderId());
             if (body == null) {
                 log.warn("Shiprocket returned empty body for order {}", order.getId());
                 return;
@@ -374,48 +301,52 @@ public class ShiprocketServiceImpl implements ShiprocketService {
                 orderData = body;
             }
 
-            Map<String, Object> shipment = extractFirstShipment(orderData);
-            if (shipment != null) {
-
-                String awb = toSafeString(shipment.get("awb_code"));
-                String courier = toSafeString(shipment.get("courier_name"));
-                String status = toSafeString(shipment.get("status"));
-                String shipmentId = toSafeString(shipment.get("id"));
-
-                boolean updated = false;
-
-                if (awb != null && (order.getAwbNumber() == null || order.getAwbNumber().isBlank())) {
-                    order.setAwbNumber(awb);
-                    updated = true;
-                }
-                if (courier != null && (order.getCourierName() == null || order.getCourierName().isBlank())) {
-                    order.setCourierName(courier);
-                    updated = true;
-                }
-                if (shipmentId != null && (order.getShiprocketShipmentId() == null || order.getShiprocketShipmentId().isBlank())) {
-                    order.setShiprocketShipmentId(shipmentId);
-                    updated = true;
-                }
-                if (status != null) {
-                    order.setShippingStatus(status);
-                    updated = true;
-                    mapShiprocketStatusToOrderStatus(order, status);
-                }
-
-                if (updated) {
-                    orderRepository.save(order);
-                    log.info("Order {} updated from Shiprocket: awb={}, courier={}, status={}",
-                            order.getId(), awb, courier, status);
-                } else {
-                    log.info("No new status data from Shiprocket for order {}", order.getId());
-                }
-            } else {
+            Map<String, Object> shipment = ShiprocketResponseParser.extractFirstShipment(orderData);
+            if (shipment == null) {
                 log.info("No shipments found in Shiprocket response for order {}", order.getId());
+                return;
             }
+
+            applyShipmentUpdates(order, shipment);
 
         } catch (Exception e) {
             log.error("Failed to refresh shipment status for order {}: {}",
                     order.getId(), e.getMessage(), e);
+        }
+    }
+
+    private void applyShipmentUpdates(Order order, Map<String, Object> shipment) {
+        String awb = ShiprocketResponseParser.toSafeString(shipment.get("awb_code"));
+        String courier = ShiprocketResponseParser.toSafeString(shipment.get("courier_name"));
+        String status = ShiprocketResponseParser.toSafeString(shipment.get("status"));
+        String shipmentId = ShiprocketResponseParser.toSafeString(shipment.get("id"));
+
+        boolean updated = false;
+
+        if (awb != null && isBlank(order.getAwbNumber())) {
+            order.setAwbNumber(awb);
+            updated = true;
+        }
+        if (courier != null && isBlank(order.getCourierName())) {
+            order.setCourierName(courier);
+            updated = true;
+        }
+        if (shipmentId != null && isBlank(order.getShiprocketShipmentId())) {
+            order.setShiprocketShipmentId(shipmentId);
+            updated = true;
+        }
+        if (status != null) {
+            order.setShippingStatus(status);
+            updated = true;
+            statusMapper.applyTo(order, status);
+        }
+
+        if (updated) {
+            orderRepository.save(order);
+            log.info("Order {} updated from Shiprocket: awb={}, courier={}, status={}",
+                    order.getId(), awb, courier, status);
+        } else {
+            log.info("No new status data from Shiprocket for order {}", order.getId());
         }
     }
 
@@ -446,266 +377,7 @@ public class ShiprocketServiceImpl implements ShiprocketService {
         return refreshed;
     }
 
-    private void mapShiprocketStatusToOrderStatus(Order order, String shiprocketStatus) {
-        if (shiprocketStatus == null) return;
-        String statusUpper = shiprocketStatus.toUpperCase().trim();
-
-        switch (statusUpper) {
-            case "PICKED UP" -> order.setStatus(
-                    order.getStatus() != Order.OrderStatus.SHIPPED
-                            ? Order.OrderStatus.PROCESSING : order.getStatus());
-            case "IN TRANSIT", "SHIPPED" -> order.setStatus(Order.OrderStatus.SHIPPED);
-            case "OUT FOR DELIVERY" -> {
-                order.setStatus(Order.OrderStatus.SHIPPED);
-                order.setShippingStatus("OUT_FOR_DELIVERY");
-            }
-            case "DELIVERED" -> {
-                order.setStatus(Order.OrderStatus.DELIVERED);
-                if (order.getDeliveredAt() == null) {
-                    order.setDeliveredAt(LocalDateTime.now());
-                }
-            }
-            case "CANCELLED", "RTO INITIATED", "RTO" -> {
-                // Don't auto-cancel — let admin decide
-                log.info("Shiprocket status '{}' received for order {} — not auto-updating order status",
-                        shiprocketStatus, order.getId());
-            }
-            default -> log.debug("Unmapped Shiprocket status '{}' for order {}", shiprocketStatus, order.getId());
-        }
-    }
-
-    // ── Shiprocket API methods ──────────────────────────────────────────────
-
-    private Map<String, Object> createShiprocketOrder(Order order) {
-        Address addr = order.getShippingAddress();
-        List<Map<String, Object>> items = new ArrayList<>();
-
-        for (OrderItem item : order.getItems()) {
-            Product product = item.getProduct();
-            Map<String, Object> srItem = new LinkedHashMap<>();
-            srItem.put("name", product.getName());
-            srItem.put("sku", "SKU-" + product.getId());
-            srItem.put("units", item.getQuantity());
-            srItem.put("selling_price", item.getPrice().doubleValue());
-            srItem.put("discount", 0);
-            srItem.put("tax", 0);
-            items.add(srItem);
-        }
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("order_id", String.valueOf(order.getId()));
-        body.put("order_date", order.getCreatedAt().format(SR_DATE_FMT));
-        body.put("pickup_location", properties.getPickupLocation());
-
-        if (properties.getChannelId() != null && !properties.getChannelId().isBlank()) {
-            body.put("channel_id", properties.getChannelId());
-        }
-
-        body.put("billing_customer_name", extractFirstName(addr.getFullName()));
-        body.put("billing_last_name", extractLastName(addr.getFullName()));
-        body.put("billing_address", addr.getStreet());
-        body.put("billing_address_2", addr.getAddressLine2() != null ? addr.getAddressLine2() : "");
-        body.put("billing_city", addr.getCity());
-        body.put("billing_pincode", addr.getPincode());
-        body.put("billing_state", addr.getState());
-        body.put("billing_country", "India");
-        body.put("billing_email", order.getUser().getEmail());
-        body.put("billing_phone", addr.getPhone());
-
-        body.put("shipping_is_billing", true);
-
-        body.put("order_items", items);
-        body.put("payment_method",
-                order.getPaymentMethod() == Order.PaymentMethod.COD ? "COD" : "Prepaid");
-        body.put("sub_total", order.getTotalAmount().doubleValue());
-
-        body.put("length", properties.getDefaultLength());
-        body.put("breadth", properties.getDefaultBreadth());
-        body.put("height", properties.getDefaultHeight());
-
-        double totalWeightKg = order.getItems().stream()
-                .filter(i -> i.getWeightKg() != null)
-                .mapToDouble(i -> i.getWeightKg().doubleValue() * i.getQuantity())
-                .sum();
-        body.put("weight", totalWeightKg > 0 ? totalWeightKg : properties.getDefaultWeight());
-
-        log.info("Shiprocket create order request for order {}: {}", order.getId(), body);
-
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
-            return restTemplate.postForEntity(
-                    BASE_URL + "/orders/create/adhoc", request,
-                    (Class<Map<String, Object>>) (Class<?>) Map.class);
-        });
-
-        log.debug("Shiprocket create order response for order {}: status={}, body={}",
-                order.getId(), response.getStatusCode(), response.getBody());
-
-        return response.getBody();
-    }
-
-    private Map<String, Object> assignAwb(String shipmentId) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("shipment_id", shipmentId);
-
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map<String, Object>> response = executeWithAuthRetry(() -> {
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
-            return restTemplate.postForEntity(
-                    BASE_URL + "/courier/assign/awb", request,
-                    (Class<Map<String, Object>>) (Class<?>) Map.class);
-        });
-
-        return response.getBody();
-    }
-
-    private void requestPickup(String shipmentId) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("shipment_id", List.of(shipmentId));
-
-        executeWithAuthRetry(() -> {
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, buildAuthHeaders());
-            return restTemplate.postForEntity(BASE_URL + "/courier/generate/pickup", request, Map.class);
-        });
-    }
-
-    // ── Auth ────────────────────────────────────────────────────────────────
-
-    private HttpHeaders buildAuthHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(getToken());
-        return headers;
-    }
-
-    /**
-     * Returns a valid Shiprocket bearer token. Logs in and caches the token if
-     * email/password credentials are configured; otherwise falls back to the
-     * static {@code apiToken} property (legacy behaviour).
-     */
-    String getToken() {
-        if (!properties.hasLoginCredentials()) {
-            return properties.getApiToken();
-        }
-
-        Instant now = Instant.now();
-        if (cachedToken != null && cachedTokenExpiresAt != null && now.isBefore(cachedTokenExpiresAt)) {
-            return cachedToken;
-        }
-
-        synchronized (tokenLock) {
-            if (cachedToken != null && cachedTokenExpiresAt != null && Instant.now().isBefore(cachedTokenExpiresAt)) {
-                return cachedToken;
-            }
-            return refreshToken();
-        }
-    }
-
-    /**
-     * Forces a fresh login against Shiprocket's auth endpoint and updates the
-     * cached token. Callers MUST hold {@link #tokenLock} when invoking this
-     * method directly, except for the initial cache-miss path which already
-     * holds the lock.
-     */
-    private String refreshToken() {
-        if (!properties.hasLoginCredentials()) {
-            // Fall back to static token; nothing to refresh.
-            return properties.getApiToken();
-        }
-
-        log.info("Refreshing Shiprocket auth token via /auth/login");
-
-        Map<String, String> body = new HashMap<>();
-        body.put("email", ShiprocketProperties.sanitize(properties.getEmail()));
-        body.put("password", ShiprocketProperties.sanitize(properties.getPassword()));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
-
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                BASE_URL + "/auth/login", request,
-                (Class<Map<String, Object>>) (Class<?>) Map.class);
-
-        Map<String, Object> responseBody = response.getBody();
-        if (responseBody == null || responseBody.get("token") == null) {
-            throw new IllegalStateException("Shiprocket /auth/login returned no token");
-        }
-
-        String token = String.valueOf(responseBody.get("token"));
-        this.cachedToken = token;
-        this.cachedTokenExpiresAt = Instant.now().plusSeconds(properties.getTokenRefreshIntervalSeconds());
-        log.info("Shiprocket auth token refreshed; next refresh after {}", cachedTokenExpiresAt);
-        return token;
-    }
-
-    /**
-     * Runs the supplied Shiprocket API call. If it fails with HTTP 401 and we
-     * have login credentials configured, force a token refresh and retry the
-     * call exactly once. This covers the common case where the cached token
-     * (or an externally-rotated static token) has expired between scheduled
-     * sync runs.
-     */
-    private <T> T executeWithAuthRetry(Supplier<T> apiCall) {
-        try {
-            return apiCall.get();
-        } catch (HttpClientErrorException.Unauthorized e) {
-            if (!properties.hasLoginCredentials()) {
-                throw e;
-            }
-            log.warn("Shiprocket call returned 401 — forcing token refresh and retrying once");
-            synchronized (tokenLock) {
-                this.cachedToken = null;
-                this.cachedTokenExpiresAt = null;
-                refreshToken();
-            }
-            return apiCall.get();
-        }
-    }
-
-    // ── Helpers ─────────────────────────────────────────────────────────────
-
-    /**
-     * Converts an API response value to a non-blank String, or {@code null}
-     * if the value is Java-null, the literal string {@code "null"} (produced
-     * by {@code String.valueOf(null)}), or blank.
-     */
-    static String toSafeString(Object value) {
-        if (value == null) return null;
-        String s = String.valueOf(value).trim();
-        return (s.isEmpty() || "null".equalsIgnoreCase(s)) ? null : s;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> extractFirstShipment(Map<String, Object> orderData) {
-        Object shipmentsRaw = orderData.get("shipments");
-        if (shipmentsRaw == null) return null;
-
-        if (shipmentsRaw instanceof List<?> list) {
-            if (list.isEmpty()) return null;
-            return (Map<String, Object>) list.get(0);
-        }
-        if (shipmentsRaw instanceof Map<?, ?> map) {
-            return (Map<String, Object>) map;
-        }
-        return null;
-    }
-
-    private static boolean isPresent(String value) {
-        return value != null && !value.isBlank() && !"null".equalsIgnoreCase(value);
-    }
-
-    private static String extractFirstName(String fullName) {
-        if (fullName == null || fullName.isBlank()) return "";
-        String[] parts = fullName.trim().split("\\s+", 2);
-        return parts[0];
-    }
-
-    private static String extractLastName(String fullName) {
-        if (fullName == null || fullName.isBlank()) return "";
-        String[] parts = fullName.trim().split("\\s+", 2);
-        return parts.length > 1 ? parts[1] : "";
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
