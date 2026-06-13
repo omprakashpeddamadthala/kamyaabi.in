@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +27,10 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private ErrorAlertService errorAlertService;
+    private final ErrorAlertService errorAlertService;
 
-    @Autowired(required = false)
-    public void setErrorAlertService(ErrorAlertService errorAlertService) {
-        this.errorAlertService = errorAlertService;
+    public GlobalExceptionHandler(ObjectProvider<ErrorAlertService> errorAlertServiceProvider) {
+        this.errorAlertService = errorAlertServiceProvider.getIfAvailable();
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
