@@ -391,3 +391,13 @@ export interface CouponValidationResult {
   discountAmount: number | null;
   message: string;
 }
+
+// ── Order CSV Import Types ──────────────────────────────────
+
+export interface OrderImportResult {
+  success: boolean;
+  totalRows: number;
+  updatedOrders: number;
+  skippedRows: number;
+  errors: string[];
+}
