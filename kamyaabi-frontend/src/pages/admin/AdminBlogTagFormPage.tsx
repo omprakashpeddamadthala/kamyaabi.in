@@ -4,7 +4,7 @@ import { Box, TextField, Skeleton } from '@mui/material';
 import { adminBlogApi, BlogTagRequest } from '../../api/blogApi';
 import { BlogTag } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import AdminFormShell from '../../components/admin/layout/AdminFormShell';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 

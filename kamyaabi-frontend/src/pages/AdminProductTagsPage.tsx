@@ -9,7 +9,7 @@ import { Add, Edit, Delete, MergeType, Close } from '@mui/icons-material';
 import { adminProductTagApi } from '../api/productTagApi';
 import { ProductTag } from '../types';
 import { parseApiError } from '../utils/apiError';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from '../components/common/useToast';
 import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
 

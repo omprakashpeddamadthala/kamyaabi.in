@@ -27,7 +27,7 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 import { adminBlogApi, BlogPostRequest } from '../api/blogApi';
 import { BlogCategory, BlogTag, BlogPostStatus } from '../types';
 import { parseApiError } from '../utils/apiError';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from '../components/common/useToast';
 import { config } from '../config';
 
 const slugify = (raw: string): string =>

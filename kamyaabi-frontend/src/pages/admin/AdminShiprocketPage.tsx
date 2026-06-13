@@ -26,7 +26,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { ShiprocketStats, Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
 const STATUS_COLORS: Record<string, 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning'> = {

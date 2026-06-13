@@ -49,7 +49,7 @@ import {
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../hooks/useAppDispatch';
 import { logout } from '../../features/auth/authSlice';
-import { useFlyToCart } from '../common/FlyToCartAnimation';
+import { useFlyToCart } from '../common/useFlyToCart';
 import SocialLinks from '../common/SocialLinks';
 import { fetchWishlistProductIds } from '../../features/wishlist/wishlistSlice';
 

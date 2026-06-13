@@ -11,7 +11,7 @@ import {
 import { adminBlogApi } from '../api/blogApi';
 import { BlogPost, BlogPostStatus } from '../types';
 import { parseApiError } from '../utils/apiError';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from '../components/common/useToast';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import TableSkeleton from '../components/common/TableSkeleton';
 

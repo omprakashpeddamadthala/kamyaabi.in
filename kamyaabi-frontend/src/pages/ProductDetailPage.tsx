@@ -41,7 +41,7 @@ import {
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
-import { useFlyToCart } from '../components/common/FlyToCartAnimation';
+import { useFlyToCart } from '../components/common/useFlyToCart';
 import PageTransition from '../components/common/PageTransition';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { usePublicSettings } from '../hooks/usePublicSettings';

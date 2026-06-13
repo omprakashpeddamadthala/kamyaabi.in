@@ -43,7 +43,7 @@ import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
 import { parseApiError } from '../../utils/apiError';
 import { triggerBlobDownload } from '../../utils/download';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
 const DEFAULT_PAGE_SIZE = 10;

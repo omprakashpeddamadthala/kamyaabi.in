@@ -23,7 +23,7 @@ import { Product } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
 import { toggleWishlistItem } from '../../features/wishlist/wishlistSlice';
-import { useFlyToCart } from './FlyToCartAnimation';
+import { useFlyToCart } from './useFlyToCart';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
 import { reviewApi } from '../../api/reviewApi';

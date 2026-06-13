@@ -33,7 +33,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { AdminUser, PageResponse } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 import ConfirmDialog from '../common/ConfirmDialog';
 import TableSkeleton from '../common/TableSkeleton';
 

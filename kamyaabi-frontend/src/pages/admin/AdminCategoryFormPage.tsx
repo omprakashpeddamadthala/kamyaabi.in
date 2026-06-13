@@ -13,7 +13,7 @@ import {
 import { adminApi, CategoryRequest } from '../../api/adminApi';
 import { categoryApi } from '../../api/categoryApi';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { fetchCategories } from '../../features/product/productSlice';
 import AdminFormShell from '../../components/admin/layout/AdminFormShell';

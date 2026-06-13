@@ -26,7 +26,7 @@ import { fetchCategories } from '../../features/product/productSlice';
 import { adminApi } from '../../api/adminApi';
 import { Category } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 import TableSkeleton from '../../components/common/TableSkeleton';
 

@@ -26,7 +26,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { AnalyticsResponse } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 
 type Metric = 'revenue' | 'orders';
 

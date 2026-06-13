@@ -13,7 +13,7 @@ import {
   Button,
 } from '@mui/material';
 import { adminApi } from '../../api/adminApi';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 import { parseApiError } from '../../utils/apiError';
 
 interface SettingsTabProps {
