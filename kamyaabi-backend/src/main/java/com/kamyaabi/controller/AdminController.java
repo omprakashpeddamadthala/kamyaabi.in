@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -103,10 +104,7 @@ public class AdminController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Boolean active) {
-        org.springframework.data.domain.Sort sort = "asc".equalsIgnoreCase(sortDir)
-                ? org.springframework.data.domain.Sort.by(sortBy).ascending()
-                : org.springframework.data.domain.Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = buildPageable(page, size, sortBy, sortDir);
         Page<ProductResponse> products = productService.searchAdminProducts(q, categoryId, active, pageable);
         return ResponseEntity.ok(ApiResponse.success(products));
     }
@@ -225,27 +223,7 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String status) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<OrderResponse> orders;
-        if (status != null && !status.isBlank()) {
-            String[] parts = status.split(",");
-            List<com.kamyaabi.entity.Order.OrderStatus> statuses = new java.util.ArrayList<>();
-            for (String part : parts) {
-                try {
-                    statuses.add(com.kamyaabi.entity.Order.OrderStatus.valueOf(part.trim().toUpperCase()));
-                } catch (IllegalArgumentException ignored) {
-                    // skip invalid status values
-                }
-            }
-            if (statuses.size() == 1) {
-                orders = orderService.getOrdersByStatus(statuses.get(0), pageable);
-            } else if (statuses.size() > 1) {
-                orders = orderService.getOrdersByStatuses(statuses, pageable);
-            } else {
-                orders = orderService.getAllOrders(pageable);
-            }
-        } else {
-            orders = orderService.getAllOrders(pageable);
-        }
+        Page<OrderResponse> orders = orderService.getOrders(status, pageable);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -281,10 +259,7 @@ public class AdminController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String q) {
-        org.springframework.data.domain.Sort sort = "asc".equalsIgnoreCase(sortDir)
-                ? org.springframework.data.domain.Sort.by(sortBy).ascending()
-                : org.springframework.data.domain.Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = buildPageable(page, size, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.success(adminUserService.getAllUsers(q, pageable)));
     }
 
@@ -324,5 +299,12 @@ public class AdminController {
             @Valid @RequestBody SettingsUpdateRequest request) {
         Map<String, String> updated = settingsService.updateAll(request.any());
         return ResponseEntity.ok(ApiResponse.success("Settings updated", updated));
+    }
+
+    private Pageable buildPageable(int page, int size, String sortBy, String sortDir) {
+        Sort sort = "asc".equalsIgnoreCase(sortDir)
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        return PageRequest.of(page, size, sort);
     }
 }

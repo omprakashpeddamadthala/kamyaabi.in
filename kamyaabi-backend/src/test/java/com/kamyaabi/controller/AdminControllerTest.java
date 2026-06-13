@@ -147,46 +147,36 @@ class AdminControllerTest {
     }
 
     @Test
-    void getAllOrders_shouldReturnPage() {
+    void getAllOrders_shouldDelegateWithNullStatus() {
         Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).build()));
-        when(orderService.getAllOrders(any(Pageable.class))).thenReturn(page);
+        when(orderService.getOrders(isNull(), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<?> response = adminController.getAllOrders(0, 10, null);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(orderService).getOrders(isNull(), any(Pageable.class));
     }
 
     @Test
-    void getAllOrders_withStatusFilter_shouldReturnFilteredPage() {
+    void getAllOrders_withStatusFilter_shouldDelegateStatusString() {
         Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).status("PAID").build()));
-        when(orderService.getOrdersByStatus(eq(Order.OrderStatus.PAID), any(Pageable.class))).thenReturn(page);
+        when(orderService.getOrders(eq("PAID"), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<?> response = adminController.getAllOrders(0, 10, "PAID");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(orderService).getOrdersByStatus(eq(Order.OrderStatus.PAID), any(Pageable.class));
+        verify(orderService).getOrders(eq("PAID"), any(Pageable.class));
     }
 
     @Test
-    void getAllOrders_withMultipleStatuses_shouldReturnFilteredPage() {
+    void getAllOrders_withMultipleStatuses_shouldDelegateStatusString() {
         Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).status("PAID").build()));
-        when(orderService.getOrdersByStatuses(any(), any(Pageable.class))).thenReturn(page);
+        when(orderService.getOrders(eq("PAID,SHIPPED,DELIVERED"), any(Pageable.class))).thenReturn(page);
 
         ResponseEntity<?> response = adminController.getAllOrders(0, 10, "PAID,SHIPPED,DELIVERED");
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(orderService).getOrdersByStatuses(any(), any(Pageable.class));
-    }
-
-    @Test
-    void getAllOrders_withInvalidStatus_shouldReturnAllOrders() {
-        Page<OrderResponse> page = new PageImpl<>(List.of(OrderResponse.builder().id(1L).build()));
-        when(orderService.getAllOrders(any(Pageable.class))).thenReturn(page);
-
-        ResponseEntity<?> response = adminController.getAllOrders(0, 10, "INVALID_STATUS");
-
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(orderService).getAllOrders(any(Pageable.class));
+        verify(orderService).getOrders(eq("PAID,SHIPPED,DELIVERED"), any(Pageable.class));
     }
 
     @Test

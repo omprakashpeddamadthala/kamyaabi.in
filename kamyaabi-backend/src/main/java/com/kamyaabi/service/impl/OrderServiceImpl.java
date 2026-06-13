@@ -194,6 +194,31 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<OrderResponse> getOrders(String statusFilter, Pageable pageable) {
+        List<Order.OrderStatus> statuses = parseStatuses(statusFilter);
+        return switch (statuses.size()) {
+            case 0 -> getAllOrders(pageable);
+            case 1 -> getOrdersByStatus(statuses.get(0), pageable);
+            default -> getOrdersByStatuses(statuses, pageable);
+        };
+    }
+
+    private List<Order.OrderStatus> parseStatuses(String statusFilter) {
+        if (statusFilter == null || statusFilter.isBlank()) {
+            return List.of();
+        }
+        List<Order.OrderStatus> statuses = new ArrayList<>();
+        for (String part : statusFilter.split(",")) {
+            try {
+                statuses.add(Order.OrderStatus.valueOf(part.trim().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return statuses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponse> getOrdersByStatus(Order.OrderStatus status, Pageable pageable) {
         log.debug("Fetching orders with status: {}", status);
         return orderRepository.findByStatusOrderByCreatedAtDesc(status, pageable)
