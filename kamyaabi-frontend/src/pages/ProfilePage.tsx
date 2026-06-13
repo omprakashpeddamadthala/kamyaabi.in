@@ -132,6 +132,7 @@ const ProfilePage: React.FC = () => {
       const res = await addressApi.getAll();
       setAddresses(res.data.data);
     } catch {
+      // Silently fail — addresses are non-critical on this view
     }
   }, []);
 

@@ -6,7 +6,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip,
 } from '@mui/material';
 import {
-  Add, Edit, Delete, Visibility, Publish, Unpublished, Search as SearchIcon, OpenInNew,
+  Add, Edit, Delete, Publish, Unpublished, Search as SearchIcon, OpenInNew,
 } from '@mui/icons-material';
 import { adminBlogApi } from '../api/blogApi';
 import { BlogPost, BlogPostStatus } from '../types';
