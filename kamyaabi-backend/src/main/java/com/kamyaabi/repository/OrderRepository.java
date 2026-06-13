@@ -38,6 +38,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             + "LEFT JOIN FETCH i.product "
             + "LEFT JOIN FETCH o.shippingAddress "
             + "LEFT JOIN FETCH o.payment "
+            + "LEFT JOIN FETCH o.user "
             + "WHERE o.id IN :ids")
     List<Order> findAllWithDetailsByIdIn(@Param("ids") List<Long> ids);
 
