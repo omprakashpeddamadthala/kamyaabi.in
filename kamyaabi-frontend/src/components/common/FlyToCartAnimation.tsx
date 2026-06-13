@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
+import { FlyToCartContext } from './useFlyToCart';
 
 interface FlyingItem {
   id: number;
@@ -10,21 +11,6 @@ interface FlyingItem {
   endX: number;
   endY: number;
 }
-
-interface FlyToCartContextType {
-  cartIconRef: React.RefObject<HTMLElement | null>;
-  triggerFlyToCart: (imageUrl: string, startElement: HTMLElement) => void;
-}
-
-const FlyToCartContext = createContext<FlyToCartContextType | null>(null);
-
-export const useFlyToCart = () => {
-  const ctx = useContext(FlyToCartContext);
-  if (!ctx) {
-    return { cartIconRef: { current: null }, triggerFlyToCart: () => {} };
-  }
-  return ctx;
-};
 
 let flyIdCounter = 0;
 

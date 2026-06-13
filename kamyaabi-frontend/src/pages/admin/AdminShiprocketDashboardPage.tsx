@@ -47,7 +47,7 @@ import type { SvgIconComponent } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
 import { Order, ShiprocketStats } from '../../types';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
 const PAGE_SIZE = 10;

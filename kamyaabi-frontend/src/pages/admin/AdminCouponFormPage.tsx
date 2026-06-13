@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { adminApi, CouponFormRequest } from '../../api/adminApi';
 import { Coupon } from '../../types';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import { parseApiError } from '../../utils/apiError';
 import AdminFormShell from '../../components/admin/layout/AdminFormShell';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';

@@ -8,7 +8,7 @@ import { Add, Edit, Delete } from '@mui/icons-material';
 import { adminBlogApi } from '../api/blogApi';
 import { BlogCategory } from '../types';
 import { parseApiError } from '../utils/apiError';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from '../components/common/useToast';
 import InlineConfirmBar from '../components/admin/InlineConfirmBar';
 import TableSkeleton from '../components/common/TableSkeleton';
 

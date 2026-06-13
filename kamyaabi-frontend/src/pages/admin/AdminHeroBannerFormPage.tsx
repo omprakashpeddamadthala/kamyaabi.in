@@ -18,7 +18,7 @@ import { CloudUpload } from '@mui/icons-material';
 import { heroBannerApi, HeroBanner, HeroBannerRequest } from '../../api/heroBannerApi';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import AdminFormShell from '../../components/admin/layout/AdminFormShell';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 

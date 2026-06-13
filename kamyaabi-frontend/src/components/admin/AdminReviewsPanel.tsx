@@ -17,7 +17,7 @@ import { Delete } from '@mui/icons-material';
 import { reviewApi } from '../../api/reviewApi';
 import type { Review } from '../../types';
 import ConfirmDialog from '../common/ConfirmDialog';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 
 interface AdminReviewsPanelProps {
   active: boolean;

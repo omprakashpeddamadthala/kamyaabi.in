@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, TextField, Skeleton } from '@mui/material';
 import { adminProductTagApi, ProductTagRequest } from '../../api/productTagApi';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import AdminFormShell from '../../components/admin/layout/AdminFormShell';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 

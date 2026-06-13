@@ -17,7 +17,7 @@ import {
 import { adminApi } from '../api/adminApi';
 import { DashboardStats } from '../types';
 import { parseApiError } from '../utils/apiError';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from '../components/common/useToast';
 import { ADMIN_NAV } from '../components/admin/layout/adminNav';
 
 const AdminPage: React.FC = () => {

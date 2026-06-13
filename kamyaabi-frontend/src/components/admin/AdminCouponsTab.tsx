@@ -20,7 +20,7 @@ import {
 import { Add, Edit, Delete, Search as SearchIcon } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
 import { Coupon, PageResponse } from '../../types';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 import { parseApiError } from '../../utils/apiError';
 import InlineConfirmBar from './InlineConfirmBar';
 import TableSkeleton from '../common/TableSkeleton';

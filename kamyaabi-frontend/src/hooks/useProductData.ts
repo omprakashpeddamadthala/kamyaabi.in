@@ -31,11 +31,12 @@ export function useProductData(slugParam: string | undefined) {
     }
   }, [paramIsNumericId, product?.slug, navigate]);
 
+  const productId = product?.id;
   useEffect(() => {
-    if (product) {
+    if (productId) {
       dispatch(fetchProducts({ page: 0, size: 12 }));
     }
-  }, [dispatch, product?.id]);
+  }, [dispatch, productId]);
 
   return { product, products, paramIsNumericId };
 }

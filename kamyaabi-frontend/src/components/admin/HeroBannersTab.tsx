@@ -27,7 +27,7 @@ import { Add, ArrowDownward, ArrowUpward, Delete, Edit } from '@mui/icons-materi
 import { heroBannerApi, HeroBanner } from '../../api/heroBannerApi';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { parseApiError } from '../../utils/apiError';
-import { useToast } from '../common/ToastProvider';
+import { useToast } from '../common/useToast';
 import InlineConfirmBar from './InlineConfirmBar';
 
 interface HeroBannersTabProps {

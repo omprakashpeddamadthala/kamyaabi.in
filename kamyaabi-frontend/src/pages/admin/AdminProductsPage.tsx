@@ -33,7 +33,7 @@ import { PageResponse, Product } from '../../types';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
 import { parseApiError } from '../../utils/apiError';
 import { triggerBlobDownload } from '../../utils/download';
-import { useToast } from '../../components/common/ToastProvider';
+import { useToast } from '../../components/common/useToast';
 import InlineConfirmBar from '../../components/admin/InlineConfirmBar';
 import TableSkeleton from '../../components/common/TableSkeleton';
 
