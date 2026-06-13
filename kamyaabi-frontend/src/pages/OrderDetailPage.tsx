@@ -25,6 +25,7 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrderById } from '../features/order/orderSlice';
 import { paymentApi } from '../api/paymentApi';
 import { orderApi } from '../api/orderApi';
+import { triggerBlobDownload } from '../utils/download';
 import Loading from '../components/common/Loading';
 import TrackingWidget from '../components/common/TrackingWidget';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
@@ -76,20 +77,8 @@ const OrderDetailPage: React.FC = () => {
     setInvoiceLoading(true);
     setInvoiceError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(orderApi.downloadInvoiceUrl(order.id), {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (!response.ok) throw new Error('invoice-download-failed');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `invoice_${order.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      const response = await orderApi.downloadInvoice(order.id);
+      triggerBlobDownload(response.data, `invoice_${order.id}.pdf`);
       dispatch(fetchOrderById(order.id));
     } catch {
       setInvoiceError('Failed to download invoice. Please try again later.');

@@ -1,5 +1,4 @@
 import axiosInstance from './axiosInstance';
-import { config } from '../config';
 import {
   ApiResponse,
   Product,
@@ -7,6 +6,7 @@ import {
   Coupon,
   Order,
   OrderImportResult,
+  ProductImportResult,
   PageResponse,
   DashboardStats,
   AnalyticsResponse,
@@ -149,17 +149,30 @@ export const adminApi = {
   updateOrderStatus: (id: number, status: string) =>
     axiosInstance.put<ApiResponse<Order>>(`/api/admin/orders/${id}/status`, { status }),
 
-  downloadInvoiceUrl: (id: number) =>
-    `${config.apiBaseUrl || ''}/api/admin/orders/${id}/invoice`,
+  downloadInvoice: (id: number) =>
+    axiosInstance.get<Blob>(`/api/admin/orders/${id}/invoice`, { responseType: 'blob' }),
 
-  exportOrdersCsvUrl: () =>
-    `${config.apiBaseUrl || ''}/api/admin/orders/export/csv`,
+  exportOrdersCsv: () =>
+    axiosInstance.get<Blob>('/api/admin/orders/export/csv', { responseType: 'blob' }),
 
   importOrdersCsv: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
     return axiosInstance.post<ApiResponse<OrderImportResult>>(
       '/api/admin/orders/import/csv',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+  },
+
+  exportProductsCsv: () =>
+    axiosInstance.get<Blob>('/api/admin/products/export/csv', { responseType: 'blob' }),
+
+  importProductsCsv: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post<ApiResponse<ProductImportResult>>(
+      '/api/admin/products/import/csv',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
