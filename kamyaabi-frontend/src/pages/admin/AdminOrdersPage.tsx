@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Container,
@@ -36,6 +36,8 @@ import {
   InventoryOutlined,
   PhoneOutlined,
   CloseOutlined,
+  FileDownloadOutlined,
+  FileUploadOutlined,
 } from '@mui/icons-material';
 import { adminApi } from '../../api/adminApi';
 import { Order } from '../../types';
@@ -106,6 +108,9 @@ const AdminOrdersPage: React.FC = () => {
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
   const [detailOrder, setDetailOrder] = useState<Order | null>(null);
   const [detailTab, setDetailTab] = useState<'items' | 'address'>('items');
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const openDetail = (order: Order, tab: 'items' | 'address') => {
     setDetailOrder(order);
@@ -185,27 +190,101 @@ const AdminOrdersPage: React.FC = () => {
     }
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(adminApi.exportOrdersCsvUrl(), {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders_export_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showSuccess('Orders exported successfully');
+    } catch (err) {
+      showError(parseApiError(err, 'Failed to export orders').message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const response = await adminApi.importOrdersCsv(file);
+      const result = response.data.data;
+      showSuccess(
+        `Import complete: ${result.updatedOrders} orders updated, ${result.skippedRows} skipped.`,
+      );
+      if (result.errors?.length) {
+        console.warn('Import warnings:', result.errors);
+      }
+      loadOrders();
+    } catch (err) {
+      showError(parseApiError(err, 'Import failed. Please check your CSV format.').message);
+    } finally {
+      setImporting(false);
+      event.target.value = '';
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".csv"
+        hidden
+        onChange={handleImport}
+      />
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>Orders</Typography>
-        <FormControl size="small" sx={{ minWidth: 180 }} disabled={loading}>
-          <InputLabel>Filter by Status</InputLabel>
-          <Select
-            label="Filter by Status"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              updateUrlParams({ page: 1 });
-            }}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={exporting ? <CircularProgress size={16} /> : <FileDownloadOutlined />}
+            onClick={handleExport}
+            disabled={exporting || loading}
           >
-            <MenuItem value="">All Orders</MenuItem>
-            <MenuItem value="PAID,SHIPPED,DELIVERED">Active Orders (Paid / Shipped / Delivered)</MenuItem>
-            {ORDER_STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>{s.replace('_', ' ')}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            Export
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={importing ? <CircularProgress size={16} /> : <FileUploadOutlined />}
+            onClick={() => importInputRef.current?.click()}
+            disabled={importing || loading}
+          >
+            Import
+          </Button>
+          <FormControl size="small" sx={{ minWidth: 180 }} disabled={loading}>
+            <InputLabel>Filter by Status</InputLabel>
+            <Select
+              label="Filter by Status"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                updateUrlParams({ page: 1 });
+              }}
+            >
+              <MenuItem value="">All Orders</MenuItem>
+              <MenuItem value="PAID,SHIPPED,DELIVERED">Active Orders (Paid / Shipped / Delivered)</MenuItem>
+              {ORDER_STATUSES.map((s) => (
+                <MenuItem key={s} value={s}>{s.replace('_', ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
       </Stack>
 
       <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>

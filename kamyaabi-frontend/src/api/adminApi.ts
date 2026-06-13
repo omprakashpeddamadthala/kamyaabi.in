@@ -6,6 +6,7 @@ import {
   Category,
   Coupon,
   Order,
+  OrderImportResult,
   PageResponse,
   DashboardStats,
   AnalyticsResponse,
@@ -150,6 +151,19 @@ export const adminApi = {
 
   downloadInvoiceUrl: (id: number) =>
     `${config.apiBaseUrl || ''}/api/admin/orders/${id}/invoice`,
+
+  exportOrdersCsvUrl: () =>
+    `${config.apiBaseUrl || ''}/api/admin/orders/export/csv`,
+
+  importOrdersCsv: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post<ApiResponse<OrderImportResult>>(
+      '/api/admin/orders/import/csv',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+  },
 
   getDashboardStats: () =>
     axiosInstance.get<ApiResponse<DashboardStats>>('/api/admin/dashboard/stats'),
