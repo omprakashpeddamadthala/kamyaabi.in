@@ -276,6 +276,56 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getOrders_withNullStatus_shouldReturnAllOrders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        when(orderRepository.findAllByOrderByCreatedAtDesc(pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.getOrders(null, pageable);
+
+        verify(orderRepository).findAllByOrderByCreatedAtDesc(pageable);
+    }
+
+    @Test
+    void getOrders_withSingleStatus_shouldFilterByStatus() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        when(orderRepository.findByStatusOrderByCreatedAtDesc(Order.OrderStatus.PAID, pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.getOrders("paid", pageable);
+
+        verify(orderRepository).findByStatusOrderByCreatedAtDesc(Order.OrderStatus.PAID, pageable);
+    }
+
+    @Test
+    void getOrders_withMultipleStatuses_shouldFilterByStatuses() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        java.util.List<Order.OrderStatus> statuses =
+                java.util.List.of(Order.OrderStatus.PAID, Order.OrderStatus.SHIPPED);
+        when(orderRepository.findByStatusInOrderByCreatedAtDesc(statuses, pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.getOrders("PAID, SHIPPED", pageable);
+
+        verify(orderRepository).findByStatusInOrderByCreatedAtDesc(statuses, pageable);
+    }
+
+    @Test
+    void getOrders_withAllInvalidStatuses_shouldReturnAllOrders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order));
+        when(orderRepository.findAllByOrderByCreatedAtDesc(pageable)).thenReturn(orderPage);
+        when(orderMapper.toResponse(order)).thenReturn(orderResponse);
+
+        orderService.getOrders("NOPE,ALSO_BAD", pageable);
+
+        verify(orderRepository).findAllByOrderByCreatedAtDesc(pageable);
+    }
+
+    @Test
     void updateOrderStatus_toPaid_shouldPublishPaymentSuccessEvent() {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
