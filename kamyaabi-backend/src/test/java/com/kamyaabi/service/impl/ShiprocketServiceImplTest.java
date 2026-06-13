@@ -3,6 +3,10 @@ package com.kamyaabi.service.impl;
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.entity.*;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.shiprocket.ShiprocketApiClient;
+import com.kamyaabi.service.shiprocket.ShiprocketAuthClient;
+import com.kamyaabi.service.shiprocket.ShiprocketResponseParser;
+import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +30,7 @@ class ShiprocketServiceImplTest {
     @Mock private RestTemplate restTemplate;
 
     private ShiprocketProperties properties;
+    private ShiprocketAuthClient authClient;
     private ShiprocketServiceImpl shiprocketService;
 
     @BeforeEach
@@ -38,14 +43,10 @@ class ShiprocketServiceImplTest {
         properties.setDefaultBreadth(10);
         properties.setDefaultHeight(10);
 
-        shiprocketService = new ShiprocketServiceImpl(properties, orderRepository);
-        try {
-            java.lang.reflect.Field field = ShiprocketServiceImpl.class.getDeclaredField("restTemplate");
-            field.setAccessible(true);
-            field.set(shiprocketService, restTemplate);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        authClient = new ShiprocketAuthClient(properties, restTemplate);
+        ShiprocketApiClient apiClient = new ShiprocketApiClient(properties, restTemplate, authClient);
+        shiprocketService = new ShiprocketServiceImpl(
+                properties, orderRepository, apiClient, new ShiprocketStatusMapper());
     }
 
     @Test
@@ -155,13 +156,13 @@ class ShiprocketServiceImplTest {
 
     @Test
     void toSafeString_handlesNullAndStringNull() {
-        assertThat(ShiprocketServiceImpl.toSafeString(null)).isNull();
-        assertThat(ShiprocketServiceImpl.toSafeString("null")).isNull();
-        assertThat(ShiprocketServiceImpl.toSafeString("NULL")).isNull();
-        assertThat(ShiprocketServiceImpl.toSafeString("")).isNull();
-        assertThat(ShiprocketServiceImpl.toSafeString("  ")).isNull();
-        assertThat(ShiprocketServiceImpl.toSafeString(12345)).isEqualTo("12345");
-        assertThat(ShiprocketServiceImpl.toSafeString("AWB123")).isEqualTo("AWB123");
+        assertThat(ShiprocketResponseParser.toSafeString(null)).isNull();
+        assertThat(ShiprocketResponseParser.toSafeString("null")).isNull();
+        assertThat(ShiprocketResponseParser.toSafeString("NULL")).isNull();
+        assertThat(ShiprocketResponseParser.toSafeString("")).isNull();
+        assertThat(ShiprocketResponseParser.toSafeString("  ")).isNull();
+        assertThat(ShiprocketResponseParser.toSafeString(12345)).isEqualTo("12345");
+        assertThat(ShiprocketResponseParser.toSafeString("AWB123")).isEqualTo("AWB123");
     }
 
     @Test
@@ -308,11 +309,11 @@ class ShiprocketServiceImplTest {
                 any(Class.class)))
                 .thenReturn(ResponseEntity.ok(loginResponse));
 
-        String token = shiprocketService.getToken();
+        String token = authClient.getToken();
         assertThat(token).isEqualTo("fresh-token-from-login");
 
         // Second call should hit the cache (no extra /auth/login invocation).
-        shiprocketService.getToken();
+        authClient.getToken();
         verify(restTemplate, times(1)).postForEntity(
                 contains("/auth/login"),
                 any(HttpEntity.class),
@@ -325,7 +326,7 @@ class ShiprocketServiceImplTest {
         properties.setEmail("");
         properties.setPassword("");
 
-        assertThat(shiprocketService.getToken()).isEqualTo("static-token");
+        assertThat(authClient.getToken()).isEqualTo("static-token");
         verifyNoInteractions(restTemplate);
     }
 

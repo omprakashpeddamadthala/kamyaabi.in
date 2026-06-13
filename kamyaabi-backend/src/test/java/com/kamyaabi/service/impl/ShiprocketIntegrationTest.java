@@ -2,6 +2,9 @@ package com.kamyaabi.service.impl;
 
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.shiprocket.ShiprocketApiClient;
+import com.kamyaabi.service.shiprocket.ShiprocketAuthClient;
+import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,7 @@ class ShiprocketIntegrationTest {
     private static final String BASE_URL = "https://apiv2.shiprocket.in/v1/external";
 
     private ShiprocketProperties properties;
+    private ShiprocketAuthClient authClient;
     private ShiprocketServiceImpl shiprocketService;
     private RestTemplate restTemplate;
 
@@ -44,15 +48,10 @@ class ShiprocketIntegrationTest {
         properties.setApiToken("");
 
         restTemplate = new RestTemplate();
-        shiprocketService = new ShiprocketServiceImpl(properties, mock(OrderRepository.class));
-        // inject the real RestTemplate
-        try {
-            java.lang.reflect.Field field = ShiprocketServiceImpl.class.getDeclaredField("restTemplate");
-            field.setAccessible(true);
-            field.set(shiprocketService, restTemplate);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        authClient = new ShiprocketAuthClient(properties, restTemplate);
+        ShiprocketApiClient apiClient = new ShiprocketApiClient(properties, restTemplate, authClient);
+        shiprocketService = new ShiprocketServiceImpl(
+                properties, mock(OrderRepository.class), apiClient, new ShiprocketStatusMapper());
     }
 
     @Test
@@ -62,22 +61,22 @@ class ShiprocketIntegrationTest {
 
     @Test
     void getToken_withRealCredentials_returnsNonBlankToken() {
-        String token = shiprocketService.getToken();
+        String token = authClient.getToken();
         assertThat(token).isNotNull().isNotBlank();
         System.out.println("Shiprocket auth token obtained (length=" + token.length() + ")");
     }
 
     @Test
     void getToken_secondCallHitsCache() {
-        String first = shiprocketService.getToken();
-        String second = shiprocketService.getToken();
+        String first = authClient.getToken();
+        String second = authClient.getToken();
         assertThat(first).isEqualTo(second);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void listChannels_withRealToken_returnsData() {
-        String token = shiprocketService.getToken();
+        String token = authClient.getToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(token);
@@ -96,7 +95,7 @@ class ShiprocketIntegrationTest {
     @Test
     @SuppressWarnings("unchecked")
     void listPickupLocations_withRealToken_returnsData() {
-        String token = shiprocketService.getToken();
+        String token = authClient.getToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(token);
