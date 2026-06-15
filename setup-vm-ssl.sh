@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # setup-vm-ssl.sh
-# Installs Nginx + Certbot on the host VM and configures SSL for your domain
+# Installs Nginx + Certbot on the host VM and configures SSL for both domains
 # Usage: sudo ./setup-vm-ssl.sh
 #
 # Prerequisites:
 #   - Ubuntu 20.04+ VM
-#   - Domain DNS A record pointing to this server's public IP
+#   - DNS A records for both kamyaabi.in and kamyaabi.shop pointing to this server's public IP
 #   - Ports 80 and 443 open in firewall / Oracle Cloud security list
 #   - Docker containers running (frontend on 127.0.0.1:3000, backend on 127.0.0.1:8080)
 
@@ -26,6 +26,7 @@ fi
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 DOMAIN="${DOMAIN:-kamyaabi.in}"
+DOMAIN_ALT="${DOMAIN_ALT:-kamyaabi.shop}"
 EMAIL="${CERTBOT_EMAIL:-admin@kamyaabi.in}"
 STAGING="${CERTBOT_STAGING:-0}"  # Set to 1 to use Let's Encrypt staging (avoids rate limits)
 NGINX_CONF_SRC="./nginx/vm/kamyaabi.conf"
@@ -35,9 +36,10 @@ CERTBOT_WEBROOT="/var/www/certbot"
 echo "============================================="
 echo "  Kamyaabi VM SSL Setup"
 echo "============================================="
-echo "Domain:  $DOMAIN"
-echo "Email:   $EMAIL"
-echo "Staging: $STAGING"
+echo "Domain:      $DOMAIN"
+echo "Domain Alt:  $DOMAIN_ALT"
+echo "Email:       $EMAIL"
+echo "Staging:     $STAGING"
 echo ""
 
 # ─── Check root ──────────────────────────────────────────────────────────────
@@ -90,6 +92,21 @@ server {
         add_header Content-Type text/plain;
     }
 }
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $DOMAIN_ALT www.$DOMAIN_ALT;
+
+    location /.well-known/acme-challenge/ {
+        root $CERTBOT_WEBROOT;
+    }
+
+    location / {
+        return 200 'Kamyaabi SSL setup in progress...';
+        add_header Content-Type text/plain;
+    }
+}
 EOF
 
 ln -sf "$NGINX_CONF_DEST" /etc/nginx/sites-enabled/kamyaabi.conf
@@ -97,8 +114,8 @@ nginx -t && systemctl reload nginx
 echo "Done."
 echo ""
 
-# ─── 6. Obtain SSL certificate ──────────────────────────────────────────────
-echo "### Step 6: Requesting Let's Encrypt SSL certificate ..."
+# ─── 6. Obtain SSL certificates ─────────────────────────────────────────────
+echo "### Step 6: Requesting Let's Encrypt SSL certificates ..."
 
 STAGING_FLAG=""
 if [ "$STAGING" != "0" ]; then
@@ -106,11 +123,26 @@ if [ "$STAGING" != "0" ]; then
     echo "  (Using Let's Encrypt STAGING environment)"
 fi
 
+# Certificate for primary domain
+echo "  Requesting certificate for $DOMAIN ..."
 certbot certonly \
     --webroot \
     -w "$CERTBOT_WEBROOT" \
     -d "$DOMAIN" \
     -d "www.$DOMAIN" \
+    --email "$EMAIL" \
+    --agree-tos \
+    --no-eff-email \
+    --non-interactive \
+    $STAGING_FLAG
+
+# Certificate for alternate domain
+echo "  Requesting certificate for $DOMAIN_ALT ..."
+certbot certonly \
+    --webroot \
+    -w "$CERTBOT_WEBROOT" \
+    -d "$DOMAIN_ALT" \
+    -d "www.$DOMAIN_ALT" \
     --email "$EMAIL" \
     --agree-tos \
     --no-eff-email \
@@ -173,12 +205,11 @@ echo "### Step 7: Installing production Nginx config with SSL ..."
 
 if [ -f "$NGINX_CONF_SRC" ]; then
     cp "$NGINX_CONF_SRC" "$NGINX_CONF_DEST"
-    # Replace default domain with actual $DOMAIN from .env
-    sed -i "s/kamyaabi\.shop/$DOMAIN/g" "$NGINX_CONF_DEST"
-    echo "  Copied from $NGINX_CONF_SRC (domain set to $DOMAIN)"
+    echo "  Copied from $NGINX_CONF_SRC (serving $DOMAIN + $DOMAIN_ALT)"
 else
     echo "  WARNING: $NGINX_CONF_SRC not found, generating config inline ..."
     cat > "$NGINX_CONF_DEST" <<'NGINXEOF'
+# --- kamyaabi.in HTTP -> HTTPS redirect ---
 server {
     listen 80;
     listen [::]:80;
@@ -193,6 +224,22 @@ server {
     }
 }
 
+# --- kamyaabi.shop HTTP -> HTTPS redirect ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name kamyaabi.shop www.kamyaabi.shop;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://kamyaabi.shop$request_uri;
+    }
+}
+
+# --- kamyaabi.in HTTPS ---
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
@@ -219,7 +266,96 @@ server {
                application/xml application/xml+rss text/javascript image/svg+xml
                application/x-font-ttf font/opentype;
 
-    # 500M practical cap for admin product image uploads.
+    client_max_body_size 500M;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_connect_timeout 30s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 60s;
+    }
+
+    location /swagger-ui/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /swagger-ui.html {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api-docs {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /v3/api-docs {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /actuator/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# --- kamyaabi.shop HTTPS ---
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name kamyaabi.shop www.kamyaabi.shop;
+
+    ssl_certificate /etc/letsencrypt/live/kamyaabi.shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/kamyaabi.shop/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/json application/javascript text/xml
+               application/xml application/xml+rss text/javascript image/svg+xml
+               application/x-font-ttf font/opentype;
+
     client_max_body_size 500M;
 
     location /api/ {
@@ -283,9 +419,7 @@ server {
     }
 }
 NGINXEOF
-    # Replace default domain with actual $DOMAIN from .env
-    sed -i "s/kamyaabi\.shop/$DOMAIN/g" "$NGINX_CONF_DEST"
-    echo "  Domain set to $DOMAIN"
+    echo "  Dual-domain config generated inline"
 fi
 
 nginx -t && systemctl reload nginx
@@ -330,14 +464,18 @@ echo ""
 echo "Your site is now accessible at:"
 echo "  https://$DOMAIN"
 echo "  https://www.$DOMAIN"
+echo "  https://$DOMAIN_ALT"
+echo "  https://www.$DOMAIN_ALT"
 echo ""
 echo "Verify with:"
 echo "  curl -I https://$DOMAIN"
+echo "  curl -I https://$DOMAIN_ALT"
 echo "  curl https://$DOMAIN/api/products"
 echo "  curl https://$DOMAIN/actuator/health"
 echo ""
 echo "SSL rating check:"
 echo "  https://www.ssllabs.com/ssltest/analyze.html?d=$DOMAIN"
+echo "  https://www.ssllabs.com/ssltest/analyze.html?d=$DOMAIN_ALT"
 echo ""
 echo "Certificate auto-renewal is handled by certbot.timer (runs twice daily)."
 echo "Post-renewal Nginx reload is handled by $HOOK_DIR/reload-nginx.sh."

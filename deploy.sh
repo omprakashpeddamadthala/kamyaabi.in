@@ -27,6 +27,7 @@ if [ -f .env ]; then
     set +a
 fi
 DOMAIN="${DOMAIN:-kamyaabi.in}"
+DOMAIN_ALT="${DOMAIN_ALT:-kamyaabi.shop}"
 
 # --- Parse arguments ---
 while [[ $# -gt 0 ]]; do
@@ -138,3 +139,4 @@ echo "  docker compose -f $COMPOSE_FILE logs -f"
 echo "  tail -f logs/application.log         # backend file log (bind-mounted)"
 echo "  tail -f logs/error.log               # ERROR-only log"
 echo "  curl -I https://${DOMAIN}"
+echo "  curl -I https://${DOMAIN_ALT}"
