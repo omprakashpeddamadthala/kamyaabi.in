@@ -1,17 +1,20 @@
 package com.kamyaabi.service.impl.whatsapp;
 
 import com.kamyaabi.config.AppProperties;
+import com.kamyaabi.service.SettingsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import static org.springframework.http.HttpMethod.POST;
 
 class ChatMitraServiceImplTest {
 
@@ -26,7 +29,11 @@ class ChatMitraServiceImplTest {
         props.getWhatsappOtp().setTemplateName("otp_login");
         props.getWhatsappOtp().setLanguage("en");
 
-        ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props);
+        SettingsService settingsService = mock(SettingsService.class);
+        when(settingsService.getString(SettingsService.CHATMITRA_API_TOKEN, "cm-test-token"))
+                .thenReturn("cm-test-token");
+
+        ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props, settingsService);
 
         server.expect(requestTo("https://backend.chatmitra.com/developer/api/send_template"))
                 .andExpect(method(POST))

@@ -21,9 +21,10 @@ Primary authentication is Google OAuth + JWT. An optional WhatsApp OTP login
 flow can be enabled from the admin Settings page. It stays hidden and disabled
 by default.
 
-To use WhatsApp OTP login, configure the ChatMitra env vars and ensure the
-ChatMitra dashboard has an approved WhatsApp authentication template named by
-`CHATMITRA_WHATSAPP_OTP_TEMPLATE_NAME` (default `otp_login`).
+To use WhatsApp OTP login, enable the feature in Admin Settings, set the
+ChatMitra API token there, and ensure the ChatMitra dashboard has an approved
+WhatsApp authentication template named by `CHATMITRA_WHATSAPP_OTP_TEMPLATE_NAME`
+(default `otp_login`). The env vars remain as a fallback for self-hosted setups.
 
 This repository hosts the entire stack — a Spring Boot REST API
 (`kamyaabi-backend/`), a React + TypeScript single-page app

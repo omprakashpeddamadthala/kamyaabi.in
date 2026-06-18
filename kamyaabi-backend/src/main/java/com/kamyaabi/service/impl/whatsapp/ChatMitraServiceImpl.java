@@ -2,6 +2,7 @@ package com.kamyaabi.service.impl.whatsapp;
 
 import com.kamyaabi.config.AppProperties;
 import com.kamyaabi.exception.BusinessException;
+import com.kamyaabi.service.SettingsService;
 import com.kamyaabi.service.whatsapp.ChatMitraService;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,16 +24,24 @@ public class ChatMitraServiceImpl implements ChatMitraService {
 
     private final RestTemplate restTemplate;
     private final AppProperties appProperties;
+    private final SettingsService settingsService;
 
-    public ChatMitraServiceImpl(RestTemplate restTemplate, AppProperties appProperties) {
+    public ChatMitraServiceImpl(
+            RestTemplate restTemplate,
+            AppProperties appProperties,
+            SettingsService settingsService) {
         this.restTemplate = restTemplate;
         this.appProperties = appProperties;
+        this.settingsService = settingsService;
     }
 
     @Override
     public void sendOtp(String phoneNumber, String otp) {
         AppProperties.WhatsAppOtp props = appProperties.getWhatsappOtp();
-        if (props.getApiToken() == null || props.getApiToken().isBlank()) {
+        String apiToken = settingsService.getString(
+                SettingsService.CHATMITRA_API_TOKEN,
+                props.getApiToken());
+        if (apiToken == null || apiToken.isBlank()) {
             throw new BusinessException("ChatMitra API token is not configured");
         }
         if (props.getTemplateName() == null || props.getTemplateName().isBlank()) {
@@ -58,7 +67,7 @@ public class ChatMitraServiceImpl implements ChatMitraService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(props.getApiToken());
+        headers.setBearerAuth(apiToken);
 
         try {
             ResponseEntity<ChatMitraResponse> response = restTemplate.postForEntity(

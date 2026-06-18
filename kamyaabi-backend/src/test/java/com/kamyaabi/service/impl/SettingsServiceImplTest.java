@@ -85,7 +85,9 @@ class SettingsServiceImplTest {
         assertThat(all).containsKeys(
                 SettingsService.LOW_STOCK_THRESHOLD,
                 SettingsService.PRODUCTS_PER_PAGE,
-                SettingsService.SHOW_BOUGHT_RECENTLY_BADGE);
+                SettingsService.SHOW_BOUGHT_RECENTLY_BADGE,
+                SettingsService.WHATSAPP_OTP_AUTH_ENABLED,
+                SettingsService.CHATMITRA_API_TOKEN);
     }
 
     @Test
@@ -95,7 +97,9 @@ class SettingsServiceImplTest {
         assertThat(publicSettings).doesNotContainKey(SettingsService.LOW_STOCK_THRESHOLD);
         assertThat(publicSettings).containsKeys(
                 SettingsService.PRODUCTS_PER_PAGE,
-                SettingsService.SHOW_BOUGHT_RECENTLY_BADGE);
+                SettingsService.SHOW_BOUGHT_RECENTLY_BADGE,
+                SettingsService.WHATSAPP_OTP_AUTH_ENABLED);
+        assertThat(publicSettings).doesNotContainKey(SettingsService.CHATMITRA_API_TOKEN);
     }
 
     @Test

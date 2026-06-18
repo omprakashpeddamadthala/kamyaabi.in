@@ -17,6 +17,7 @@ public interface SettingsService {
     String SHOW_BOUGHT_RECENTLY_BADGE = "show_bought_recently_badge";
     String PRODUCTS_PER_PAGE = "products_per_page";
     String WHATSAPP_OTP_AUTH_ENABLED = "whatsapp_otp_auth_enabled";
+    String CHATMITRA_API_TOKEN = "chatmitra_api_token";
 
     String COUPON_ENABLED = "coupon_enabled";
     String COUPON_MAX_USES_PER_USER = "coupon_max_uses_per_user";
