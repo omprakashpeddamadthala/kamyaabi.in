@@ -25,6 +25,7 @@ public class SettingsServiceImpl implements SettingsService {
             SHOW_BOUGHT_RECENTLY_BADGE,
             PRODUCTS_PER_PAGE,
             WHATSAPP_OTP_AUTH_ENABLED,
+            CHATMITRA_API_TOKEN,
             COUPON_ENABLED,
             COUPON_MAX_USES_PER_USER,
             COUPON_MAX_USES_PER_USER_PER_DAY,
@@ -172,6 +173,7 @@ public class SettingsServiceImpl implements SettingsService {
                     String.valueOf(getBoolean(key, DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE));
             case WHATSAPP_OTP_AUTH_ENABLED ->
                     String.valueOf(getBoolean(key, DEFAULT_WHATSAPP_OTP_AUTH_ENABLED));
+            case CHATMITRA_API_TOKEN -> getString(key, "");
             case COUPON_ENABLED ->
                     String.valueOf(getBoolean(key, DEFAULT_COUPON_ENABLED));
             case COUPON_MAX_USES_PER_USER ->

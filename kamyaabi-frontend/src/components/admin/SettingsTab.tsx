@@ -24,6 +24,7 @@ const LOW_STOCK_THRESHOLD = 'low_stock_threshold';
 const PRODUCTS_PER_PAGE = 'products_per_page';
 const SHOW_BOUGHT_RECENTLY_BADGE = 'show_bought_recently_badge';
 const WHATSAPP_OTP_AUTH_ENABLED = 'whatsapp_otp_auth_enabled';
+const CHATMITRA_API_TOKEN = 'chatmitra_api_token';
 const COUPON_ENABLED = 'coupon_enabled';
 const COUPON_MAX_USES_PER_USER = 'coupon_max_uses_per_user';
 const COUPON_MAX_USES_PER_USER_PER_DAY = 'coupon_max_uses_per_user_per_day';
@@ -40,6 +41,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const [productsPerPage, setProductsPerPage] = useState('8');
   const [showBoughtRecently, setShowBoughtRecently] = useState(true);
   const [whatsappOtpAuthEnabled, setWhatsappOtpAuthEnabled] = useState(false);
+  const [chatmitraApiToken, setChatmitraApiToken] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Coupon settings
@@ -71,6 +73,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
           setWhatsappOtpAuthEnabled(
             String(data[WHATSAPP_OTP_AUTH_ENABLED]).toLowerCase() === 'true',
           );
+        }
+        if (data[CHATMITRA_API_TOKEN] !== undefined) {
+          setChatmitraApiToken(data[CHATMITRA_API_TOKEN]);
         }
         if (data[COUPON_ENABLED] !== undefined) {
           setCouponEnabled(String(data[COUPON_ENABLED]).toLowerCase() === 'true');
@@ -141,6 +146,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         [PRODUCTS_PER_PAGE]: String(Number(productsPerPage)),
         [SHOW_BOUGHT_RECENTLY_BADGE]: showBoughtRecently ? 'true' : 'false',
         [WHATSAPP_OTP_AUTH_ENABLED]: whatsappOtpAuthEnabled ? 'true' : 'false',
+        [CHATMITRA_API_TOKEN]: chatmitraApiToken.trim(),
         [COUPON_ENABLED]: couponEnabled ? 'true' : 'false',
         [COUPON_MAX_USES_PER_USER]: String(Number(couponMaxUsesPerUser)),
         [COUPON_MAX_USES_PER_USER_PER_DAY]: String(Number(couponMaxUsesPerUserPerDay)),
@@ -231,8 +237,23 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
               }
               label={whatsappOtpAuthEnabled ? 'Enabled' : 'Disabled'}
             />
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                ChatMitra API Token
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Required to send the OTP template through ChatMitra. Stored for backend use only.
+              </Typography>
+              <TextField
+                type="password"
+                size="small"
+                value={chatmitraApiToken}
+                onChange={(e) => setChatmitraApiToken(e.target.value)}
+                helperText="Leave blank only if the backend should keep using the env fallback."
+                sx={{ maxWidth: 420, width: '100%' }}
+              />
+            </Box>
           </Box>
-
           <Box>
             <Typography variant="subtitle1" gutterBottom>
               Show &apos;Bought Recently&apos; Badge on Product Page
