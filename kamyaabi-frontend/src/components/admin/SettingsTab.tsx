@@ -23,6 +23,7 @@ interface SettingsTabProps {
 const LOW_STOCK_THRESHOLD = 'low_stock_threshold';
 const PRODUCTS_PER_PAGE = 'products_per_page';
 const SHOW_BOUGHT_RECENTLY_BADGE = 'show_bought_recently_badge';
+const WHATSAPP_OTP_AUTH_ENABLED = 'whatsapp_otp_auth_enabled';
 const COUPON_ENABLED = 'coupon_enabled';
 const COUPON_MAX_USES_PER_USER = 'coupon_max_uses_per_user';
 const COUPON_MAX_USES_PER_USER_PER_DAY = 'coupon_max_uses_per_user_per_day';
@@ -38,6 +39,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const [lowStock, setLowStock] = useState('10');
   const [productsPerPage, setProductsPerPage] = useState('8');
   const [showBoughtRecently, setShowBoughtRecently] = useState(true);
+  const [whatsappOtpAuthEnabled, setWhatsappOtpAuthEnabled] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Coupon settings
@@ -63,6 +65,11 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         if (data[SHOW_BOUGHT_RECENTLY_BADGE] !== undefined) {
           setShowBoughtRecently(
             String(data[SHOW_BOUGHT_RECENTLY_BADGE]).toLowerCase() === 'true',
+          );
+        }
+        if (data[WHATSAPP_OTP_AUTH_ENABLED] !== undefined) {
+          setWhatsappOtpAuthEnabled(
+            String(data[WHATSAPP_OTP_AUTH_ENABLED]).toLowerCase() === 'true',
           );
         }
         if (data[COUPON_ENABLED] !== undefined) {
@@ -133,6 +140,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         [LOW_STOCK_THRESHOLD]: String(Number(lowStock)),
         [PRODUCTS_PER_PAGE]: String(Number(productsPerPage)),
         [SHOW_BOUGHT_RECENTLY_BADGE]: showBoughtRecently ? 'true' : 'false',
+        [WHATSAPP_OTP_AUTH_ENABLED]: whatsappOtpAuthEnabled ? 'true' : 'false',
         [COUPON_ENABLED]: couponEnabled ? 'true' : 'false',
         [COUPON_MAX_USES_PER_USER]: String(Number(couponMaxUsesPerUser)),
         [COUPON_MAX_USES_PER_USER_PER_DAY]: String(Number(couponMaxUsesPerUserPerDay)),
@@ -203,6 +211,25 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
               helperText={errors[PRODUCTS_PER_PAGE] ?? 'Default: 8'}
               inputProps={{ min: 1, step: 1 }}
               sx={{ maxWidth: 240 }}
+            />
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              WhatsApp OTP Login/Signup
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Show the WhatsApp login option on the public sign-in page and
+              allow the backend OTP endpoints to accept requests.
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={whatsappOtpAuthEnabled}
+                  onChange={(_, checked) => setWhatsappOtpAuthEnabled(checked)}
+                />
+              }
+              label={whatsappOtpAuthEnabled ? 'Enabled' : 'Disabled'}
             />
           </Box>
 

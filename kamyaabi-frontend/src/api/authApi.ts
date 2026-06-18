@@ -1,5 +1,19 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse, AuthResponse, User } from '../types';
+import type { ApiResponse, AuthResponse, User } from '../types';
+
+export interface WhatsappOtpRequestPayload {
+  phoneNumber: string;
+}
+
+export interface WhatsappOtpVerifyPayload {
+  phoneNumber: string;
+  otp: string;
+}
+
+export interface WhatsappOtpRequestResponse {
+  resendAfterSeconds: number;
+  expiresInSeconds: number;
+}
 
 export const authApi = {
   googleLogin: (userInfo: Record<string, unknown>) =>
@@ -7,4 +21,10 @@ export const authApi = {
 
   getCurrentUser: () =>
     axiosInstance.get<ApiResponse<User>>('/api/auth/me'),
+
+  requestWhatsappOtp: (payload: WhatsappOtpRequestPayload) =>
+    axiosInstance.post<ApiResponse<WhatsappOtpRequestResponse>>('/api/auth/whatsapp/request-otp', payload),
+
+  verifyWhatsappOtp: (payload: WhatsappOtpVerifyPayload) =>
+    axiosInstance.post<ApiResponse<AuthResponse>>('/api/auth/whatsapp/verify-otp', payload),
 };

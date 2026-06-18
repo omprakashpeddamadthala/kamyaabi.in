@@ -16,6 +16,7 @@ public interface SettingsService {
     String LOW_STOCK_THRESHOLD = "low_stock_threshold";
     String SHOW_BOUGHT_RECENTLY_BADGE = "show_bought_recently_badge";
     String PRODUCTS_PER_PAGE = "products_per_page";
+    String WHATSAPP_OTP_AUTH_ENABLED = "whatsapp_otp_auth_enabled";
 
     String COUPON_ENABLED = "coupon_enabled";
     String COUPON_MAX_USES_PER_USER = "coupon_max_uses_per_user";
@@ -29,6 +30,7 @@ public interface SettingsService {
     int DEFAULT_LOW_STOCK_THRESHOLD = 10;
     boolean DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE = true;
     int DEFAULT_PRODUCTS_PER_PAGE = 8;
+    boolean DEFAULT_WHATSAPP_OTP_AUTH_ENABLED = false;
 
     boolean DEFAULT_COUPON_ENABLED = true;
     int DEFAULT_COUPON_MAX_USES_PER_USER = 1;
