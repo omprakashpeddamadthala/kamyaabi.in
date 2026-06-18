@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
-import { User } from '../../types';
+import type { User } from '../../types';
 import { setTokenExpiry } from '../../api/axiosInstance';
 
 interface AuthState {
@@ -8,6 +8,11 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+}
+
+export interface AuthSessionPayload {
+  token: string;
+  user: User;
 }
 
 const initialState: AuthState = {
@@ -51,6 +56,10 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    setSession: (state, action: { payload: AuthSessionPayload }) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+    },
     logout: (state) => {
       state.user = null;
       state.token = null;
@@ -83,5 +92,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { setSession, logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

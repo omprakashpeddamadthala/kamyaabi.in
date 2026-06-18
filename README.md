@@ -15,6 +15,16 @@ to manage products, categories, customers, orders, and basic sales analytics.
 A role-based admin dashboard lives at `/admin` and is gated to users seeded
 with the `ADMIN` role.
 
+## Auth options
+
+Primary authentication is Google OAuth + JWT. An optional WhatsApp OTP login
+flow can be enabled from the admin Settings page. It stays hidden and disabled
+by default.
+
+To use WhatsApp OTP login, configure the ChatMitra env vars and ensure the
+ChatMitra dashboard has an approved WhatsApp authentication template named by
+`CHATMITRA_WHATSAPP_OTP_TEMPLATE_NAME` (default `otp_login`).
+
 This repository hosts the entire stack — a Spring Boot REST API
 (`kamyaabi-backend/`), a React + TypeScript single-page app
 (`kamyaabi-frontend/`), Nginx and Certbot configuration for SSL termination,

@@ -25,6 +25,9 @@ public class AppProperties {
     @Valid
     private Razorpay razorpay = new Razorpay();
 
+    @Valid
+    private WhatsAppOtp whatsappOtp = new WhatsAppOtp();
+
     private String frontendUrl = "https://kamyaabi.in";
 
     @Getter
@@ -52,5 +55,14 @@ public class AppProperties {
 
         @NotBlank
         private String keySecret;
+    }
+
+    @Getter
+    @Setter
+    public static class WhatsAppOtp {
+        private String apiUrl = "https://backend.chatmitra.com/developer/api";
+        private String apiToken = "";
+        private String templateName = "otp_login";
+        private String language = "en";
     }
 }

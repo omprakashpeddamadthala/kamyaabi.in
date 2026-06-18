@@ -54,6 +54,12 @@ app:
     key-id: ${RAZORPAY_KEY_ID}
     key-secret: ${RAZORPAY_KEY_SECRET}
 
+  whatsapp-otp:
+    api-url: ${CHATMITRA_API_URL:https://backend.chatmitra.com/developer/api}
+    api-token: ${CHATMITRA_API_TOKEN:}
+    template-name: ${CHATMITRA_WHATSAPP_OTP_TEMPLATE_NAME:otp_login}
+    language: ${CHATMITRA_WHATSAPP_OTP_LANGUAGE:en}
+
   support:
     email: ${APP_SUPPORT_EMAIL:support@kamyaabi.in}
     url: ${APP_SUPPORT_URL:https://kamyaabi.in}
