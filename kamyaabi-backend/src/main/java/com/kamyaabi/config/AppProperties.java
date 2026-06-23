@@ -60,7 +60,7 @@ public class AppProperties {
     @Getter
     @Setter
     public static class WhatsAppOtp {
-        private String apiUrl = "https://backend.chatmitra.com/developer/api";
+        private String apiUrl = "https://api.chatmitra.com/v2/client";
         private String apiToken = "";
         private String templateName = "otp_login";
         private String language = "en";
