@@ -35,7 +35,7 @@ public interface SettingsService {
     boolean DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE = true;
     int DEFAULT_PRODUCTS_PER_PAGE = 8;
     boolean DEFAULT_WHATSAPP_OTP_AUTH_ENABLED = false;
-    String DEFAULT_CHATMITRA_API_BASE_URL = "https://backend.chatmitra.com/developer/api";
+    String DEFAULT_CHATMITRA_API_BASE_URL = "https://api.chatmitra.com/v2/client";
     String DEFAULT_CHATMITRA_OTP_TEMPLATE_ID = "otp_login";
 
     boolean DEFAULT_COUPON_ENABLED = true;

@@ -24,7 +24,7 @@ class ChatMitraServiceImplTest {
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         AppProperties props = new AppProperties();
-        props.getWhatsappOtp().setApiUrl("https://backend.chatmitra.com/developer/api");
+        props.getWhatsappOtp().setApiUrl("https://api.chatmitra.com/v2/client");
         props.getWhatsappOtp().setApiToken("cm-test-token");
         props.getWhatsappOtp().setTemplateName("otp_login");
         props.getWhatsappOtp().setLanguage("en");
@@ -32,8 +32,8 @@ class ChatMitraServiceImplTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getString(SettingsService.CHATMITRA_API_TOKEN, "cm-test-token"))
                 .thenReturn("cm-test-token");
-        when(settingsService.getString(SettingsService.CHATMITRA_API_BASE_URL, "https://backend.chatmitra.com/developer/api"))
-                .thenReturn("https://backend.chatmitra.com/developer/api");
+        when(settingsService.getString(SettingsService.CHATMITRA_API_BASE_URL, "https://api.chatmitra.com/v2/client"))
+                .thenReturn("https://api.chatmitra.com/v2/client");
         when(settingsService.getString(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login"))
                 .thenReturn("otp_login");
         when(settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, ""))
@@ -41,7 +41,7 @@ class ChatMitraServiceImplTest {
 
         ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props, settingsService);
 
-        server.expect(requestTo("https://backend.chatmitra.com/developer/api/send_template"))
+        server.expect(requestTo("https://api.chatmitra.com/v2/client/send_template"))
                 .andExpect(method(POST))
                 .andExpect(header("Authorization", "Bearer cm-test-token"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

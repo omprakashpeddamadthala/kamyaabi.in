@@ -286,7 +286,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
                 size="small"
                 value={chatmitraApiBaseUrl}
                 onChange={(e) => setChatmitraApiBaseUrl(e.target.value)}
-                placeholder="https://backend.chatmitra.com/developer/api"
+                placeholder="https://api.chatmitra.com/v2/client"
                 error={!!errors[CHATMITRA_API_BASE_URL]}
                 helperText={errors[CHATMITRA_API_BASE_URL] ?? 'Must start with http:// or https://'}
                 sx={{ maxWidth: 420, width: '100%' }}
