@@ -5,12 +5,14 @@ import com.kamyaabi.dto.request.WhatsappOtpVerifyRequest;
 import com.kamyaabi.dto.response.ApiResponse;
 import com.kamyaabi.dto.response.AuthResponse;
 import com.kamyaabi.dto.response.WhatsappOtpRequestResponse;
+import com.kamyaabi.dto.response.WhatsappOtpStatusResponse;
 import com.kamyaabi.service.whatsapp.WhatsappOtpAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +29,18 @@ public class WhatsappOtpAuthController {
         this.whatsappOtpAuthService = whatsappOtpAuthService;
     }
 
-    @PostMapping("/request-otp")
-    @Operation(summary = "Request a WhatsApp OTP")
+    @GetMapping("/status")
+    @Operation(summary = "Whether WhatsApp OTP login is enabled",
+            description = "Public flag used by the frontend to conditionally show the WhatsApp login option.")
+    public ResponseEntity<ApiResponse<WhatsappOtpStatusResponse>> status() {
+        WhatsappOtpStatusResponse response = WhatsappOtpStatusResponse.builder()
+                .enabled(whatsappOtpAuthService.isWhatsappOtpEnabled())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/send-otp")
+    @Operation(summary = "Send a WhatsApp OTP")
     public ResponseEntity<ApiResponse<WhatsappOtpRequestResponse>> requestOtp(
             @Valid @RequestBody WhatsappOtpRequest request,
             HttpServletRequest httpServletRequest) {

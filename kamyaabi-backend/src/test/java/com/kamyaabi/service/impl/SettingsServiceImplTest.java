@@ -125,6 +125,29 @@ class SettingsServiceImplTest {
     }
 
     @Test
+    void updateAll_acceptsChatmitraConfig() {
+        when(settingRepository.findById(any())).thenReturn(Optional.empty());
+        when(settingRepository.save(any(Setting.class))).thenAnswer(inv -> inv.getArgument(0));
+        Map<String, String> updates = new LinkedHashMap<>();
+        updates.put(SettingsService.CHATMITRA_API_TOKEN, "cm-secret");
+        updates.put(SettingsService.CHATMITRA_API_BASE_URL, "https://api.chatmitra.com");
+        updates.put(SettingsService.CHATMITRA_SENDER_ID, "kamyaabi");
+        updates.put(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login");
+
+        Map<String, String> result = settingsService.updateAll(updates);
+
+        assertThat(result).containsKey(SettingsService.CHATMITRA_API_TOKEN);
+        verify(settingRepository, times(4)).save(any(Setting.class));
+    }
+
+    @Test
+    void updateAll_rejectsInvalidChatmitraBaseUrl() {
+        Map<String, String> updates = Map.of(SettingsService.CHATMITRA_API_BASE_URL, "not-a-url");
+        assertThatThrownBy(() -> settingsService.updateAll(updates))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
     void updateAll_rejectsEmptyMap() {
         assertThatThrownBy(() -> settingsService.updateAll(new LinkedHashMap<>()))
                 .isInstanceOf(BadRequestException.class);

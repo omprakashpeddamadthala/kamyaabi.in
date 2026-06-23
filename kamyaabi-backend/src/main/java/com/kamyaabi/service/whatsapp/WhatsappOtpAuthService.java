@@ -8,4 +8,6 @@ public interface WhatsappOtpAuthService {
     WhatsappOtpRequestResponse requestOtp(String phoneNumber, String clientIp);
 
     AuthResponse verifyOtp(String phoneNumber, String otp);
+
+    boolean isWhatsappOtpEnabled();
 }

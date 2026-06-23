@@ -80,6 +80,26 @@ class WhatsappOtpAuthServiceImplTest {
     }
 
     @Test
+    void requestOtp_whenPhoneRateLimitExceeded_shouldReject() {
+        when(settingsService.getBoolean(SettingsService.WHATSAPP_OTP_AUTH_ENABLED, false))
+                .thenReturn(true);
+        when(otpRepository.countByPhoneNumberAndCreatedAtAfter(anyString(), any(LocalDateTime.class)))
+                .thenReturn(3L);
+
+        assertThatThrownBy(() -> service.requestOtp("+919876543210", "127.0.0.1"))
+                .isInstanceOf(AccessDeniedException.class);
+        verifyNoInteractions(chatMitraService);
+        verify(otpRepository, never()).save(any(WhatsappOtpVerification.class));
+    }
+
+    @Test
+    void isWhatsappOtpEnabled_reflectsSetting() {
+        when(settingsService.getBoolean(SettingsService.WHATSAPP_OTP_AUTH_ENABLED, false))
+                .thenReturn(true);
+        assertThat(service.isWhatsappOtpEnabled()).isTrue();
+    }
+
+    @Test
     void verifyOtp_whenCodeMatches_shouldCreateSession() {
         when(settingsService.getBoolean(SettingsService.WHATSAPP_OTP_AUTH_ENABLED, false))
                 .thenReturn(true);
