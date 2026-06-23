@@ -53,7 +53,7 @@ app:
     key-secret: ${RAZORPAY_KEY_SECRET:placeholder_secret}
 
   whatsapp-otp:
-    api-url: ${CHATMITRA_API_URL:https://api.chatmitra.com/v2/client}
+    api-url: ${CHATMITRA_API_URL:https://backend.chatmitra.com/v2/client}
     api-token: ${CHATMITRA_API_TOKEN:}
     template-name: ${CHATMITRA_WHATSAPP_OTP_TEMPLATE_NAME:otp_login}
     language: ${CHATMITRA_WHATSAPP_OTP_LANGUAGE:en}
