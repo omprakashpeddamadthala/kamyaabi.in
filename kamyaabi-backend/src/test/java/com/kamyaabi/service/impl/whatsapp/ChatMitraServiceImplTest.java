@@ -32,6 +32,12 @@ class ChatMitraServiceImplTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getString(SettingsService.CHATMITRA_API_TOKEN, "cm-test-token"))
                 .thenReturn("cm-test-token");
+        when(settingsService.getString(SettingsService.CHATMITRA_API_BASE_URL, "https://backend.chatmitra.com/developer/api"))
+                .thenReturn("https://backend.chatmitra.com/developer/api");
+        when(settingsService.getString(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login"))
+                .thenReturn("otp_login");
+        when(settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, ""))
+                .thenReturn("");
 
         ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props, settingsService);
 

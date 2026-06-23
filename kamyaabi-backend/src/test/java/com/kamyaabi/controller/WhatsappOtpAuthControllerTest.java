@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,7 +40,7 @@ class WhatsappOtpAuthControllerTest {
                         .expiresInSeconds(300)
                         .build());
 
-        mockMvc.perform(post("/api/auth/whatsapp/request-otp")
+        mockMvc.perform(post("/api/auth/whatsapp/send-otp")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Forwarded-For", "127.0.0.1")
                         .content("{\"phoneNumber\":\"+919876543210\"}"))
@@ -49,6 +50,17 @@ class WhatsappOtpAuthControllerTest {
                 .andExpect(jsonPath("$.data.expiresInSeconds").value(300));
 
         verify(whatsappOtpAuthService).requestOtp("+919876543210", "127.0.0.1");
+    }
+
+    @Test
+    void status_shouldReturnEnabledFlag() throws Exception {
+        when(whatsappOtpAuthService.isWhatsappOtpEnabled()).thenReturn(true);
+
+        mockMvc.perform(get("/api/auth/whatsapp/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.enabled").value(true));
+
+        verify(whatsappOtpAuthService).isWhatsappOtpEnabled();
     }
 
     @Test

@@ -15,6 +15,10 @@ export interface WhatsappOtpRequestResponse {
   expiresInSeconds: number;
 }
 
+export interface WhatsappOtpStatusResponse {
+  enabled: boolean;
+}
+
 export const authApi = {
   googleLogin: (userInfo: Record<string, unknown>) =>
     axiosInstance.post<ApiResponse<AuthResponse>>('/api/auth/google', userInfo),
@@ -22,8 +26,11 @@ export const authApi = {
   getCurrentUser: () =>
     axiosInstance.get<ApiResponse<User>>('/api/auth/me'),
 
+  getWhatsappStatus: () =>
+    axiosInstance.get<ApiResponse<WhatsappOtpStatusResponse>>('/api/auth/whatsapp/status'),
+
   requestWhatsappOtp: (payload: WhatsappOtpRequestPayload) =>
-    axiosInstance.post<ApiResponse<WhatsappOtpRequestResponse>>('/api/auth/whatsapp/request-otp', payload),
+    axiosInstance.post<ApiResponse<WhatsappOtpRequestResponse>>('/api/auth/whatsapp/send-otp', payload),
 
   verifyWhatsappOtp: (payload: WhatsappOtpVerifyPayload) =>
     axiosInstance.post<ApiResponse<AuthResponse>>('/api/auth/whatsapp/verify-otp', payload),

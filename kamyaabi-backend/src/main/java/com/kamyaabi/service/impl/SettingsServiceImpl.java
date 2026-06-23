@@ -26,6 +26,9 @@ public class SettingsServiceImpl implements SettingsService {
             PRODUCTS_PER_PAGE,
             WHATSAPP_OTP_AUTH_ENABLED,
             CHATMITRA_API_TOKEN,
+            CHATMITRA_API_BASE_URL,
+            CHATMITRA_SENDER_ID,
+            CHATMITRA_OTP_TEMPLATE_ID,
             COUPON_ENABLED,
             COUPON_MAX_USES_PER_USER,
             COUPON_MAX_USES_PER_USER_PER_DAY,
@@ -153,13 +156,16 @@ public class SettingsServiceImpl implements SettingsService {
                             "Setting '" + key + "' must be 'true' or 'false'");
                 }
             }
-            case AMAZON_STORE_URL -> {
+            case AMAZON_STORE_URL, CHATMITRA_API_BASE_URL -> {
                 if (!value.isEmpty()
                         && !value.startsWith("http://")
                         && !value.startsWith("https://")) {
                     throw new BadRequestException(
                             "Setting '" + key + "' must be empty or a valid http(s) URL");
                 }
+            }
+            case CHATMITRA_API_TOKEN, CHATMITRA_SENDER_ID, CHATMITRA_OTP_TEMPLATE_ID -> {
+                // Free-text secrets/identifiers — no format constraints.
             }
             default -> throw new BadRequestException("Unknown setting key: " + key);
         }
@@ -173,7 +179,9 @@ public class SettingsServiceImpl implements SettingsService {
                     String.valueOf(getBoolean(key, DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE));
             case WHATSAPP_OTP_AUTH_ENABLED ->
                     String.valueOf(getBoolean(key, DEFAULT_WHATSAPP_OTP_AUTH_ENABLED));
-            case CHATMITRA_API_TOKEN -> getString(key, "");
+            case CHATMITRA_API_TOKEN, CHATMITRA_SENDER_ID -> getString(key, "");
+            case CHATMITRA_API_BASE_URL -> getString(key, DEFAULT_CHATMITRA_API_BASE_URL);
+            case CHATMITRA_OTP_TEMPLATE_ID -> getString(key, DEFAULT_CHATMITRA_OTP_TEMPLATE_ID);
             case COUPON_ENABLED ->
                     String.valueOf(getBoolean(key, DEFAULT_COUPON_ENABLED));
             case COUPON_MAX_USES_PER_USER ->

@@ -25,6 +25,9 @@ const PRODUCTS_PER_PAGE = 'products_per_page';
 const SHOW_BOUGHT_RECENTLY_BADGE = 'show_bought_recently_badge';
 const WHATSAPP_OTP_AUTH_ENABLED = 'whatsapp_otp_auth_enabled';
 const CHATMITRA_API_TOKEN = 'chatmitra_api_token';
+const CHATMITRA_API_BASE_URL = 'chatmitra_api_base_url';
+const CHATMITRA_SENDER_ID = 'chatmitra_sender_id';
+const CHATMITRA_OTP_TEMPLATE_ID = 'chatmitra_otp_template_id';
 const COUPON_ENABLED = 'coupon_enabled';
 const COUPON_MAX_USES_PER_USER = 'coupon_max_uses_per_user';
 const COUPON_MAX_USES_PER_USER_PER_DAY = 'coupon_max_uses_per_user_per_day';
@@ -42,6 +45,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
   const [showBoughtRecently, setShowBoughtRecently] = useState(true);
   const [whatsappOtpAuthEnabled, setWhatsappOtpAuthEnabled] = useState(false);
   const [chatmitraApiToken, setChatmitraApiToken] = useState('');
+  const [chatmitraApiBaseUrl, setChatmitraApiBaseUrl] = useState('');
+  const [chatmitraSenderId, setChatmitraSenderId] = useState('');
+  const [chatmitraOtpTemplateId, setChatmitraOtpTemplateId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Coupon settings
@@ -76,6 +82,15 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         }
         if (data[CHATMITRA_API_TOKEN] !== undefined) {
           setChatmitraApiToken(data[CHATMITRA_API_TOKEN]);
+        }
+        if (data[CHATMITRA_API_BASE_URL] !== undefined) {
+          setChatmitraApiBaseUrl(data[CHATMITRA_API_BASE_URL]);
+        }
+        if (data[CHATMITRA_SENDER_ID] !== undefined) {
+          setChatmitraSenderId(data[CHATMITRA_SENDER_ID]);
+        }
+        if (data[CHATMITRA_OTP_TEMPLATE_ID] !== undefined) {
+          setChatmitraOtpTemplateId(data[CHATMITRA_OTP_TEMPLATE_ID]);
         }
         if (data[COUPON_ENABLED] !== undefined) {
           setCouponEnabled(String(data[COUPON_ENABLED]).toLowerCase() === 'true');
@@ -129,6 +144,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
     if (url && !/^https?:\/\//i.test(url)) {
       next[AMAZON_STORE_URL] = 'Must be empty or start with http:// or https://';
     }
+    const baseUrl = chatmitraApiBaseUrl.trim();
+    if (baseUrl && !/^https?:\/\//i.test(baseUrl)) {
+      next[CHATMITRA_API_BASE_URL] = 'Must be empty or start with http:// or https://';
+    }
     return next;
   };
 
@@ -147,6 +166,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
         [SHOW_BOUGHT_RECENTLY_BADGE]: showBoughtRecently ? 'true' : 'false',
         [WHATSAPP_OTP_AUTH_ENABLED]: whatsappOtpAuthEnabled ? 'true' : 'false',
         [CHATMITRA_API_TOKEN]: chatmitraApiToken.trim(),
+        [CHATMITRA_API_BASE_URL]: chatmitraApiBaseUrl.trim(),
+        [CHATMITRA_SENDER_ID]: chatmitraSenderId.trim(),
+        [CHATMITRA_OTP_TEMPLATE_ID]: chatmitraOtpTemplateId.trim(),
         [COUPON_ENABLED]: couponEnabled ? 'true' : 'false',
         [COUPON_MAX_USES_PER_USER]: String(Number(couponMaxUsesPerUser)),
         [COUPON_MAX_USES_PER_USER_PER_DAY]: String(Number(couponMaxUsesPerUserPerDay)),
@@ -250,6 +272,52 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
                 value={chatmitraApiToken}
                 onChange={(e) => setChatmitraApiToken(e.target.value)}
                 helperText="Leave blank only if the backend should keep using the env fallback."
+                sx={{ maxWidth: 420, width: '100%' }}
+              />
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                ChatMitra API Base URL
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Base URL for the ChatMitra API. Leave blank to use the backend default.
+              </Typography>
+              <TextField
+                size="small"
+                value={chatmitraApiBaseUrl}
+                onChange={(e) => setChatmitraApiBaseUrl(e.target.value)}
+                placeholder="https://backend.chatmitra.com/developer/api"
+                error={!!errors[CHATMITRA_API_BASE_URL]}
+                helperText={errors[CHATMITRA_API_BASE_URL] ?? 'Must start with http:// or https://'}
+                sx={{ maxWidth: 420, width: '100%' }}
+              />
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                ChatMitra Sender ID (optional)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                WhatsApp sender ID, if required by your ChatMitra account.
+              </Typography>
+              <TextField
+                size="small"
+                value={chatmitraSenderId}
+                onChange={(e) => setChatmitraSenderId(e.target.value)}
+                sx={{ maxWidth: 420, width: '100%' }}
+              />
+            </Box>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                ChatMitra OTP Template ID (optional)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                Approved WhatsApp message template used to deliver the OTP. Defaults to otp_login.
+              </Typography>
+              <TextField
+                size="small"
+                value={chatmitraOtpTemplateId}
+                onChange={(e) => setChatmitraOtpTemplateId(e.target.value)}
+                placeholder="otp_login"
                 sx={{ maxWidth: 420, width: '100%' }}
               />
             </Box>

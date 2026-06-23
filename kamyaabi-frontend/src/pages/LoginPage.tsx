@@ -23,7 +23,6 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { googleLogin, setSession } from '../features/auth/authSlice';
 import { config } from '../config';
 import { logger } from '../utils/logger';
-import { settingsApi } from '../api/settingsApi';
 import { authApi } from '../api/authApi';
 import { parseApiError } from '../utils/apiError';
 import { setTokenExpiry } from '../api/axiosInstance';
@@ -62,16 +61,15 @@ const LoginPage: React.FC = () => {
 
   React.useEffect(() => {
     let cancelled = false;
-    settingsApi
-      .getPublicSettings()
+    authApi
+      .getWhatsappStatus()
       .then((res) => {
         if (cancelled) return;
-        const enabled = String(res.data.data?.whatsapp_otp_auth_enabled ?? 'false').toLowerCase() === 'true';
-        setWhatsappEnabled(enabled);
+        setWhatsappEnabled(Boolean(res.data.data?.enabled));
       })
       .catch((err) => {
         if (cancelled) return;
-        logger.warn('Failed to load public settings for auth methods', {
+        logger.warn('Failed to load WhatsApp login status', {
           message: parseApiError(err, 'Failed to load auth settings').message,
         });
         setWhatsappEnabled(false);

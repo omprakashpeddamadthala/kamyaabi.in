@@ -1,5 +1,6 @@
 package com.kamyaabi.service.impl.whatsapp;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kamyaabi.config.AppProperties;
 import com.kamyaabi.exception.BusinessException;
 import com.kamyaabi.service.SettingsService;
@@ -41,16 +42,27 @@ public class ChatMitraServiceImpl implements ChatMitraService {
         String apiToken = settingsService.getString(
                 SettingsService.CHATMITRA_API_TOKEN,
                 props.getApiToken());
+        String baseUrl = settingsService.getString(
+                SettingsService.CHATMITRA_API_BASE_URL,
+                props.getApiUrl());
+        String templateName = settingsService.getString(
+                SettingsService.CHATMITRA_OTP_TEMPLATE_ID,
+                props.getTemplateName());
+        String senderId = settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, "");
         if (apiToken == null || apiToken.isBlank()) {
             throw new BusinessException("ChatMitra API token is not configured");
         }
-        if (props.getTemplateName() == null || props.getTemplateName().isBlank()) {
-            throw new BusinessException("ChatMitra OTP template name is not configured");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new BusinessException("ChatMitra API base URL is not configured");
+        }
+        if (templateName == null || templateName.isBlank()) {
+            throw new BusinessException("ChatMitra OTP template is not configured");
         }
 
         TemplateSendRequest request = TemplateSendRequest.builder()
-                .templateName(props.getTemplateName())
+                .templateName(templateName)
                 .language(props.getLanguage())
+                .senderId(senderId == null || senderId.isBlank() ? null : senderId)
                 .phoneNumber(phoneNumber)
                 .components(List.of(
                         TemplateComponent.builder()
@@ -71,7 +83,7 @@ public class ChatMitraServiceImpl implements ChatMitraService {
 
         try {
             ResponseEntity<ChatMitraResponse> response = restTemplate.postForEntity(
-                    props.getApiUrl().replaceAll("/+$", "") + "/send_template",
+                    baseUrl.replaceAll("/+$", "") + "/send_template",
                     new HttpEntity<>(request, headers),
                     ChatMitraResponse.class);
 
@@ -97,9 +109,11 @@ public class ChatMitraServiceImpl implements ChatMitraService {
     @Getter
     @Setter
     @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class TemplateSendRequest {
         private String templateName;
         private String language;
+        private String senderId;
         private String phoneNumber;
         private List<TemplateComponent> components;
     }

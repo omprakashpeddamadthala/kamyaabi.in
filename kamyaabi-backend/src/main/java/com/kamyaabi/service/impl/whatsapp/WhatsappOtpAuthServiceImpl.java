@@ -32,8 +32,9 @@ public class WhatsappOtpAuthServiceImpl implements WhatsappOtpAuthService {
     private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
     private static final int OTP_EXPIRY_MINUTES = 5;
     private static final int RESEND_AFTER_SECONDS = 30;
-    private static final int MAX_ATTEMPTS = 5;
-    private static final int MAX_REQUESTS_PER_PHONE_PER_HOUR = 3;
+    private static final int MAX_ATTEMPTS = 3;
+    private static final int RATE_LIMIT_WINDOW_MINUTES = 10;
+    private static final int MAX_REQUESTS_PER_PHONE_PER_WINDOW = 3;
     private static final int MAX_REQUESTS_PER_IP_PER_HOUR = 10;
 
     private final UserRepository userRepository;
@@ -161,20 +162,27 @@ public class WhatsappOtpAuthServiceImpl implements WhatsappOtpAuthService {
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isWhatsappOtpEnabled() {
+        return settingsService.getBoolean(SettingsService.WHATSAPP_OTP_AUTH_ENABLED,
+                SettingsService.DEFAULT_WHATSAPP_OTP_AUTH_ENABLED);
+    }
+
     private void requireEnabled() {
-        if (!settingsService.getBoolean(SettingsService.WHATSAPP_OTP_AUTH_ENABLED,
-                SettingsService.DEFAULT_WHATSAPP_OTP_AUTH_ENABLED)) {
+        if (!isWhatsappOtpEnabled()) {
             throw new AccessDeniedException("WhatsApp OTP auth is disabled");
         }
     }
 
     private void enforceRequestLimits(String phoneNumber, String clientIp, LocalDateTime now) {
-        LocalDateTime windowStart = now.minusHours(1);
-        long phoneCount = otpRepository.countByPhoneNumberAndCreatedAtAfter(phoneNumber, windowStart);
-        if (phoneCount >= MAX_REQUESTS_PER_PHONE_PER_HOUR) {
+        LocalDateTime phoneWindowStart = now.minusMinutes(RATE_LIMIT_WINDOW_MINUTES);
+        long phoneCount = otpRepository.countByPhoneNumberAndCreatedAtAfter(phoneNumber, phoneWindowStart);
+        if (phoneCount >= MAX_REQUESTS_PER_PHONE_PER_WINDOW) {
             throw new AccessDeniedException("Too many OTP requests for this phone number");
         }
-        long ipCount = otpRepository.countByRequestedFromIpAndCreatedAtAfter(clientIp, windowStart);
+        LocalDateTime ipWindowStart = now.minusHours(1);
+        long ipCount = otpRepository.countByRequestedFromIpAndCreatedAtAfter(clientIp, ipWindowStart);
         if (ipCount >= MAX_REQUESTS_PER_IP_PER_HOUR) {
             throw new AccessDeniedException("Too many OTP requests from this network");
         }
