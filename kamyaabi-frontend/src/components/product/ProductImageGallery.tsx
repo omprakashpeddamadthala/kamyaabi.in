@@ -117,7 +117,9 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
           display: 'block',
           transition: 'transform 0.3s ease, opacity 0.3s ease',
           transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-          transform: isZooming ? 'scale(1.5)' : 'scale(1)',
+          // GSC FIX / TASK 2: desktop hover-zoom bumped to 2x (was 1.5x) to meet
+          // the minimum-2x zoom requirement; click still opens the full lightbox.
+          transform: isZooming ? 'scale(2)' : 'scale(1)',
         }}
         loading="eager"
         fetchPriority="high"

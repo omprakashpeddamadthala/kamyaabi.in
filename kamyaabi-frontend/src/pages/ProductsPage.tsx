@@ -5,6 +5,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import Seo from '../components/common/Seo';
 import {
   Container,
   Typography,
@@ -131,6 +132,13 @@ const ProductsPage: React.FC = () => {
 
   return (
     <PageTransition>
+      {/* GSC FIX: canonical points at /products so filtered/paginated query
+          variants don't create duplicate URLs in the index. */}
+      <Seo
+        title="Shop Premium Dry Fruits & Nuts"
+        description="Browse Kamyaabi's full range of premium dry fruits and nuts — almonds, cashews, pistachios, raisins and more. Freshly packed and delivered across India."
+        canonicalPath="/products"
+      />
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
         {selectedCategory ? selectedCategory.name : 'All Products'}

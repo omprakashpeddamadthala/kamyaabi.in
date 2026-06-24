@@ -4,6 +4,7 @@
  * - Visual-only tokenization of cart heading, address cards, line items, and order summary.
  */
 import React, { useEffect, useCallback, useRef, useState } from 'react';
+import Seo from '../components/common/Seo';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Container,
@@ -174,6 +175,8 @@ const CartPage: React.FC = () => {
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* GSC FIX: cart is a private/transactional page — noindex. */}
+      <Seo title="Your Cart" noindex />
       <Typography variant="h3" sx={{ mb: 4, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
         Shopping Cart
       </Typography>

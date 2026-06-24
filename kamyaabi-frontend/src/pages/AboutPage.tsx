@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography, Grid, Skeleton } from '@mui/material';
 import SocialLinks from '../components/common/SocialLinks';
+import Seo from '../components/common/Seo';
 import { galleryApi, GalleryImage } from '../api/galleryApi';
 
 const fallbackGalleryImages = [
@@ -26,6 +27,12 @@ const AboutPage: React.FC = () => {
   }, []);
   return (
     <Box>
+      {/* GSC FIX: per-page title/description/canonical/OG for the About page. */}
+      <Seo
+        title="About Us"
+        description="Learn about Kamyaabi — our story, our commitment to purity, and how we source and deliver premium dry fruits and nuts fresh across India."
+        canonicalPath="/about"
+      />
       {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">

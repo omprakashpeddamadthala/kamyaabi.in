@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Seo from '../components/common/Seo';
 import { Container, Typography, Grid, Alert } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchCart } from '../features/cart/cartSlice';
@@ -45,6 +46,8 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      {/* GSC FIX: checkout is a private/transactional page — noindex. */}
+      <Seo title="Checkout" noindex />
       <Typography
         variant="h3"
         sx={{

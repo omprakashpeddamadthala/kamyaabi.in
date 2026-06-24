@@ -4,6 +4,7 @@
  * - Visual-only redesign of account shell, profile avatar, form surfaces, and address cards.
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import Seo from '../components/common/Seo';
 import {
   Container,
   Paper,
@@ -223,6 +224,8 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+      {/* GSC FIX: account profile is private — noindex. */}
+      <Seo title="My Profile" noindex />
       {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>

@@ -293,6 +293,7 @@ const AdminBlogEditorPage: React.FC = () => {
               startIcon={<Visibility />}
               href={`/blog/${slug}?preview=true`}
               target="_blank"
+              rel="noopener noreferrer"
             >
               Preview
             </Button>

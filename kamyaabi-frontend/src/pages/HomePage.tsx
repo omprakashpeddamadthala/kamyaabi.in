@@ -14,6 +14,7 @@ import { fetchFeaturedProducts, fetchCategories } from '../features/product/prod
 import ProductCard from '../components/common/ProductCard';
 import ProductCardSkeleton from '../components/common/ProductCardSkeleton';
 import PageTransition from '../components/common/PageTransition';
+import Seo from '../components/common/Seo';
 import AmazonBanner from '../components/common/AmazonBanner';
 import { heroBannerApi, HeroBanner } from '../api/heroBannerApi';
 import { withCloudinaryTransform } from '../utils/cloudinary';
@@ -120,6 +121,12 @@ const HomePage: React.FC = () => {
 
   return (
     <PageTransition>
+      {/* GSC FIX: home page title/description/canonical/OG. */}
+      <Seo
+        title="Premium Dry Fruits & Nuts Online"
+        description="Kamyaabi delivers premium, hand-picked dry fruits and nuts — almonds, cashews, pistachios and more. Sourced for purity, sealed for freshness, delivered across India."
+        canonicalPath="/"
+      />
     <Box>
       {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', position: 'relative', overflow: 'hidden' }}>

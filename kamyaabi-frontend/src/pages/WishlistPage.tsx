@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Seo from '../components/common/Seo';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -221,6 +222,8 @@ const WishlistPage: React.FC = () => {
 
   return (
     <PageTransition>
+      {/* GSC FIX: account wishlist is private — noindex. */}
+      <Seo title="My Wishlist" noindex />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography
           variant="h4"

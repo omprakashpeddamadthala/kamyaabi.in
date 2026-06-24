@@ -1,6 +1,10 @@
 import React from 'react';
-import { Box, Dialog, IconButton } from '@mui/material';
-import { Close } from '@mui/icons-material';
+// TASK 2: review images use the same zoomable lightbox (pinch / double-tap /
+// scroll zoom, swipe + ESC to dismiss, keyboard nav, ARIA labels) for parity
+// with the product gallery.
+import Lightbox from 'yet-another-react-lightbox';
+import Zoom from 'yet-another-react-lightbox/plugins/zoom';
+import 'yet-another-react-lightbox/styles.css';
 
 interface ReviewImageLightboxDialogProps {
   imageUrl: string | null;
@@ -8,24 +12,17 @@ interface ReviewImageLightboxDialogProps {
 }
 
 const ReviewImageLightboxDialog: React.FC<ReviewImageLightboxDialogProps> = ({ imageUrl, onClose }) => (
-  <Dialog
+  <Lightbox
     open={!!imageUrl}
-    onClose={onClose}
-    maxWidth="md"
-    PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.95)', boxShadow: 'none' } }}
-  >
-    <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-      <IconButton
-        onClick={onClose}
-        sx={{ position: 'absolute', top: 8, right: 8, color: '#fff' }}
-      >
-        <Close />
-      </IconButton>
-      {imageUrl && (
-        <Box component="img" src={imageUrl} alt="Review image" sx={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }} />
-      )}
-    </Box>
-  </Dialog>
+    close={onClose}
+    slides={imageUrl ? [{ src: imageUrl, alt: 'Review image' }] : []}
+    plugins={[Zoom]}
+    carousel={{ finite: true }}
+    controller={{ closeOnBackdropClick: true }}
+    zoom={{ maxZoomPixelRatio: 3, zoomInMultiplier: 2, scrollToZoom: true }}
+    render={{ buttonPrev: () => null, buttonNext: () => null }}
+    styles={{ container: { backgroundColor: 'rgba(0,0,0,0.95)' } }}
+  />
 );
 
 export default ReviewImageLightboxDialog;

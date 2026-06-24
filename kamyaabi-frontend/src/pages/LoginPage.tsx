@@ -4,6 +4,7 @@
  * - Visual-only tokenization of centered auth card, radius, and shadow.
  */
 import React from 'react';
+import Seo from '../components/common/Seo';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -197,6 +198,8 @@ const LoginPage: React.FC = () => {
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
+      {/* GSC FIX: auth page is private — noindex. */}
+      <Seo title="Sign In" noindex />
       <GoogleOAuthProvider clientId={clientId}>
         <Card sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center', '&:hover': { transform: 'none' }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
           <Box

@@ -4,6 +4,7 @@
  * - Visual-only redesign of order cards, status pills, price typography, and item surfaces.
  */
 import React, { useEffect, useState } from 'react';
+import Seo from '../components/common/Seo';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -81,6 +82,8 @@ const OrdersPage: React.FC = () => {
   if (orders.length === 0) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        {/* GSC FIX: account orders page is private — noindex. */}
+        <Seo title="My Orders" noindex />
         <Receipt sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
         <Typography variant="h4" sx={{ mb: 2 }}>
           {"You haven't placed any orders yet."}
@@ -97,6 +100,8 @@ const OrdersPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      {/* GSC FIX: account orders page is private — noindex. */}
+      <Seo title="My Orders" noindex />
       <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
         My Orders
       </Typography>

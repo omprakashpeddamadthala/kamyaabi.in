@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { config } from '../config';
+import Seo from '../components/common/Seo';
 
 interface FaqItem {
   q: string;
@@ -110,6 +111,12 @@ const RefundPolicyPage: React.FC = () => {
 
   return (
     <Box>
+      {/* GSC FIX: per-page title/description/canonical/OG for the Refund Policy page. */}
+      <Seo
+        title="Refund & Cancellation Policy"
+        description="Read Kamyaabi's refund, return and cancellation policy for dry fruit and nut orders, including eligibility, timelines and how to raise a request."
+        canonicalPath="/refund-policy"
+      />
       {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">

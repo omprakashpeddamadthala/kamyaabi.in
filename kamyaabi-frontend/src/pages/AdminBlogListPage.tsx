@@ -194,7 +194,7 @@ const AdminBlogListPage: React.FC = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Preview">
-                        <IconButton size="small" component="a" href={`/blog/${post.slug}?preview=true`} target="_blank">
+                        <IconButton size="small" component="a" href={`/blog/${post.slug}?preview=true`} target="_blank" rel="noopener noreferrer">
                           <OpenInNew fontSize="small" />
                         </IconButton>
                       </Tooltip>
