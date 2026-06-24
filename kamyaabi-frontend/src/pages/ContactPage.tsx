@@ -9,11 +9,18 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import Seo from '../components/common/Seo';
 import { config } from '../config';
 
 const ContactPage: React.FC = () => {
   return (
     <Box>
+      {/* GSC FIX: per-page title/description/canonical/OG for the Contact page. */}
+      <Seo
+        title="Contact Us"
+        description="Get in touch with Kamyaabi. Reach our customer support by phone, WhatsApp or email for orders, delivery and product queries."
+        canonicalPath="/contact"
+      />
       {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">

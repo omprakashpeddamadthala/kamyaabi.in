@@ -21,6 +21,32 @@
     <meta name="theme-color" content="#1D4ED8" />
     <title>Kamyaabi - Premium Dry Fruits</title>
 
+    <!-- GSC FIX: static SEO defaults in the SPA shell. Per-page <Seo> tags
+         (react-helmet-async) override these once React mounts, but non-JS
+         crawlers / social scrapers (Facebook, WhatsApp, Twitter, LinkedIn)
+         that never run JS still get a valid title, description and preview. -->
+    <meta
+      name="description"
+      content="Shop premium, hand-picked dry fruits and nuts at Kamyaabi — almonds, cashews, pistachios and more. Sourced for purity, sealed for freshness, delivered across India."
+    />
+    <link rel="canonical" href="https://kamyaabi.in/" />
+    <meta property="og:site_name" content="Kamyaabi" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Kamyaabi - Premium Dry Fruits" />
+    <meta
+      property="og:description"
+      content="Premium, hand-picked dry fruits and nuts — sourced for purity, sealed for freshness, delivered across India."
+    />
+    <meta property="og:url" content="https://kamyaabi.in/" />
+    <meta property="og:image" content="https://kamyaabi.in/pwa-512x512.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kamyaabi - Premium Dry Fruits" />
+    <meta
+      name="twitter:description"
+      content="Premium, hand-picked dry fruits and nuts — sourced for purity, sealed for freshness, delivered across India."
+    />
+    <meta name="twitter:image" content="https://kamyaabi.in/pwa-512x512.png" />
+
     <!-- Open a TCP+TLS connection to the image CDN as early as possible so
          the hero product image lands inside the LCP budget. -->
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />

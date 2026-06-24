@@ -4,6 +4,7 @@
  * - Visual-only tokenization of Razorpay theme color from design tokens.
  */
 import React, { useEffect } from 'react';
+import Seo from '../components/common/Seo';
 import { useParams, Link } from 'react-router-dom';
 import {
   Container,
@@ -149,6 +150,8 @@ const OrderDetailPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      {/* GSC FIX: account order detail is private — noindex. */}
+      <Seo title="Order Details" noindex />
       <Breadcrumbs sx={{ mb: 3 }}>
         <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
         <MuiLink component={Link} to="/orders" underline="hover" color="inherit">Orders</MuiLink>

@@ -40,6 +40,8 @@ import {
   RateReview,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
+import Seo from '../components/common/Seo';
+import { config } from '../config';
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import { useFlyToCart } from '../components/common/useFlyToCart';
 import PageTransition from '../components/common/PageTransition';
@@ -179,9 +181,6 @@ const ProductDetailPage: React.FC = () => {
     });
   }, [user, isAdding, product, primaryImageSource, quantity, navigate, dispatch]);
 
-  const lightboxPrev = () => setSelectedImageIdx((i) => (i > 0 ? i - 1 : galleryImages.length - 1));
-  const lightboxNext = () => setSelectedImageIdx((i) => (i < galleryImages.length - 1 ? i + 1 : 0));
-
   const trustReveal = useRevealOnScroll();
   const tabsReveal = useRevealOnScroll();
 
@@ -204,6 +203,58 @@ const ProductDetailPage: React.FC = () => {
 
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
+
+  // GSC FIX: build per-product SEO metadata + schema.org structured data.
+  const productUrl = `${config.brandSiteUrl}/products/${product.slug}`;
+  const seoCanonical = product.canonicalUrl || productUrl;
+  const plainDescription = (product.description || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const seoDescription = product.seoDescription
+    || (plainDescription
+      ? `${plainDescription.slice(0, 157)}${plainDescription.length > 157 ? '…' : ''}`
+      : `Buy ${product.name} online at Kamyaabi — premium quality, freshly packed and delivered across India.`);
+  const seoImage = product.ogImageUrl || product.mainImageUrl || product.imageUrl || primaryImageSource || undefined;
+  const productJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: seoDescription,
+    image: seoImage ? [seoImage] : undefined,
+    sku: product.slug,
+    category: product.categoryName || undefined,
+    brand: { '@type': 'Brand', name: 'Kamyaabi' },
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'INR',
+      price: effectivePrice,
+      availability: inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+    ...(hasRating && reviewSummary
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: reviewSummary.averageRating.toFixed(1),
+            reviewCount: reviewSummary.totalReviews,
+          },
+        }
+      : {}),
+  };
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Products', item: `${config.brandSiteUrl}/products` },
+      { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
+    ],
+  };
+
   const hasNutrition = !!product.nutritionalInfo && Object.keys(product.nutritionalInfo).length > 0;
   const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;
   const hasStorageTips = !!product.storageTips && product.storageTips.length > 0;
@@ -217,6 +268,15 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <PageTransition>
+      <Seo
+        title={product.seoTitle || product.name}
+        description={seoDescription}
+        canonicalUrl={seoCanonical}
+        image={seoImage}
+        type="product"
+        keywords={product.seoKeywords || undefined}
+        jsonLd={[productJsonLd, breadcrumbJsonLd]}
+      />
       <Container maxWidth="lg" sx={{ pt: { xs: 2, md: 3 }, pb: 0 }}>
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
@@ -728,10 +788,7 @@ const ProductDetailPage: React.FC = () => {
         onClose={() => setLightboxOpen(false)}
         galleryImages={galleryImages}
         safeIdx={safeIdx}
-        primaryImageSource={primaryImageSource}
         productName={product.name}
-        onPrev={lightboxPrev}
-        onNext={lightboxNext}
         onSelectIdx={setSelectedImageIdx}
       />
 

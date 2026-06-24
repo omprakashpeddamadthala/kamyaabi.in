@@ -42,6 +42,7 @@ import { logout } from '../../../features/auth/authSlice';
 import { adminApi } from '../../../api/adminApi';
 import AdminSidebar from './AdminSidebar';
 import { buildAdminBreadcrumbs } from './adminNav';
+import Seo from '../../common/Seo';
 
 const DRAWER_WIDTH = 248;
 const DRAWER_WIDTH_COLLAPSED = 72;
@@ -104,6 +105,8 @@ const AdminLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--color-surface-bg)' }}>
+      {/* GSC FIX: every /admin/* route is private — keep it out of the index. */}
+      <Seo title="Admin" noindex />
       {/* Desktop: permanent (collapsible) sidebar */}
       {!isMobile && (
         <Box

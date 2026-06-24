@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { trackingApi } from '../api/trackingApi';
+import Seo from '../components/common/Seo';
 import { PublicOrderTracking, TrackingEvent } from '../types';
 import { parseApiError } from '../utils/apiError';
 import PageTransition from '../components/common/PageTransition';
@@ -157,6 +158,12 @@ const TrackOrderPage: React.FC = () => {
 
   return (
     <PageTransition>
+      {/* GSC FIX: public order-tracking tool — indexable with canonical/OG. */}
+      <Seo
+        title="Track Your Order"
+        description="Track your Kamyaabi order in real time. Enter your order ID or AWB number to see the latest shipment status and estimated delivery date."
+        canonicalPath="/track-order"
+      />
       <Box sx={{ bgcolor: '#f5f5f5', minHeight: '80vh', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="md">
           {/* Header */}
