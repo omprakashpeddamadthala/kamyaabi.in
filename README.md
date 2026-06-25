@@ -234,7 +234,7 @@ into the repo. The full template lives in [`.env.example`](.env.example).
 | `CLOUDINARY_CLOUD_NAME` | yes | _(none)_ | Cloudinary account cloud name |
 | `CLOUDINARY_API_KEY` | yes | _(none)_ | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | yes | _(none)_ | Cloudinary API secret |
-| `PRODUCT_IMAGE_MAX_COUNT` | no | `5` | Max images per product |
+| `PRODUCT_IMAGE_MAX_COUNT` | no | `10` | Max images per product |
 | `EMAIL_ENABLED` | no | `true` | Master switch for outbound email |
 | `EMAIL_FROM` | no | `noreply@${DOMAIN}` | Sender address |
 | `EMAIL_FROM_NAME` | no | `Kamyaabi` | Sender display name |
