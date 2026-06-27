@@ -1,55 +1,47 @@
 import { useEffect, useState } from 'react';
 import { shippingApi } from '../api/shippingApi';
 import type { PincodeServiceability } from '../api/shippingApi';
-import { addressApi } from '../api/addressApi';
-import type { Product, User } from '../types';
+import type { User } from '../types';
 
-export function usePincodeCheck(product: Product | null, user: User | null) {
+export function usePincodeCheck(_product: unknown, user: User | null) {
   const [pincodeResult, setPincodeResult] = useState<PincodeServiceability | null>(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
   const [hasNoAddress, setHasNoAddress] = useState(false);
-  const [addressLoaded, setAddressLoaded] = useState(false);
 
   useEffect(() => {
-    if (!user || !product || addressLoaded) return;
-    let cancelled = false;
+    if (!user) return; // Guest — nothing to fetch
 
-    addressApi.getAll()
+    let cancelled = false;
+    setPincodeLoading(true);
+
+    shippingApi.getCachedEstimate()
       .then((res) => {
         if (cancelled) return;
-        const addresses = res.data.data ?? [];
-        const defaultAddr = addresses.find((a) => a.isDefault) ?? addresses[0];
-
-        if (!defaultAddr || !defaultAddr.pincode || !/^[1-9][0-9]{5}$/.test(defaultAddr.pincode)) {
+        const data = res.data?.data;
+        if (data) {
+          setPincodeResult(data);
+        } else {
+          // 200 with no data means no addresses saved yet
           setHasNoAddress(true);
-          setAddressLoaded(true);
-          return;
         }
-
-        setAddressLoaded(true);
-        setPincodeLoading(true);
-
-        shippingApi.getDeliveryEstimate(defaultAddr.pincode, product.id)
-          .then((estimateRes) => {
-            if (!cancelled) setPincodeResult(estimateRes.data.data);
-          })
-          .catch(() => {
-            if (!cancelled) setPincodeError('Unable to check delivery availability.');
-          })
-          .finally(() => {
-            if (!cancelled) setPincodeLoading(false);
-          });
       })
-      .catch(() => {
-        if (!cancelled) {
-          setAddressLoaded(true);
+      .catch((err) => {
+        if (cancelled) return;
+        const status = err?.response?.status;
+        if (status === 204) {
+          // No estimate cached yet — user may have no address
           setHasNoAddress(true);
+        } else {
+          setPincodeError('Unable to load delivery info.');
         }
+      })
+      .finally(() => {
+        if (!cancelled) setPincodeLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [user, product, addressLoaded]);
+  }, [user]);
 
   return {
     pincodeResult,

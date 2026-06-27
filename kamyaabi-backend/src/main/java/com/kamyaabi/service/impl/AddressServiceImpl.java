@@ -10,6 +10,7 @@ import com.kamyaabi.mapper.AddressMapper;
 import com.kamyaabi.repository.AddressRepository;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.service.AddressService;
+import com.kamyaabi.service.DeliveryEstimateService;
 import com.kamyaabi.validation.IndianAddressValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,15 +27,18 @@ public class AddressServiceImpl implements AddressService {
     private final UserRepository userRepository;
     private final AddressMapper addressMapper;
     private final IndianAddressValidator addressValidator;
+    private final DeliveryEstimateService deliveryEstimateService;
 
     public AddressServiceImpl(AddressRepository addressRepository,
                               UserRepository userRepository,
                               AddressMapper addressMapper,
-                              IndianAddressValidator addressValidator) {
+                              IndianAddressValidator addressValidator,
+                              DeliveryEstimateService deliveryEstimateService) {
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
         this.addressMapper = addressMapper;
         this.addressValidator = addressValidator;
+        this.deliveryEstimateService = deliveryEstimateService;
     }
 
     @Override
@@ -60,6 +64,7 @@ public class AddressServiceImpl implements AddressService {
         }
         Address saved = addressRepository.save(address);
         log.info("Address created with id: {}", saved.getId());
+        deliveryEstimateService.refreshForUser(userId);
         return addressMapper.toResponse(saved);
     }
 
@@ -81,6 +86,7 @@ public class AddressServiceImpl implements AddressService {
         }
         Address saved = addressRepository.save(address);
         log.info("Address updated: {}", saved.getId());
+        deliveryEstimateService.refreshForUser(userId);
         return addressMapper.toResponse(saved);
     }
 
@@ -112,6 +118,7 @@ public class AddressServiceImpl implements AddressService {
         address.setIsDefault(true);
         Address saved = addressRepository.save(address);
         log.info("Default address set to: {}", saved.getId());
+        deliveryEstimateService.refreshForUser(userId);
         return addressMapper.toResponse(saved);
     }
 

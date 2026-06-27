@@ -12,14 +12,17 @@ import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.exception.UnauthorizedException;
 import com.kamyaabi.mapper.UserMapper;
+import com.kamyaabi.repository.UserDeliveryEstimateRepository;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.security.JwtTokenProvider;
 import com.kamyaabi.service.AuthService;
+import com.kamyaabi.service.DeliveryEstimateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
@@ -31,21 +34,27 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserMapper userMapper;
-    
+    private final DeliveryEstimateService deliveryEstimateService;
+    private final UserDeliveryEstimateRepository estimateRepository;
+
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
-    
+
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    
+
     private volatile GoogleIdTokenVerifier cachedVerifier;
 
     public AuthServiceImpl(UserRepository userRepository,
                            JwtTokenProvider jwtTokenProvider,
-                           UserMapper userMapper) {
+                           UserMapper userMapper,
+                           DeliveryEstimateService deliveryEstimateService,
+                           UserDeliveryEstimateRepository estimateRepository) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userMapper = userMapper;
+        this.deliveryEstimateService = deliveryEstimateService;
+        this.estimateRepository = estimateRepository;
     }
     
     private GoogleIdTokenVerifier getVerifier() {
@@ -171,6 +180,9 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException(reason);
         }
 
+        // Refresh cached delivery estimate if missing or older than 24 h
+        refreshEstimateIfStale(user.getId());
+
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
 
         return AuthResponse.builder()
@@ -194,5 +206,16 @@ public class AuthServiceImpl implements AuthService {
         log.debug("Fetching user by email: {}", email);
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+    }
+
+    private void refreshEstimateIfStale(Long userId) {
+        boolean stale = estimateRepository.findByUserId(userId)
+                .map(e -> e.getLastRefreshedAt() == null
+                        || e.getLastRefreshedAt().isBefore(LocalDateTime.now().minusHours(24)))
+                .orElse(true); // no record yet → treat as stale
+        if (stale) {
+            log.debug("Delivery estimate stale for user {} — scheduling async refresh", userId);
+            deliveryEstimateService.refreshForUser(userId);
+        }
     }
 }

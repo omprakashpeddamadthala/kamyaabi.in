@@ -11,8 +11,10 @@ import com.kamyaabi.entity.User;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.exception.UnauthorizedException;
 import com.kamyaabi.mapper.UserMapper;
+import com.kamyaabi.repository.UserDeliveryEstimateRepository;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.security.JwtTokenProvider;
+import com.kamyaabi.service.DeliveryEstimateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +40,8 @@ class AuthServiceImplTest {
     @Mock private UserRepository userRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private UserMapper userMapper;
+    @Mock private DeliveryEstimateService deliveryEstimateService;
+    @Mock private UserDeliveryEstimateRepository estimateRepository;
 
     @InjectMocks private AuthServiceImpl authService;
 

@@ -9,6 +9,7 @@ import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.mapper.AddressMapper;
 import com.kamyaabi.repository.AddressRepository;
 import com.kamyaabi.repository.UserRepository;
+import com.kamyaabi.service.DeliveryEstimateService;
 import com.kamyaabi.validation.IndianAddressValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class AddressServiceImplTest {
     @Mock private UserRepository userRepository;
     @Mock private AddressMapper addressMapper;
     @Mock private IndianAddressValidator addressValidator;
+    @Mock private DeliveryEstimateService deliveryEstimateService;
 
     private AddressServiceImpl addressService;
 
@@ -41,7 +43,7 @@ class AddressServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        addressService = new AddressServiceImpl(addressRepository, userRepository, addressMapper, addressValidator);
+        addressService = new AddressServiceImpl(addressRepository, userRepository, addressMapper, addressValidator, deliveryEstimateService);
 
         user = User.builder().id(1L).email("test@kamyaabi.in").name("Test").role(User.Role.USER).build();
         address = Address.builder().id(1L).user(user).fullName("Test User").phone("9876543210")

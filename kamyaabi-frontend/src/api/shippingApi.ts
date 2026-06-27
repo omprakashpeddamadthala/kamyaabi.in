@@ -24,4 +24,8 @@ export const shippingApi = {
       '/api/delivery/estimate',
       { params: { pincode, productId } },
     ),
+
+  /** Reads the cached Shiprocket estimate for the logged-in user from the database. */
+  getCachedEstimate: () =>
+    axiosInstance.get<ApiResponse<PincodeServiceability>>('/api/delivery/cached-estimate'),
 };

@@ -6,6 +6,8 @@ import com.kamyaabi.entity.Product;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.repository.ProductRepository;
+import com.kamyaabi.security.CurrentUser;
+import com.kamyaabi.service.DeliveryEstimateService;
 import com.kamyaabi.service.ShiprocketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,11 +23,17 @@ public class DeliveryController {
 
     private final ShiprocketService shiprocketService;
     private final ProductRepository productRepository;
+    private final DeliveryEstimateService deliveryEstimateService;
+    private final CurrentUser currentUser;
 
     public DeliveryController(ShiprocketService shiprocketService,
-                              ProductRepository productRepository) {
+                              ProductRepository productRepository,
+                              DeliveryEstimateService deliveryEstimateService,
+                              CurrentUser currentUser) {
         this.shiprocketService = shiprocketService;
         this.productRepository = productRepository;
+        this.deliveryEstimateService = deliveryEstimateService;
+        this.currentUser = currentUser;
     }
 
     @GetMapping("/estimate")
@@ -46,6 +54,17 @@ public class DeliveryController {
 
         PincodeServiceabilityResponse response = shiprocketService.checkServiceability(pincode, weightKg);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/cached-estimate")
+    @Operation(summary = "Get cached delivery estimate",
+            description = "Returns the cached Shiprocket delivery estimate for the current user from the database. "
+                    + "Returns 204 No Content if no estimate has been computed yet.")
+    public ResponseEntity<ApiResponse<PincodeServiceabilityResponse>> getCachedEstimate() {
+        Long userId = currentUser.getUserId();
+        return deliveryEstimateService.getCachedEstimate(userId)
+                .map(est -> ResponseEntity.ok(ApiResponse.success(est)))
+                .orElse(ResponseEntity.noContent().build());
     }
 
     private double parseWeightToKg(String weight, String unit) {
