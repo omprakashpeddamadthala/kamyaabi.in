@@ -43,7 +43,6 @@ public class ProductMapper {
         List<ProductImageResponse> imageResponses = images.stream()
                 .map(productImageMapper::toResponse)
                 .toList();
-        String mainImageUrl = resolveMainImageUrl(images, product.getImageUrl());
         List<ProductTagResponse> tagResponses = product.getTags() != null
                 ? product.getTags().stream()
                     .map(t -> ProductTagResponse.builder()
@@ -72,7 +71,7 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .discountPrice(product.getDiscountPrice())
                 .imageUrl(product.getImageUrl())
-                .mainImageUrl(mainImageUrl)
+                .mainImageUrl(product.getMainImageUrl())
                 .images(imageResponses)
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
@@ -98,10 +97,6 @@ public class ProductMapper {
     }
 
     public ProductVariationResponse toVariationResponse(Product product) {
-        List<ProductImage> images = product.getImages() == null
-                ? Collections.emptyList()
-                : product.getImages();
-        String mainImageUrl = resolveMainImageUrl(images, product.getImageUrl());
         return ProductVariationResponse.builder()
                 .id(product.getId())
                 .slug(product.getSlug())
@@ -110,7 +105,7 @@ public class ProductMapper {
                 .price(product.getPrice())
                 .discountPrice(product.getDiscountPrice())
                 .stock(product.getStock())
-                .mainImageUrl(mainImageUrl)
+                .mainImageUrl(product.getMainImageUrl())
                 .build();
     }
 
@@ -124,17 +119,6 @@ public class ProductMapper {
 
     private String writeJson(Object value) {
         return jsonFieldConverter.write(value);
-    }
-
-    private String resolveMainImageUrl(List<ProductImage> images, String legacyImageUrl) {
-        if (images == null || images.isEmpty()) {
-            return legacyImageUrl;
-        }
-        return images.stream()
-                .filter(i -> Boolean.TRUE.equals(i.getIsMain()))
-                .map(ProductImage::getImageUrl)
-                .findFirst()
-                .orElseGet(() -> images.get(0).getImageUrl());
     }
 
     public Product toEntity(ProductRequest request, Category category) {

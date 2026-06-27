@@ -42,7 +42,7 @@ public class CartMapper {
                 .id(item.getId())
                 .productId(item.getProduct().getId())
                 .productName(item.getProduct().getName())
-                .productImageUrl(item.getProduct().getImageUrl())
+                .productImageUrl(item.getProduct().getMainImageUrl())
                 .productPrice(item.getProduct().getPrice())
                 .productDiscountPrice(item.getProduct().getDiscountPrice())
                 .quantity(item.getQuantity())

@@ -117,4 +117,16 @@ public class Product {
         this.images.remove(image);
         image.setProduct(null);
     }
+
+    public String getMainImageUrl() {
+        if (images == null || images.isEmpty()) {
+            return imageUrl;
+        }
+        return images.stream()
+                .filter(i -> Boolean.TRUE.equals(i.getIsMain()))
+                .map(ProductImage::getImageUrl)
+                .findFirst()
+                .orElseGet(() -> images.get(0).getImageUrl());
+    }
 }
+

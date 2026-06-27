@@ -176,7 +176,7 @@ public class InvoiceTemplateRenderer {
                 Product product = item.getProduct();
                 String productName = product == null ? "Item" : product.getName();
                 String productDescription = product == null ? "" : product.getDescription();
-                String productImageUrl = product == null ? "" : product.getImageUrl();
+                String productImageUrl = product == null ? "" : product.getMainImageUrl();
                 BigDecimal unit = amount(item.getPrice());
                 int quantity = item.getQuantity() == null ? 0 : item.getQuantity();
                 BigDecimal lineTotal = unit.multiply(BigDecimal.valueOf(quantity));

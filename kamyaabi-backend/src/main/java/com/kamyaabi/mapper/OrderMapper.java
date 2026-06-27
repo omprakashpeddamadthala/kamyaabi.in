@@ -65,7 +65,7 @@ public class OrderMapper {
                 .id(item.getId())
                 .productId(item.getProduct().getId())
                 .productName(item.getProduct().getName())
-                .productImageUrl(item.getProduct().getImageUrl())
+                .productImageUrl(item.getProduct().getMainImageUrl())
                 .quantity(item.getQuantity())
                 .price(item.getPrice())
                 .subtotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
