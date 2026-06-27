@@ -354,34 +354,73 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ active }) => {
     <Card>
       <CardContent>
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
+          direction={{ xs: 'column', md: 'row' }}
           spacing={2}
-          sx={{ mb: 2 }}
+          sx={{ mb: 3 }}
           justifyContent="space-between"
-          alignItems={{ xs: 'stretch', sm: 'center' }}
+          alignItems={{ xs: 'stretch', md: 'center' }}
         >
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
               Platform Settings
+              {dirtyKeys.length > 0 && (
+                <Chip
+                  label={`${dirtyKeys.length} Unsaved`}
+                  color="warning"
+                  size="small"
+                  sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                />
+              )}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Tune storefront behavior without redeploying. Changes apply immediately.
             </Typography>
           </Box>
-          <TextField
-            size="small"
-            placeholder="Search settings\u2026"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ minWidth: { xs: '100%', sm: 260 } }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+          >
+            {dirtyKeys.length > 0 && (
+              <Stack direction="row" spacing={1.5}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  disabled={saving}
+                  onClick={() => {
+                    setValues(baseline);
+                    setErrors({});
+                  }}
+                  fullWidth
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={onSave}
+                  disabled={saving}
+                  fullWidth
+                >
+                  {saving ? 'Saving\u2026' : 'Save'}
+                </Button>
+              </Stack>
+            )}
+            <TextField
+              size="small"
+              placeholder="Search settings\u2026"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{ minWidth: { xs: '100%', sm: 240 } }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Stack>
         </Stack>
 
         {grouped.length === 0 ? (
