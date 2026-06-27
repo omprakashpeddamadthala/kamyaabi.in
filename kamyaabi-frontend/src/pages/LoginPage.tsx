@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
   const [whatsappEnabledLoaded, setWhatsappEnabledLoaded] = React.useState(false);
   const [showWhatsappFlow, setShowWhatsappFlow] = React.useState(false);
   const [whatsappStep, setWhatsappStep] = React.useState<'phone' | 'otp'>('phone');
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState('+91');
   const [otp, setOtp] = React.useState('');
   const [whatsappMessage, setWhatsappMessage] = React.useState<string | null>(null);
   const [whatsappError, setWhatsappError] = React.useState<string | null>(null);
