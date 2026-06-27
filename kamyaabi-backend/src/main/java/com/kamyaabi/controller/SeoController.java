@@ -81,12 +81,16 @@ public class SeoController {
             appendUrl(sb, base + route.path(), null, route.changefreq(), route.priority());
         }
 
-        // Active products — /products/{slug}
+        // Active products — canonical /products/{categorySlug}/{slug}, falling back to
+        // the flat /products/{slug} form when a category slug is unavailable.
         try {
             Page<ProductResponse> products = productService.getAllProducts(PageRequest.of(0, 1000));
             for (ProductResponse p : products.getContent()) {
                 if (p.slug() == null || p.slug().isBlank()) continue;
-                appendUrl(sb, base + "/products/" + escapeXml(p.slug()), null, "weekly", "0.8");
+                String loc = (p.categorySlug() != null && !p.categorySlug().isBlank())
+                        ? base + "/products/" + escapeXml(p.categorySlug()) + "/" + escapeXml(p.slug())
+                        : base + "/products/" + escapeXml(p.slug());
+                appendUrl(sb, loc, null, "weekly", "0.8");
             }
         } catch (Exception e) {
             log.warn("Failed to add products to sitemap: {}", e.getMessage());

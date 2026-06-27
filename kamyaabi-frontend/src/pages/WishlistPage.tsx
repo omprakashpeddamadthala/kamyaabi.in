@@ -23,6 +23,7 @@ import { fetchWishlist, removeFromWishlist } from '../features/wishlist/wishlist
 import { addToCart, optimisticAddToCart } from '../features/cart/cartSlice';
 import PageTransition from '../components/common/PageTransition';
 import { withCloudinaryTransform } from '../utils/cloudinary';
+import { productUrl } from '../utils/productUrl';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import type { WishlistItem } from '../types';
 
@@ -85,7 +86,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
       }}
     >
       <Box sx={{ position: 'relative', cursor: 'pointer' }}
-        onClick={() => navigate(`/products/${item.productSlug ?? item.productId}`)}
+        onClick={() => navigate(productUrl({ id: item.productId, slug: item.productSlug, categorySlug: item.categorySlug }))}
       >
         <CardMedia
           component="img"
@@ -138,7 +139,7 @@ const WishlistItemCard: React.FC<WishlistItemCardProps> = ({
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}
-          onClick={() => navigate(`/products/${item.productSlug ?? item.productId}`)}
+          onClick={() => navigate(productUrl({ id: item.productId, slug: item.productSlug, categorySlug: item.categorySlug }))}
         >
           {item.productName}
         </Typography>

@@ -145,7 +145,8 @@ public class ProductServiceImpl implements ProductService {
         return new ProductResponse(
                 response.id(), response.name(), response.slug(), response.description(),
                 response.price(), response.discountPrice(), response.imageUrl(), response.mainImageUrl(),
-                response.images(), response.categoryId(), response.categoryName(), response.tags(),
+                response.images(), response.categoryId(), response.categoryName(), response.categorySlug(),
+                response.tags(),
                 response.stock(), response.weight(), response.unit(), response.shelfLife(),
                 response.nutritionalInfo(), response.howToUse(), response.storageTips(),
                 response.active(), response.createdAt(), response.seoTitle(), response.seoDescription(),

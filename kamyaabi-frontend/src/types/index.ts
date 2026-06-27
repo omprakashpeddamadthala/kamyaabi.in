@@ -60,6 +60,7 @@ export interface Product {
   images: ProductImage[];
   categoryId: number;
   categoryName: string;
+  categorySlug?: string | null;
   stock: number;
   weight: string;
   unit: string;
@@ -356,6 +357,7 @@ export interface WishlistItem {
   productId: number;
   productName: string;
   productSlug: string;
+  categorySlug?: string | null;
   productImageUrl: string;
   productPrice: number;
   productDiscountPrice: number | null;

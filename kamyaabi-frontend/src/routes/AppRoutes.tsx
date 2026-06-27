@@ -104,7 +104,10 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/products" element={<ProductsPage />} />
-        {}
+        {/* Canonical, SEO-friendly hierarchy: /products/:categorySlug/:productSlug.
+            The flat /products/:slug form is kept for backward compatibility and
+            redirects to the canonical URL (see useProductData). */}
+        <Route path="/products/:categorySlug/:productSlug" element={<ProductDetailPage />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />

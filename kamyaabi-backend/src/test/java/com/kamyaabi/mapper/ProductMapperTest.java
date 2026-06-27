@@ -26,7 +26,21 @@ class ProductMapperTest {
     void setUp() {
         imageMapper = new ProductImageMapper();
         mapper = new ProductMapper(imageMapper, new JsonFieldConverter(new ObjectMapper()));
-        category = Category.builder().id(1L).name("Cashews").build();
+        category = Category.builder().id(1L).name("Cashews").slug("cashews").build();
+    }
+
+    @Test
+    void toResponse_mapsCategorySlugForHierarchicalUrls() {
+        Product product = Product.builder()
+                .id(1L).name("Split Cashew").slug("split-cashew").price(BigDecimal.ONE)
+                .imageUrl("http://legacy").category(category)
+                .stock(1).active(true).images(new ArrayList<>()).build();
+
+        ProductResponse response = mapper.toResponse(product);
+
+        assertThat(response.slug()).isEqualTo("split-cashew");
+        assertThat(response.categorySlug()).isEqualTo("cashews");
+        assertThat(response.categoryName()).isEqualTo("Cashews");
     }
 
     @Test

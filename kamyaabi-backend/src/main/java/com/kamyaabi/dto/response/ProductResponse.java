@@ -20,6 +20,7 @@ public record ProductResponse(
         List<ProductImageResponse> images,
         Long categoryId,
         String categoryName,
+        String categorySlug,
         List<ProductTagResponse> tags,
         Integer stock,
         String weight,
