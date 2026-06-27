@@ -1,12 +1,8 @@
 /*
  * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves all nav links, role-based Admin/Product visibility, cart badge, login/logout, account menu, social links, and mobile drawer.
- * - Visual-only redesign with tokenized sticky header, active state, and menu styling.
- */
-/**
- * AUDIT: Preserves all existing navigation links, user role checks (ADMIN/USER),
- * cart badge count, login/logout, mobile drawer, and social links.
- * Visual-only changes: new color tokens, typography, sticky header style.
+ * - Preserves all nav links, role-based Admin/Product visibility, cart badge, login/logout, account menu, social links.
+ * - Adds a premium mobile Bottom Navigation bar for quick thumb-friendly access (Zepto/Blinkit style).
+ * - Desktop remains a sleek, expansive header.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -30,6 +26,8 @@ import {
   useMediaQuery,
   useTheme,
   Typography,
+  BottomNavigation,
+  BottomNavigationAction,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -86,7 +84,7 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 8);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -133,342 +131,390 @@ const Navbar: React.FC = () => {
     '/contact': <ContactMail />,
   };
 
+  // Determine active bottom nav value
+  let bottomNavValue = location.pathname;
+  if (bottomNavValue.startsWith('/products')) bottomNavValue = '/products';
+  if (bottomNavValue.startsWith('/cart')) bottomNavValue = '/cart';
+  if (bottomNavValue.startsWith('/profile') || bottomNavValue.startsWith('/orders')) bottomNavValue = '/profile';
+
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: scrolled ? 'rgba(255,255,255,0.95)' : 'var(--color-surface-card)',
-        borderBottom: scrolled ? '1px solid rgba(29, 78, 216,0.12)' : '1px solid rgba(29, 78, 216,0.06)',
-        backdropFilter: 'blur(14px)',
-        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.08)' : 'none',
-        transition: 'box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ justifyContent: 'space-between', minHeight: { xs: 64, md: 72 } }}>
-          {isMobile && (
-            <IconButton onClick={() => setDrawerOpen(true)} edge="start" aria-label="Open menu">
-              <MenuIcon sx={{ color: 'var(--color-text-primary)' }} />
-            </IconButton>
-          )}
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: scrolled || isMobile ? 'rgba(255,255,255,0.98)' : 'var(--color-surface-card)',
+          borderBottom: '1px solid var(--color-border)',
+          backdropFilter: 'blur(16px)',
+          boxShadow: scrolled ? 'var(--shadow-sm)' : 'none',
+          transition: 'all var(--transition-normal)',
+          zIndex: (t) => t.zIndex.appBar,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between', minHeight: { xs: 60, md: 72 } }}>
+            {isMobile && (
+              <IconButton onClick={() => setDrawerOpen(true)} edge="start" aria-label="Open menu" sx={{ ml: -1 }}>
+                <MenuIcon sx={{ color: 'var(--color-text-primary)' }} />
+              </IconButton>
+            )}
 
-          <Box
-            component={Link}
-            to="/"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              flexShrink: 0,
-              transition: 'transform 0.2s ease',
-              '&:hover': { transform: 'scale(1.03)' },
-            }}
-          >
             <Box
-              component="img"
-              src="/assets/img/klogo1.webp"
-              alt="Kamyaabi"
-              sx={{ height: 42, width: 'auto' }}
-            />
-          </Box>
+              component={Link}
+              to="/"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                flexShrink: 0,
+                transition: 'transform var(--transition-fast)',
+                '&:active': { transform: 'scale(0.95)' },
+              }}
+            >
+              <Box
+                component="img"
+                src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551833/kamyaabi/assets/img/klogo1.webp"
+                alt="Kamyaabi"
+                sx={{ height: { xs: 36, md: 42 }, width: 'auto' }}
+              />
+            </Box>
 
-          {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-              {navLinks.map((link) => {
-                const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
-                return (
+            {!isMobile && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {navLinks.map((link) => {
+                  const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
+                  return (
+                    <Button
+                      key={link.to}
+                      component={Link}
+                      to={link.to}
+                      sx={{
+                        color: isActive ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: 'var(--text-sm)',
+                        px: 2.5,
+                        py: 1,
+                        borderRadius: 'var(--radius-full)',
+                        transition: 'all var(--transition-fast)',
+                        bgcolor: isActive ? 'rgba(29, 78, 216, 0.08)' : 'transparent',
+                        '&:hover': {
+                          bgcolor: 'rgba(29, 78, 216, 0.05)',
+                        },
+                      }}
+                    >
+                      {link.label}
+                    </Button>
+                  );
+                })}
+                {user && user.role !== 'ADMIN' && (
+                  <Button component={Link} to="/orders" sx={{
+                    color: location.pathname.startsWith('/orders') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                    fontWeight: location.pathname.startsWith('/orders') ? 700 : 500,
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: 'var(--radius-full)',
+                    bgcolor: location.pathname.startsWith('/orders') ? 'rgba(29, 78, 216, 0.08)' : 'transparent',
+                    '&:hover': { bgcolor: 'rgba(29, 78, 216, 0.05)' },
+                  }}>
+                    Orders
+                  </Button>
+                )}
+                {user?.role === 'ADMIN' && (
+                  <Button component={Link} to="/admin" sx={{
+                    color: location.pathname.startsWith('/admin') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                    fontWeight: location.pathname.startsWith('/admin') ? 700 : 500,
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: 'var(--radius-full)',
+                    bgcolor: location.pathname.startsWith('/admin') ? 'rgba(29, 78, 216, 0.08)' : 'transparent',
+                    '&:hover': { bgcolor: 'rgba(29, 78, 216, 0.05)' },
+                  }}>
+                    Admin
+                  </Button>
+                )}
+              </Box>
+            )}
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.5 } }}>
+              {!isMobile && (
+                <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.5} sx={{ mr: 1 }} />
+              )}
+              {!isMobile && user && user.role !== 'ADMIN' && (
+                <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist">
+                  <Badge
+                    badgeContent={wishlistProductIds.length}
+                    color="primary"
+                    invisible={wishlistProductIds.length === 0}
+                  >
+                    <FavoriteBorder sx={{ color: 'var(--color-text-primary)' }} />
+                  </Badge>
+                </IconButton>
+              )}
+              {!isMobile && user && user.role !== 'ADMIN' && (
+                <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
+                  <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart">
+                    <Badge
+                      badgeContent={cartItemCount}
+                      color="primary"
+                      invisible={cartItemCount === 0}
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          bgcolor: 'var(--color-brand-accent)',
+                          color: '#fff',
+                        },
+                      }}
+                    >
+                      <ShoppingCart sx={{ color: 'var(--color-text-primary)' }} />
+                    </Badge>
+                  </IconButton>
+                </Box>
+              )}
+
+              {user ? (
+                <Box ref={avatarWrapRef} sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <IconButton onClick={handleMenuOpen} aria-label="Open account menu" sx={{ p: 0.5 }}>
+                    <Avatar
+                      src={user.avatarUrl || undefined}
+                      alt={user.name}
+                      sx={{
+                        width: { xs: 32, md: 38 },
+                        height: { xs: 32, md: 38 },
+                        bgcolor: 'var(--color-surface-hover)',
+                        color: 'var(--color-brand-primary)',
+                        border: '2px solid transparent',
+                        transition: 'border-color var(--transition-fast)',
+                        ...(menuOpen && { borderColor: 'var(--color-brand-primary)' }),
+                        fontWeight: 700,
+                        fontSize: 'var(--text-sm)',
+                      }}
+                    >
+                      {user.name.charAt(0)}
+                    </Avatar>
+                  </IconButton>
+                  {menuOpen && (
+                    <Paper
+                      elevation={8}
+                      className="kamyaabi-fade-up"
+                      sx={{
+                        position: 'absolute',
+                        right: 0,
+                        ...(dropUp
+                          ? { bottom: 'calc(100% + 8px)' }
+                          : { top: 'calc(100% + 8px)' }),
+                        minWidth: 240,
+                        maxWidth: 'calc(100vw - 16px)',
+                        py: 1,
+                        zIndex: (t) => t.zIndex.modal,
+                        borderRadius: 'var(--radius-lg)',
+                        boxShadow: 'var(--shadow-modal)',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      <Box sx={{ px: 2, py: 1.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'var(--color-text-primary)' }} noWrap>{user.name}</Typography>
+                        <Typography variant="caption" sx={{ color: 'var(--color-text-secondary)' }} noWrap>{user.email}</Typography>
+                      </Box>
+                      <Divider sx={{ mb: 1 }} />
+                      
+                      {isMobile && user.role !== 'ADMIN' && (
+                        <MenuItem onClick={() => { handleMenuClose(); navigate('/wishlist'); }} sx={{ py: 1.5 }}>
+                          <ListItemIcon><FavoriteBorder fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
+                          <ListItemText primary="My Wishlist" primaryTypographyProps={{ fontWeight: 600 }} />
+                        </MenuItem>
+                      )}
+                      
+                      {user.role !== 'ADMIN' && (
+                        <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }} sx={{ py: 1.5 }}>
+                          <ListItemIcon><Person fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
+                          <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
+                        </MenuItem>
+                      )}
+                      {user.role !== 'ADMIN' && (
+                        <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }} sx={{ py: 1.5 }}>
+                          <ListItemIcon><Receipt fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
+                          <ListItemText primary="My Orders" primaryTypographyProps={{ fontWeight: 600 }} />
+                        </MenuItem>
+                      )}
+                      {user.role === 'ADMIN' && (
+                        <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }} sx={{ py: 1.5 }}>
+                          <ListItemIcon><Dashboard fontSize="small" sx={{ color: 'var(--color-brand-primary)' }} /></ListItemIcon>
+                          <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700, color: 'var(--color-brand-primary)' }} />
+                        </MenuItem>
+                      )}
+                      <Divider sx={{ my: 1 }} />
+                      <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'var(--color-error)' }}>
+                        <ListItemIcon><Logout fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+                        <ListItemText primary="Logout" primaryTypographyProps={{ fontWeight: 600 }} />
+                      </MenuItem>
+                    </Paper>
+                  )}
+                </Box>
+              ) : (
                 <Button
-                  key={link.to}
                   component={Link}
-                  to={link.to}
+                  to="/login"
+                  variant="contained"
+                  size={isMobile ? "small" : "medium"}
                   sx={{
-                    color: isActive ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                    fontWeight: isActive ? 700 : 500,
-                    fontSize: 'var(--text-sm)',
-                    letterSpacing: '0.01em',
-                    px: 2,
-                    py: 1.25,
-                    borderRadius: 'var(--radius-sm)',
-                    position: 'relative',
-                    transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 4,
-                      left: '50%',
-                      transform: isActive ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
-                      width: '60%',
-                      height: 2.5,
-                      bgcolor: 'var(--color-brand-primary)',
-                      borderRadius: 2,
-                      transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-                    },
-                    '&:hover': {
-                      color: 'var(--color-brand-primary)',
-                      bgcolor: 'rgba(29, 78, 216,0.05)',
-                      transform: 'translateY(-1px)',
-                    },
-                    '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
+                    bgcolor: 'var(--color-brand-primary)',
+                    color: '#fff',
+                    borderRadius: 'var(--radius-full)',
+                    px: { xs: 2, md: 3 },
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    boxShadow: '0 4px 12px rgba(29, 78, 216, 0.2)',
+                    '&:hover': { bgcolor: 'var(--color-brand-primary-dark)', boxShadow: '0 6px 16px rgba(29, 78, 216, 0.3)' },
                   }}
                 >
-                  {link.label}
-                </Button>
-                );
-              })}
-              {user && user.role !== 'ADMIN' && (
-                <Button component={Link} to="/orders" sx={{
-                  color: location.pathname.startsWith('/orders') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                  fontWeight: location.pathname.startsWith('/orders') ? 700 : 500,
-                  fontSize: 'var(--text-sm)',
-                  px: 2,
-                  py: 1.25,
-                  borderRadius: 'var(--radius-sm)',
-                  position: 'relative',
-                  transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 4,
-                    left: '50%',
-                    transform: location.pathname.startsWith('/orders') ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
-                    width: '60%',
-                    height: 2.5,
-                    bgcolor: 'var(--color-brand-primary)',
-                    borderRadius: 2,
-                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-                  },
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.05)', transform: 'translateY(-1px)' },
-                  '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
-                }}>
-                  Orders
-                </Button>
-              )}
-              {user?.role === 'ADMIN' && (
-                <Button component={Link} to="/admin" sx={{
-                  color: location.pathname.startsWith('/admin') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
-                  fontWeight: location.pathname.startsWith('/admin') ? 700 : 500,
-                  fontSize: 'var(--text-sm)',
-                  px: 2,
-                  py: 1.25,
-                  borderRadius: 'var(--radius-sm)',
-                  position: 'relative',
-                  transition: 'color 0.2s ease, background-color 0.2s ease, transform 0.2s ease',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: 4,
-                    left: '50%',
-                    transform: location.pathname.startsWith('/admin') ? 'translateX(-50%) scaleX(1)' : 'translateX(-50%) scaleX(0)',
-                    width: '60%',
-                    height: 2.5,
-                    bgcolor: 'var(--color-brand-primary)',
-                    borderRadius: 2,
-                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1)',
-                  },
-                  '&:hover': { color: 'var(--color-brand-primary)', bgcolor: 'rgba(29, 78, 216,0.05)', transform: 'translateY(-1px)' },
-                  '&:hover::after': { transform: 'translateX(-50%) scaleX(1)' },
-                }}>
-                  Admin
+                  Sign In
                 </Button>
               )}
             </Box>
-          )}
+          </Toolbar>
+        </Container>
+      </AppBar>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-            {!isMobile && (
-              <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.25} sx={{ mr: 0.5 }} />
-            )}
-            {user && user.role !== 'ADMIN' && (
-              <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist" sx={{ transition: 'transform 0.2s ease', '&:hover': { transform: 'scale(1.1)' } }}>
-                <Badge
-                  badgeContent={wishlistProductIds.length}
-                  color="primary"
-                  invisible={wishlistProductIds.length === 0}
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      bgcolor: 'var(--color-brand-primary)',
-                      color: '#fff',
-                      fontWeight: 700,
-                    },
-                  }}
-                >
-                  <FavoriteBorder sx={{ color: 'var(--color-text-primary)', fontSize: 'var(--icon-wishlist)' }} />
-                </Badge>
-              </IconButton>
-            )}
-            {user && user.role !== 'ADMIN' && (
-              <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
-                <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart" sx={{ transition: 'transform 0.2s ease', '&:hover': { transform: 'scale(1.1)' } }}>
-                  <Badge
-                    badgeContent={cartItemCount}
-                    color="primary"
-                    invisible={cartItemCount === 0}
-                    sx={{
-                      '& .MuiBadge-badge': {
-                        bgcolor: 'var(--color-brand-primary)',
-                        color: '#fff',
-                        fontWeight: 700,
-                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      },
-                    }}
-                  >
-                    <ShoppingCart sx={{ color: 'var(--color-text-primary)' }} />
-                  </Badge>
-                </IconButton>
-              </Box>
-            )}
-
-            {user ? (
-              <Box ref={avatarWrapRef} sx={{ position: 'relative', display: 'inline-flex' }}>
-                <IconButton onClick={handleMenuOpen} aria-label="Open account menu">
-                  <Avatar
-                    src={user.avatarUrl || undefined}
-                    alt={user.name}
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      border: '2px solid var(--color-brand-primary)',
-                      fontSize: 'var(--text-sm)',
-                    }}
-                  >
-                    {user.name.charAt(0)}
-                  </Avatar>
-                </IconButton>
-                {menuOpen && (
-                  <Paper
-                    elevation={8}
-                    sx={{
-                      position: 'absolute',
-                      right: 0,
-                      ...(dropUp
-                        ? { bottom: 'calc(100% + 8px)' }
-                        : { top: 'calc(100% + 8px)' }),
-                      minWidth: 220,
-                      maxWidth: 'calc(100vw - 16px)',
-                      py: 0.5,
-                      zIndex: (t) => t.zIndex.modal,
-                      borderRadius: 'var(--radius-md)',
-                      boxShadow: 'var(--shadow-modal)',
-                    }}
-                  >
-                    <MenuItem disabled sx={{ opacity: 1 }}>
-                      <Typography variant="body2" color="text.secondary" noWrap>{user.name}</Typography>
-                    </MenuItem>
-                    <Divider />
-                    {user.role !== 'ADMIN' && (
-                      <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>
-                        <ListItemIcon><Person fontSize="small" /></ListItemIcon>
-                        My Profile
-                      </MenuItem>
-                    )}
-                    {user.role !== 'ADMIN' && (
-                      <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }}>
-                        <ListItemIcon><Receipt fontSize="small" /></ListItemIcon>
-                        My Orders
-                      </MenuItem>
-                    )}
-                    {user.role === 'ADMIN' && (
-                      <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }}>
-                        <ListItemIcon><Dashboard fontSize="small" /></ListItemIcon>
-                        Admin Panel
-                      </MenuItem>
-                    )}
-                    <Divider />
-                    <MenuItem onClick={handleLogout}>
-                      <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
-                      Logout
-                    </MenuItem>
-                  </Paper>
-                )}
-              </Box>
-            ) : (
-              <Button
-                component={Link}
-                to="/login"
-                variant="contained"
-                size="small"
-                startIcon={<Login />}
-                sx={{
-                  bgcolor: 'var(--color-brand-primary)',
-                  color: '#fff',
-                  borderRadius: 'var(--radius-full)',
-                  px: 2.5,
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  boxShadow: 'none',
-                  '&:hover': { bgcolor: '#1E40AF', boxShadow: 'var(--shadow-hover)' },
-                }}
-              >
-                Sign In
-              </Button>
-            )}
-          </Box>
-        </Toolbar>
-      </Container>
-
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 260 }}>
-          <Box sx={{ p: 2 }}>
-            <img src="/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 40 }} />
+      {/* Mobile Drawer (Left Menu) */}
+      <Drawer 
+        open={drawerOpen} 
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: { width: 280, borderTopRightRadius: 'var(--radius-xl)', borderBottomRightRadius: 'var(--radius-xl)' }
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <img src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551833/kamyaabi/assets/img/klogo1.webp" alt="Kamyaabi" style={{ height: 42 }} />
           </Box>
           <Divider />
-          <List>
-            {navLinks.map((link) => (
-              <ListItem
-                key={link.to}
-                onClick={() => { setDrawerOpen(false); navigate(link.to); }}
-                sx={{ cursor: 'pointer' }}
-              >
-                <ListItemIcon>{drawerIcons[link.to]}</ListItemIcon>
-                <ListItemText primary={link.label} />
-              </ListItem>
-            ))}
+          <List sx={{ flex: 1, px: 2, py: 2 }}>
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
+              return (
+                <ListItem
+                  key={link.to}
+                  onClick={() => { setDrawerOpen(false); navigate(link.to); }}
+                  sx={{ 
+                    cursor: 'pointer', 
+                    borderRadius: 'var(--radius-md)', 
+                    mb: 1,
+                    bgcolor: isActive ? 'rgba(29, 78, 216, 0.08)' : 'transparent',
+                    color: isActive ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>{drawerIcons[link.to]}</ListItemIcon>
+                  <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: isActive ? 700 : 600 }} />
+                </ListItem>
+              );
+            })}
+            
+            <Divider sx={{ my: 2 }} />
+            
             <ListItem
               onClick={() => { setDrawerOpen(false); navigate('/track-order'); }}
-              sx={{ cursor: 'pointer' }}
+              sx={{ cursor: 'pointer', borderRadius: 'var(--radius-md)', mb: 1, color: 'var(--color-text-primary)' }}
             >
-              <ListItemIcon><LocalShipping /></ListItemIcon>
-              <ListItemText primary="Track Order" />
+              <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}><LocalShipping /></ListItemIcon>
+              <ListItemText primary="Track Order" primaryTypographyProps={{ fontWeight: 600 }} />
             </ListItem>
-            {user && user.role !== 'ADMIN' && (
-              <ListItem
-                onClick={() => { setDrawerOpen(false); navigate('/wishlist'); }}
-                sx={{ cursor: 'pointer' }}
-              >
-                <ListItemIcon><FavoriteBorder /></ListItemIcon>
-                <ListItemText primary="Wishlist" />
-              </ListItem>
-            )}
-            {user && user.role !== 'ADMIN' && (
-              <ListItem
-                onClick={() => { setDrawerOpen(false); navigate('/orders'); }}
-                sx={{ cursor: 'pointer' }}
-              >
-                <ListItemIcon><Receipt /></ListItemIcon>
-                <ListItemText primary="Orders" />
-              </ListItem>
-            )}
+
             {user?.role === 'ADMIN' && (
               <ListItem
                 onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
-                sx={{ cursor: 'pointer' }}
+                sx={{ cursor: 'pointer', borderRadius: 'var(--radius-md)', mb: 1, color: 'var(--color-brand-primary)' }}
               >
-                <ListItemIcon><Dashboard /></ListItemIcon>
-                <ListItemText primary="Admin" />
+                <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}><Dashboard /></ListItemIcon>
+                <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700 }} />
               </ListItem>
             )}
           </List>
-          <Divider />
-          <Box sx={{ p: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'var(--color-text-primary)' }}>
+          
+          <Box sx={{ p: 3, bgcolor: 'var(--color-surface-hover)' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: 'var(--color-text-primary)' }}>
               Follow Us
             </Typography>
-            <SocialLinks size={22} color="var(--color-text-secondary)" />
+            <SocialLinks size={24} color="var(--color-brand-primary)" />
           </Box>
         </Box>
       </Drawer>
-    </AppBar>
+
+      {/* Mobile Bottom Navigation (Zepto/Blinkit Style) */}
+      {isMobile && user?.role !== 'ADMIN' && (
+        <Paper 
+          elevation={0}
+          sx={{ 
+            position: 'fixed', 
+            bottom: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: (t) => t.zIndex.appBar,
+            boxShadow: 'var(--shadow-sticky)',
+            borderTop: '1px solid var(--color-border)',
+            pb: 'env(safe-area-inset-bottom)' // iOS safe area
+          }}
+        >
+          <BottomNavigation
+            value={bottomNavValue}
+            onChange={(event, newValue) => {
+              navigate(newValue);
+            }}
+            showLabels
+            sx={{
+              height: 64,
+              bgcolor: '#ffffff',
+              '& .MuiBottomNavigationAction-root': {
+                minWidth: 'auto',
+                padding: '6px 0 8px',
+                color: 'var(--color-text-muted)',
+              },
+              '& .Mui-selected': {
+                color: 'var(--color-brand-primary)',
+              },
+              '& .MuiBottomNavigationAction-label': {
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                mt: 0.5,
+              },
+              '& .Mui-selected .MuiBottomNavigationAction-label': {
+                fontSize: '0.7rem',
+                fontWeight: 700,
+              },
+            }}
+          >
+            <BottomNavigationAction 
+              label="Home" 
+              value="/" 
+              icon={<Home />} 
+            />
+            <BottomNavigationAction 
+              label="Shop" 
+              value="/products" 
+              icon={<Store />} 
+            />
+            <BottomNavigationAction 
+              label="Cart" 
+              value="/cart" 
+              icon={
+                <Badge badgeContent={cartItemCount} sx={{
+                  '& .MuiBadge-badge': {
+                    bgcolor: 'var(--color-brand-accent)',
+                    color: '#fff',
+                    fontWeight: 700,
+                  }
+                }}>
+                  <ShoppingCart />
+                </Badge>
+              } 
+            />
+            <BottomNavigationAction 
+              label={user ? 'Profile' : 'Sign In'}
+              value={user ? '/profile' : '/login'} 
+              icon={<Person />} 
+            />
+          </BottomNavigation>
+        </Paper>
+      )}
+    </>
   );
 };
 

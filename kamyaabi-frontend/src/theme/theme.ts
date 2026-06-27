@@ -3,6 +3,7 @@
  * - Preserves MUI provider integration, all existing Redux/Auth/API behavior, and responsive overflow safeguards.
  * - Replaces only visual primitives with design-token-backed palette, typography, spacing, radii, shadows, and states.
  * - Keeps current page routes, role guards, form handling, and backend request contracts untouched.
+ * - Updated to Zepto/Blinkit premium mobile-first aesthetic.
  */
 import { createTheme } from '@mui/material/styles';
 
@@ -30,18 +31,18 @@ const theme = createTheme({
       contrastText: '#0F172A',
     },
     success: {
-      main: '#16A34A',
-      light: '#22C55E',
-      dark: '#15803D',
+      main: '#10B981',
+      light: '#34D399',
+      dark: '#059669',
     },
     warning: {
-      main: '#D97706',
+      main: '#F59E0B',
     },
     error: {
-      main: '#DC2626',
+      main: '#EF4444',
     },
     background: {
-      default: '#F8FAFC',
+      default: '#F4F6F8',
       paper: '#FFFFFF',
     },
     text: {
@@ -49,7 +50,7 @@ const theme = createTheme({
       secondary: '#475569',
       disabled: '#94A3B8',
     },
-    divider: 'rgba(29, 78, 216, 0.12)',
+    divider: 'rgba(15, 23, 42, 0.08)',
   },
   typography: {
     fontFamily: 'var(--font-body)',
@@ -77,20 +78,20 @@ const theme = createTheme({
     },
     h4: {
       fontFamily: 'var(--font-display)',
-      fontWeight: 750,
+      fontWeight: 700,
       letterSpacing: '-0.02em',
       lineHeight: 1.2,
       fontSize: 'var(--text-2xl)',
     },
     h5: {
-      fontWeight: 750,
+      fontWeight: 700,
       lineHeight: 1.25,
       fontSize: 'var(--text-xl)',
     },
     h6: {
-      fontWeight: 750,
+      fontWeight: 700,
       lineHeight: 1.3,
-      fontSize: 'var(--text-base)',
+      fontSize: 'var(--text-lg)',
     },
     subtitle1: {
       fontSize: 'var(--text-base)',
@@ -101,30 +102,31 @@ const theme = createTheme({
       fontWeight: 600,
     },
     body1: {
-      lineHeight: 1.65,
+      lineHeight: 1.5,
       fontSize: 'var(--text-base)',
     },
     body2: {
-      lineHeight: 1.6,
+      lineHeight: 1.5,
       fontSize: 'var(--text-sm)',
     },
     caption: {
       fontSize: 'var(--text-xs)',
     },
     overline: {
-      fontWeight: 800,
-      letterSpacing: '0.1em',
+      fontWeight: 700,
+      letterSpacing: '0.05em',
       fontSize: 'var(--text-xs)',
+      textTransform: 'uppercase',
     },
     button: {
       textTransform: 'none',
-      fontWeight: 750,
+      fontWeight: 600,
       letterSpacing: 0,
       fontSize: 'var(--text-sm)',
     },
   },
   shape: {
-    borderRadius: 10,
+    borderRadius: 12,
   },
   shadows: [
     'none',
@@ -160,6 +162,7 @@ const theme = createTheme({
           overflowX: 'hidden',
           maxWidth: '100vw',
           WebkitTextSizeAdjust: '100%',
+          backgroundColor: 'var(--color-surface-bg)',
         },
         '#root': {
           overflowX: 'hidden',
@@ -173,7 +176,7 @@ const theme = createTheme({
           height: 'auto',
         },
         'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible': {
-          outline: '3px solid rgba(29,78,216,0.45)',
+          outline: '2px solid rgba(29,78,216,0.5)',
           outlineOffset: 2,
         },
       },
@@ -189,7 +192,7 @@ const theme = createTheme({
           },
         }),
         maxWidthLg: {
-          maxWidth: '1280px !important',
+          maxWidth: '1200px !important',
         },
         maxWidthXl: {
           maxWidth: '1440px !important',
@@ -199,12 +202,12 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          borderRadius: 'var(--radius-lg)',
+          borderRadius: 'var(--radius-xl)',
           boxShadow: 'var(--shadow-modal)',
           [theme.breakpoints.down('sm')]: {
-            margin: theme.spacing(1.5),
-            width: 'calc(100% - 24px)',
-            maxWidth: 'calc(100% - 24px)',
+            margin: theme.spacing(2),
+            width: 'calc(100% - 32px)',
+            maxWidth: 'calc(100% - 32px)',
           },
         }),
       },
@@ -212,17 +215,20 @@ const theme = createTheme({
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderTopLeftRadius: 'var(--radius-lg)',
-          borderTopRightRadius: 'var(--radius-lg)',
+          borderTopLeftRadius: 'var(--radius-xl)',
+          borderTopRightRadius: 'var(--radius-xl)',
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         head: {
-          fontWeight: 800,
-          color: '#0F172A',
-          backgroundColor: '#F1F5F9',
+          fontWeight: 700,
+          color: '#475569',
+          backgroundColor: '#F8FAFC',
+          textTransform: 'uppercase',
+          fontSize: '0.75rem',
+          letterSpacing: '0.05em',
         },
       },
     },
@@ -233,31 +239,35 @@ const theme = createTheme({
           WebkitOverflowScrolling: 'touch',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-card)',
+          border: '1px solid var(--color-border)',
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 'var(--radius-full)',
+          borderRadius: 'var(--radius-lg)',
           padding: '10px 24px',
-          minHeight: 42,
-          transition: 'transform var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base)',
+          minHeight: 44,
+          transition: 'all var(--transition-fast)',
           '&:active': {
-            transform: 'translateY(1px)',
-          },
-          '@media (pointer: coarse)': {
-            minHeight: 44,
+            transform: 'scale(0.98)',
           },
         },
         contained: {
-          boxShadow: '0 10px 24px rgba(29,78,216,0.22)',
+          boxShadow: '0 4px 12px rgba(29,78,216,0.15)',
           '&:hover': {
-            boxShadow: 'var(--shadow-hover)',
+            boxShadow: '0 6px 16px rgba(29,78,216,0.2)',
           },
         },
         outlined: {
           borderWidth: 1.5,
+          borderColor: 'var(--color-border)',
+          color: 'var(--color-text-primary)',
+          '&:hover': {
+            borderWidth: 1.5,
+            backgroundColor: 'var(--color-surface-hover)',
+          },
         },
       },
     },
@@ -266,12 +276,10 @@ const theme = createTheme({
         root: {
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-card)',
-          border: '1px solid rgba(29,78,216,0.08)',
-          transition: 'transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base)',
+          border: '1px solid var(--color-border)',
+          transition: 'all var(--transition-normal)',
           '&:hover': {
-            transform: 'translateY(-4px)',
             boxShadow: 'var(--shadow-hover)',
-            borderColor: 'rgba(29,78,216,0.18)',
           },
         },
       },
@@ -286,18 +294,18 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(255,255,255,0.86)',
+          backgroundColor: 'rgba(255,255,255,0.9)',
           color: '#0F172A',
-          boxShadow: '0 1px 0 rgba(29,78,216,0.12)',
-          backdropFilter: 'blur(18px)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          backdropFilter: 'blur(12px)',
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 'var(--radius-full)',
-          fontWeight: 750,
+          borderRadius: 'var(--radius-md)',
+          fontWeight: 600,
         },
       },
     },
@@ -311,9 +319,9 @@ const theme = createTheme({
         root: {
           borderRadius: 'var(--radius-md)',
           backgroundColor: '#FFFFFF',
-          transition: 'box-shadow var(--transition-base), border-color var(--transition-base)',
+          transition: 'all var(--transition-fast)',
           '&.Mui-focused': {
-            boxShadow: '0 0 0 4px rgba(29,78,216,0.10)',
+            boxShadow: '0 0 0 3px rgba(29,78,216,0.15)',
           },
         },
         input: {
@@ -324,9 +332,9 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          transition: 'transform var(--transition-base), background-color var(--transition-base)',
+          transition: 'all var(--transition-fast)',
           '&:active': {
-            transform: 'scale(0.96)',
+            transform: 'scale(0.92)',
           },
           '@media (pointer: coarse)': {
             minWidth: 44,

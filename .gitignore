@@ -35,3 +35,7 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Spring Boot
+application-local.yml
+*-local.yml

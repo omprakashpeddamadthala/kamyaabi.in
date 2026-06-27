@@ -10,9 +10,9 @@ import Seo from '../components/common/Seo';
 import { galleryApi, GalleryImage } from '../api/galleryApi';
 
 const fallbackGalleryImages = [
-  '/assets/img/categorie/gallery1.webp', '/assets/img/categorie/gallery2.webp',
-  '/assets/img/categorie/gallery3.webp', '/assets/img/categorie/gallery4.webp',
-  '/assets/img/categorie/gallery5.webp', '/assets/img/categorie/gallery6.webp',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551809/kamyaabi/assets/img/categorie/gallery1.webp', 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551810/kamyaabi/assets/img/categorie/gallery2.webp',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551811/kamyaabi/assets/img/categorie/gallery3.webp', 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551813/kamyaabi/assets/img/categorie/gallery4.webp',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551814/kamyaabi/assets/img/categorie/gallery5.webp', 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551815/kamyaabi/assets/img/categorie/gallery6.webp',
 ];
 
 const AboutPage: React.FC = () => {
@@ -59,7 +59,7 @@ const AboutPage: React.FC = () => {
               </Typography>
             </Grid>
             <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Box component="img" src="/assets/img/about/aboutUS.webp" alt="About Kamyaabi" sx={{ maxWidth: '100%', maxHeight: 400, objectFit: 'contain', borderRadius: 3 }} />
+              <Box component="img" src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551800/kamyaabi/assets/img/about/aboutUS.webp" alt="About Kamyaabi" sx={{ maxWidth: '100%', maxHeight: 400, objectFit: 'contain', borderRadius: 3 }} />
             </Grid>
           </Grid>
         </Container>
