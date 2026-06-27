@@ -653,15 +653,10 @@ const ProductDetailPage: React.FC = () => {
 
             <DeliverySection
               user={user}
-              pincode={pincodeState.pincode}
-              setPincode={pincodeState.setPincode}
               pincodeResult={pincodeState.pincodeResult}
-              setPincodeResult={pincodeState.setPincodeResult}
               pincodeLoading={pincodeState.pincodeLoading}
               pincodeError={pincodeState.pincodeError}
-              setPincodeError={pincodeState.setPincodeError}
               hasNoAddress={pincodeState.hasNoAddress}
-              onCheckPincode={pincodeState.handleCheckPincode}
             />
 
             {showBoughtRecentlyBadge && reviewSummary && reviewSummary.recentBuyersCount > 0 && (
