@@ -103,6 +103,35 @@ class SettingsServiceImplTest {
     }
 
     @Test
+    void getAllMetadata_returnsEveryCatalogEntry_withTypesDefaultsAndValues() {
+        when(settingRepository.findById(any())).thenReturn(Optional.empty());
+
+        var metadata = settingsService.getAllMetadata();
+
+        assertThat(metadata).hasSize(com.kamyaabi.service.SettingsCatalog.DEFINITIONS.size());
+        assertThat(metadata).extracting(com.kamyaabi.dto.response.SettingMetadataResponse::key)
+                .contains(
+                        SettingsService.LOW_STOCK_THRESHOLD,
+                        SettingsService.CHATMITRA_API_TOKEN,
+                        SettingsService.AMAZON_STORE_URL);
+
+        var lowStock = metadata.stream()
+                .filter(m -> m.key().equals(SettingsService.LOW_STOCK_THRESHOLD))
+                .findFirst()
+                .orElseThrow();
+        assertThat(lowStock.dataType()).isEqualTo(com.kamyaabi.service.SettingDataType.NUMBER);
+        assertThat(lowStock.value()).isEqualTo("10");
+        assertThat(lowStock.defaultValue()).isEqualTo("10");
+        assertThat(lowStock.min()).isEqualTo(1);
+
+        var token = metadata.stream()
+                .filter(m -> m.key().equals(SettingsService.CHATMITRA_API_TOKEN))
+                .findFirst()
+                .orElseThrow();
+        assertThat(token.dataType()).isEqualTo(com.kamyaabi.service.SettingDataType.SECRET);
+    }
+
+    @Test
     void updateAll_acceptsValidNumericAndBoolean() {
         when(settingRepository.findById(any())).thenReturn(Optional.empty());
         when(settingRepository.save(any(Setting.class))).thenAnswer(inv -> inv.getArgument(0));
