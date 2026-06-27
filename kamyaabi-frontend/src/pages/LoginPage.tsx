@@ -197,22 +197,67 @@ const LoginPage: React.FC = () => {
   const googleBusy = loading || loginAttempted;
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      {/* GSC FIX: auth page is private — noindex. */}
-      <Seo title="Sign In" noindex />
-      <GoogleOAuthProvider clientId={clientId}>
-        <Card sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center', '&:hover': { transform: 'none' }, borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)' }}>
-          <Box
-            component="img"
-            src="/assets/img/klogo1.webp"
-            alt="Kamyaabi"
-            sx={{ height: 56, width: 'auto', mb: 1, mx: 'auto', display: 'block' }}
-          />
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Premium Dry Fruits Store
-          </Typography>
+    <Box sx={{ 
+      minHeight: '80vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      py: 8,
+      position: 'relative',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: '10%',
+        left: '20%',
+        width: '40vw',
+        height: '40vw',
+        bgcolor: 'var(--color-brand-primary)',
+        opacity: 0.05,
+        filter: 'blur(100px)',
+        borderRadius: '50%',
+        zIndex: 0,
+        pointerEvents: 'none',
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        bottom: '10%',
+        right: '20%',
+        width: '30vw',
+        height: '30vw',
+        bgcolor: 'var(--color-brand-secondary)',
+        opacity: 0.05,
+        filter: 'blur(80px)',
+        borderRadius: '50%',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }
+    }}>
+      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* GSC FIX: auth page is private — noindex. */}
+        <Seo title="Sign In" noindex />
+        <GoogleOAuthProvider clientId={clientId}>
+          <Card sx={{ 
+            p: { xs: 3, sm: 5 }, 
+            textAlign: 'center', 
+            '&:hover': { transform: 'none' }, 
+            borderRadius: 'var(--radius-2xl)', 
+            boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
+            border: '1px solid rgba(255,255,255,0.4)',
+            bgcolor: 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(20px)',
+          }}>
+            <Box
+              component="img"
+              src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551833/kamyaabi/assets/img/klogo1.webp"
+              alt="Kamyaabi"
+              sx={{ height: 64, width: 'auto', mb: 1, mx: 'auto', display: 'block', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }}
+            />
+            <Typography variant="body1" sx={{ color: 'var(--color-text-secondary)', fontWeight: 600, mb: 4, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: 'var(--text-xs)' }}>
+              Premium Dry Fruits
+            </Typography>
 
-          <Divider sx={{ mb: 4 }} />
+            <Divider sx={{ mb: 4, borderColor: 'rgba(0,0,0,0.06)' }} />
 
           <Typography variant="h5" sx={{ mb: 1 }}>
             Welcome Back
@@ -411,7 +456,8 @@ const LoginPage: React.FC = () => {
           </Box>
         </Card>
       </GoogleOAuthProvider>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

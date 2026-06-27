@@ -23,6 +23,8 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { Add, Remove, Delete, ShoppingBag, LocationOn, Person } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
@@ -84,6 +86,8 @@ const AddressSkeleton: React.FC = () => (
 const CartPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { cart, loading } = useAppSelector((state) => state.cart);
   const { token } = useAppSelector((state) => state.auth);
   const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
@@ -388,40 +392,65 @@ const CartPage: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Order Summary
-            </Typography>
+          <Card sx={{ 
+            p: 3, 
+            '&:hover': { transform: 'none' },
+            borderRadius: { xs: 'var(--radius-3xl) var(--radius-3xl) 0 0', md: 'var(--radius-2xl)' },
+            border: '1px solid rgba(0,0,0,0.05)',
+            boxShadow: { xs: '0 -10px 40px rgba(0,0,0,0.1)', md: '0 4px 20px rgba(0,0,0,0.03)' },
+            position: { xs: 'fixed', md: 'sticky' },
+            bottom: { xs: 0, md: 'auto' },
+            top: { md: 90 },
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            bgcolor: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(20px)',
+          }}>
+            <Box sx={{ display: { xs: 'flex', md: 'block' }, justifyContent: 'space-between', alignItems: 'center', mb: { xs: 2, md: 2 } }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'var(--font-display)', display: { xs: 'none', md: 'block' } }}>
+                Order Summary
+              </Typography>
+              {isMobile && (
+                <Box>
+                   <Typography variant="body2" sx={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Total</Typography>
+                   <Typography variant="h5" sx={{ fontWeight: 800, color: 'var(--color-text-primary)' }}>₹{cart.totalAmount}</Typography>
+                </Box>
+              )}
+            </Box>
 
-            {selectedAddress && (
-              <Box sx={{ mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                  DELIVER TO
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {selectedAddress.fullName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.pincode}
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+              {selectedAddress && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(29, 78, 216, 0.04)', borderRadius: 'var(--radius-xl)' }}>
+                  <Typography variant="caption" sx={{ color: 'var(--color-brand-primary)', fontWeight: 800, letterSpacing: '0.05em' }}>
+                    DELIVER TO
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5, color: 'var(--color-text-primary)' }}>
+                    {selectedAddress.fullName}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                    {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.pincode}
+                  </Typography>
+                </Box>
+              )}
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                <Typography sx={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Items ({cart.totalItems})</Typography>
+                <Typography sx={{ fontWeight: 700 }}>₹{cart.totalAmount}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography sx={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Delivery</Typography>
+                <Typography sx={{ color: 'var(--color-success)', fontWeight: 800 }}>FREE</Typography>
+              </Box>
+              <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.06)' }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>Total</Typography>
+                <Typography variant="h6" sx={{ color: 'var(--color-text-primary)', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
+                  ₹{cart.totalAmount}
                 </Typography>
               </Box>
-            )}
+            </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography color="text.secondary">Items ({cart.totalItems})</Typography>
-              <Typography>₹{cart.totalAmount}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography color="text.secondary">Delivery</Typography>
-              <Typography color="success.main">FREE</Typography>
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-              <Typography variant="h6">Total</Typography>
-              <Typography variant="h6" color="primary" fontWeight={700}>
-                ₹{cart.totalAmount}
-              </Typography>
-            </Box>
             <Button
               variant="contained"
               fullWidth
@@ -429,17 +458,36 @@ const CartPage: React.FC = () => {
               onClick={() => navigate('/checkout')}
               disabled={!selectedAddressId || addressLoading}
               startIcon={addressLoading ? <CircularProgress size={20} color="inherit" /> : undefined}
+              sx={{
+                bgcolor: 'var(--color-brand-primary)',
+                color: '#fff',
+                fontWeight: 800,
+                py: 1.5,
+                borderRadius: 'var(--radius-full)',
+                fontSize: '1rem',
+                textTransform: 'none',
+                boxShadow: '0 8px 20px rgba(29, 78, 216, 0.25)',
+                '&:hover': {
+                  bgcolor: 'var(--color-brand-primary-dark)',
+                  boxShadow: '0 12px 24px rgba(29, 78, 216, 0.35)',
+                  transform: 'translateY(-2px)'
+                },
+                '&:active': { transform: 'scale(0.98)' },
+              }}
             >
               {!hasAddresses ? 'Add Address to Proceed' : 'Proceed to Checkout'}
             </Button>
             {!hasAddresses && !addressLoading && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-                Please add a delivery address before checkout
+              <Typography variant="caption" sx={{ color: 'var(--color-error)', display: 'block', textAlign: 'center', mt: 1.5, fontWeight: 600 }}>
+                Please add a delivery address to checkout
               </Typography>
             )}
           </Card>
         </Grid>
       </Grid>
+      
+      {/* Spacer for mobile to prevent content hiding behind fixed card */}
+      {isMobile && <Box sx={{ height: 120 }} />}
 
       {}
       <AddressFormDialog

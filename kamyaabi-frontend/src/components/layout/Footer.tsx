@@ -4,7 +4,7 @@
  * - Visual-only tokenization of dark surface, muted text, spacing, and responsive layout.
  */
 import React from 'react';
-import { Box, Container, Typography, Link as MuiLink, Grid, Divider } from '@mui/material';
+import { Box, Container, Typography, Link as MuiLink, Grid, Divider, Stack } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -17,89 +17,92 @@ const Footer: React.FC = () => {
   return (
     <Box
       component="footer"
-      sx={{ bgcolor: "var(--color-surface-dark)", color: '#FFFFFF', pt: { xs: 4, sm: 6 }, pb: 3, mt: 'auto' }}
+      sx={{ 
+        bgcolor: 'var(--color-surface-dark)', 
+        color: '#f9fafb', 
+        pt: { xs: 6, md: 8 }, 
+        pb: { xs: 4, md: 4 }, 
+        mt: 'auto',
+        borderTop: '1px solid var(--color-border)',
+      }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={{ xs: 3, sm: 4, md: 5 }}>
+        <Grid container spacing={{ xs: 5, md: 8 }}>
+          {/* Brand Column */}
           <Grid item xs={12} md={4}>
-            <Box component={Link} to="/" sx={{ display: 'inline-block', mb: 2 }}>
+            <Box component={Link} to="/" sx={{ display: 'inline-block', mb: 3, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
               <Box
                 component="img"
-                src="/assets/img/klogo1.webp"
+                src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551833/kamyaabi/assets/img/klogo1.webp"
                 alt="Kamyaabi"
-                sx={{ height: 32, width: 'auto' }}
+                sx={{ height: 40, width: 'auto', filter: 'brightness(0) invert(1)' }}
               />
             </Box>
-            <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', lineHeight: 1.8, maxWidth: 360 }}>
+            <Typography variant="body2" sx={{ color: '#9ca3af', lineHeight: 1.8, maxWidth: 360, mb: 4, fontSize: '0.9rem' }}>
               Premium dry fruits sourced from the finest farms. Where freshness meets flavor —
               delivering quality and natural goodness in every bite.
             </Typography>
 
             <Typography
-              variant="subtitle1"
-              sx={{ mt: 3, mb: 1, fontWeight: 600 }}
+              variant="subtitle2"
+              sx={{ mb: 2, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}
             >
               Follow Us
             </Typography>
-            <SocialLinks size={24} color="#BBB" />
+            <SocialLinks size={22} color="#9ca3af" />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-              Quick Links
+          {/* Quick Links */}
+          <Grid item xs={6} sm={4} md={2}>
+            <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Company
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-              <MuiLink component={Link} to="/" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
+            <Stack spacing={2}>
+              <MuiLink component={Link} to="/" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
                 Home
               </MuiLink>
-              <MuiLink component={Link} to="/about" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
+              <MuiLink component={Link} to="/about" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
                 About Us
               </MuiLink>
-              <MuiLink component={Link} to="/products" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
-                Products
+              <MuiLink component={Link} to="/products" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
+                Shop
               </MuiLink>
-              <MuiLink component={Link} to="/contact" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
-                Contact
+              <MuiLink component={Link} to="/blog" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
+                Journal
               </MuiLink>
-              <MuiLink component={Link} to="/blog" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
-                Blogs
-              </MuiLink>
-            </Box>
+            </Stack>
           </Grid>
 
-          <Grid item xs={12} sm={6} md={2}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+          {/* Support */}
+          <Grid item xs={6} sm={4} md={2}>
+            <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Support
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
-              <MuiLink component={Link} to="/track-order" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
+            <Stack spacing={2}>
+              <MuiLink component={Link} to="/contact" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
+                Contact Us
+              </MuiLink>
+              <MuiLink component={Link} to="/track-order" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
                 Track Order
               </MuiLink>
-              <MuiLink
-                component={Link}
-                to="/refund-policy"
-                underline="hover"
-                sx={{ color: 'var(--color-text-muted)' }}
-              >
+              <MuiLink component={Link} to="/refund-policy" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
                 Refund Policy
               </MuiLink>
-              <MuiLink component={Link} to="/contact" underline="hover" sx={{ color: 'var(--color-text-muted)' }}>
-                Contact Support
-              </MuiLink>
-            </Box>
+            </Stack>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-              Contact Us
+          {/* Contact Details */}
+          <Grid item xs={12} sm={4} md={4}>
+            <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+              Get in Touch
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25, mb: 1.5 }}>
-              <LocationOnIcon
-                sx={{ color: 'var(--color-text-muted)', fontSize: 20, mt: '3px', flexShrink: 0 }}
-                aria-hidden="true"
-              />
-              <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-                <Box component="span" sx={{ fontWeight: 700, color: '#fff', display: 'block' }}>
+            
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 3 }}>
+              <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 1, borderRadius: 'var(--radius-md)', display: 'flex', mt: -0.5 }}>
+                <LocationOnIcon sx={{ color: 'var(--color-brand-primary)', fontSize: 20 }} aria-hidden="true" />
+              </Box>
+              <Typography variant="body2" sx={{ color: '#9ca3af', lineHeight: 1.6, fontSize: '0.9rem' }}>
+                <Box component="span" sx={{ fontWeight: 600, color: '#e5e7eb', display: 'block', mb: 0.5 }}>
                   SM ENTERPRISES
                 </Box>
                 House No. 2-114/5, Srinivasa Nagar, Aganampudi,
@@ -109,20 +112,28 @@ const Footer: React.FC = () => {
                 Andhra Pradesh, India
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1 }}>
-              <EmailIcon sx={{ color: 'var(--color-text-muted)', fontSize: 18 }} aria-hidden="true" />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 1, borderRadius: 'var(--radius-md)', display: 'flex' }}>
+                <EmailIcon sx={{ color: 'var(--color-brand-primary)', fontSize: 18 }} aria-hidden="true" />
+              </Box>
               <MuiLink
                 href={`mailto:${config.supportEmail}`}
-                sx={{ color: 'var(--color-text-muted)', '&:hover': { color: '#fff' } }}
+                underline="none"
+                sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}
               >
                 {config.supportEmail}
               </MuiLink>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 1 }}>
-              <PhoneIcon sx={{ color: 'var(--color-text-muted)', fontSize: 18 }} aria-hidden="true" />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ bgcolor: 'rgba(255,255,255,0.05)', p: 1, borderRadius: 'var(--radius-md)', display: 'flex' }}>
+                <PhoneIcon sx={{ color: 'var(--color-brand-primary)', fontSize: 18 }} aria-hidden="true" />
+              </Box>
               <MuiLink
                 href={config.supportPhoneTel}
-                sx={{ color: 'var(--color-text-muted)', '&:hover': { color: '#fff' } }}
+                underline="none"
+                sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}
               >
                 {config.supportPhoneDisplay}
               </MuiLink>
@@ -131,14 +142,20 @@ const Footer: React.FC = () => {
           </Grid>
         </Grid>
 
-        <Divider sx={{ my: 4, borderColor: '#333' }} />
+        <Divider sx={{ mt: 6, mb: 4, borderColor: 'rgba(255,255,255,0.1)' }} />
 
-        <Typography variant="body2" align="center" sx={{ color: '#777' }}>
-          &copy; {new Date().getFullYear()} Kamyaabi. All rights reserved.
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.85rem' }}>
+            &copy; {new Date().getFullYear()} Kamyaabi. All rights reserved.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box component="img" src="https://res.cloudinary.com/dsibez7to/image/upload/v1782551833/kamyaabi/assets/img/klogo1.webp" alt="Kamyaabi" sx={{ height: 20, opacity: 0.3, filter: 'grayscale(1) invert(1)' }} />
+          </Box>
+        </Box>
       </Container>
     </Box>
   );
 };
 
 export default Footer;
+

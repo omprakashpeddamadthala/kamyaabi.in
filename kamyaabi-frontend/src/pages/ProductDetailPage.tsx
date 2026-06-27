@@ -330,296 +330,307 @@ const ProductDetailPage: React.FC = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                mb: 1,
-                fontWeight: 600,
-                fontSize: 'var(--text-3xl)',
-                lineHeight: 1.3,
-                fontFamily: 'var(--font-display)',
-              }}
-            >
-              {product.name}
-            </Typography>
-
-            {hasRating && reviewSummary && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                <Typography variant="body2" fontWeight={600}>
-                  {reviewSummary.averageRating.toFixed(1)}
-                </Typography>
-                <Rating
-                  value={reviewSummary.averageRating}
-                  precision={0.5}
-                  readOnly
-                  size="small"
-                  sx={{ color: '#F59E0B' }}
-                />
-                <MuiLink
-                  href="#reviews"
-                  underline="hover"
-                  variant="body2"
-                  sx={{ color: '#007185' }}
-                >
-                  ({reviewSummary.totalReviews})
-                </MuiLink>
-              </Box>
-            )}
-
-            <Divider sx={{ mb: 2 }} />
-
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
-              {hasDiscount && (
                 <Typography
-                  variant="h6"
-                  sx={{ color: '#CC0C39', fontWeight: 500, fontSize: '1.1rem' }}
+                  variant="h4"
+                  component="h1"
+                  sx={{
+                    mb: 1,
+                    fontWeight: 800,
+                    fontSize: { xs: '2rem', md: 'var(--text-3xl)' },
+                    lineHeight: 1.2,
+                    fontFamily: 'var(--font-display)',
+                    letterSpacing: '-0.02em',
+                    color: 'var(--color-text-primary)'
+                  }}
                 >
-                  -{discountPercent}%
+                  {product.name}
                 </Typography>
-              )}
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 600,
-                  fontSize: 'var(--text-4xl)',
-                  color: '#0F1111',
-                  lineHeight: 1,
-                }}
-              >
-                <Box component="span" sx={{ fontSize: '0.55em', mr: 0.25 }}>₹</Box>
-                {effectivePrice}
-              </Typography>
-              {pricePer100g != null && (
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
-                  (₹{pricePer100g}/100 g)
-                </Typography>
-              )}
-            </Box>
 
-            {hasDiscount && (
-              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                M.R.P.:{' '}
-                <Box component="span" sx={{ textDecoration: 'line-through' }}>
-                  ₹{product.price}
+                {hasRating && reviewSummary && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                    <Typography variant="body2" fontWeight={800} sx={{ color: 'var(--color-text-primary)' }}>
+                      {reviewSummary.averageRating.toFixed(1)}
+                    </Typography>
+                    <Rating
+                      value={reviewSummary.averageRating}
+                      precision={0.5}
+                      readOnly
+                      size="small"
+                      sx={{ color: '#F59E0B' }}
+                    />
+                    <MuiLink
+                      href="#reviews"
+                      underline="hover"
+                      variant="body2"
+                      sx={{ color: 'var(--color-brand-primary)', fontWeight: 600 }}
+                    >
+                      ({reviewSummary.totalReviews})
+                    </MuiLink>
+                  </Box>
+                )}
+
+                <Divider sx={{ mb: 2, borderColor: 'rgba(0,0,0,0.06)' }} />
+
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, flexWrap: 'wrap', mb: 0.5 }}>
+                  {hasDiscount && (
+                    <Typography
+                      variant="h6"
+                      sx={{ color: 'var(--color-error)', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.01em' }}
+                    >
+                      -{discountPercent}%
+                    </Typography>
+                  )}
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: { xs: '2.5rem', md: '3rem' },
+                      color: 'var(--color-text-primary)',
+                      lineHeight: 1,
+                      letterSpacing: '-0.03em',
+                      fontFamily: 'var(--font-mono)'
+                    }}
+                  >
+                    <Box component="span" sx={{ fontSize: '0.6em', mr: 0.25, fontWeight: 700 }}>₹</Box>
+                    {effectivePrice}
+                  </Typography>
+                  {pricePer100g != null && (
+                    <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', ml: 0.5, fontWeight: 600 }}>
+                      (₹{pricePer100g}/100g)
+                    </Typography>
+                  )}
                 </Box>
-              </Typography>
-            )}
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Inclusive of all taxes
-            </Typography>
+                {hasDiscount && (
+                  <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', mb: 0.5, fontWeight: 500 }}>
+                    M.R.P.:{' '}
+                    <Box component="span" sx={{ textDecoration: 'line-through', fontFamily: 'var(--font-mono)' }}>
+                      ₹{product.price}
+                    </Box>
+                  </Typography>
+                )}
 
-            <Typography
-              variant="subtitle1"
-              sx={{
-                color: inStock ? '#007600' : '#CC0C39',
-                fontWeight: 600,
-                fontSize: '1rem',
-                mb: 1.5,
-              }}
-            >
-              {inStock ? 'In stock' : 'Out of stock'}
-            </Typography>
-
-            {product.variations && product.variations.length > 1 && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#0F1111' }}>
-                  Available Sizes:
+                <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', mb: 2, fontWeight: 500 }}>
+                  Inclusive of all taxes
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {product.variations.map((v) => {
-                    const isSelected = v.id === product.id;
-                    const vHasDiscount = v.discountPrice !== null && v.discountPrice > 0 && v.discountPrice < v.price;
-                    const vPrice = vHasDiscount ? v.discountPrice : v.price;
-                    const outOfStock = v.stock === 0;
-                    return (
-                      <Box
-                        key={v.id}
-                        onClick={() => {
-                          if (!isSelected && v.slug) {
-                            navigate(productUrl({ slug: v.slug, categorySlug: product.categorySlug }));
-                          }
-                        }}
+
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    color: inStock ? 'var(--color-success)' : 'var(--color-error)',
+                    fontWeight: 800,
+                    fontSize: '1.1rem',
+                    mb: 2,
+                  }}
+                >
+                  {inStock ? 'In stock' : 'Out of stock'}
+                </Typography>
+
+                {product.variations && product.variations.length > 1 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Available Sizes
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                      {product.variations.map((v) => {
+                        const isSelected = v.id === product.id;
+                        const vHasDiscount = v.discountPrice !== null && v.discountPrice > 0 && v.discountPrice < v.price;
+                        const vPrice = vHasDiscount ? v.discountPrice : v.price;
+                        const outOfStock = v.stock === 0;
+                        return (
+                          <Box
+                            key={v.id}
+                            onClick={() => {
+                              if (!isSelected && v.slug) {
+                                navigate(productUrl({ slug: v.slug, categorySlug: product.categorySlug }));
+                              }
+                            }}
+                            sx={{
+                              border: '2px solid',
+                              borderColor: isSelected ? 'var(--color-brand-primary)' : outOfStock ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.1)',
+                              borderRadius: 'var(--radius-xl)',
+                              px: 2.5,
+                              py: 1.5,
+                              cursor: outOfStock && !isSelected ? 'not-allowed' : 'pointer',
+                              bgcolor: isSelected ? 'rgba(29, 78, 216, 0.05)' : outOfStock ? 'var(--color-surface-bg)' : '#fff',
+                              opacity: outOfStock && !isSelected ? 0.6 : 1,
+                              transition: 'all var(--transition-normal)',
+                              '&:hover': {
+                                borderColor: outOfStock && !isSelected ? 'rgba(0,0,0,0.05)' : 'var(--color-brand-primary)',
+                                transform: outOfStock && !isSelected ? 'none' : 'translateY(-2px)',
+                                boxShadow: outOfStock && !isSelected ? 'none' : '0 4px 12px rgba(29, 78, 216, 0.1)',
+                              },
+                              minWidth: 90,
+                              textAlign: 'center',
+                              position: 'relative',
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 800,
+                                color: isSelected ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
+                                fontSize: '1.05rem',
+                              }}
+                            >
+                              {v.weight} {v.unit}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: isSelected ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
+                                fontWeight: 600,
+                                fontFamily: 'var(--font-mono)'
+                              }}
+                            >
+                              ₹{vPrice}
+                            </Typography>
+                            {outOfStock && (
+                              <Typography variant="caption" sx={{ display: 'block', color: 'var(--color-error)', fontWeight: 700, mt: 0.5 }}>
+                                Out of stock
+                              </Typography>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                )}
+
+                {product.categoryName && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                    <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>Category:</Typography>
+                    <MuiLink
+                      component={Link}
+                      to={`/products?category=${product.categoryId}`}
+                      underline="hover"
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: 'var(--color-brand-primary)' }}
+                    >
+                      {product.categoryName}
+                    </MuiLink>
+                  </Box>
+                )}
+
+                {product.tags && product.tags.length > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+                    <LocalOffer sx={{ fontSize: 16, color: 'var(--color-text-muted)' }} />
+                    {product.tags.map((tag) => (
+                      <Chip
+                        key={tag.id}
+                        label={tag.name}
+                        size="small"
+                        variant="outlined"
+                        component={Link}
+                        to={`/products?tag=${tag.slug}`}
+                        clickable
+                        sx={{ fontSize: 'var(--text-xs)', fontWeight: 700, borderRadius: 'var(--radius-full)' }}
+                      />
+                    ))}
+                  </Box>
+                )}
+
+                {(!user || user.role !== 'ADMIN') && (
+                  <Box ref={ctaRef} sx={{ mb: 3, p: 3, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-2xl)', border: '1px solid rgba(0,0,0,0.04)' }}>
+                    <FormControl size="small" sx={{ mb: 2.5, minWidth: 120 }}>
+                      <Select
+                        id="qty-select"
+                        value={String(Math.min(quantity, Math.max(product.stock, 1)))}
+                        onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value))))}
+                        disabled={!inStock}
+                        IconComponent={KeyboardArrowDown}
+                        inputProps={{ 'aria-label': 'Quantity' }}
                         sx={{
-                          border: '2px solid',
-                          borderColor: isSelected ? 'primary.main' : outOfStock ? '#E0E0E0' : '#D5D9D9',
-                          borderRadius: 2,
-                          px: 2,
-                          py: 1,
-                          cursor: outOfStock && !isSelected ? 'not-allowed' : 'pointer',
-                          bgcolor: isSelected ? 'primary.50' : outOfStock ? '#FAFAFA' : '#fff',
-                          opacity: outOfStock && !isSelected ? 0.6 : 1,
-                          transition: 'all 0.2s ease',
+                          borderRadius: 'var(--radius-full)',
+                          bgcolor: '#fff',
+                          fontWeight: 700,
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.1)' },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.2)' },
+                          '& .MuiSelect-select': { py: 1.25, pl: 2.5 },
+                        }}
+                        renderValue={(v) => `Qty: ${v}`}
+                      >
+                        {Array.from({ length: Math.min(Math.max(product.stock, 1), 10) }, (_, i) => i + 1).map((n) => (
+                          <MenuItem key={n} value={String(n)} sx={{ fontWeight: 600 }}>{n}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                      <Button
+                        fullWidth
+                        size="large"
+                        onClick={handleAddToCart}
+                        disabled={!inStock || isAdding}
+                        startIcon={
+                          isAdding ? <CircularProgress size={20} sx={{ color: '#FFFFFF' }} /> :
+                          justAdded ? <Check /> : <ShoppingCart />
+                        }
+                        sx={{
+                          bgcolor: justAdded ? '#10b981' : 'var(--color-brand-primary)',
+                          color: '#FFFFFF',
+                          borderRadius: 'var(--radius-full)',
+                          fontWeight: 800,
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          py: 1.5,
+                          boxShadow: justAdded ? '0 8px 20px rgba(16, 185, 129, 0.3)' : '0 8px 20px rgba(29, 78, 216, 0.25)',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           '&:hover': {
-                            borderColor: outOfStock && !isSelected ? '#E0E0E0' : 'primary.main',
-                            boxShadow: outOfStock && !isSelected ? 'none' : '0 1px 5px rgba(0,0,0,0.1)',
+                            bgcolor: justAdded ? '#059669' : 'var(--color-brand-primary-dark)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: justAdded ? '0 12px 24px rgba(16, 185, 129, 0.4)' : '0 12px 24px rgba(29, 78, 216, 0.35)',
                           },
-                          minWidth: 80,
-                          textAlign: 'center',
-                          position: 'relative',
+                          '&:active': { transform: 'scale(0.98)' },
+                          '&.Mui-disabled': {
+                            bgcolor: 'rgba(0,0,0,0.05)',
+                            color: 'rgba(0,0,0,0.3)',
+                          },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: isSelected ? 700 : 500,
-                            color: isSelected ? 'primary.main' : '#0F1111',
-                            fontSize: 'var(--text-sm)',
-                          }}
-                        >
-                          {v.weight} {v.unit}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: isSelected ? 'primary.dark' : 'text.secondary',
-                            fontWeight: 500,
-                          }}
-                        >
-                          ₹{vPrice}
-                        </Typography>
-                        {outOfStock && (
-                          <Typography variant="caption" sx={{ display: 'block', color: '#CC0C39', fontSize: 'var(--text-xs)' }}>
-                            Out of stock
-                          </Typography>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              </Box>
-            )}
+                        {!inStock ? 'Out of Stock' :
+                         isAdding ? 'Adding...' :
+                         justAdded ? 'Added to Cart!' : 'Add to Cart'}
+                      </Button>
 
-            {product.categoryName && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">Category:</Typography>
-                <MuiLink
-                  component={Link}
-                  to={`/products?category=${product.categoryId}`}
-                  underline="hover"
-                  variant="body2"
-                  color="primary"
-                  sx={{ fontWeight: 500 }}
-                >
-                  {product.categoryName}
-                </MuiLink>
-              </Box>
-            )}
+                      <Button
+                        fullWidth
+                        size="large"
+                        onClick={handleBuyNow}
+                        disabled={!inStock || isAdding}
+                        startIcon={<FlashOn />}
+                        sx={{
+                          bgcolor: 'var(--color-brand-secondary)',
+                          color: 'var(--color-surface-dark)',
+                          borderRadius: 'var(--radius-full)',
+                          fontWeight: 800,
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          py: 1.5,
+                          boxShadow: '0 8px 20px rgba(245, 158, 11, 0.25)',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            bgcolor: '#d97706',
+                            color: '#fff',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 12px 24px rgba(245, 158, 11, 0.35)',
+                          },
+                          '&:active': { transform: 'scale(0.98)' },
+                          '&.Mui-disabled': {
+                            bgcolor: 'rgba(0,0,0,0.05)',
+                            color: 'rgba(0,0,0,0.3)',
+                          },
+                        }}
+                      >
+                        Buy Now
+                      </Button>
+                    </Box>
 
-            {product.tags && product.tags.length > 0 && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
-                <LocalOffer sx={{ fontSize: 16, color: 'text.secondary' }} />
-                {product.tags.map((tag) => (
-                  <Chip
-                    key={tag.id}
-                    label={tag.name}
-                    size="small"
-                    variant="outlined"
-                    component={Link}
-                    to={`/products?tag=${tag.slug}`}
-                    clickable
-                    sx={{ fontSize: 'var(--text-sm)' }}
-                  />
-                ))}
-              </Box>
-            )}
-
-            {(!user || user.role !== 'ADMIN') && (
-              <Box ref={ctaRef} sx={{ mb: 2 }}>
-                <FormControl size="small" sx={{ mb: 2, minWidth: 180 }}>
-                  <Select
-                    id="qty-select"
-                    value={String(Math.min(quantity, Math.max(product.stock, 1)))}
-                    onChange={(e) => setQuantity(Math.max(1, Math.min(product.stock, Number(e.target.value))))}
-                    disabled={!inStock}
-                    IconComponent={KeyboardArrowDown}
-                    inputProps={{ 'aria-label': 'Quantity' }}
-                    sx={{
-                      borderRadius: 2,
-                      bgcolor: 'var(--color-surface-bg)',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: '#D5D9D9' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#888C8C' },
-                      '& .MuiSelect-select': { py: 1.1, pl: 2 },
-                    }}
-                    renderValue={(v) => `Quantity: ${v}`}
-                  >
-                    {Array.from({ length: Math.min(Math.max(product.stock, 1), 10) }, (_, i) => i + 1).map((n) => (
-                      <MenuItem key={n} value={String(n)}>{n}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5 }}>
-                  <Button
-                    fullWidth
-                    size="large"
-                    onClick={handleAddToCart}
-                    disabled={!inStock || isAdding}
-                    startIcon={
-                      isAdding ? <CircularProgress size={20} sx={{ color: '#FFFFFF' }} /> :
-                      justAdded ? <Check /> : <ShoppingCart />
-                    }
-                    sx={{
-                      bgcolor: 'var(--color-brand-primary)',
-                      color: '#FFFFFF',
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      fontSize: 'var(--text-base)',
-                      textTransform: 'none',
-                      py: 1.25,
-                      boxShadow: '0 2px 5px rgba(213,217,217,.5)',
-                      border: '1px solid var(--color-brand-primary-dark)',
-                      '&:hover': {
-                        bgcolor: '#1E40AF',
-                        boxShadow: '0 2px 6px rgba(213,217,217,.6)',
-                      },
-                      '&.Mui-disabled': {
-                        bgcolor: 'var(--color-surface-bg)',
-                        color: '#A0A0A0',
-                        border: '1px solid #E0E0E0',
-                      },
-                    }}
-                  >
-                    {!inStock ? 'Out of Stock' :
-                     isAdding ? 'Adding...' :
-                     justAdded ? 'Added to Cart!' : 'Add to Cart'}
-                  </Button>
-
-                  <Button
-                    fullWidth
-                    size="large"
-                    onClick={handleBuyNow}
-                    disabled={!inStock || isAdding}
-                    startIcon={<FlashOn />}
-                    sx={{
-                      bgcolor: 'var(--color-brand-secondary)',
-                      color: '#0F1111',
-                      borderRadius: 2,
-                      fontWeight: 600,
-                      fontSize: 'var(--text-base)',
-                      textTransform: 'none',
-                      py: 1.25,
-                      boxShadow: '0 2px 5px rgba(213,217,217,.5)',
-                      border: '1px solid #B45309',
-                      '&:hover': {
-                        bgcolor: '#B45309',
-                        boxShadow: '0 2px 6px rgba(213,217,217,.6)',
-                      },
-                      '&.Mui-disabled': {
-                        bgcolor: 'var(--color-surface-bg)',
-                        color: '#A0A0A0',
-                        border: '1px solid #E0E0E0',
-                      },
-                    }}
-                  >
-                    Buy Now
-                  </Button>
-                </Box>
-
-                <WishlistToggleButton />
-              </Box>
-            )}
+                    <Box sx={{ mt: 2 }}>
+                      <WishlistToggleButton />
+                    </Box>
+                  </Box>
+                )}
 
             <Box
               ref={trustReveal.ref}
