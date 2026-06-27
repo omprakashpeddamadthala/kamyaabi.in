@@ -159,7 +159,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
             alt={product.name}
             sx={{
               objectFit: 'contain',
-              height: { xs: 150, sm: 200 },
+              height: { xs: 120, sm: 200 },
               width: '100%',
               transition: 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1)',
               p: 2,
