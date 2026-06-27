@@ -27,6 +27,7 @@ class WishlistMapperTest {
                 .id(10L)
                 .name("Cashews")
                 .slug("cashews")
+                .category(Category.builder().id(1L).name("Dry Fruits").slug("dry-fruits").build())
                 .price(new BigDecimal("899.00"))
                 .discountPrice(new BigDecimal("799.00"))
                 .stock(50)
@@ -54,6 +55,7 @@ class WishlistMapperTest {
         assertThat(itemResponse.productId()).isEqualTo(10L);
         assertThat(itemResponse.productName()).isEqualTo("Cashews");
         assertThat(itemResponse.productSlug()).isEqualTo("cashews");
+        assertThat(itemResponse.categorySlug()).isEqualTo("dry-fruits");
         assertThat(itemResponse.productImageUrl()).isEqualTo("cashews.jpg");
         assertThat(itemResponse.productPrice()).isEqualByComparingTo(new BigDecimal("899.00"));
         assertThat(itemResponse.productDiscountPrice()).isEqualByComparingTo(new BigDecimal("799.00"));

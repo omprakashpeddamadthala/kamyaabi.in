@@ -25,6 +25,7 @@ import { addToCart, optimisticAddToCart } from '../../features/cart/cartSlice';
 import { toggleWishlistItem } from '../../features/wishlist/wishlistSlice';
 import { useFlyToCart } from './useFlyToCart';
 import { withCloudinaryTransform } from '../../utils/cloudinary';
+import { productUrl } from '../../utils/productUrl';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../../config/images';
 import { reviewApi } from '../../api/reviewApi';
 
@@ -149,7 +150,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
           transform: 'translateY(0)',
         },
       }}
-      onClick={() => navigate(`/products/${product.slug ?? product.id}`)}
+      onClick={() => navigate(productUrl(product))}
     >
       <Box sx={{ position: 'relative', overflow: 'hidden' }}>
         <CardMedia

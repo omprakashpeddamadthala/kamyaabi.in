@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from './useAppDispatch';
 import {
   fetchProductById,
@@ -7,29 +7,38 @@ import {
   clearSelectedProduct,
   fetchProducts,
 } from '../features/product/productSlice';
+import { productUrl } from '../utils/productUrl';
 
-export function useProductData(slugParam: string | undefined) {
+export function useProductData(productSlug: string | undefined) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const paramIsNumericId = !!slugParam && /^\d+$/.test(slugParam);
+  const location = useLocation();
+  const paramIsNumericId = !!productSlug && /^\d+$/.test(productSlug);
   const { selectedProduct: product, products } = useAppSelector((s) => s.products);
 
   useEffect(() => {
-    if (slugParam) {
+    if (productSlug) {
       if (paramIsNumericId) {
-        dispatch(fetchProductById(Number(slugParam)));
+        dispatch(fetchProductById(Number(productSlug)));
       } else {
-        dispatch(fetchProductBySlug(slugParam));
+        dispatch(fetchProductBySlug(productSlug));
       }
     }
     return () => { dispatch(clearSelectedProduct()); };
-  }, [dispatch, slugParam, paramIsNumericId]);
+  }, [dispatch, productSlug, paramIsNumericId]);
 
+  // Canonicalize the URL once the product is loaded: legacy numeric-id URLs,
+  // the flat /products/:slug form, and any mismatched categorySlug all redirect
+  // (client-side 301-equivalent) to /products/:categorySlug/:productSlug.
   useEffect(() => {
-    if (paramIsNumericId && product?.slug) {
-      navigate(`/products/${product.slug}`, { replace: true });
+    if (!product?.slug) return;
+    // Avoid redirecting from a stale product still in the store mid-transition.
+    if (!paramIsNumericId && product.slug !== productSlug) return;
+    const canonical = productUrl(product);
+    if (location.pathname !== canonical) {
+      navigate(canonical, { replace: true });
     }
-  }, [paramIsNumericId, product?.slug, navigate]);
+  }, [product, productSlug, paramIsNumericId, location.pathname, navigate]);
 
   const productId = product?.id;
   useEffect(() => {

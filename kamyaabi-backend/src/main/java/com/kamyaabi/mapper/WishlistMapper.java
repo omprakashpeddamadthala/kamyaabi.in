@@ -32,6 +32,7 @@ public class WishlistMapper {
                 .productId(product.getId())
                 .productName(product.getName())
                 .productSlug(product.getSlug())
+                .categorySlug(product.getCategory() != null ? product.getCategory().getSlug() : null)
                 .productImageUrl(product.getImageUrl())
                 .productPrice(product.getPrice())
                 .productDiscountPrice(product.getDiscountPrice())

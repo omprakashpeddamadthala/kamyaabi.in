@@ -76,6 +76,7 @@ public class ProductMapper {
                 .images(imageResponses)
                 .categoryId(product.getCategory().getId())
                 .categoryName(product.getCategory().getName())
+                .categorySlug(product.getCategory().getSlug())
                 .tags(tagResponses)
                 .stock(product.getStock())
                 .weight(product.getWeight())

@@ -11,6 +11,7 @@ public record WishlistItemResponse(
         Long productId,
         String productName,
         String productSlug,
+        String categorySlug,
         String productImageUrl,
         BigDecimal productPrice,
         BigDecimal productDiscountPrice,

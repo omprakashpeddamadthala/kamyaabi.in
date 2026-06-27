@@ -50,6 +50,7 @@ import { usePublicSettings } from '../hooks/usePublicSettings';
 import { useProductData } from '../hooks/useProductData';
 import { useProductReviews } from '../hooks/useProductReviews';
 import { usePincodeCheck } from '../hooks/usePincodeCheck';
+import { productUrl } from '../utils/productUrl';
 import { revealSx, useRevealOnScroll } from '../hooks/useRevealOnScroll';
 import { parseDescriptionBullets, parseWeightInGrams } from '../utils/productDetail';
 import ProductDetailSkeleton from '../components/product/ProductDetailSkeleton';
@@ -66,7 +67,8 @@ import ReviewImageLightboxDialog from '../components/product/ReviewImageLightbox
 import StickyAddToCartBar from '../components/product/StickyAddToCartBar';
 
 const ProductDetailPage: React.FC = () => {
-  const { slug: slugParam } = useParams<{ slug: string }>();
+  const { slug: flatSlug, productSlug } = useParams<{ slug?: string; productSlug?: string }>();
+  const slugParam = productSlug ?? flatSlug;
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const theme = useTheme();
@@ -205,8 +207,9 @@ const ProductDetailPage: React.FC = () => {
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
 
   // GSC FIX: build per-product SEO metadata + schema.org structured data.
-  const productUrl = `${config.brandSiteUrl}/products/${product.slug}`;
-  const seoCanonical = product.canonicalUrl || productUrl;
+  const productPath = productUrl(product);
+  const productAbsoluteUrl = `${config.brandSiteUrl}${productPath}`;
+  const seoCanonical = product.canonicalUrl || productAbsoluteUrl;
   const plainDescription = (product.description || '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
@@ -227,7 +230,7 @@ const ProductDetailPage: React.FC = () => {
     brand: { '@type': 'Brand', name: 'Kamyaabi' },
     offers: {
       '@type': 'Offer',
-      url: productUrl,
+      url: productAbsoluteUrl,
       priceCurrency: 'INR',
       price: effectivePrice,
       availability: inStock
@@ -251,7 +254,20 @@ const ProductDetailPage: React.FC = () => {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
       { '@type': 'ListItem', position: 2, name: 'Products', item: `${config.brandSiteUrl}/products` },
-      { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
+      ...(product.categoryName
+        ? [{
+            '@type': 'ListItem',
+            position: 3,
+            name: product.categoryName,
+            item: `${config.brandSiteUrl}/products?category=${product.categoryId}`,
+          }]
+        : []),
+      {
+        '@type': 'ListItem',
+        position: product.categoryName ? 4 : 3,
+        name: product.name,
+        item: productAbsoluteUrl,
+      },
     ],
   };
 
@@ -281,6 +297,16 @@ const ProductDetailPage: React.FC = () => {
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
           <MuiLink component={Link} to="/products" underline="hover" color="inherit">Products</MuiLink>
+          {product.categoryName && (
+            <MuiLink
+              component={Link}
+              to={`/products?category=${product.categoryId}`}
+              underline="hover"
+              color="inherit"
+            >
+              {product.categoryName}
+            </MuiLink>
+          )}
           <Typography color="text.primary" fontWeight={500}>{product.name}</Typography>
         </Breadcrumbs>
       </Container>
@@ -411,7 +437,9 @@ const ProductDetailPage: React.FC = () => {
                       <Box
                         key={v.id}
                         onClick={() => {
-                          if (!isSelected && v.slug) navigate(`/products/${v.slug}`);
+                          if (!isSelected && v.slug) {
+                            navigate(productUrl({ slug: v.slug, categorySlug: product.categorySlug }));
+                          }
                         }}
                         sx={{
                           border: '2px solid',
