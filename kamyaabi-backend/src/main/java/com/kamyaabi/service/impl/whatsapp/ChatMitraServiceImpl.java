@@ -1,6 +1,7 @@
 package com.kamyaabi.service.impl.whatsapp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kamyaabi.config.AppProperties;
 import com.kamyaabi.exception.BusinessException;
 import com.kamyaabi.service.SettingsService;
@@ -59,23 +60,64 @@ public class ChatMitraServiceImpl implements ChatMitraService {
             throw new BusinessException("ChatMitra OTP template is not configured");
         }
 
-        TemplateSendRequest request = TemplateSendRequest.builder()
-                .templateName(templateName)
-                .language(props.getLanguage())
-                .senderId(senderId == null || senderId.isBlank() ? null : senderId)
-                .phoneNumber(phoneNumber)
-                .components(List.of(
-                        TemplateComponent.builder()
-                                .type("body")
-                                .parameters(List.of(
-                                        TemplateParameter.builder()
-                                                .type("text")
-                                                .text(otp)
-                                                .build()
-                                ))
-                                .build()
-                ))
-                .build();
+        String finalBaseUrl = baseUrl.replaceAll("/+$", "");
+        boolean useDeveloperApi = false;
+
+        if (finalBaseUrl.contains("backend.chatmitra.com/v2/client")) {
+            finalBaseUrl = "https://backend.chatmitra.com/developer/api";
+            useDeveloperApi = true;
+        } else if (finalBaseUrl.contains("/developer/api")) {
+            useDeveloperApi = true;
+        }
+
+        Object requestPayload;
+        String requestUrl;
+
+        if (useDeveloperApi) {
+            requestUrl = finalBaseUrl + "/send_message";
+            requestPayload = DeveloperApiSendRequest.builder()
+                    .recipientMobileNumber(phoneNumber)
+                    .messages(List.of(
+                            DeveloperApiMessage.builder()
+                                    .kind("template")
+                                    .template(DeveloperApiTemplate.builder()
+                                            .name(templateName)
+                                            .language(props.getLanguage())
+                                            .components(List.of(
+                                                    DeveloperApiComponent.builder()
+                                                            .type("body")
+                                                            .parameters(List.of(
+                                                                    DeveloperApiParameter.builder()
+                                                                            .type("text")
+                                                                            .text(otp)
+                                                                            .build()
+                                                            ))
+                                                            .build()
+                                            ))
+                                            .build())
+                                    .build()
+                    ))
+                    .build();
+        } else {
+            requestUrl = finalBaseUrl + "/send_template";
+            requestPayload = TemplateSendRequest.builder()
+                    .templateName(templateName)
+                    .language(props.getLanguage())
+                    .senderId(senderId == null || senderId.isBlank() ? null : senderId)
+                    .phoneNumber(phoneNumber)
+                    .components(List.of(
+                            TemplateComponent.builder()
+                                    .type("body")
+                                    .parameters(List.of(
+                                            TemplateParameter.builder()
+                                                    .type("text")
+                                                    .text(otp)
+                                                    .build()
+                                    ))
+                                    .build()
+                    ))
+                    .build();
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -83,8 +125,8 @@ public class ChatMitraServiceImpl implements ChatMitraService {
 
         try {
             ResponseEntity<ChatMitraResponse> response = restTemplate.postForEntity(
-                    baseUrl.replaceAll("/+$", "") + "/send_template",
-                    new HttpEntity<>(request, headers),
+                    requestUrl,
+                    new HttpEntity<>(requestPayload, headers),
                     ChatMitraResponse.class);
 
             ChatMitraResponse body = response.getBody();
@@ -104,6 +146,53 @@ public class ChatMitraServiceImpl implements ChatMitraService {
             return "***";
         }
         return phoneNumber.substring(0, 3) + "***" + phoneNumber.substring(phoneNumber.length() - 3);
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class DeveloperApiSendRequest {
+        @JsonProperty("recipient_mobile_number")
+        private String recipientMobileNumber;
+        private List<DeveloperApiMessage> messages;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class DeveloperApiMessage {
+        private String kind;
+        private DeveloperApiTemplate template;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class DeveloperApiTemplate {
+        private String name;
+        private String language;
+        private List<DeveloperApiComponent> components;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class DeveloperApiComponent {
+        private String type;
+        private List<DeveloperApiParameter> parameters;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class DeveloperApiParameter {
+        private String type;
+        private String text;
     }
 
     @Getter

@@ -19,7 +19,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 class ChatMitraServiceImplTest {
 
     @Test
-    void sendOtp_shouldPostApprovedTemplatePayload() {
+    void sendOtp_shouldPostApprovedTemplatePayloadToDeveloperApi() {
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
@@ -41,7 +41,58 @@ class ChatMitraServiceImplTest {
 
         ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props, settingsService);
 
-        server.expect(requestTo("https://backend.chatmitra.com/v2/client/send_template"))
+        server.expect(requestTo("https://backend.chatmitra.com/developer/api/send_message"))
+                .andExpect(method(POST))
+                .andExpect(header("Authorization", "Bearer cm-test-token"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "recipient_mobile_number": "919876543210",
+                          "messages": [
+                            {
+                              "kind": "template",
+                              "template": {
+                                "name": "otp_login",
+                                "language": "en",
+                                "components": [
+                                  {"type": "body", "parameters": [{"type": "text", "text": "123456"}]}
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                        """))
+                .andRespond(withSuccess("{\"status\":\"success\",\"message\":\"Request queued\"}", MediaType.APPLICATION_JSON));
+
+        service.sendOtp("919876543210", "123456");
+
+        server.verify();
+    }
+
+    @Test
+    void sendOtp_shouldFallbackToClientApi() {
+        RestTemplate restTemplate = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+
+        AppProperties props = new AppProperties();
+        props.getWhatsappOtp().setApiUrl("https://some-other-provider.com/v2/client");
+        props.getWhatsappOtp().setApiToken("cm-test-token");
+        props.getWhatsappOtp().setTemplateName("otp_login");
+        props.getWhatsappOtp().setLanguage("en");
+
+        SettingsService settingsService = mock(SettingsService.class);
+        when(settingsService.getString(SettingsService.CHATMITRA_API_TOKEN, "cm-test-token"))
+                .thenReturn("cm-test-token");
+        when(settingsService.getString(SettingsService.CHATMITRA_API_BASE_URL, "https://some-other-provider.com/v2/client"))
+                .thenReturn("https://some-other-provider.com/v2/client");
+        when(settingsService.getString(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login"))
+                .thenReturn("otp_login");
+        when(settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, ""))
+                .thenReturn("");
+
+        ChatMitraServiceImpl service = new ChatMitraServiceImpl(restTemplate, props, settingsService);
+
+        server.expect(requestTo("https://some-other-provider.com/v2/client/send_template"))
                 .andExpect(method(POST))
                 .andExpect(header("Authorization", "Bearer cm-test-token"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
