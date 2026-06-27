@@ -1,5 +1,8 @@
 package com.kamyaabi.service;
 
+import com.kamyaabi.dto.response.SettingMetadataResponse;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,6 +57,14 @@ public interface SettingsService {
     String getString(String key, String defaultValue);
 
     Map<String, String> getAll();
+
+    /**
+     * Returns the full settings catalog as metadata (label, description,
+     * category, data type, default value, validation rules) combined with each
+     * setting's current value, in display order. Drives the dynamic admin
+     * settings UI.
+     */
+    List<SettingMetadataResponse> getAllMetadata();
 
     Map<String, String> getPublicSettings();
 

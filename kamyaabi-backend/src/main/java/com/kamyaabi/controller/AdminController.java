@@ -292,6 +292,15 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(settingsService.getAll()));
     }
 
+    @GetMapping("/settings/metadata")
+    @Operation(summary = "Get platform settings metadata",
+            description = "Returns each setting's metadata (label, description, category, data type, "
+                    + "default value, validation rules) plus its current value, in display order. "
+                    + "Drives the dynamic admin settings UI.")
+    public ResponseEntity<ApiResponse<List<SettingMetadataResponse>>> getSettingsMetadata() {
+        return ResponseEntity.ok(ApiResponse.success(settingsService.getAllMetadata()));
+    }
+
     @PutMapping("/settings")
     @Operation(summary = "Update platform settings",
             description = "Bulk key/value update. Unknown keys and invalid values are rejected with 400.")

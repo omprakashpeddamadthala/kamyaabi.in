@@ -1,8 +1,11 @@
 package com.kamyaabi.service.impl;
 
+import com.kamyaabi.dto.response.SettingMetadataResponse;
 import com.kamyaabi.entity.Setting;
 import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.repository.SettingRepository;
+import com.kamyaabi.service.SettingDefinition;
+import com.kamyaabi.service.SettingsCatalog;
 import com.kamyaabi.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -10,6 +13,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,22 +24,7 @@ import java.util.Set;
 @Service
 public class SettingsServiceImpl implements SettingsService {
 
-    static final Set<String> ALLOWED_KEYS = Set.of(
-            LOW_STOCK_THRESHOLD,
-            SHOW_BOUGHT_RECENTLY_BADGE,
-            PRODUCTS_PER_PAGE,
-            WHATSAPP_OTP_AUTH_ENABLED,
-            CHATMITRA_API_TOKEN,
-            CHATMITRA_API_BASE_URL,
-            CHATMITRA_SENDER_ID,
-            CHATMITRA_OTP_TEMPLATE_ID,
-            COUPON_ENABLED,
-            COUPON_MAX_USES_PER_USER,
-            COUPON_MAX_USES_PER_USER_PER_DAY,
-            COUPON_MAX_TOTAL_MEMBERS,
-            COUPON_DEFAULT_EXPIRY_DAYS,
-            COUPON_ALLOW_STACKING,
-            AMAZON_STORE_URL);
+    static final Set<String> ALLOWED_KEYS = SettingsCatalog.BY_KEY.keySet();
 
     static final List<String> PUBLIC_KEYS = List.of(
             SHOW_BOUGHT_RECENTLY_BADGE,
@@ -91,8 +80,31 @@ public class SettingsServiceImpl implements SettingsService {
     @Transactional(readOnly = true)
     public Map<String, String> getAll() {
         Map<String, String> out = new LinkedHashMap<>();
-        for (String key : ALLOWED_KEYS) {
-            out.put(key, currentValueWithDefault(key));
+        for (SettingDefinition def : SettingsCatalog.DEFINITIONS) {
+            out.put(def.key(), currentValueWithDefault(def));
+        }
+        return out;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SettingMetadataResponse> getAllMetadata() {
+        List<SettingMetadataResponse> out = new ArrayList<>(SettingsCatalog.DEFINITIONS.size());
+        for (SettingDefinition def : SettingsCatalog.DEFINITIONS) {
+            out.add(SettingMetadataResponse.builder()
+                    .key(def.key())
+                    .label(def.label())
+                    .value(currentValueWithDefault(def))
+                    .description(def.description())
+                    .helperText(def.helperText())
+                    .category(def.category())
+                    .dataType(def.dataType())
+                    .editable(def.editable())
+                    .defaultValue(def.defaultValue())
+                    .min(def.min())
+                    .max(def.max())
+                    .required(def.required())
+                    .build());
         }
         return out;
     }
@@ -102,7 +114,7 @@ public class SettingsServiceImpl implements SettingsService {
     public Map<String, String> getPublicSettings() {
         Map<String, String> out = new LinkedHashMap<>();
         for (String key : PUBLIC_KEYS) {
-            out.put(key, currentValueWithDefault(key));
+            out.put(key, currentValueWithDefault(SettingsCatalog.BY_KEY.get(key)));
         }
         return out;
     }
@@ -171,31 +183,15 @@ public class SettingsServiceImpl implements SettingsService {
         }
     }
 
-    private String currentValueWithDefault(String key) {
-        return switch (key) {
-            case LOW_STOCK_THRESHOLD -> String.valueOf(getInt(key, DEFAULT_LOW_STOCK_THRESHOLD));
-            case PRODUCTS_PER_PAGE -> String.valueOf(getInt(key, DEFAULT_PRODUCTS_PER_PAGE));
-            case SHOW_BOUGHT_RECENTLY_BADGE ->
-                    String.valueOf(getBoolean(key, DEFAULT_SHOW_BOUGHT_RECENTLY_BADGE));
-            case WHATSAPP_OTP_AUTH_ENABLED ->
-                    String.valueOf(getBoolean(key, DEFAULT_WHATSAPP_OTP_AUTH_ENABLED));
-            case CHATMITRA_API_TOKEN, CHATMITRA_SENDER_ID -> getString(key, "");
-            case CHATMITRA_API_BASE_URL -> getString(key, DEFAULT_CHATMITRA_API_BASE_URL);
-            case CHATMITRA_OTP_TEMPLATE_ID -> getString(key, DEFAULT_CHATMITRA_OTP_TEMPLATE_ID);
-            case COUPON_ENABLED ->
-                    String.valueOf(getBoolean(key, DEFAULT_COUPON_ENABLED));
-            case COUPON_MAX_USES_PER_USER ->
-                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_USES_PER_USER));
-            case COUPON_MAX_USES_PER_USER_PER_DAY ->
-                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_USES_PER_USER_PER_DAY));
-            case COUPON_MAX_TOTAL_MEMBERS ->
-                    String.valueOf(getInt(key, DEFAULT_COUPON_MAX_TOTAL_MEMBERS));
-            case COUPON_DEFAULT_EXPIRY_DAYS ->
-                    String.valueOf(getInt(key, DEFAULT_COUPON_DEFAULT_EXPIRY_DAYS));
-            case COUPON_ALLOW_STACKING ->
-                    String.valueOf(getBoolean(key, DEFAULT_COUPON_ALLOW_STACKING));
-            case AMAZON_STORE_URL -> getString(key, DEFAULT_AMAZON_STORE_URL);
-            default -> "";
+    private String currentValueWithDefault(SettingDefinition def) {
+        if (def == null) {
+            return "";
+        }
+        String key = def.key();
+        return switch (def.dataType()) {
+            case NUMBER -> String.valueOf(getInt(key, Integer.parseInt(def.defaultValue())));
+            case BOOLEAN -> String.valueOf(getBoolean(key, Boolean.parseBoolean(def.defaultValue())));
+            case STRING, SECRET, URL, JSON -> getString(key, def.defaultValue());
         };
     }
 }

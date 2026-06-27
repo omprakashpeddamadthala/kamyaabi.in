@@ -14,6 +14,29 @@ import {
   ShiprocketStats,
 } from '../types';
 
+export type SettingDataType =
+  | 'STRING'
+  | 'NUMBER'
+  | 'BOOLEAN'
+  | 'SECRET'
+  | 'URL'
+  | 'JSON';
+
+export interface SettingMetadata {
+  key: string;
+  label: string;
+  value: string;
+  description?: string | null;
+  helperText?: string | null;
+  category: string;
+  dataType: SettingDataType;
+  editable: boolean;
+  defaultValue: string;
+  min?: number | null;
+  max?: number | null;
+  required: boolean;
+}
+
 export interface ProductRequest {
   name: string;
   description: string;
@@ -208,6 +231,9 @@ export const adminApi = {
 
   getSettings: () =>
     axiosInstance.get<ApiResponse<Record<string, string>>>('/api/admin/settings'),
+
+  getSettingsMetadata: () =>
+    axiosInstance.get<ApiResponse<SettingMetadata[]>>('/api/admin/settings/metadata'),
 
   updateSettings: (values: Record<string, string>) =>
     axiosInstance.put<ApiResponse<Record<string, string>>>('/api/admin/settings', values),
