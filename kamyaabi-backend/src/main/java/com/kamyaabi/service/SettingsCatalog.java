@@ -117,6 +117,17 @@ public final class SettingsCatalog {
                     .defaultValue(DEFAULT_CHATMITRA_OTP_TEMPLATE_ID)
                     .required(false)
                     .build(),
+            SettingDefinition.builder()
+                    .key(CHATMITRA_OTP_LANGUAGE)
+                    .label("ChatMitra OTP Template Language")
+                    .description("Language/locale code of the approved template on Meta (e.g. en, en_US, hi).")
+                    .helperText("Defaults to " + DEFAULT_CHATMITRA_OTP_LANGUAGE)
+                    .category(CATEGORY_WHATSAPP)
+                    .dataType(SettingDataType.STRING)
+                    .editable(true)
+                    .defaultValue(DEFAULT_CHATMITRA_OTP_LANGUAGE)
+                    .required(false)
+                    .build(),
 
             // ── Coupons ───────────────────────────────────────────────
             SettingDefinition.builder()

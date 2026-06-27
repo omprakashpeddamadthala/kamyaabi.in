@@ -24,6 +24,7 @@ public interface SettingsService {
     String CHATMITRA_API_BASE_URL = "chatmitra_api_base_url";
     String CHATMITRA_SENDER_ID = "chatmitra_sender_id";
     String CHATMITRA_OTP_TEMPLATE_ID = "chatmitra_otp_template_id";
+    String CHATMITRA_OTP_LANGUAGE = "chatmitra_otp_language";
 
     String COUPON_ENABLED = "coupon_enabled";
     String COUPON_MAX_USES_PER_USER = "coupon_max_uses_per_user";
@@ -40,6 +41,7 @@ public interface SettingsService {
     boolean DEFAULT_WHATSAPP_OTP_AUTH_ENABLED = false;
     String DEFAULT_CHATMITRA_API_BASE_URL = "https://backend.chatmitra.com/v2/client";
     String DEFAULT_CHATMITRA_OTP_TEMPLATE_ID = "otp_login";
+    String DEFAULT_CHATMITRA_OTP_LANGUAGE = "en";
 
     boolean DEFAULT_COUPON_ENABLED = true;
     int DEFAULT_COUPON_MAX_USES_PER_USER = 1;

@@ -176,7 +176,7 @@ public class SettingsServiceImpl implements SettingsService {
                             "Setting '" + key + "' must be empty or a valid http(s) URL");
                 }
             }
-            case CHATMITRA_API_TOKEN, CHATMITRA_SENDER_ID, CHATMITRA_OTP_TEMPLATE_ID -> {
+            case CHATMITRA_API_TOKEN, CHATMITRA_SENDER_ID, CHATMITRA_OTP_TEMPLATE_ID, CHATMITRA_OTP_LANGUAGE -> {
                 // Free-text secrets/identifiers — no format constraints.
             }
             default -> throw new BadRequestException("Unknown setting key: " + key);

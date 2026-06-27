@@ -49,6 +49,9 @@ public class ChatMitraServiceImpl implements ChatMitraService {
         String templateName = settingsService.getString(
                 SettingsService.CHATMITRA_OTP_TEMPLATE_ID,
                 props.getTemplateName());
+        String templateLanguage = settingsService.getString(
+                SettingsService.CHATMITRA_OTP_LANGUAGE,
+                props.getLanguage());
         String senderId = settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, "");
         if (apiToken == null || apiToken.isBlank()) {
             throw new BusinessException("ChatMitra API token is not configured");
@@ -82,7 +85,7 @@ public class ChatMitraServiceImpl implements ChatMitraService {
                                     .kind("template")
                                     .template(DeveloperApiTemplate.builder()
                                             .name(templateName)
-                                            .language(props.getLanguage())
+                                            .language(templateLanguage)
                                             .components(List.of(
                                                     DeveloperApiComponent.builder()
                                                             .type("body")
@@ -102,7 +105,7 @@ public class ChatMitraServiceImpl implements ChatMitraService {
             requestUrl = finalBaseUrl + "/send_template";
             requestPayload = TemplateSendRequest.builder()
                     .templateName(templateName)
-                    .language(props.getLanguage())
+                    .language(templateLanguage)
                     .senderId(senderId == null || senderId.isBlank() ? null : senderId)
                     .phoneNumber(phoneNumber)
                     .components(List.of(

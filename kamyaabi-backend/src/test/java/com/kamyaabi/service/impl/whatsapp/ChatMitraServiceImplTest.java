@@ -36,6 +36,8 @@ class ChatMitraServiceImplTest {
                 .thenReturn("https://backend.chatmitra.com/v2/client");
         when(settingsService.getString(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login"))
                 .thenReturn("otp_login");
+        when(settingsService.getString(SettingsService.CHATMITRA_OTP_LANGUAGE, "en"))
+                .thenReturn("en");
         when(settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, ""))
                 .thenReturn("");
 
@@ -87,6 +89,8 @@ class ChatMitraServiceImplTest {
                 .thenReturn("https://some-other-provider.com/v2/client");
         when(settingsService.getString(SettingsService.CHATMITRA_OTP_TEMPLATE_ID, "otp_login"))
                 .thenReturn("otp_login");
+        when(settingsService.getString(SettingsService.CHATMITRA_OTP_LANGUAGE, "en"))
+                .thenReturn("en");
         when(settingsService.getString(SettingsService.CHATMITRA_SENDER_ID, ""))
                 .thenReturn("");
 
