@@ -7,7 +7,7 @@ const ProductCardSkeleton: React.FC = () => {
       <Skeleton
         variant="rectangular"
         animation="wave"
-        sx={{ height: { xs: 128, sm: 208 } }}
+        sx={{ height: { xs: 168, sm: 208 } }}
       />
       <CardContent
         sx={{
