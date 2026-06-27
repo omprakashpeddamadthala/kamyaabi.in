@@ -177,3 +177,39 @@ jobs:
             omprakashornold/kamyaabi-frontend:${{ steps.datestamp.outputs.tag }}
           build-args: |
             VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    # Only deploy after images are built, tested, and pushed — and only for
+    # real merges/pushes to master (never for pull_request events, which do
+    # not push images and must not touch production).
+    needs: [docker-build-push-backend, docker-build-push-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    concurrency:
+      # Serialize deployments so two merges in quick succession can't run
+      # deploy.sh on the VM at the same time.
+      group: production-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy over SSH and run deploy.sh
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          # Prefer key-based auth. Provide SSH_PRIVATE_KEY (recommended) OR
+          # SSH_PASSWORD. If both are set, the key is used. The action ignores
+          # an empty value, so leaving one secret unset is fine.
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          # Fail the job (and surface logs) if any remote command fails or the
+          # connection/command exceeds the timeouts below.
+          command_timeout: 20m
+          timeout: 60s
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_DIR || 'kamyaabi.in' }}
+            ./deploy.sh
