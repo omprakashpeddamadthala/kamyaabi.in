@@ -8,8 +8,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Box, Container, Typography, Grid, Button, Card, CardMedia, TextField, InputAdornment, IconButton,
+  Accordion, AccordionSummary, AccordionDetails,
 } from '@mui/material';
-import { LocalShipping, Search, ArrowForward, ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { LocalShipping, Search, ArrowForward, ChevronLeft, ChevronRight, ExpandMore } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchFeaturedProducts, fetchCategories } from '../features/product/productSlice';
 import ProductCard from '../components/common/ProductCard';
@@ -144,6 +145,47 @@ const testimonials = [
   { name: 'Ananya', text: "\"I've been shopping for dry fruits from various places, but nothing compares to the quality I found here! The nuts are so fresh and the variety is amazing. I love the packaging too\u2014everything arrives perfectly sealed and fresh. Will definitely be a regular customer!\"" },
 ];
 
+const faqs = [
+  {
+    q: 'Why choose Kamyaabi for premium dry fruits?',
+    a: 'Kamyaabi is committed to delivering premium-quality dry fruits that are carefully sourced, hygienically packed, and rich in nutrition. We focus on freshness, quality, and customer satisfaction to bring you the finest selection of dry fruits online.',
+  },
+  {
+    q: 'What makes Kamyaabi dry fruits different from others?',
+    a: 'Kamyaabi combines quality sourcing, stringent quality checks, premium packaging, and reliable delivery to ensure every product meets the highest standards of taste, freshness, and nutrition.',
+  },
+  {
+    q: 'What are the health benefits of Premium Anjeer?',
+    a: 'Premium Anjeer (figs) is rich in fiber, antioxidants, calcium, and essential nutrients that support digestion, bone health, and overall wellness.',
+  },
+  {
+    q: 'Why should I choose Premium Chilean Walnuts?',
+    a: 'Premium Chilean Walnuts are known for their superior quality, rich omega-3 fatty acids, and crunchy texture, making them an excellent choice for heart and brain health.',
+  },
+  {
+    q: 'Are Kamyaabi dry fruits fresh and naturally sourced?',
+    a: 'Yes, all Kamyaabi dry fruits are carefully sourced from trusted suppliers and packed hygienically to ensure freshness, taste, and quality.',
+  },
+  {
+    q: 'How should I store dry fruits to maintain freshness?',
+    a: 'Store dry fruits in an airtight container in a cool, dry place away from direct sunlight. Refrigeration can help extend their shelf life.',
+  },
+  {
+    q: 'Are Kamyaabi dry fruits suitable for daily consumption?',
+    a: 'Yes, almonds, walnuts, anjeer, raisins, pistachios, dates, and seeds can be enjoyed daily as part of a balanced and healthy diet.',
+  },
+];
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
 const counters = [
   { icon: 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551828/kamyaabi/assets/img/icon/counter-icon1.webp', label: 'Premium Selection' },
   { icon: 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551829/kamyaabi/assets/img/icon/counter-icon2.webp', label: 'Clean, healthy, natural' },
@@ -213,6 +255,7 @@ const HomePage: React.FC = () => {
         title="Premium Dry Fruits & Nuts Online"
         description="Kamyaabi delivers premium, hand-picked dry fruits and nuts — almonds, cashews, pistachios and more. Sourced for purity, sealed for freshness, delivered across India."
         canonicalPath="/"
+        jsonLd={faqJsonLd}
       />
     <Box>
       {/* Hero Section */}
@@ -515,6 +558,50 @@ const HomePage: React.FC = () => {
           <Box sx={{ display: 'flex', gap: 1.5, mt: 4, justifyContent: 'center' }}>
             {testimonials.map((_, i) => (
               <Box key={i} onClick={() => setCurrentTestimonial(i)} sx={{ width: i === currentTestimonial ? 32 : 12, height: 8, borderRadius: 4, bgcolor: i === currentTestimonial ? 'var(--color-brand-primary)' : 'rgba(29, 78, 216, 0.2)', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }} />
+            ))}
+          </Box>
+        </Container>
+      </Box>
+
+      {/* FAQ */}
+      <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: 'var(--color-surface-bg)' }}>
+        <Container maxWidth="md">
+          <Box sx={{ textAlign: 'center', mb: 5 }}>
+            <Typography variant="overline" sx={{ color: 'var(--color-brand-primary)', fontWeight: 800, letterSpacing: 2 }}>FAQ</Typography>
+            <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              Frequently Asked Questions
+            </Typography>
+          </Box>
+          <Box>
+            {faqs.map((faq, i) => (
+              <Accordion
+                key={i}
+                disableGutters
+                elevation={0}
+                sx={{
+                  bgcolor: '#ffffff',
+                  borderRadius: 'var(--radius-xl)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  mb: 2,
+                  '&:before': { display: 'none' },
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMore sx={{ color: 'var(--color-brand-primary)' }} />}
+                  sx={{ px: { xs: 2.5, md: 3 }, py: 1, '& .MuiAccordionSummary-content': { my: 1.5 } }}
+                >
+                  <Typography sx={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--color-text-primary)' }}>
+                    {faq.q}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ px: { xs: 2.5, md: 3 }, pt: 0, pb: 2.5 }}>
+                  <Typography sx={{ color: 'var(--color-text-secondary)', lineHeight: 1.8 }}>
+                    {faq.a}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
             ))}
           </Box>
         </Container>
