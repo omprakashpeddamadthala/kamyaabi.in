@@ -22,6 +22,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import ApiErrorNotifier from './components/common/ApiErrorNotifier';
 import { ToastProvider } from './components/common/ToastProvider';
 import SiteHead from './components/common/SiteHead';
+import ScrollToTop from './components/common/ScrollToTop';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +50,7 @@ const App: React.FC = () => {
             <ErrorBoundary>
               <ToastProvider>
                 <BrowserRouter>
+                  <ScrollToTop />
                   <Suspense fallback={<Loading message="Loading page..." />}>
                     <FlyToCartProvider>
                       <AppRoutes />

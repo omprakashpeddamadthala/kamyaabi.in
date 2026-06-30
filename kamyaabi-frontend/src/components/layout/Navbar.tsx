@@ -28,6 +28,7 @@ import {
   Typography,
   BottomNavigation,
   BottomNavigationAction,
+  ListItemButton,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -391,7 +392,7 @@ const Navbar: React.FC = () => {
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to || (link.to !== '/' && location.pathname.startsWith(link.to));
               return (
-                <ListItem
+                <ListItemButton
                   key={link.to}
                   onClick={() => { setDrawerOpen(false); navigate(link.to); }}
                   sx={{ 
@@ -404,28 +405,28 @@ const Navbar: React.FC = () => {
                 >
                   <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>{drawerIcons[link.to]}</ListItemIcon>
                   <ListItemText primary={link.label} primaryTypographyProps={{ fontWeight: isActive ? 700 : 600 }} />
-                </ListItem>
+                </ListItemButton>
               );
             })}
             
             <Divider sx={{ my: 2 }} />
             
-            <ListItem
+            <ListItemButton
               onClick={() => { setDrawerOpen(false); navigate('/track-order'); }}
               sx={{ cursor: 'pointer', borderRadius: 'var(--radius-md)', mb: 1, color: 'var(--color-text-primary)' }}
             >
               <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}><LocalShipping /></ListItemIcon>
               <ListItemText primary="Track Order" primaryTypographyProps={{ fontWeight: 600 }} />
-            </ListItem>
+            </ListItemButton>
 
             {user?.role === 'ADMIN' && (
-              <ListItem
+              <ListItemButton
                 onClick={() => { setDrawerOpen(false); navigate('/admin'); }}
                 sx={{ cursor: 'pointer', borderRadius: 'var(--radius-md)', mb: 1, color: 'var(--color-brand-primary)' }}
               >
                 <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}><Dashboard /></ListItemIcon>
                 <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700 }} />
-              </ListItem>
+              </ListItemButton>
             )}
           </List>
           

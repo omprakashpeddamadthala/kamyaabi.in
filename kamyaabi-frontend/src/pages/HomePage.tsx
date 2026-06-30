@@ -4,7 +4,7 @@
  * - Visual-only tokenization of hero, sections, cards, typography, and responsive heights.
  * - Introduces horizontal scrolling ribbons for touch-friendly mobile navigation.
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Box, Container, Typography, Grid, Button, Card, CardMedia, TextField, InputAdornment, IconButton,
@@ -48,7 +48,7 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'raisins': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551819/kamyaabi/assets/img/categorie/raisins.jpg',
   'pistachio': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
   'pistachios': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
-  'seeds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551820/kamyaabi/assets/img/categorie/seeds.jpg',
+  'seeds': '/assets/img/categorie/seeds.png',
 };
 
 const getCategoryImage = (catName: string, catImageUrl: string | null | undefined): string => {
@@ -204,6 +204,61 @@ const HomePage: React.FC = () => {
   const [heroBanners, setHeroBanners] = useState<HeroBanner[] | null>(null);
   const [trackQuery, setTrackQuery] = useState('');
 
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const productScrollRef = useRef<HTMLDivElement>(null);
+  const categoryHoverRef = useRef(false);
+  const productHoverRef = useRef(false);
+
+  const handleScroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -ref.current.offsetWidth * 0.75 : ref.current.offsetWidth * 0.75;
+      ref.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Auto-scroll Categories periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      if (categoryScrollRef.current && !categoryHoverRef.current) {
+        const el = categoryScrollRef.current;
+        const cardWidth = el.firstElementChild?.clientWidth || 200;
+        const gap = 16;
+        const step = cardWidth + gap;
+
+        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 15) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollBy({ left: step, behavior: 'smooth' });
+        }
+      }
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [categories]);
+
+  // Auto-scroll Products periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      if (productScrollRef.current && !productHoverRef.current) {
+        const el = productScrollRef.current;
+        const cardWidth = el.firstElementChild?.clientWidth || 280;
+        const gap = 24;
+        const step = cardWidth + gap;
+
+        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 15) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollBy({ left: step, behavior: 'smooth' });
+        }
+      }
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [featuredProducts]);
+
   useEffect(() => {
     dispatch(fetchFeaturedProducts());
     dispatch(fetchCategories());
@@ -294,12 +349,43 @@ const HomePage: React.FC = () => {
       {/* Categories Horizontal Ribbon */}
       <Box sx={{ py: { xs: 4, md: 6 }, overflow: 'hidden' }}>
         <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
-          <Box sx={{ px: { xs: 2, sm: 0 }, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <Box sx={{ px: { xs: 2, sm: 0 }, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
              <Typography variant="h5" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.01em' }}>
               Shop by Category
             </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton
+                onClick={() => handleScroll(categoryScrollRef, 'left')}
+                sx={{
+                  bgcolor: '#ffffff',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  '&:hover': { bgcolor: '#f3f4f6', transform: 'scale(1.05)' },
+                  width: { xs: 36, md: 40 },
+                  height: { xs: 36, md: 40 },
+                }}
+              >
+                <ChevronLeft fontSize="small" />
+              </IconButton>
+              <IconButton
+                onClick={() => handleScroll(categoryScrollRef, 'right')}
+                sx={{
+                  bgcolor: '#ffffff',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  '&:hover': { bgcolor: '#f3f4f6', transform: 'scale(1.05)' },
+                  width: { xs: 36, md: 40 },
+                  height: { xs: 36, md: 40 },
+                }}
+              >
+                <ChevronRight fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
           <Box
+            ref={categoryScrollRef}
+            onMouseEnter={() => { categoryHoverRef.current = true; }}
+            onMouseLeave={() => { categoryHoverRef.current = false; }}
             sx={{
               display: 'flex',
               gap: 2,
@@ -356,28 +442,58 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Featured Products (Horizontal on Mobile, Grid on Desktop) */}
+      {/* Featured Products (Horizontal Carousel) */}
       {!isAdmin && (
         <Box sx={{ py: { xs: 4, md: 8 }, bgcolor: 'var(--color-surface-bg)' }}>
           <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
-            <Box sx={{ px: { xs: 2, sm: 0 }, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <Box sx={{ px: { xs: 2, sm: 0 }, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
                 <Typography variant="h4" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.01em', mt: 0.5 }}>Our Products</Typography>
               </Box>
-              <Button component={Link} to="/products" endIcon={<ArrowForward />} sx={{ fontWeight: 700, display: { xs: 'none', sm: 'inline-flex' } }}>
-                View All
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Button component={Link} to="/products" endIcon={<ArrowForward />} sx={{ fontWeight: 700, mr: 1, display: { xs: 'none', sm: 'inline-flex' } }}>
+                  View All
+                </Button>
+                <IconButton
+                  onClick={() => handleScroll(productScrollRef, 'left')}
+                  sx={{
+                    bgcolor: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    '&:hover': { bgcolor: '#f3f4f6', transform: 'scale(1.05)' },
+                    width: { xs: 36, md: 40 },
+                    height: { xs: 36, md: 40 },
+                  }}
+                >
+                  <ChevronLeft fontSize="small" />
+                </IconButton>
+                <IconButton
+                  onClick={() => handleScroll(productScrollRef, 'right')}
+                  sx={{
+                    bgcolor: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                    '&:hover': { bgcolor: '#f3f4f6', transform: 'scale(1.05)' },
+                    width: { xs: 36, md: 40 },
+                    height: { xs: 36, md: 40 },
+                  }}
+                >
+                  <ChevronRight fontSize="small" />
+                </IconButton>
+              </Box>
             </Box>
 
-            {/* Mobile: Horizontal Ribbon | Desktop: Grid */}
-            <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+            <Box>
               <Box
+                ref={productScrollRef}
+                onMouseEnter={() => { productHoverRef.current = true; }}
+                onMouseLeave={() => { productHoverRef.current = false; }}
                 sx={{
                   display: 'flex',
-                  gap: 2,
+                  gap: 3,
                   overflowX: 'auto',
                   scrollSnapType: 'x mandatory',
-                  px: 2,
+                  px: { xs: 2, sm: 0 },
                   pb: 3, // space for shadow
                   '&::-webkit-scrollbar': { display: 'none' },
                   msOverflowStyle: 'none',
@@ -385,39 +501,22 @@ const HomePage: React.FC = () => {
                 }}
               >
                 {showProductSkeletons
-                  ? Array.from({ length: 4 }).map((_, i) => (
-                      <Box key={`skel-m-${i}`} sx={{ flex: '0 0 auto', width: 220, scrollSnapAlign: 'start' }}>
+                  ? Array.from({ length: 8 }).map((_, i) => (
+                      <Box key={`skel-${i}`} sx={{ flex: '0 0 auto', width: { xs: 220, sm: 250, md: 280 }, scrollSnapAlign: 'start' }}>
                         <ProductCardSkeleton />
                       </Box>
                     ))
                   : featuredProducts.map((product) => (
-                      <Box key={`prod-m-${product.id}`} sx={{ flex: '0 0 auto', width: 220, scrollSnapAlign: 'start' }}>
+                      <Box key={`prod-${product.id}`} sx={{ flex: '0 0 auto', width: { xs: 220, sm: 250, md: 280 }, scrollSnapAlign: 'start' }}>
                         <ProductCard product={product} />
                       </Box>
                     ))}
               </Box>
-              <Box sx={{ textAlign: 'center', mt: 1 }}>
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
                 <Button component={Link} to="/products" variant="outlined" sx={{ borderRadius: 'var(--radius-full)', fontWeight: 700, px: 4 }}>
                   Browse All Products
                 </Button>
               </Box>
-            </Box>
-
-            {/* Desktop View */}
-            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Grid container spacing={3}>
-                {showProductSkeletons
-                  ? Array.from({ length: 8 }).map((_, i) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={`skel-d-${i}`}>
-                        <ProductCardSkeleton />
-                      </Grid>
-                    ))
-                  : featuredProducts.map((product) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={`prod-d-${product.id}`}>
-                        <ProductCard product={product} />
-                      </Grid>
-                    ))}
-              </Grid>
             </Box>
           </Container>
         </Box>

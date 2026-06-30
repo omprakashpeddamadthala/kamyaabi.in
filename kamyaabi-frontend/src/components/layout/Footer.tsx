@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
                 Shop
               </MuiLink>
               <MuiLink component={Link} to="/blog" underline="none" sx={{ color: '#9ca3af', fontSize: '0.9rem', transition: 'color 0.2s', '&:hover': { color: 'var(--color-brand-primary)' } }}>
-                Journal
+                Blogs
               </MuiLink>
             </Stack>
           </Grid>

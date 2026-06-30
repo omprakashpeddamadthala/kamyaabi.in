@@ -66,7 +66,7 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'walnuts': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551821/kamyaabi/assets/img/categorie/walnuts.jpg',
   'raisins': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551819/kamyaabi/assets/img/categorie/raisins.jpg',
   'pistachio': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
-  'seeds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551820/kamyaabi/assets/img/categorie/seeds.jpg',
+  'seeds': '/assets/img/categorie/seeds.png',
 };
 
 const getCategoryImage = (catName: string, catImageUrl: string | null | undefined): string => {
