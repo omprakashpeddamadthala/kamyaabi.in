@@ -387,10 +387,9 @@ const AdminProductsPage: React.FC = () => {
               <InputLabel>Per page</InputLabel>
               <Select
                 label="Per page"
-                value={size}
+                value={limit}
                 onChange={(e) => {
-                  updateUrlParams({ page: 1, size: e.target.value });
-                  setSize(Number(e.target.value));
+                  updateUrlParams({ page: 1, limit: Number(e.target.value) });
                 }}
               >
                 {[10, 20, 50].map((v) => (
@@ -400,11 +399,10 @@ const AdminProductsPage: React.FC = () => {
             </FormControl>
             <Pagination
               count={totalPages}
-              page={page}
+              page={page + 1}
               color="primary"
               onChange={(_, value) => {
                 updateUrlParams({ page: value });
-                setPage(value);
               }}
               siblingCount={0}
               boundaryCount={1}

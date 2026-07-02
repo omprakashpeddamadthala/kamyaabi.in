@@ -8,6 +8,7 @@ import {
   IconButton,
   InputAdornment,
   Pagination,
+  Stack,
   Table,
   TableBody,
   TableCell,

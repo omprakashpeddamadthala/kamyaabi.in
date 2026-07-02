@@ -12,6 +12,7 @@ import {
   Rating,
   Pagination,
   Paper,
+  Stack,
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import { reviewApi } from '../../api/reviewApi';
