@@ -123,7 +123,7 @@ const AdminProductTagsPage: React.FC = () => {
         </Card>
       </Collapse>
 
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -145,11 +145,11 @@ const AdminProductTagsPage: React.FC = () => {
             ) : (
               tags.map((tag) => (
                 <TableRow key={tag.id}>
-                  <TableCell sx={{ fontWeight: 600 }}>{tag.name}</TableCell>
-                  <TableCell>{tag.slug}</TableCell>
-                  <TableCell>{tag.productCount ?? 0}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5}>
+                  <TableCell data-label="Name" sx={{ fontWeight: 600 }}>{tag.name}</TableCell>
+                  <TableCell data-label="Slug">{tag.slug}</TableCell>
+                  <TableCell data-label="Products">{tag.productCount ?? 0}</TableCell>
+                  <TableCell data-label="Actions">
+                    <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                       <Tooltip title="Edit">
                         <IconButton size="small" aria-label={`Edit ${tag.name}`} onClick={() => navigate(`/admin/products/tags/edit/${tag.id}`, { state: { tag } })}>
                           <Edit fontSize="small" />

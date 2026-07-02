@@ -24,7 +24,7 @@ const StickyAddToCartBar: React.FC<StickyAddToCartBarProps> = ({
   <Slide direction="up" in={show} mountOnEnter unmountOnExit>
     <Box sx={{
       position: 'fixed',
-      bottom: { xs: 64, md: 0 },
+      bottom: { xs: 'calc(64px + env(safe-area-inset-bottom))', md: 0 },
       left: 0,
       right: 0,
       bgcolor: 'rgba(255,255,255,0.92)',

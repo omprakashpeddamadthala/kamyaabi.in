@@ -66,7 +66,7 @@ const AdminReviewsPanel: React.FC<AdminReviewsPanelProps> = ({ active }) => {
   return (
     <Box>
       <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>All Reviews</Typography>
-      <TableContainer component={Paper} variant="outlined">
+      <TableContainer component={Paper} variant="outlined" className="responsive-table">
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -92,13 +92,17 @@ const AdminReviewsPanel: React.FC<AdminReviewsPanelProps> = ({ active }) => {
               </TableRow>
             ) : reviews.map((review) => (
               <TableRow key={review.id}>
-                <TableCell>{review.authorName}</TableCell>
-                <TableCell><Rating value={review.rating} readOnly size="small" /></TableCell>
-                <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <TableCell data-label="Reviewer">{review.authorName}</TableCell>
+                <TableCell data-label="Rating">
+                  <Stack direction="row" justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
+                    <Rating value={review.rating} readOnly size="small" />
+                  </Stack>
+                </TableCell>
+                <TableCell data-label="Text" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {review.text}
                 </TableCell>
-                <TableCell>{formatDate(review.createdAt)}</TableCell>
-                <TableCell align="right">
+                <TableCell data-label="Date">{formatDate(review.createdAt)}</TableCell>
+                <TableCell data-label="Actions" align="right">
                   <IconButton
                     size="small"
                     color="error"
@@ -119,6 +123,9 @@ const AdminReviewsPanel: React.FC<AdminReviewsPanelProps> = ({ active }) => {
             page={page + 1}
             onChange={(_, p) => setPage(p - 1)}
             color="primary"
+            siblingCount={0}
+            boundaryCount={1}
+            size="small"
           />
         </Box>
       )}

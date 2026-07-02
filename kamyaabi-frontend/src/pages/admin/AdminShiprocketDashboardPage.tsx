@@ -327,7 +327,7 @@ const AdminShiprocketDashboardPage: React.FC = () => {
           </Tabs>
         </Stack>
 
-        <TableContainer>
+        <TableContainer className="responsive-table">
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -355,8 +355,8 @@ const AdminShiprocketDashboardPage: React.FC = () => {
               ) : (
                 orders.map((o) => (
                   <TableRow key={o.id} hover>
-                    <TableCell>#{o.id}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Order #">#{o.id}</TableCell>
+                    <TableCell data-label="Payment">
                       <Chip
                         label={o.paymentMethod === 'COD' ? 'COD' : 'Prepaid'}
                         size="small"
@@ -364,11 +364,11 @@ const AdminShiprocketDashboardPage: React.FC = () => {
                         variant="outlined"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Status">
                       <Chip label={o.status} size="small" />
                     </TableCell>
-                    <TableCell>{o.shiprocketOrderId ?? '—'}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Shiprocket ID">{o.shiprocketOrderId ?? '—'}</TableCell>
+                    <TableCell data-label="AWB / Courier">
                       {o.awbNumber ? (
                         <Box>
                           <Typography variant="body2" fontWeight={600}>
@@ -384,15 +384,15 @@ const AdminShiprocketDashboardPage: React.FC = () => {
                         '—'
                       )}
                     </TableCell>
-                    <TableCell>{formatStatus(o.shippingStatus)}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Shipping Status">{formatStatus(o.shippingStatus)}</TableCell>
+                    <TableCell data-label="Synced">
                       {o.shiprocketSynced ? (
                         <Chip label="Synced" size="small" color="success" />
                       ) : (
                         <Chip label="Pending" size="small" color="warning" />
                       )}
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell data-label="Actions" align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <Tooltip title={o.shiprocketSynced ? 'Refresh status from Shiprocket' : 'Sync to Shiprocket'}>
                           <span>
@@ -431,6 +431,10 @@ const AdminShiprocketDashboardPage: React.FC = () => {
               count={totalPages}
               page={page + 1}
               onChange={(_, p) => setPage(p - 1)}
+              color="primary"
+              siblingCount={0}
+              boundaryCount={1}
+              size="small"
             />
           </Box>
         )}

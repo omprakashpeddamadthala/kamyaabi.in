@@ -129,7 +129,7 @@ const HeroBannersTab: React.FC<HeroBannersTabProps> = ({ active }) => {
             No hero banners yet. Add one to control the homepage hero.
           </Typography>
         ) : (
-          <TableContainer sx={{ overflowX: 'auto' }}>
+          <TableContainer className="responsive-table" sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -143,8 +143,8 @@ const HeroBannersTab: React.FC<HeroBannersTabProps> = ({ active }) => {
               <TableBody>
                 {banners.map((banner, index) => (
                   <TableRow key={banner.id}>
-                    <TableCell>
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <TableCell data-label="Order">
+                      <Stack direction="row" alignItems="center" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                         <IconButton size="small" aria-label="Move up" disabled={index === 0} onClick={() => move(index, -1)}>
                           <ArrowUpward fontSize="inherit" />
                         </IconButton>
@@ -158,15 +158,17 @@ const HeroBannersTab: React.FC<HeroBannersTabProps> = ({ active }) => {
                         </IconButton>
                       </Stack>
                     </TableCell>
-                    <TableCell>
-                      <Box
-                        component="img"
-                        src={withCloudinaryTransform(banner.imageUrl) || banner.imageUrl}
-                        alt={banner.altText ?? banner.title ?? 'Hero banner'}
-                        sx={{ width: 96, height: 54, objectFit: 'cover', borderRadius: 1, bgcolor: 'var(--color-surface-bg)' }}
-                      />
+                    <TableCell data-label="Image">
+                      <Stack direction="row" justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
+                        <Box
+                          component="img"
+                          src={withCloudinaryTransform(banner.imageUrl) || banner.imageUrl}
+                          alt={banner.altText ?? banner.title ?? 'Hero banner'}
+                          sx={{ width: 96, height: 54, objectFit: 'cover', borderRadius: 1, bgcolor: 'var(--color-surface-bg)' }}
+                        />
+                      </Stack>
                     </TableCell>
-                    <TableCell sx={{ maxWidth: 280 }}>
+                    <TableCell data-label="Title" sx={{ maxWidth: 280 }}>
                       <Typography variant="body2" fontWeight={600} noWrap>
                         {banner.title || <em>(no title)</em>}
                       </Typography>
@@ -176,29 +178,33 @@ const HeroBannersTab: React.FC<HeroBannersTabProps> = ({ active }) => {
                         </Typography>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={banner.active}
-                        onChange={() => toggleActive(banner)}
-                        size="small"
-                        inputProps={{ 'aria-label': `Toggle visibility for ${banner.title || 'banner'}` }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit">
-                        <IconButton
+                    <TableCell data-label="Active">
+                      <Stack direction="row" justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
+                        <Switch
+                          checked={banner.active}
+                          onChange={() => toggleActive(banner)}
                           size="small"
-                          aria-label="Edit banner"
-                          onClick={() => navigate(`/admin/hero-banners/edit/${banner.id}`, { state: { banner } })}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" color="error" aria-label="Delete banner" onClick={() => setConfirmId(banner.id)}>
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          inputProps={{ 'aria-label': `Toggle visibility for ${banner.title || 'banner'}` }}
+                        />
+                      </Stack>
+                    </TableCell>
+                    <TableCell data-label="Actions" align="right">
+                      <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-end' }}>
+                        <Tooltip title="Edit">
+                          <IconButton
+                            size="small"
+                            aria-label="Edit banner"
+                            onClick={() => navigate(`/admin/hero-banners/edit/${banner.id}`, { state: { banner } })}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                          <IconButton size="small" color="error" aria-label="Delete banner" onClick={() => setConfirmId(banner.id)}>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 ))}

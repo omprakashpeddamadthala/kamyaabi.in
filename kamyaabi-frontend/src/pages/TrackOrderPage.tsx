@@ -306,7 +306,15 @@ const TrackOrderPage: React.FC = () => {
 
               {/* Order Lifecycle Stepper (horizontal) */}
               {!isCancelled && (
-                <Card sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 3, overflowX: 'auto' }}>
+                <Card sx={{
+                  p: { xs: 2, md: 3 },
+                  mb: 3,
+                  borderRadius: 3,
+                  overflowX: 'auto',
+                  '&::-webkit-scrollbar': { display: 'none' },
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
                     Order Progress
                   </Typography>

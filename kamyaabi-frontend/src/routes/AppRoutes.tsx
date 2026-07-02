@@ -90,10 +90,8 @@ const AdminLayoutRoute: React.FC = () => {
 };
 
 const CustomerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAppSelector((state) => state.auth);
   const { authenticated } = useSessionGuard();
   if (!authenticated) return <Navigate to="/login" replace />;
-  if (user?.role === 'ADMIN') return <Navigate to="/products" replace />;
   return <>{children}</>;
 };
 

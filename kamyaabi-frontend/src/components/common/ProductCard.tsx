@@ -309,7 +309,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               </Typography>
             </Box>
 
-            {(!user || user.role !== 'ADMIN') && (
+            {true && (
               <Button
                 variant={justAdded ? "contained" : "outlined"}
                 size="small"

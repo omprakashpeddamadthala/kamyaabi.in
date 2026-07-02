@@ -117,7 +117,7 @@ const AdminBlogListPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>Blog Posts</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/blog/new')}>
           New Post
@@ -147,7 +147,7 @@ const AdminBlogListPage: React.FC = () => {
         </FormControl>
       </Stack>
 
-      <TableContainer component={Card} sx={{ '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -171,23 +171,23 @@ const AdminBlogListPage: React.FC = () => {
             ) : (
               posts.map((post) => (
                 <TableRow key={post.id}>
-                  <TableCell>
+                  <TableCell data-label="Title">
                     <Typography variant="body2" sx={{ fontWeight: 600, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {post.title}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Category">
                     {post.categories.map((c) => (
                       <Chip key={c.id} label={c.name} size="small" sx={{ mr: 0.5 }} />
                     ))}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Status">
                     <Chip label={post.status} size="small" color={statusColor[post.status]} />
                   </TableCell>
-                  <TableCell>{formatDate(post.publishedAt)}</TableCell>
-                  <TableCell>{post.viewCount}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5}>
+                  <TableCell data-label="Published">{formatDate(post.publishedAt)}</TableCell>
+                  <TableCell data-label="Views">{post.viewCount}</TableCell>
+                  <TableCell data-label="Actions">
+                    <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                       <Tooltip title="Edit">
                         <IconButton size="small" onClick={() => navigate(`/admin/blog/edit/${post.id}`)}>
                           <Edit fontSize="small" />
@@ -227,7 +227,7 @@ const AdminBlogListPage: React.FC = () => {
 
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination count={totalPages} page={page + 1} onChange={(_, v) => setSearchParams(v > 1 ? { page: String(v) } : {})} color="primary" />
+          <Pagination count={totalPages} page={page + 1} onChange={(_, v) => setSearchParams(v > 1 ? { page: String(v) } : {})} color="primary" siblingCount={0} boundaryCount={1} size="small" />
         </Box>
       )}
 

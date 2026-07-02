@@ -164,7 +164,13 @@ const OrdersPage: React.FC = () => {
             <Divider sx={{ my: 2 }} />
 
             {order.status !== 'CANCELLED' && (
-              <Box sx={{ mb: 3, overflowX: 'auto' }}>
+              <Box sx={{
+                mb: 3,
+                overflowX: 'auto',
+                '&::-webkit-scrollbar': { display: 'none' },
+                msOverflowStyle: 'none',
+                scrollbarWidth: 'none',
+              }}>
                 <Stepper
                   activeStep={getActiveStep(order.status, order.payment?.status)}
                   alternativeLabel

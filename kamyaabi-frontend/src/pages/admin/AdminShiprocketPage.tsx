@@ -115,7 +115,7 @@ const AdminShiprocketPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3, flexWrap: 'wrap' }}>
         <LocalShipping sx={{ fontSize: 32, color: 'primary.main' }} />
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Shiprocket Dashboard
@@ -143,7 +143,7 @@ const AdminShiprocketPage: React.FC = () => {
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
         Shiprocket Orders ({totalElements})
       </Typography>
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -171,9 +171,9 @@ const AdminShiprocketPage: React.FC = () => {
             ) : (
               orders.map((o) => (
                 <TableRow key={o.id}>
-                  <TableCell>#{o.id}</TableCell>
-                  <TableCell>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Order ID">#{o.id}</TableCell>
+                  <TableCell data-label="Date">{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                  <TableCell data-label="Payment">
                     <Chip
                       label={o.paymentMethod === 'COD' ? 'COD' : 'Prepaid'}
                       size="small"
@@ -181,15 +181,15 @@ const AdminShiprocketPage: React.FC = () => {
                       variant="outlined"
                     />
                   </TableCell>
-                  <TableCell>₹{o.totalAmount}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Total">₹{o.totalAmount}</TableCell>
+                  <TableCell data-label="Status">
                     <Chip label={o.status} size="small" />
                   </TableCell>
-                  <TableCell>{o.courierName || '—'}</TableCell>
-                  <TableCell sx={{ fontFamily: 'monospace', fontSize: 'var(--text-sm)' }}>
+                  <TableCell data-label="Courier">{o.courierName || '—'}</TableCell>
+                  <TableCell data-label="AWB" sx={{ fontFamily: 'monospace', fontSize: 'var(--text-sm)' }}>
                     {o.awbNumber || '—'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Shipping Status">
                     {o.shippingStatus ? (
                       <Chip
                         label={o.shippingStatus.replace(/_/g, ' ')}
@@ -213,6 +213,10 @@ const AdminShiprocketPage: React.FC = () => {
             count={totalPages}
             page={page + 1}
             onChange={(_, p) => setPage(p - 1)}
+            color="primary"
+            siblingCount={0}
+            boundaryCount={1}
+            size="small"
           />
         </Box>
       )}

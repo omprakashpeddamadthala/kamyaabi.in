@@ -66,7 +66,7 @@ const AdminBlogCategoriesPage: React.FC = () => {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -89,12 +89,12 @@ const AdminBlogCategoriesPage: React.FC = () => {
             ) : (
               categories.map((cat) => (
                 <TableRow key={cat.id}>
-                  <TableCell sx={{ fontWeight: 600 }}>{cat.name}</TableCell>
-                  <TableCell>{cat.slug}</TableCell>
-                  <TableCell>{cat.parentName || '—'}</TableCell>
-                  <TableCell>{cat.postCount}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5}>
+                  <TableCell data-label="Name" sx={{ fontWeight: 600 }}>{cat.name}</TableCell>
+                  <TableCell data-label="Slug">{cat.slug}</TableCell>
+                  <TableCell data-label="Parent">{cat.parentName || '—'}</TableCell>
+                  <TableCell data-label="Posts">{cat.postCount}</TableCell>
+                  <TableCell data-label="Actions">
+                    <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                       <Tooltip title="Edit">
                         <IconButton size="small" aria-label={`Edit ${cat.name}`} onClick={() => navigate(`/admin/blog/categories/edit/${cat.id}`, { state: { category: cat } })}>
                           <Edit fontSize="small" />

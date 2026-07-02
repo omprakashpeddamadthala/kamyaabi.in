@@ -530,7 +530,7 @@ const ProductDetailPage: React.FC = () => {
                   </Box>
                 )}
 
-                {(!user || user.role !== 'ADMIN') && (
+                {true && (
                   <Box ref={ctaRef} sx={{ mb: 3, p: 3, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-2xl)', border: '1px solid rgba(0,0,0,0.04)' }}>
                     <FormControl size="small" sx={{ mb: 2.5, minWidth: 120 }}>
                       <Select
@@ -831,7 +831,7 @@ const ProductDetailPage: React.FC = () => {
         onClose={() => setLightboxImageUrl(null)}
       />
 
-      {isTablet && (!user || user.role !== 'ADMIN') && (
+      {isTablet && (
         <StickyAddToCartBar
           show={stickyVisible}
           productName={product.name}

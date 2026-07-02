@@ -73,7 +73,7 @@ const Navbar: React.FC = () => {
   const { cartIconRef } = useFlyToCart();
 
   useEffect(() => {
-    if (user && user.role !== 'ADMIN') {
+    if (user) {
       dispatch(fetchWishlistProductIds());
     }
   }, [user, dispatch]);
@@ -141,7 +141,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       <AppBar
-        position="sticky"
+        position={isMobile ? 'fixed' : 'sticky'}
         elevation={0}
         sx={{
           bgcolor: scrolled || isMobile ? 'rgba(255,255,255,0.98)' : 'var(--color-surface-card)',
@@ -207,7 +207,7 @@ const Navbar: React.FC = () => {
                     </Button>
                   );
                 })}
-                {user && user.role !== 'ADMIN' && (
+                {user && (
                   <Button component={Link} to="/orders" sx={{
                     color: location.pathname.startsWith('/orders') ? 'var(--color-brand-primary)' : 'var(--color-text-primary)',
                     fontWeight: location.pathname.startsWith('/orders') ? 700 : 500,
@@ -240,7 +240,7 @@ const Navbar: React.FC = () => {
               {!isMobile && (
                 <SocialLinks size={22} color="var(--color-text-secondary)" gap={0.5} sx={{ mr: 1 }} />
               )}
-              {!isMobile && user && user.role !== 'ADMIN' && (
+              {!isMobile && user && (
                 <IconButton component={Link} to="/wishlist" color="inherit" aria-label="Wishlist">
                   <Badge
                     badgeContent={wishlistProductIds.length}
@@ -251,7 +251,7 @@ const Navbar: React.FC = () => {
                   </Badge>
                 </IconButton>
               )}
-              {!isMobile && user && user.role !== 'ADMIN' && (
+              {!isMobile && user && (
                 <Box ref={cartIconRef} sx={{ display: 'inline-flex' }}>
                   <IconButton component={Link} to="/cart" color="inherit" aria-label="Cart">
                     <Badge
@@ -317,20 +317,20 @@ const Navbar: React.FC = () => {
                       </Box>
                       <Divider sx={{ mb: 1 }} />
                       
-                      {isMobile && user.role !== 'ADMIN' && (
+                      {isMobile && (
                         <MenuItem onClick={() => { handleMenuClose(); navigate('/wishlist'); }} sx={{ py: 1.5 }}>
                           <ListItemIcon><FavoriteBorder fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
                           <ListItemText primary="My Wishlist" primaryTypographyProps={{ fontWeight: 600 }} />
                         </MenuItem>
                       )}
                       
-                      {user.role !== 'ADMIN' && (
+                      {true && (
                         <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }} sx={{ py: 1.5 }}>
                           <ListItemIcon><Person fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
                           <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
                         </MenuItem>
                       )}
-                      {user.role !== 'ADMIN' && (
+                      {true && (
                         <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }} sx={{ py: 1.5 }}>
                           <ListItemIcon><Receipt fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
                           <ListItemText primary="My Orders" primaryTypographyProps={{ fontWeight: 600 }} />
@@ -440,7 +440,7 @@ const Navbar: React.FC = () => {
       </Drawer>
 
       {/* Mobile Bottom Navigation (Zepto/Blinkit Style) */}
-      {isMobile && user?.role !== 'ADMIN' && (
+      {isMobile && (
         <Paper 
           elevation={0}
           sx={{ 

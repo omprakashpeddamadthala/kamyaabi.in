@@ -122,7 +122,7 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
         <TableSkeleton rows={5} columns={7} />
       ) : (
         <>
-          <TableContainer component={Card} sx={{ overflowX: 'auto' }}>
+          <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -147,46 +147,48 @@ const AdminCouponsTab: React.FC<AdminCouponsTabProps> = ({ active }) => {
                 )}
                 {coupons?.content.map((coupon) => (
                   <TableRow key={coupon.id}>
-                    <TableCell>
+                    <TableCell data-label="Code">
                       <Typography fontWeight={600} sx={{ fontFamily: 'monospace' }}>
                         {coupon.code}
                       </Typography>
                     </TableCell>
-                    <TableCell>{coupon.discountType}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Type">{coupon.discountType}</TableCell>
+                    <TableCell data-label="Value">
                       {coupon.discountType === 'PERCENTAGE' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Status">
                       <Chip
                         label={coupon.isActive ? 'Active' : 'Inactive'}
                         color={coupon.isActive ? 'success' : 'default'}
                         size="small"
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell data-label="Usage">
                       {coupon.uniqueMembers} members / {coupon.usageCount} uses
                     </TableCell>
-                    <TableCell>{formatDate(coupon.expiresAt)}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        aria-label={`Edit coupon ${coupon.code}`}
-                        onClick={() => navigate(`/admin/coupons/edit/${coupon.id}`, { state: { coupon } })}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      {coupon.isActive && (
+                    <TableCell data-label="Expires">{formatDate(coupon.expiresAt)}</TableCell>
+                    <TableCell data-label="Actions" align="right">
+                      <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-end' }}>
                         <IconButton
                           size="small"
-                          color="error"
-                          aria-label={`Deactivate coupon ${coupon.code}`}
-                          onClick={() =>
-                            setConfirmState({ open: true, couponId: coupon.id, couponCode: coupon.code, loading: false })
-                          }
+                          aria-label={`Edit coupon ${coupon.code}`}
+                          onClick={() => navigate(`/admin/coupons/edit/${coupon.id}`, { state: { coupon } })}
                         >
-                          <Delete fontSize="small" />
+                          <Edit fontSize="small" />
                         </IconButton>
-                      )}
+                        {coupon.isActive && (
+                          <IconButton
+                            size="small"
+                            color="error"
+                            aria-label={`Deactivate coupon ${coupon.code}`}
+                            onClick={() =>
+                              setConfirmState({ open: true, couponId: coupon.id, couponCode: coupon.code, loading: false })
+                            }
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 ))}

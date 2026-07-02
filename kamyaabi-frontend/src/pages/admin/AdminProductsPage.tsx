@@ -159,7 +159,12 @@ const AdminProductsPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>Products</Typography>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Products</Typography>
+        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/products/new')}>
+          Add Product
+        </Button>
+      </Stack>
 
       <InlineConfirmBar
         open={!!deleteTarget}
@@ -235,6 +240,7 @@ const AdminProductsPage: React.FC = () => {
               showError('Failed to export CSV');
             }
           }}
+          sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
         >
           Export CSV
         </Button>
@@ -243,6 +249,7 @@ const AdminProductsPage: React.FC = () => {
           startIcon={importing ? <CircularProgress size={18} /> : <FileUpload />}
           disabled={importing}
           onClick={() => csvFileRef.current?.click()}
+          sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
         >
           {importing ? 'Importing...' : 'Import CSV'}
         </Button>
@@ -273,12 +280,9 @@ const AdminProductsPage: React.FC = () => {
             }
           }}
         />
-        <Button variant="contained" startIcon={<Add />} onClick={() => navigate('/admin/products/new')}>
-          Add Product
-        </Button>
       </Stack>
 
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -310,7 +314,7 @@ const AdminProductsPage: React.FC = () => {
                 const thumb = p.mainImageUrl || p.images?.[0]?.imageUrl || p.imageUrl;
                 return (
                   <TableRow key={p.id}>
-                    <TableCell>
+                    <TableCell data-label="Image">
                       {thumb ? (
                         <Box
                           component="img"
@@ -322,15 +326,15 @@ const AdminProductsPage: React.FC = () => {
                         <Box sx={{ width: 48, height: 48, bgcolor: 'grey.100', borderRadius: 1 }} />
                       )}
                     </TableCell>
-                    <TableCell>{p.name}</TableCell>
-                    <TableCell>{p.categoryName}</TableCell>
-                    <TableCell>{p.weight || '—'}</TableCell>
-                    <TableCell>{p.unit || '—'}</TableCell>
-                    <TableCell>₹{p.price}</TableCell>
-                    <TableCell>{p.discountPrice ? `₹${p.discountPrice}` : '—'}</TableCell>
-                    <TableCell>{p.stock}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
+                    <TableCell data-label="Name">{p.name}</TableCell>
+                    <TableCell data-label="Category">{p.categoryName}</TableCell>
+                    <TableCell data-label="Weight">{p.weight || '—'}</TableCell>
+                    <TableCell data-label="Unit">{p.unit || '—'}</TableCell>
+                    <TableCell data-label="Price (MRP)">₹{p.price}</TableCell>
+                    <TableCell data-label="Discount Price">{p.discountPrice ? `₹${p.discountPrice}` : '—'}</TableCell>
+                    <TableCell data-label="Stock">{p.stock}</TableCell>
+                    <TableCell data-label="Status">
+                      <Stack direction="row" spacing={1} alignItems="center" justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                         <Switch
                           size="small"
                           checked={!!p.active}
@@ -341,13 +345,15 @@ const AdminProductsPage: React.FC = () => {
                         <Chip label={p.active ? 'Active' : 'Inactive'} color={p.active ? 'success' : 'default'} size="small" />
                       </Stack>
                     </TableCell>
-                    <TableCell>
-                      <IconButton size="small" onClick={() => navigate(`/admin/products/edit/${p.id}`)} aria-label={`Edit ${p.name}`}>
-                        <Edit />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => setDeleteTarget(p)} aria-label={`Delete ${p.name}`} disabled={!p.active}>
-                        <Delete />
-                      </IconButton>
+                    <TableCell data-label="Actions">
+                      <Stack direction="row" spacing={0.5} justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
+                        <IconButton size="small" onClick={() => navigate(`/admin/products/edit/${p.id}`)} aria-label={`Edit ${p.name}`}>
+                          <Edit />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => setDeleteTarget(p)} aria-label={`Delete ${p.name}`} disabled={!p.active}>
+                          <Delete />
+                        </IconButton>
+                      </Stack>
                     </TableCell>
                   </TableRow>
                 );
@@ -358,22 +364,52 @@ const AdminProductsPage: React.FC = () => {
       </TableContainer>
 
       {(totalPages > 1 || totalElements > 0) && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mt: 3, 
+          gap: 2 
+        }}>
           <Typography variant="body2" color="text.secondary">
             {totalElements} product{totalElements === 1 ? '' : 's'}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center', 
+            gap: 2,
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: 'center'
+          }}>
+            <FormControl size="small" sx={{ width: { xs: 120, sm: 100 } }}>
               <InputLabel>Per page</InputLabel>
-              <Select label="Per page" value={limit} onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}>
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <MenuItem key={n} value={n}>{n}</MenuItem>
+              <Select
+                label="Per page"
+                value={size}
+                onChange={(e) => {
+                  updateUrlParams({ page: 1, size: e.target.value });
+                  setSize(Number(e.target.value));
+                }}
+              >
+                {[10, 20, 50].map((v) => (
+                  <MenuItem key={v} value={v}>{v}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            {totalPages > 1 && (
-              <Pagination count={totalPages} page={page + 1} onChange={(_, p) => updateUrlParams({ page: p })} />
-            )}
+            <Pagination
+              count={totalPages}
+              page={page}
+              color="primary"
+              onChange={(_, value) => {
+                updateUrlParams({ page: value });
+                setPage(value);
+              }}
+              siblingCount={0}
+              boundaryCount={1}
+              size="small"
+            />
           </Box>
         </Box>
       )}

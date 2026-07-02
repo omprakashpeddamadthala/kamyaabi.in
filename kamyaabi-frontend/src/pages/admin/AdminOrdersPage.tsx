@@ -232,6 +232,7 @@ const AdminOrdersPage: React.FC = () => {
             startIcon={exporting ? <CircularProgress size={16} /> : <FileDownloadOutlined />}
             onClick={handleExport}
             disabled={exporting || loading}
+            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
           >
             Export
           </Button>
@@ -241,6 +242,7 @@ const AdminOrdersPage: React.FC = () => {
             startIcon={importing ? <CircularProgress size={16} /> : <FileUploadOutlined />}
             onClick={() => importInputRef.current?.click()}
             disabled={importing || loading}
+            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
           >
             Import
           </Button>
@@ -264,7 +266,7 @@ const AdminOrdersPage: React.FC = () => {
         </Stack>
       </Stack>
 
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -292,9 +294,9 @@ const AdminOrdersPage: React.FC = () => {
             ) : (
               orders.map((o) => (
                 <TableRow key={o.id} hover>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>#{o.id}</TableCell>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Order ID" sx={{ whiteSpace: 'nowrap' }}>#{o.id}</TableCell>
+                  <TableCell data-label="Date" sx={{ whiteSpace: 'nowrap' }}>{new Date(o.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                  <TableCell data-label="Payment">
                     <Chip
                       label={o.paymentMethod === 'COD' ? 'COD' : 'Online'}
                       size="small"
@@ -302,7 +304,7 @@ const AdminOrdersPage: React.FC = () => {
                       variant="outlined"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Items">
                     {o.items.length === 0 ? (
                       '—'
                     ) : (
@@ -320,12 +322,12 @@ const AdminOrdersPage: React.FC = () => {
                       </Tooltip>
                     )}
                   </TableCell>
-                  <TableCell sx={{ whiteSpace: 'nowrap' }}>₹{o.totalAmount}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Total" sx={{ whiteSpace: 'nowrap' }}>₹{o.totalAmount}</TableCell>
+                  <TableCell data-label="Status">
                     <Chip label={o.status} size="small" />
                   </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                  <TableCell data-label="Shipping">
+                    <Stack direction="row" spacing={0.5} alignItems="center" justifyContent={{ xs: 'flex-end', md: 'flex-start' }}>
                       {o.shippingAddress ? (
                         <Tooltip title="View address">
                           <Link
@@ -347,8 +349,8 @@ const AdminOrdersPage: React.FC = () => {
                       )}
                     </Stack>
                   </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                  <TableCell data-label="Action">
+                    <Stack direction="row" spacing={0.5} alignItems="center" justifyContent={{ xs: 'flex-end', md: 'flex-start' }} flexWrap="wrap" useFlexGap>
                       <FormControl size="small" sx={{ minWidth: 110 }} disabled={updatingId === o.id}>
                         <InputLabel>Update</InputLabel>
                         <Select label="Update" value="" onChange={(e) => handleUpdateStatus(o.id, e.target.value)}>
@@ -482,12 +484,26 @@ const AdminOrdersPage: React.FC = () => {
       </Dialog>
 
       {(totalPages > 1 || totalElements > 0) && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mt: 3, 
+          gap: 2 
+        }}>
           <Typography variant="body2" color="text.secondary">
             {totalElements} order{totalElements === 1 ? '' : 's'}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center', 
+            gap: 2,
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: 'center'
+          }}>
+            <FormControl size="small" sx={{ width: { xs: 120, sm: 100 } }}>
               <InputLabel>Per page</InputLabel>
               <Select label="Per page" value={limit} onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}>
                 {PAGE_SIZE_OPTIONS.map((n) => (
@@ -496,7 +512,7 @@ const AdminOrdersPage: React.FC = () => {
               </Select>
             </FormControl>
             {totalPages > 1 && (
-              <Pagination count={totalPages} page={page + 1} onChange={(_, p) => updateUrlParams({ page: p })} />
+              <Pagination count={totalPages} page={page + 1} onChange={(_, p) => updateUrlParams({ page: p })} siblingCount={0} boundaryCount={1} size="small" />
             )}
           </Box>
         </Box>

@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Chip,
+  Divider,
   IconButton,
   InputAdornment,
   LinearProgress,
@@ -18,6 +19,8 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   AdminPanelSettings,
@@ -79,6 +82,8 @@ const initial = (name?: string, email?: string): string => {
 };
 
 const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { showSuccess, showError } = useToast();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -267,84 +272,72 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
 
       {loading && <LinearProgress sx={{ mb: 1 }} />}
 
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small" aria-label="users-table" sx={{ minWidth: 720 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>User ID</TableCell>
-              <TableCell>Full Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Joined</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading && users.length === 0 ? (
-              <TableSkeleton rows={6} columns={7} />
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                  No users match the current filter.
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => {
-                const isSelf = user.id === currentUserId;
-                const rowBusy = rowLoadingId === user.id;
-                const isRemoved = user.status === 'REMOVED';
-                const removedRowSx = isRemoved
-                  ? {
-                      bgcolor: 'action.hover',
-                      opacity: 0.6,
-                      '& .removable-text': { textDecoration: 'line-through' },
-                    }
-                  : undefined;
-                return (
-                  <TableRow key={user.id} hover sx={removedRowSx}>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.75} alignItems="center">
-                        {isRemoved && (
-                          <DoNotDisturbOn
-                            fontSize="small"
-                            color="error"
-                            aria-label="Removed user"
-                          />
-                        )}
-                        <span className="removable-text">#{user.id}</span>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
+      {isMobile ? (
+        <Stack spacing={2}>
+          {loading && users.length === 0 ? (
+            <Typography color="text.secondary" align="center" sx={{ py: 4 }}>Loading users...</Typography>
+          ) : users.length === 0 ? (
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+              No users match the current filter.
+            </Paper>
+          ) : (
+            users.map((user) => {
+              const isSelf = user.id === currentUserId;
+              const rowBusy = rowLoadingId === user.id;
+              const isRemoved = user.status === 'REMOVED';
+              return (
+                <Paper
+                  key={user.id}
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 'var(--radius-lg)',
+                    bgcolor: isRemoved ? 'action.hover' : 'background.paper',
+                    opacity: isRemoved ? 0.8 : 1,
+                    position: 'relative',
+                  }}
+                >
+                  <Stack spacing={1.5}>
+                    {/* Top Row: ID, Avatar, Name */}
+                    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
                         <Avatar
                           src={user.avatarUrl ?? undefined}
                           alt={user.name}
                           sx={{
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             fontSize: 14,
                             filter: isRemoved ? 'grayscale(1)' : undefined,
                           }}
                         >
                           {initial(user.name, user.email)}
                         </Avatar>
-                        <Box>
-                          <Typography variant="body2" fontWeight={600} className="removable-text">
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="body2" fontWeight={700} noWrap>
                             {user.name || '—'}
                           </Typography>
-                          {isSelf && (
-                            <Typography variant="caption" color="primary">
-                              You
-                            </Typography>
-                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            #{user.id} {isSelf && '(You)'}
+                          </Typography>
                         </Box>
                       </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <span className="removable-text">{user.email}</span>
-                    </TableCell>
-                    <TableCell>
+                    </Stack>
+
+                    <Divider sx={{ borderColor: 'rgba(0,0,0,0.04)' }} />
+
+                    {/* Middle Rows: Email & Joined date */}
+                    <Box>
+                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, wordBreak: 'break-all', mb: 0.5 }}>
+                        <strong>Email:</strong> {user.email}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Joined:</strong> {formatDate(user.createdAt)}
+                      </Typography>
+                    </Box>
+
+                    {/* Chips Row: Role & Status */}
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                       <Chip
                         size="small"
                         icon={user.role === 'ADMIN' ? <AdminPanelSettings /> : <PersonOutline />}
@@ -352,19 +345,15 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                         color={user.role === 'ADMIN' ? 'primary' : 'default'}
                         variant={user.role === 'ADMIN' ? 'filled' : 'outlined'}
                       />
-                    </TableCell>
-                    <TableCell>
                       {user.status === 'REMOVED' ? (
-                        <Tooltip title="This user has been removed. Their record is retained but they cannot sign in.">
-                          <Chip
-                            size="small"
-                            icon={<DoNotDisturbOn />}
-                            label="Removed"
-                            color="error"
-                            variant="filled"
-                            sx={{ fontWeight: 700 }}
-                          />
-                        </Tooltip>
+                        <Chip
+                          size="small"
+                          icon={<DoNotDisturbOn />}
+                          label="Removed"
+                          color="error"
+                          variant="filled"
+                          sx={{ fontWeight: 700 }}
+                        />
                       ) : (
                         <Chip
                           size="small"
@@ -374,84 +363,274 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                           variant="outlined"
                         />
                       )}
-                    </TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Tooltip
-                          title={
-                            isSelf
-                              ? 'You cannot change your own role'
-                              : user.role === 'ADMIN'
-                                ? 'Remove Admin'
-                                : 'Make Admin'
-                          }
-                        >
-                          <span>
-                            <IconButton
+                    </Stack>
+
+                    <Divider sx={{ borderColor: 'rgba(0,0,0,0.04)' }} />
+
+                    {/* Actions Row */}
+                    <Stack direction="row" spacing={1.5} justifyContent="flex-end" alignItems="center">
+                      <Tooltip
+                        title={
+                          isSelf
+                            ? 'You cannot change your own role'
+                            : user.role === 'ADMIN'
+                              ? 'Remove Admin'
+                              : 'Make Admin'
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            disabled={isSelf || rowBusy}
+                            onClick={() => handleToggleRole(user)}
+                            aria-label={user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
+                            sx={{ border: '1px solid rgba(29, 78, 216, 0.15)' }}
+                          >
+                            {user.role === 'ADMIN' ? <RemoveModerator /> : <AdminPanelSettings />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          isSelf
+                            ? 'You cannot block your own account'
+                            : isRemoved
+                              ? 'Restore this user before blocking'
+                              : user.status === 'BLOCKED'
+                                ? 'Unblock user'
+                                : 'Block user'
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            size="small"
+                            color={user.status === 'BLOCKED' ? 'success' : 'error'}
+                            disabled={isSelf || rowBusy || isRemoved}
+                            onClick={() => handleToggleStatus(user)}
+                            aria-label={user.status === 'BLOCKED' ? 'Unblock user' : 'Block user'}
+                            sx={{ border: '1px solid rgba(239, 68, 68, 0.15)' }}
+                          >
+                            {user.status === 'BLOCKED' ? <LockOpen /> : <Block />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          isSelf
+                            ? 'You cannot remove your own account'
+                            : isRemoved
+                              ? 'Restore user'
+                              : 'Remove user (soft delete)'
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            size="small"
+                            color={isRemoved ? 'success' : 'warning'}
+                            disabled={isSelf || rowBusy}
+                            onClick={() => handleToggleRemoval(user)}
+                            aria-label={isRemoved ? 'Restore user' : 'Remove user'}
+                            sx={{ border: '1px solid rgba(245, 158, 11, 0.15)' }}
+                          >
+                            {isRemoved ? <RestoreFromTrash /> : <DoNotDisturbOn />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              );
+            })
+          )}
+        </Stack>
+      ) : (
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small" aria-label="users-table" sx={{ minWidth: 720 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>User ID</TableCell>
+                <TableCell>Full Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Joined</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading && users.length === 0 ? (
+                <TableSkeleton rows={6} columns={7} />
+              ) : users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No users match the current filter.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user) => {
+                  const isSelf = user.id === currentUserId;
+                  const rowBusy = rowLoadingId === user.id;
+                  const isRemoved = user.status === 'REMOVED';
+                  const removedRowSx = isRemoved
+                    ? {
+                        bgcolor: 'action.hover',
+                        opacity: 0.6,
+                        '& .removable-text': { textDecoration: 'line-through' },
+                      }
+                    : undefined;
+                  return (
+                    <TableRow key={user.id} hover sx={removedRowSx}>
+                      <TableCell>
+                        <Stack direction="row" spacing={0.75} alignItems="center">
+                          {isRemoved && (
+                            <DoNotDisturbOn
+                              fontSize="small"
+                              color="error"
+                              aria-label="Removed user"
+                            />
+                          )}
+                          <span className="removable-text">#{user.id}</span>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                          <Avatar
+                            src={user.avatarUrl ?? undefined}
+                            alt={user.name}
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: 14,
+                              filter: isRemoved ? 'grayscale(1)' : undefined,
+                            }}
+                          >
+                            {initial(user.name, user.email)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600} className="removable-text">
+                              {user.name || '—'}
+                            </Typography>
+                            {isSelf && (
+                              <Typography variant="caption" color="primary">
+                                You
+                              </Typography>
+                            )}
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <span className="removable-text">{user.email}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          icon={user.role === 'ADMIN' ? <AdminPanelSettings /> : <PersonOutline />}
+                          label={user.role === 'ADMIN' ? 'Admin' : 'User'}
+                          color={user.role === 'ADMIN' ? 'primary' : 'default'}
+                          variant={user.role === 'ADMIN' ? 'filled' : 'outlined'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {user.status === 'REMOVED' ? (
+                          <Tooltip title="This user has been removed. Their record is retained but they cannot sign in.">
+                            <Chip
                               size="small"
-                              color="primary"
-                              disabled={isSelf || rowBusy}
-                              onClick={() => handleToggleRole(user)}
-                              aria-label={user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
-                            >
-                              {user.role === 'ADMIN' ? <RemoveModerator /> : <AdminPanelSettings />}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            isSelf
-                              ? 'You cannot block your own account'
-                              : isRemoved
-                                ? 'Restore this user before blocking'
-                                : user.status === 'BLOCKED'
-                                  ? 'Unblock user'
-                                  : 'Block user'
-                          }
-                        >
-                          <span>
-                            <IconButton
-                              size="small"
-                              color={user.status === 'BLOCKED' ? 'success' : 'error'}
-                              disabled={isSelf || rowBusy || isRemoved}
-                              onClick={() => handleToggleStatus(user)}
-                              aria-label={user.status === 'BLOCKED' ? 'Unblock user' : 'Block user'}
-                            >
-                              {user.status === 'BLOCKED' ? <LockOpen /> : <Block />}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip
-                          title={
-                            isSelf
-                              ? 'You cannot remove your own account'
-                              : isRemoved
-                                ? 'Restore user'
-                                : 'Remove user (soft delete)'
-                          }
-                        >
-                          <span>
-                            <IconButton
-                              size="small"
-                              color={isRemoved ? 'success' : 'warning'}
-                              disabled={isSelf || rowBusy}
-                              onClick={() => handleToggleRemoval(user)}
-                              aria-label={isRemoved ? 'Restore user' : 'Remove user'}
-                            >
-                              {isRemoved ? <RestoreFromTrash /> : <DoNotDisturbOn />}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                              icon={<DoNotDisturbOn />}
+                              label="Removed"
+                              color="error"
+                              variant="filled"
+                              sx={{ fontWeight: 700 }}
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Chip
+                            size="small"
+                            icon={user.status === 'BLOCKED' ? <Block /> : <CheckCircle />}
+                            label={user.status === 'BLOCKED' ? 'Blocked' : 'Active'}
+                            color={user.status === 'BLOCKED' ? 'error' : 'success'}
+                            variant="outlined"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Tooltip
+                            title={
+                              isSelf
+                                ? 'You cannot change your own role'
+                                : user.role === 'ADMIN'
+                                  ? 'Remove Admin'
+                                  : 'Make Admin'
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                disabled={isSelf || rowBusy}
+                                onClick={() => handleToggleRole(user)}
+                                aria-label={user.role === 'ADMIN' ? 'Remove Admin' : 'Make Admin'}
+                              >
+                                {user.role === 'ADMIN' ? <RemoveModerator /> : <AdminPanelSettings />}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip
+                            title={
+                              isSelf
+                                ? 'You cannot block your own account'
+                                : isRemoved
+                                  ? 'Restore this user before blocking'
+                                  : user.status === 'BLOCKED'
+                                    ? 'Unblock user'
+                                    : 'Block user'
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={user.status === 'BLOCKED' ? 'success' : 'error'}
+                                disabled={isSelf || rowBusy || isRemoved}
+                                onClick={() => handleToggleStatus(user)}
+                                aria-label={user.status === 'BLOCKED' ? 'Unblock user' : 'Block user'}
+                              >
+                                {user.status === 'BLOCKED' ? <LockOpen /> : <Block />}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip
+                            title={
+                              isSelf
+                                ? 'You cannot remove your own account'
+                                : isRemoved
+                                  ? 'Restore user'
+                                  : 'Remove user (soft delete)'
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={isRemoved ? 'success' : 'warning'}
+                                disabled={isSelf || rowBusy}
+                                onClick={() => handleToggleRemoval(user)}
+                                aria-label={isRemoved ? 'Restore user' : 'Remove user'}
+                              >
+                                {isRemoved ? <RestoreFromTrash /> : <DoNotDisturbOn />}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       {totalPages > 1 && (
         <Stack direction="row" justifyContent="center" sx={{ mt: 3 }}>
@@ -460,6 +639,9 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
             page={page + 1}
             color="primary"
             onChange={(_, value) => setPage(value - 1)}
+            siblingCount={0}
+            boundaryCount={1}
+            size="small"
           />
         </Stack>
       )}

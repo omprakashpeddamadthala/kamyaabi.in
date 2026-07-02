@@ -146,7 +146,7 @@ const AdminCategoriesPage: React.FC = () => {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <TableContainer component={Card} sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
+      <TableContainer component={Card} className="responsive-table" sx={{ overflowX: 'auto', '&:hover': { transform: 'none' } }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -169,13 +169,13 @@ const AdminCategoriesPage: React.FC = () => {
             ) : (
               rows.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell>{c.name}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Name">{c.name}</TableCell>
+                  <TableCell data-label="Slug">
                     <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>{c.slug || '—'}</Typography>
                   </TableCell>
-                  <TableCell>{c.parentName || '—'}</TableCell>
-                  <TableCell>{c.productCount}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Parent">{c.parentName || '—'}</TableCell>
+                  <TableCell data-label="Products">{c.productCount}</TableCell>
+                  <TableCell data-label="Actions">
                     <IconButton size="small" onClick={() => navigate(`/admin/categories/edit/${c.id}`)} aria-label={`Edit ${c.name}`}>
                       <Edit />
                     </IconButton>
@@ -191,12 +191,26 @@ const AdminCategoriesPage: React.FC = () => {
       </TableContainer>
 
       {(totalPages > 1 || totalElements > 0) && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mt: 3, 
+          gap: 2 
+        }}>
           <Typography variant="body2" color="text.secondary">
             {totalElements} categor{totalElements === 1 ? 'y' : 'ies'}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center', 
+            gap: 2,
+            width: { xs: '100%', sm: 'auto' },
+            justifyContent: 'center'
+          }}>
+            <FormControl size="small" sx={{ width: { xs: 120, sm: 100 } }}>
               <InputLabel>Per page</InputLabel>
               <Select label="Per page" value={limit} onChange={(e) => updateUrlParams({ limit: Number(e.target.value), page: 1 })}>
                 {PAGE_SIZE_OPTIONS.map((n) => (
@@ -205,7 +219,7 @@ const AdminCategoriesPage: React.FC = () => {
               </Select>
             </FormControl>
             {totalPages > 1 && (
-              <Pagination count={totalPages} page={page + 1} onChange={(_, p) => updateUrlParams({ page: p })} />
+              <Pagination count={totalPages} page={page + 1} onChange={(_, p) => updateUrlParams({ page: p })} siblingCount={0} boundaryCount={1} size="small" />
             )}
           </Box>
         </Box>
