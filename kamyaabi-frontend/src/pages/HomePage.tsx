@@ -39,7 +39,7 @@ const fallbackHeroSlides: HeroSlide[] = [
 
 const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'almonds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551804/kamyaabi/assets/img/categorie/almonds.jpg',
-  'anjeer': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551805/kamyaabi/assets/img/categorie/anjeer.jpg',
+  'anjeer': 'https://res.cloudinary.com/dsibez7to/image/upload/v1783216984/kamyaabi/assets/img/categorie/anjeer.jpg',
   'cashew': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551807/kamyaabi/assets/img/categorie/cashew.jpg',
   'cashews': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551807/kamyaabi/assets/img/categorie/cashew.jpg',
   'dry dates': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551808/kamyaabi/assets/img/categorie/dry_dates.jpg',
@@ -48,7 +48,7 @@ const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'raisins': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551819/kamyaabi/assets/img/categorie/raisins.jpg',
   'pistachio': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
   'pistachios': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
-  'seeds': '/assets/img/categorie/seeds.png',
+  'seeds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1783216005/kamyaabi/assets/img/categorie/seeds.jpg',
 };
 
 const getCategoryImage = (catName: string, catImageUrl: string | null | undefined): string => {
@@ -134,9 +134,9 @@ const getCategoryStyle = (catName: string) => {
 };
 
 const welcomeImages = [
-  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551834/kamyaabi/assets/img/product/almond_1.webp',
-  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551848/kamyaabi/assets/img/product/pista1.webp',
-  'https://res.cloudinary.com/dsibez7to/image/upload/v1782551857/kamyaabi/assets/img/product/wholecashew3.webp',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1783217380/kamyaabi/assets/img/product/almonds_jar.jpg',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1783217381/kamyaabi/assets/img/product/pista_pouch.jpg',
+  'https://res.cloudinary.com/dsibez7to/image/upload/v1783217378/kamyaabi/assets/img/product/cashew_pouch.jpg',
 ];
 
 const testimonials = [

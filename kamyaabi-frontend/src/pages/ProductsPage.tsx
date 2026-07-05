@@ -59,14 +59,14 @@ const isValidSort = (raw: string | null): raw is ProductSort =>
 
 const CATEGORY_IMAGE_MAP: Record<string, string> = {
   'almonds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551804/kamyaabi/assets/img/categorie/almonds.jpg',
-  'anjeer': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551805/kamyaabi/assets/img/categorie/anjeer.jpg',
+  'anjeer': 'https://res.cloudinary.com/dsibez7to/image/upload/v1783216984/kamyaabi/assets/img/categorie/anjeer.jpg',
   'cashew': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551807/kamyaabi/assets/img/categorie/cashew.jpg',
   'dry dates': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551808/kamyaabi/assets/img/categorie/dry_dates.jpg',
   'kalmi dates': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551816/kamyaabi/assets/img/categorie/kalmi_dates.jpg',
   'walnuts': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551821/kamyaabi/assets/img/categorie/walnuts.jpg',
   'raisins': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551819/kamyaabi/assets/img/categorie/raisins.jpg',
   'pistachio': 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551817/kamyaabi/assets/img/categorie/pistachio.jpg',
-  'seeds': '/assets/img/categorie/seeds.png',
+  'seeds': 'https://res.cloudinary.com/dsibez7to/image/upload/v1783216005/kamyaabi/assets/img/categorie/seeds.jpg',
 };
 
 const getCategoryImage = (catName: string, catImageUrl: string | null | undefined): string => {
