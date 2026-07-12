@@ -43,9 +43,9 @@ class InvoiceTemplateRendererTest {
         String html = renderer.render(order, renderer.invoiceNumber(order));
 
         assertThat(renderer.invoiceNumber(order)).isEqualTo("INV-20260102-100");
-        assertThat(html).contains("TAX INVOICE", "PAID", "Bill To", "Order Summary", "Cashews", "SKU-44");
-        assertThat(html).contains("Buyer Name", "buyer@test.com", "pay_123", "Thank you for your purchase!");
-        assertThat(html).contains("Order status:", "Payment method:");
+        assertThat(html).contains("TAX INVOICE", "PAID", "Billing / Shipping Address", "Order Items", "Cashews", "SKU-44");
+        assertThat(html).contains("Buyer Name", "buyer@test.com", "pay_123", "Thank you for shopping with us!");
+        assertThat(html).contains("Payment Status:", "Payment Method:");
         assertThat(html).contains("data:image/png;base64,");
     }
 
@@ -60,6 +60,6 @@ class InvoiceTemplateRendererTest {
 
         String html = renderer.render(order, renderer.invoiceNumber(order));
 
-        assertThat(html).contains("No line items recorded", "₹100.00");
+        assertThat(html).contains("No line items recorded", "Rs. 100.00");
     }
 }
