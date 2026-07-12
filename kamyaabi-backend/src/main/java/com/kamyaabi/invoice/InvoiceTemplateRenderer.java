@@ -97,13 +97,10 @@ public class InvoiceTemplateRenderer {
                     .qr { width: 65px; height: 65px; }
                     .thanks { font-size: 12px; color: #111; font-weight: bold; margin-bottom: 3px; }
                     .page:after { content: counter(page); }
-                    #watermark { position: fixed; top: 32%; left: 10%; width: 80%; text-align: center; opacity: 0.05; z-index: -1000; }
-                    #watermark img { width: 450px; height: auto; }
                   </style>
                 </head>
                 <body>
                 """
-                + getWatermarkHtml()
                 + header(invoiceNumber, invoiceDate, dueDate, order)
                 + billTo(order)
                 + itemsTable(order.getItems())
@@ -138,25 +135,6 @@ public class InvoiceTemplateRenderer {
                 + "</tr>"
                 + "</table>"
                 + "<hr style=\"border: 0; border-top: 1px solid #ddd; margin: 15px 0;\"/>";
-    }
-
-    private String getWatermarkHtml() {
-        // Try reading local logo from classpath first
-        try (InputStream is = getClass().getResourceAsStream("/images/logo.png")) {
-            if (is != null) {
-                byte[] bytes = is.readAllBytes();
-                String base64 = Base64.getEncoder().encodeToString(bytes);
-                return "<div id=\"watermark\"><img src=\"data:image/png;base64," + base64 + "\" alt=\"Watermark\" /></div>";
-            }
-        } catch (Exception e) {
-            // Ignore
-        }
-
-        String logoUrl = text(invoiceProperties.getLogoUrl());
-        if (!logoUrl.isBlank() && logoUrl.startsWith("http")) {
-            return "<div id=\"watermark\"><img src=\"" + attr(transformCloudinaryUrl(logoUrl, "w_150,h_150,c_fill,q_80")) + "\" alt=\"Watermark\" /></div>";
-        }
-        return "";
     }
 
     private String getLogoHtml() {
