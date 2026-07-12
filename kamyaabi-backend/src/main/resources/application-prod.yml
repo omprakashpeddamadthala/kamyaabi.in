@@ -66,15 +66,15 @@ app:
 
   invoice:
     storage-directory: ${INVOICE_STORAGE_DIRECTORY:/app/invoices}
-    company-name: ${INVOICE_COMPANY_NAME:Kamyaabi}
-    company-address: ${INVOICE_COMPANY_ADDRESS:Premium Dry Fruits, India}
+    company-name: ${INVOICE_COMPANY_NAME:SM Enterprises}
+    company-address: ${INVOICE_COMPANY_ADDRESS:House No. 2-114/5, Srinivasa Nagar, Aganampudi, Prasanthi Nagar, Visakhapatnam - 530053, Andhra Pradesh, India}
     company-email: ${INVOICE_COMPANY_EMAIL:${APP_SUPPORT_EMAIL:support@kamyaabi.in}}
     company-phone: ${INVOICE_COMPANY_PHONE:+91 9848999072}
     company-website: ${INVOICE_COMPANY_WEBSITE:${APP_SUPPORT_URL:https://kamyaabi.in}}
     logo-url: ${INVOICE_LOGO_URL:}
     currency: ${INVOICE_CURRENCY:INR}
     tax-label: ${INVOICE_TAX_LABEL:GST}
-    tax-rate: ${INVOICE_TAX_RATE:0%}
+    tax-rate: ${INVOICE_TAX_RATE:5%}
     refund-policy-note: ${INVOICE_REFUND_POLICY_NOTE:Returns and refunds are handled as per Kamyaabi refund policy.}
 
   email:
