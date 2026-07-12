@@ -26,10 +26,10 @@ public class DataInitializer {
         return args -> {
             if (categoryRepo.count() > 0) {
                 log.info("Data already initialized. Checking if Seeds or Anjeer categories need to be backfilled...");
-                if (!categoryRepo.existsByName("Seeds")) {
+                if (!categoryRepo.existsByName("Seeds") && !categoryRepo.existsBySlug("seeds")) {
                     seedSeedsCategoryAndProducts(categoryRepo, productRepo);
                 }
-                if (!categoryRepo.existsByName("Anjeer")) {
+                if (!categoryRepo.existsByName("Anjeer") && !categoryRepo.existsBySlug("anjeer")) {
                     seedAnjeerCategoryAndProducts(categoryRepo, productRepo);
                 }
                 return;

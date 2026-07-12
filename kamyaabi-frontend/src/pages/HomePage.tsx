@@ -425,7 +425,7 @@ const HomePage: React.FC = () => {
                         '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.1)' } 
                       }}
                       onClick={() => {
-                        navigate(`/products?category=${cat.id}`);
+                        navigate(`/products?category=${cat.slug}`);
                       }}
                     >
                       <CardMedia component="img" loading="lazy" image={getCategoryImage(cat.name, cat.imageUrl)} alt={cat.name} sx={{ height: { xs: 130, md: 160 }, objectFit: 'cover' }} />

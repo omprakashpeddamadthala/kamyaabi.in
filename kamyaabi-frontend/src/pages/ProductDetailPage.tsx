@@ -259,7 +259,7 @@ const ProductDetailPage: React.FC = () => {
             '@type': 'ListItem',
             position: 3,
             name: product.categoryName,
-            item: `${config.brandSiteUrl}/products?category=${product.categoryId}`,
+            item: `${config.brandSiteUrl}/products?category=${product.categorySlug || product.categoryId}`,
           }]
         : []),
       {
@@ -300,7 +300,7 @@ const ProductDetailPage: React.FC = () => {
           {product.categoryName && (
             <MuiLink
               component={Link}
-              to={`/products?category=${product.categoryId}`}
+              to={`/products?category=${product.categorySlug || product.categoryId}`}
               underline="hover"
               color="inherit"
             >
@@ -502,7 +502,7 @@ const ProductDetailPage: React.FC = () => {
                     <Typography variant="body2" sx={{ color: 'var(--color-text-muted)', fontWeight: 600 }}>Category:</Typography>
                     <MuiLink
                       component={Link}
-                      to={`/products?category=${product.categoryId}`}
+                      to={`/products?category=${product.categorySlug || product.categoryId}`}
                       underline="hover"
                       variant="body2"
                       sx={{ fontWeight: 700, color: 'var(--color-brand-primary)' }}

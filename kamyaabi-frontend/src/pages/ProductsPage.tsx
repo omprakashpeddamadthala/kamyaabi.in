@@ -3,7 +3,7 @@
  * - Preserves search, sort, category/tag URL params, pagination, public settings page size, and product API dispatch behavior.
  * - Visual-only redesign of headings, filter surfaces, and responsive product presentation. Includes off-canvas filters for mobile.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Seo from '../components/common/Seo';
 import {
@@ -99,6 +99,15 @@ const ProductsPage: React.FC = () => {
   const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'newest';
   const categoryId = searchParams.get('category');
   const tagSlug = searchParams.get('tag');
+
+  const resolvedCategoryId = useMemo(() => {
+    if (!categoryId) return null;
+    if (/^\d+$/.test(categoryId)) return Number(categoryId);
+    const matched = categories.find((c) => c.slug === categoryId);
+    if (matched) return matched.id;
+    if (categories.length > 0) return -1;
+    return null;
+  }, [categoryId, categories]);
   const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
   const zeroBasedPage = urlPage - 1;
 
@@ -126,19 +135,19 @@ const ProductsPage: React.FC = () => {
       dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage, size: productsPerPage, sort }));
     } else if (tagSlug) {
       dispatch(fetchProductsByTag({ tagSlug, page: zeroBasedPage, size: productsPerPage, sort }));
-    } else if (categoryId) {
+    } else if (resolvedCategoryId !== null) {
       dispatch(
         fetchProductsByCategory({
-          categoryId: Number(categoryId),
+          categoryId: resolvedCategoryId,
           page: zeroBasedPage,
           size: productsPerPage,
           sort,
         }),
       );
-    } else {
+    } else if (!categoryId) {
       dispatch(fetchProducts({ page: zeroBasedPage, size: productsPerPage, sort }));
     }
-  }, [dispatch, categoryId, tagSlug, sort, searchQuery, zeroBasedPage, productsPerPage]);
+  }, [dispatch, resolvedCategoryId, categoryId, tagSlug, sort, searchQuery, zeroBasedPage, productsPerPage]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
     updateParams({ page: page === 1 ? null : String(page) });
@@ -157,7 +166,7 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const selectedCategory = categories.find((c) => c.id === Number(categoryId));
+  const selectedCategory = categories.find((c) => c.id === resolvedCategoryId);
 
   const FiltersContent = () => (
     <Box sx={{ p: { xs: 2, md: 0 } }}>
@@ -214,12 +223,12 @@ const ProductsPage: React.FC = () => {
         </Box>
 
         {categories.filter((cat) => cat.parentId !== null && cat.parentId !== undefined).map((cat) => {
-          const isSelected = categoryId === String(cat.id);
+          const isSelected = categoryId === cat.slug || resolvedCategoryId === cat.id;
           return (
             <Box
               key={cat.id}
               onClick={() => {
-                setSearchParams({ category: String(cat.id) });
+                setSearchParams({ category: cat.slug });
                 setSearchQuery('');
                 if(isMobile) setIsFilterDrawerOpen(false);
               }}
