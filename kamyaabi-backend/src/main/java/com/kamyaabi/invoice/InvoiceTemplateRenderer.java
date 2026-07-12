@@ -67,7 +67,7 @@ public class InvoiceTemplateRenderer {
                     * { box-sizing: border-box; }
                     body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; font-size: 11px; line-height: 1.4; }
                     .header-table { display: table; width: 100%; margin-bottom: 15px; }
-                    .logo { max-width: 140px; max-height: 50px; margin-bottom: 5px; }
+                    .logo { max-width: 180px; max-height: 60px; }
                     .logo-placeholder { width: 45px; height: 45px; border-radius: 8px; background: #232f3e; color: #febd69; font-size: 20px; font-weight: 800; text-align: center; line-height: 45px; margin-bottom: 5px; }
                     .muted { color: #555; font-size: 10.5px; }
                     .panel-row { display: table; width: 100%; margin-bottom: 15px; }
@@ -76,7 +76,7 @@ public class InvoiceTemplateRenderer {
                     .section-title { font-weight: bold; font-size: 11px; text-transform: uppercase; color: #232f3e; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 6px; }
                     table.items { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #ccc; }
                     table.items th { background: #f3f3f3; color: #111; padding: 8px; font-size: 10px; text-align: left; text-transform: uppercase; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; font-weight: bold; }
-                    table.items td { padding: 8px; vertical-align: top; border-bottom: 1px solid #ddd; border-right: 1px solid #ccc; }
+                    table.items td { padding: 8px; vertical-align: middle; border-bottom: 1px solid #ddd; border-right: 1px solid #ccc; }
                     table.items th:last-child, table.items td:last-child { border-right: 0; }
                     .num { text-align: right; white-space: nowrap; }
                     .thumb { width: 55px; height: 55px; border-radius: 4px; object-fit: cover; vertical-align: middle; border: 1px solid #ddd; }
@@ -97,10 +97,13 @@ public class InvoiceTemplateRenderer {
                     .qr { width: 65px; height: 65px; }
                     .thanks { font-size: 12px; color: #111; font-weight: bold; margin-bottom: 3px; }
                     .page:after { content: counter(page); }
+                    #watermark { position: fixed; top: 32%; left: 10%; width: 80%; text-align: center; opacity: 0.05; z-index: -1000; }
+                    #watermark img { width: 450px; height: auto; }
                   </style>
                 </head>
                 <body>
                 """
+                + getWatermarkHtml()
                 + header(invoiceNumber, invoiceDate, dueDate, order)
                 + billTo(order)
                 + itemsTable(order.getItems())
@@ -112,23 +115,48 @@ public class InvoiceTemplateRenderer {
 
     private String header(String invoiceNumber, LocalDate invoiceDate, LocalDate dueDate, Order order) {
         String logoHtml = getLogoHtml();
-        return "<div class=\"header-table\"><div style=\"display: table-cell; width: 50%; vertical-align: top;\">"
-                + logoHtml
-                + "<div style=\"font-size: 16px; font-weight: bold; margin-top: 5px;\">" + html(invoiceProperties.getCompanyName()) + "</div>"
-                + "<div class=\"muted\">"
+        return "<table style=\"width: 100%; border-collapse: collapse; border: 0; margin-bottom: 15px;\">"
+                + "<tr>"
+                + "<td style=\"width: 50%; vertical-align: top; border: 0; padding: 0; text-align: left;\">"
+                + "<div style=\"display: block; margin-bottom: 5px;\">" + logoHtml + "</div>"
+                + "<div style=\"font-size: 16px; font-weight: bold; color: #111; margin-top: 5px;\">" + html(invoiceProperties.getCompanyName()) + "</div>"
+                + "<div class=\"muted\" style=\"line-height: 1.4;\">"
                 + html(invoiceProperties.getCompanyAddress()) + "<br/>"
                 + "Email: " + html(invoiceProperties.getCompanyEmail()) + " | Phone: " + html(invoiceProperties.getCompanyPhone()) + "<br/>"
                 + "Website: " + html(invoiceProperties.getCompanyWebsite())
-                + "</div></div>"
-                + "<div style=\"display: table-cell; width: 50%; text-align: right; vertical-align: top;\">"
-                + "<div style=\"font-size: 20px; font-weight: bold; color: #232f3e;\">TAX INVOICE</div>"
-                + "<div style=\"margin-top: 8px; line-height: 1.5;\" class=\"muted\">"
+                + "</div>"
+                + "</td>"
+                + "<td style=\"width: 50%; vertical-align: top; border: 0; padding: 0; text-align: right;\">"
+                + "<div style=\"font-size: 20px; font-weight: bold; color: #232f3e; margin-bottom: 8px;\">TAX INVOICE</div>"
+                + "<div class=\"muted\" style=\"line-height: 1.5;\">"
                 + "<strong>Invoice No:</strong> " + html(invoiceNumber) + "<br/>"
                 + "<strong>Invoice Date:</strong> " + invoiceDate.format(DISPLAY_DATE) + "<br/>"
                 + "<strong>Order ID:</strong> #" + order.getId() + "<br/>"
                 + "<strong>Order Date:</strong> " + (order.getCreatedAt() != null ? order.getCreatedAt().toLocalDate().format(DISPLAY_DATE) : invoiceDate.format(DISPLAY_DATE))
-                + "</div></div></div>"
+                + "</div>"
+                + "</td>"
+                + "</tr>"
+                + "</table>"
                 + "<hr style=\"border: 0; border-top: 1px solid #ddd; margin: 15px 0;\"/>";
+    }
+
+    private String getWatermarkHtml() {
+        // Try reading local logo from classpath first
+        try (InputStream is = getClass().getResourceAsStream("/images/logo.png")) {
+            if (is != null) {
+                byte[] bytes = is.readAllBytes();
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                return "<div id=\"watermark\"><img src=\"data:image/png;base64," + base64 + "\" alt=\"Watermark\" /></div>";
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+
+        String logoUrl = text(invoiceProperties.getLogoUrl());
+        if (!logoUrl.isBlank() && logoUrl.startsWith("http")) {
+            return "<div id=\"watermark\"><img src=\"" + attr(transformCloudinaryUrl(logoUrl, "w_150,h_150,c_fill,q_80")) + "\" alt=\"Watermark\" /></div>";
+        }
+        return "";
     }
 
     private String getLogoHtml() {
