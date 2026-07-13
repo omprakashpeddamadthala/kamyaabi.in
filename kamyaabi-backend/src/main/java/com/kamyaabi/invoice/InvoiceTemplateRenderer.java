@@ -138,6 +138,11 @@ public class InvoiceTemplateRenderer {
     }
 
     private String getLogoHtml() {
+        String logoUrl = text(invoiceProperties.getLogoUrl());
+        if (!logoUrl.isBlank() && logoUrl.startsWith("http")) {
+            return "<img class=\"logo\" src=\"" + attr(transformCloudinaryUrl(logoUrl, "w_360,h_120,c_limit,q_90")) + "\" alt=\"Logo\" />";
+        }
+
         // Try reading local logo from classpath first
         try (InputStream is = getClass().getResourceAsStream("/images/logo.png")) {
             if (is != null) {
@@ -147,11 +152,6 @@ public class InvoiceTemplateRenderer {
             }
         } catch (Exception e) {
             // Ignore
-        }
-
-        String logoUrl = text(invoiceProperties.getLogoUrl());
-        if (!logoUrl.isBlank() && logoUrl.startsWith("http")) {
-            return "<img class=\"logo\" src=\"" + attr(transformCloudinaryUrl(logoUrl, "w_150,h_150,c_fill,q_90")) + "\" alt=\"Logo\" />";
         }
         return "<div class=\"logo-placeholder\">K</div>";
     }
@@ -220,7 +220,7 @@ public class InvoiceTemplateRenderer {
                 BigDecimal unitInclusive = amount(item.getPrice());
                 BigDecimal unitExclusive = unitInclusive;
                 if (taxRate.compareTo(BigDecimal.ZERO) > 0) {
-                    unitExclusive = unitInclusive.divide(BigDecimal.ONE.add(taxRate), 2, RoundingMode.HALF_UP);
+                    unitExclusive = unitInclusive.subtract(unitInclusive.multiply(taxRate)).setScale(2, RoundingMode.HALF_UP);
                 }
                 int quantity = item.getQuantity() == null ? 0 : item.getQuantity();
                 BigDecimal lineTotal = unitInclusive.multiply(BigDecimal.valueOf(quantity));
@@ -258,7 +258,7 @@ public class InvoiceTemplateRenderer {
 
                 BigDecimal lineTax = BigDecimal.ZERO;
                 if (taxRate.compareTo(BigDecimal.ZERO) > 0) {
-                    lineTax = lineTotal.multiply(taxRate).divide(BigDecimal.ONE.add(taxRate), 2, RoundingMode.HALF_UP);
+                    lineTax = lineTotal.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
                 }
                 String igstRateDisplay = invoiceProperties.getTaxRate();
                 String igstAmountDisplay = money(lineTax);
@@ -294,9 +294,9 @@ public class InvoiceTemplateRenderer {
         BigDecimal discountExcl = discount;
 
         if (taxRate.compareTo(BigDecimal.ZERO) > 0) {
-            taxAmount = total.multiply(taxRate).divide(BigDecimal.ONE.add(taxRate), 2, RoundingMode.HALF_UP);
-            subtotalExcl = subtotal.divide(BigDecimal.ONE.add(taxRate), 2, RoundingMode.HALF_UP);
-            discountExcl = discount.divide(BigDecimal.ONE.add(taxRate), 2, RoundingMode.HALF_UP);
+            taxAmount = total.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
+            subtotalExcl = subtotal.subtract(subtotal.multiply(taxRate)).setScale(2, RoundingMode.HALF_UP);
+            discountExcl = discount.subtract(discount.multiply(taxRate)).setScale(2, RoundingMode.HALF_UP);
         }
 
         String taxLabel = invoiceProperties.getTaxLabel();

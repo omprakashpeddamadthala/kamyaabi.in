@@ -62,4 +62,41 @@ class InvoiceTemplateRendererTest {
 
         assertThat(html).contains("No line items recorded", "Rs. 100.00");
     }
+
+    @Test
+    void render_withCloudinaryLogoAndIgstCalculation() {
+        InvoiceProperties invoiceProperties = new InvoiceProperties();
+        invoiceProperties.setCompanyName("Kamyaabi Test");
+        invoiceProperties.setLogoUrl("https://res.cloudinary.com/demo/image/upload/sample.jpg");
+        invoiceProperties.setTaxRate("5%");
+        invoiceProperties.setTaxLabel("IGST");
+
+        AppProperties appProperties = new AppProperties();
+        appProperties.setFrontendUrl("https://kamyaabi.in");
+        InvoiceTemplateRenderer renderer = new InvoiceTemplateRenderer(invoiceProperties, appProperties);
+
+        User user = User.builder().id(1L).email("buyer@test.com").name("Buyer").role(User.Role.USER).build();
+        Address address = Address.builder().id(1L).user(user).fullName("Buyer Name").phone("9999999999")
+                .street("Street 1").city("Hyderabad").state("Telangana").pincode("500001").build();
+        Product product = Product.builder().id(44L).name("Cashews").description("Premium cashews").build();
+
+        // Price = 250.00 inclusive of tax.
+        // Direct Tax = 250.00 * 5% = 12.50
+        // Exclusive price = 250.00 - 12.50 = 237.50
+        // Quantity = 1
+        OrderItem item = OrderItem.builder().id(10L).product(product).quantity(1)
+                .price(new BigDecimal("250.00")).build();
+
+        Order order = Order.builder().id(100L).user(user).shippingAddress(address).items(List.of(item))
+                .totalAmount(new BigDecimal("250.00")).status(Order.OrderStatus.PAID)
+                .createdAt(LocalDateTime.of(2026, 1, 2, 12, 0)).build();
+
+        String html = renderer.render(order, renderer.invoiceNumber(order));
+
+        // Verify the Cloudinary logo URL is transformed with c_limit
+        assertThat(html).contains("https://res.cloudinary.com/demo/image/upload/w_360,h_120,c_limit,q_90/sample.png");
+
+        // Verify the IGST amount is Rs. 12.50 and unit price excl. tax is Rs. 237.50
+        assertThat(html).contains("Rs. 237.50", "Rs. 12.50", "Rs. 250.00");
+    }
 }
