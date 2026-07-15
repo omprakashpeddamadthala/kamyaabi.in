@@ -51,6 +51,9 @@ function fakeFetch(routes) {
     if (route.status && route.status !== 200) {
       return Response.json({ message: route.message || 'error' }, { status: route.status });
     }
+    if (route.body !== undefined) {
+      return new Response(route.body, { headers: route.headers });
+    }
     return Response.json({ success: true, data: route.data });
   };
 }
@@ -142,4 +145,31 @@ test('blog and category pages return useful crawlable HTML', async () => {
   assert.equal(categoryResponse.status, 200);
   assert.match(categoryHtml, /<h1>Cashews Dry Fruits &amp; Nuts<\/h1>/);
   assert.match(categoryHtml, /Premium Cashews 500g/);
+});
+
+test('sitemap and robots are proxied with crawler-safe status and MIME types', async () => {
+  const sitemap = '<?xml version="1.0"?><urlset><url><loc>https://kamyaabi.in/products/cashews/premium-cashews-500g</loc></url></urlset>';
+  const robots = 'User-agent: *\nDisallow: /api/\n\nSitemap: https://kamyaabi.in/sitemap.xml\n';
+  const origin = await start({
+    '/sitemap.xml': {
+      body: sitemap,
+      headers: { 'cache-control': 'public, max-age=300' },
+    },
+    '/robots.txt': {
+      body: robots,
+      headers: { 'cache-control': 'public, max-age=3600' },
+    },
+  });
+
+  const sitemapResponse = await fetch(`${origin}/sitemap.xml`);
+  assert.equal(sitemapResponse.status, 200);
+  assert.match(sitemapResponse.headers.get('content-type'), /application\/xml/);
+  assert.equal(sitemapResponse.headers.get('cache-control'), 'public, max-age=300');
+  assert.equal(await sitemapResponse.text(), sitemap);
+
+  const robotsResponse = await fetch(`${origin}/robots.txt`);
+  assert.equal(robotsResponse.status, 200);
+  assert.match(robotsResponse.headers.get('content-type'), /text\/plain/);
+  assert.equal(robotsResponse.headers.get('cache-control'), 'public, max-age=3600');
+  assert.equal(await robotsResponse.text(), robots);
 });

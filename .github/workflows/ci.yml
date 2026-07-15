@@ -212,4 +212,7 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ secrets.DEPLOY_DIR || 'kamyaabi.in' }}
+            git fetch origin master
+            git checkout master
+            git pull --ff-only origin master
             ./deploy.sh

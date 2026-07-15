@@ -109,6 +109,33 @@ docker compose -f "$COMPOSE_FILE" up -d
 echo "Done."
 echo ""
 
+wait_for_url() {
+    local name="$1"
+    local url="$2"
+    for _ in $(seq 1 30); do
+        if curl --fail --silent --show-error --max-time 10 "$url" >/dev/null; then
+            echo "  ${name} is ready."
+            return 0
+        fi
+        sleep 2
+    done
+    echo "ERROR: ${name} did not become ready: ${url}"
+    return 1
+}
+
+echo "### Verifying application health ..."
+wait_for_url "Backend" "http://127.0.0.1:8080/actuator/health/liveness"
+wait_for_url "Frontend" "http://127.0.0.1:3000/healthz"
+wait_for_url "Rendered homepage" "http://127.0.0.1:3000/"
+
+SITEMAP="$(curl --fail --silent --show-error --max-time 30 http://127.0.0.1:3000/sitemap.xml)"
+grep -q '<urlset' <<< "$SITEMAP"
+
+ROBOTS="$(curl --fail --silent --show-error --max-time 10 http://127.0.0.1:3000/robots.txt)"
+grep -q 'Sitemap: https://kamyaabi.in/sitemap.xml' <<< "$ROBOTS"
+echo "  SEO discovery endpoints are ready."
+echo ""
+
 # --- Verify ---
 echo "### Container status:"
 docker compose -f "$COMPOSE_FILE" ps
