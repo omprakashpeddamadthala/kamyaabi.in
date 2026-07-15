@@ -78,6 +78,9 @@ services:
         VITE_INSTAGRAM_URL: ${VITE_INSTAGRAM_URL:-}
     container_name: kamyaabi-frontend
     restart: unless-stopped
+    environment:
+      BACKEND_INTERNAL_URL: http://backend:8080
+      PUBLIC_SITE_URL: ${APP_FRONTEND_URL:-https://kamyaabi.in}
     ports:
       - "127.0.0.1:3000:80"
     depends_on:

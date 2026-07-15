@@ -1,15 +1,16 @@
 package com.kamyaabi.controller;
 
+import com.kamyaabi.dto.response.BlogCategoryResponse;
 import com.kamyaabi.dto.response.BlogPostResponse;
-import com.kamyaabi.dto.response.ProductResponse;
+import com.kamyaabi.dto.response.BlogTagResponse;
+import com.kamyaabi.dto.response.CategoryResponse;
+import com.kamyaabi.dto.response.ProductSitemapResponse;
 import com.kamyaabi.service.BlogService;
+import com.kamyaabi.service.CategoryService;
 import com.kamyaabi.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,159 +18,193 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-/**
- * GSC FIX: serves the site-wide {@code /sitemap.xml} and {@code /robots.txt}
- * that Google Search Console reported as missing.
- *
- * <p>The SPA previously let both paths fall through to {@code index.html}, so
- * Google received an HTML shell instead of a real sitemap / robots file. These
- * endpoints are mapped at the domain root (not under {@code /api}) and are
- * wired through nginx so they resolve at e.g. {@code https://kamyaabi.in/sitemap.xml}.
- *
- * <p>URLs are built from the forwarded host/scheme so the same code serves the
- * correct absolute URLs for every domain the app is hosted on (kamyaabi.in and
- * kamyaabi.shop) without hard-coding.
- */
-@Slf4j
 @RestController
 @Tag(name = "SEO", description = "Public sitemap.xml and robots.txt endpoints")
 public class SeoController {
 
-    private static final String DEFAULT_HOST = "kamyaabi.in";
-
-    /** Stable, crawlable storefront routes that always belong in the sitemap. */
     private static final List<StaticRoute> STATIC_ROUTES = List.of(
             new StaticRoute("/", "daily", "1.0"),
             new StaticRoute("/products", "daily", "0.9"),
-            new StaticRoute("/blog", "weekly", "0.7"),
+            new StaticRoute("/blog", "daily", "0.8"),
             new StaticRoute("/about", "monthly", "0.5"),
             new StaticRoute("/contact", "monthly", "0.5"),
             new StaticRoute("/track-order", "monthly", "0.4"),
             new StaticRoute("/refund-policy", "yearly", "0.3")
     );
 
-    /**
-     * Private / transactional areas that must never be indexed. Mirrors the
-     * `noindex` meta tags added on the corresponding React pages.
-     */
-    private static final Set<String> DISALLOWED_PATHS = Set.of(
+    private static final List<String> DISALLOWED_PATHS = List.of(
             "/api/", "/admin", "/cart", "/checkout", "/orders", "/order",
-            "/profile", "/wishlist", "/login", "/oauth2/", "/swagger-ui/", "/v3/api-docs"
+            "/profile", "/wishlist", "/login", "/oauth2/", "/swagger-ui/",
+            "/api-docs", "/v3/api-docs"
     );
 
     private final ProductService productService;
+    private final CategoryService categoryService;
     private final BlogService blogService;
+    private final String publicSiteUrl;
 
-    public SeoController(ProductService productService, BlogService blogService) {
+    public SeoController(ProductService productService,
+                         CategoryService categoryService,
+                         BlogService blogService,
+                         @Value("${app.frontend-url:https://kamyaabi.in}") String publicSiteUrl) {
         this.productService = productService;
+        this.categoryService = categoryService;
         this.blogService = blogService;
+        this.publicSiteUrl = removeTrailingSlash(publicSiteUrl);
     }
 
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "XML sitemap",
-            description = "Sitemap of all public storefront pages, active products and published blog posts.")
-    public ResponseEntity<String> getSitemap(HttpServletRequest request) {
-        String base = baseUrl(request);
-        StringBuilder sb = new StringBuilder();
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-        sb.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
+            description = "Complete sitemap of public storefront, category, product, and published blog URLs.")
+    public ResponseEntity<String> getSitemap() {
+        List<ProductSitemapResponse> products = productService.getSitemapProducts();
+        List<CategoryResponse> categories = categoryService.getAllCategories();
+        List<BlogPostResponse> posts = blogService.getAllPublishedPosts();
+        List<BlogCategoryResponse> blogCategories = blogService.getAllCategories();
+        List<BlogTagResponse> blogTags = blogService.getAllTags();
+
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        xml.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
 
         for (StaticRoute route : STATIC_ROUTES) {
-            appendUrl(sb, base + route.path(), null, route.changefreq(), route.priority());
+            appendUrl(xml, publicSiteUrl + route.path(), null, route.changefreq(), route.priority());
         }
 
-        // Active products — canonical /products/{categorySlug}/{slug}, falling back to
-        // the flat /products/{slug} form when a category slug is unavailable.
-        try {
-            Page<ProductResponse> products = productService.getAllProducts(PageRequest.of(0, 1000));
-            for (ProductResponse p : products.getContent()) {
-                if (p.slug() == null || p.slug().isBlank()) continue;
-                String loc = (p.categorySlug() != null && !p.categorySlug().isBlank())
-                        ? base + "/products/" + escapeXml(p.categorySlug()) + "/" + escapeXml(p.slug())
-                        : base + "/products/" + escapeXml(p.slug());
-                appendUrl(sb, loc, null, "weekly", "0.8");
+        Set<String> usedCategorySlugs = new HashSet<>();
+        for (ProductSitemapResponse product : products) {
+            if (isBlank(product.slug())) continue;
+            if (!isBlank(product.categorySlug())) usedCategorySlugs.add(product.categorySlug());
+            String path = isBlank(product.categorySlug())
+                    ? "/products/" + product.slug()
+                    : "/products/" + product.categorySlug() + "/" + product.slug();
+            appendUrl(xml, publicSiteUrl + path,
+                    lastModified(product.updatedAt(), product.createdAt()), "weekly", "0.8");
+        }
+
+        for (CategoryResponse category : categories) {
+            if (isBlank(category.slug()) || !usedCategorySlugs.contains(category.slug())) continue;
+            appendUrl(xml, publicSiteUrl + "/products/category/" + category.slug(),
+                    lastModified(category.updatedAt()), "weekly", "0.7");
+        }
+
+        Map<String, LocalDateTime> blogCategoryLastModified = new HashMap<>();
+        Map<String, LocalDateTime> blogTagLastModified = new HashMap<>();
+        Set<String> publishedBlogCategorySlugs = new HashSet<>();
+        Set<String> publishedBlogTagSlugs = new HashSet<>();
+        for (BlogPostResponse post : posts) {
+            if (isBlank(post.slug())) continue;
+            LocalDateTime postLastModified = firstNonNull(post.updatedAt(), post.publishedAt(), post.createdAt());
+            appendUrl(xml, publicSiteUrl + "/blog/" + post.slug(),
+                    lastModified(postLastModified), "weekly", "0.7");
+            if (post.categories() != null) {
+                for (BlogCategoryResponse category : post.categories()) {
+                    if (!isBlank(category.slug())) {
+                        publishedBlogCategorySlugs.add(category.slug());
+                        if (postLastModified != null) {
+                            blogCategoryLastModified.merge(category.slug(), postLastModified, SeoController::latest);
+                        }
+                    }
+                }
             }
-        } catch (Exception e) {
-            log.warn("Failed to add products to sitemap: {}", e.getMessage());
-        }
-
-        // Published blog posts — /blog/{slug}
-        try {
-            List<BlogPostResponse> posts = blogService.getAllPublishedPosts();
-            for (BlogPostResponse post : posts) {
-                if (post.slug() == null || post.slug().isBlank()) continue;
-                String lastmod = post.updatedAt() != null
-                        ? post.updatedAt().toLocalDate().toString()
-                        : (post.publishedAt() != null ? post.publishedAt().toLocalDate().toString() : null);
-                appendUrl(sb, base + "/blog/" + escapeXml(post.slug()), lastmod, "weekly", "0.7");
+            if (post.tags() != null) {
+                for (BlogTagResponse tag : post.tags()) {
+                    if (!isBlank(tag.slug())) {
+                        publishedBlogTagSlugs.add(tag.slug());
+                        if (postLastModified != null) {
+                            blogTagLastModified.merge(tag.slug(), postLastModified, SeoController::latest);
+                        }
+                    }
+                }
             }
-        } catch (Exception e) {
-            log.warn("Failed to add blog posts to sitemap: {}", e.getMessage());
         }
 
-        sb.append("</urlset>");
+        for (BlogCategoryResponse category : blogCategories) {
+            if (isBlank(category.slug()) || !publishedBlogCategorySlugs.contains(category.slug())) continue;
+            appendUrl(xml, publicSiteUrl + "/blog/category/" + category.slug(),
+                    lastModified(blogCategoryLastModified.get(category.slug()), category.createdAt()), "weekly", "0.6");
+        }
+
+        for (BlogTagResponse tag : blogTags) {
+            if (isBlank(tag.slug()) || !publishedBlogTagSlugs.contains(tag.slug())) continue;
+            appendUrl(xml, publicSiteUrl + "/blog/tag/" + tag.slug(),
+                    lastModified(blogTagLastModified.get(tag.slug()), tag.createdAt()), "weekly", "0.5");
+        }
+
+        xml.append("</urlset>");
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_XML)
-                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
-                .body(sb.toString());
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic().mustRevalidate())
+                .body(xml.toString());
     }
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "robots.txt",
-            description = "Allows crawling of public pages, blocks private/transactional areas, points at the sitemap.")
-    public ResponseEntity<String> getRobots(HttpServletRequest request) {
-        String base = baseUrl(request);
-        StringBuilder sb = new StringBuilder();
-        sb.append("User-agent: *\n");
+            description = "Allows public pages, blocks private areas, and references the canonical HTTPS sitemap.")
+    public ResponseEntity<String> getRobots() {
+        StringBuilder robots = new StringBuilder("User-agent: *\n");
         for (String path : DISALLOWED_PATHS) {
-            sb.append("Disallow: ").append(path).append('\n');
+            robots.append("Disallow: ").append(path).append('\n');
         }
-        sb.append('\n');
-        sb.append("Sitemap: ").append(base).append("/sitemap.xml\n");
+        robots.append("\nSitemap: ").append(publicSiteUrl).append("/sitemap.xml\n");
         return ResponseEntity.ok()
                 .contentType(MediaType.TEXT_PLAIN)
-                .cacheControl(CacheControl.maxAge(Duration.ofHours(6)).cachePublic())
-                .body(sb.toString());
+                .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic().mustRevalidate())
+                .body(robots.toString());
     }
 
-    /** Resolves the public scheme+host from proxy-forwarded headers. */
-    private String baseUrl(HttpServletRequest request) {
-        String host = firstNonBlank(
-                request.getHeader("X-Forwarded-Host"),
-                request.getHeader("Host"),
-                request.getServerName());
-        if (host == null || host.isBlank()) host = DEFAULT_HOST;
-        // X-Forwarded-Host may contain a comma-separated chain; take the first.
-        host = host.split(",")[0].trim();
-        String proto = firstNonBlank(request.getHeader("X-Forwarded-Proto"), request.getScheme());
-        if (proto == null || proto.isBlank()) proto = "https";
-        return proto + "://" + host;
+    private static void appendUrl(StringBuilder xml, String loc, String lastmod,
+                                  String changefreq, String priority) {
+        xml.append("  <url>\n");
+        xml.append("    <loc>").append(escapeXml(loc)).append("</loc>\n");
+        if (lastmod != null) {
+            xml.append("    <lastmod>").append(lastmod).append("</lastmod>\n");
+        }
+        xml.append("    <changefreq>").append(changefreq).append("</changefreq>\n");
+        xml.append("    <priority>").append(priority).append("</priority>\n");
+        xml.append("  </url>\n");
     }
 
-    private static String firstNonBlank(String... values) {
-        for (String v : values) {
-            if (v != null && !v.isBlank()) return v;
+    private static String lastModified(LocalDateTime... candidates) {
+        for (LocalDateTime candidate : candidates) {
+            if (candidate != null) return candidate.toLocalDate().toString();
         }
         return null;
     }
 
-    private static void appendUrl(StringBuilder sb, String loc, String lastmod,
-                                  String changefreq, String priority) {
-        sb.append("  <url>\n");
-        sb.append("    <loc>").append(loc).append("</loc>\n");
-        if (lastmod != null) {
-            sb.append("    <lastmod>").append(lastmod).append("</lastmod>\n");
+    private static LocalDateTime firstNonNull(LocalDateTime... candidates) {
+        for (LocalDateTime candidate : candidates) {
+            if (candidate != null) return candidate;
         }
-        sb.append("    <changefreq>").append(changefreq).append("</changefreq>\n");
-        sb.append("    <priority>").append(priority).append("</priority>\n");
-        sb.append("  </url>\n");
+        return null;
+    }
+
+    private static LocalDateTime latest(LocalDateTime first, LocalDateTime second) {
+        if (first == null) return second;
+        if (second == null) return first;
+        return first.isAfter(second) ? first : second;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static String removeTrailingSlash(String value) {
+        String normalized = isBlank(value) ? "https://kamyaabi.in" : value.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
     }
 
     private static String escapeXml(String text) {
-        if (text == null) return "";
         return text.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")

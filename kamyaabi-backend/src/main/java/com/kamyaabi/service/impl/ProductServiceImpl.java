@@ -3,6 +3,7 @@ package com.kamyaabi.service.impl;
 import com.kamyaabi.config.ProductImageProperties;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
+import com.kamyaabi.dto.response.ProductSitemapResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
@@ -116,7 +117,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = CacheNames.PRODUCT_BY_ID, key = "#id")
     public ProductResponse getProductById(Long id) {
         log.debug("Fetching product by id: {}", id);
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         List<Product> variations = productRepository.findVariations(
                 product.getName(), product.getCategory().getId());
@@ -128,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
     @Cacheable(value = CacheNames.PRODUCT_BY_SLUG, key = "#slug")
     public ProductResponse getProductBySlug(String slug) {
         log.debug("Fetching product by slug: {}", slug);
-        Product product = productRepository.findBySlug(slug)
+        Product product = productRepository.findBySlugAndActiveTrue(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with slug '" + slug + "' not found"));
         List<Product> variations = productRepository.findVariations(
                 product.getName(), product.getCategory().getId());
@@ -149,7 +150,7 @@ public class ProductServiceImpl implements ProductService {
                 response.tags(),
                 response.stock(), response.weight(), response.unit(), response.shelfLife(),
                 response.nutritionalInfo(), response.howToUse(), response.storageTips(),
-                response.active(), response.createdAt(), response.seoTitle(), response.seoDescription(),
+                response.active(), response.createdAt(), response.updatedAt(), response.seoTitle(), response.seoDescription(),
                 response.seoKeywords(), response.ogImageUrl(), response.canonicalUrl(),
                 null, (int) count);
     }
@@ -157,7 +158,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public String getSlugForId(Long id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         String slug = product.getSlug();
         if (slug == null || slug.isBlank()) {
@@ -176,6 +177,18 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findTop8ByActiveTrueOrderByCreatedAtDesc()
                 .stream()
                 .map(this::toResponseWithVariationCount)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductSitemapResponse> getSitemapProducts() {
+        return productRepository.findByActiveTrueOrderByUpdatedAtDesc().stream()
+                .map(product -> new ProductSitemapResponse(
+                        product.getSlug(),
+                        product.getCategory() != null ? product.getCategory().getSlug() : null,
+                        product.getUpdatedAt(),
+                        product.getCreatedAt()))
                 .toList();
     }
 

@@ -19,6 +19,7 @@ public class CategoryMapper {
                 .parentId(parent != null ? parent.getId() : null)
                 .parentName(parent != null ? parent.getName() : null)
                 .productCount(category.getProducts() != null ? category.getProducts().size() : 0)
+                .updatedAt(category.getUpdatedAt())
                 .build();
     }
 

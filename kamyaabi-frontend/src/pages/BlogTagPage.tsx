@@ -5,8 +5,8 @@ import {
   Box, Pagination, Skeleton, Stack, Breadcrumbs, Link,
 } from '@mui/material';
 import { AccessTime } from '@mui/icons-material';
-import { Helmet } from 'react-helmet-async';
 import { blogApi } from '../api/blogApi';
+import Seo from '../components/common/Seo';
 import { BlogPost, BlogTag } from '../types';
 
 const BlogTagPage: React.FC = () => {
@@ -42,15 +42,12 @@ const BlogTagPage: React.FC = () => {
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-  const title = tag ? `Posts tagged "${tag.name}" | Kamyaabi Blog` : 'Tag | Kamyaabi Blog';
+  const title = tag ? `${tag.name} Articles` : 'Blog Tag';
   const description = tag?.description || `Articles tagged with ${tag?.name || slug} from Kamyaabi`;
 
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-      </Helmet>
+      <Seo title={title} description={description} canonicalPath={slug ? `/blog/tag/${slug}` : '/blog'} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link component={RouterLink} to="/" underline="hover" color="inherit">Home</Link>
@@ -58,7 +55,7 @@ const BlogTagPage: React.FC = () => {
           <Typography color="text.primary">#{tag?.name || slug}</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h3" sx={{ mb: 1, fontWeight: 700 }}>#{tag?.name || slug}</Typography>
+        <Typography variant="h3" component="h1" sx={{ mb: 1, fontWeight: 700 }}>#{tag?.name || slug}</Typography>
         {tag?.description && (
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>{tag.description}</Typography>
         )}

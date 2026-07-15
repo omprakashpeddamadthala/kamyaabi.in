@@ -101,7 +101,7 @@ const BlogPostPage: React.FC = () => {
   if (error || !post) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h4" gutterBottom>Post Not Found</Typography>
+        <Typography variant="h4" component="h1" gutterBottom>Post Not Found</Typography>
         <Typography color="text.secondary">The blog post you are looking for does not exist.</Typography>
         <Link component={RouterLink} to="/blog" sx={{ mt: 2, display: 'inline-block' }}>
           Back to Blog
@@ -190,7 +190,7 @@ const BlogPostPage: React.FC = () => {
         )}
 
         {/* Title */}
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, lineHeight: 1.2 }}>
+        <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 2, lineHeight: 1.2 }}>
           {post.title}
         </Typography>
 

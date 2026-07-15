@@ -166,7 +166,7 @@ const BlogListPage: React.FC = () => {
         </script>
       </Helmet>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h3" sx={{ mb: 1, fontWeight: 700 }}>
+        <Typography variant="h3" component="h1" sx={{ mb: 1, fontWeight: 700 }}>
           Blog
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

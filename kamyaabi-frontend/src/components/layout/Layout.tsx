@@ -9,10 +9,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import { useAppSelector } from '../../hooks/useAppDispatch';
 
 const Layout: React.FC = () => {
-  const { user } = useAppSelector((state) => state.auth);
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -41,4 +39,3 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
-

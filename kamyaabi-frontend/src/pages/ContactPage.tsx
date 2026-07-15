@@ -32,6 +32,7 @@ const ContactPage: React.FC = () => {
           </Typography>
           <Typography
             variant="h3"
+            component="h1"
             sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}
           >
             Get In Touch

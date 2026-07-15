@@ -31,6 +31,7 @@ public record ProductResponse(
         List<String> storageTips,
         Boolean active,
         LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         String seoTitle,
         String seoDescription,
         String seoKeywords,

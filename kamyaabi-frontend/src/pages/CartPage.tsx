@@ -89,7 +89,7 @@ const CartPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { cart, loading } = useAppSelector((state) => state.cart);
-  const { token, user } = useAppSelector((state) => state.auth);
+  const { token } = useAppSelector((state) => state.auth);
   const debounceTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const [addresses, setAddresses] = useState<Address[]>([]);

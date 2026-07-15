@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -135,7 +136,7 @@ class ProductServiceImplTest {
     @Test
     void getProductById_existing_shouldReturnProduct() {
         List<Product> variations = List.of(product);
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(product));
         when(productRepository.findVariations(product.getName(), product.getCategory().getId())).thenReturn(variations);
         when(productMapper.toResponse(product, variations)).thenReturn(productResponse);
 
@@ -146,9 +147,30 @@ class ProductServiceImplTest {
 
     @Test
     void getProductById_notFound_shouldThrowException() {
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productRepository.findByIdAndActiveTrue(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.getProductById(999L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void getProductBySlug_activeProduct_shouldReturnProduct() {
+        product.setSlug("whole-cashews");
+        List<Product> variations = List.of(product);
+        when(productRepository.findBySlugAndActiveTrue("whole-cashews")).thenReturn(Optional.of(product));
+        when(productRepository.findVariations(product.getName(), product.getCategory().getId())).thenReturn(variations);
+        when(productMapper.toResponse(product, variations)).thenReturn(productResponse);
+
+        ProductResponse result = productService.getProductBySlug("whole-cashews");
+
+        assertThat(result.name()).isEqualTo("Whole Cashews");
+    }
+
+    @Test
+    void getProductBySlug_inactiveProduct_shouldReturnNotFound() {
+        when(productRepository.findBySlugAndActiveTrue("hidden-product")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.getProductBySlug("hidden-product"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -161,6 +183,23 @@ class ProductServiceImplTest {
         List<ProductResponse> result = productService.getFeaturedProducts();
 
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getSitemapProducts_shouldReturnAllActiveProductsWithoutPaginationLimit() {
+        List<Product> products = IntStream.rangeClosed(1, 1001)
+                .mapToObj(index -> Product.builder()
+                        .slug("product-" + index)
+                        .category(category)
+                        .active(true)
+                        .build())
+                .toList();
+        when(productRepository.findByActiveTrueOrderByUpdatedAtDesc()).thenReturn(products);
+
+        var result = productService.getSitemapProducts();
+
+        assertThat(result).hasSize(1001);
+        assertThat(result.get(1000).slug()).isEqualTo("product-1001");
     }
 
     @Test

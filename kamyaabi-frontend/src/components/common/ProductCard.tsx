@@ -309,8 +309,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               </Typography>
             </Box>
 
-            {true && (
-              <Button
+            <Button
                 variant={justAdded ? "contained" : "outlined"}
                 size="small"
                 startIcon={getButtonIcon()}
@@ -346,8 +345,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
                 }}
               >
                 {getButtonContent()}
-              </Button>
-            )}
+            </Button>
           </Box>
         </Box>
       </CardContent>
@@ -356,4 +354,3 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
 };
 
 export default React.memo(ProductCard);
-

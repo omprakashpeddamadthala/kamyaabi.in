@@ -4,7 +4,7 @@
  * - Visual-only redesign of headings, filter surfaces, and responsive product presentation. Includes off-canvas filters for mobile.
  */
 import React, { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Seo from '../components/common/Seo';
 import {
   Container,
@@ -79,6 +79,8 @@ const getCategoryImage = (catName: string, catImageUrl: string | null | undefine
 
 const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { categorySlug } = useParams<{ categorySlug?: string }>();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [searchParams, setSearchParams] = useSearchParams();
@@ -97,7 +99,7 @@ const ProductsPage: React.FC = () => {
 
   const sortParam = searchParams.get('sort');
   const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'newest';
-  const categoryId = searchParams.get('category');
+  const categoryId = categorySlug || searchParams.get('category');
   const tagSlug = searchParams.get('tag');
 
   const resolvedCategoryId = useMemo(() => {
@@ -197,7 +199,7 @@ const ProductsPage: React.FC = () => {
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 1.5, mb: 4 }}>
         <Box
-          onClick={() => { setSearchParams({}); setSearchQuery(''); if(isMobile) setIsFilterDrawerOpen(false); }}
+          onClick={() => { navigate('/products'); setSearchQuery(''); if(isMobile) setIsFilterDrawerOpen(false); }}
           sx={{
             cursor: 'pointer',
             borderRadius: 'var(--radius-lg)',
@@ -228,7 +230,7 @@ const ProductsPage: React.FC = () => {
             <Box
               key={cat.id}
               onClick={() => {
-                setSearchParams({ category: cat.slug });
+                navigate(`/products/category/${cat.slug}`);
                 setSearchQuery('');
                 if(isMobile) setIsFilterDrawerOpen(false);
               }}
@@ -301,18 +303,17 @@ const ProductsPage: React.FC = () => {
 
   return (
     <PageTransition>
-      {/* GSC FIX: canonical points at /products so filtered/paginated query
-          variants don't create duplicate URLs in the index. */}
       <Seo
-        title="Shop Premium Dry Fruits & Nuts"
-        description="Browse Kamyaabi's full range of premium dry fruits and nuts — almonds, cashews, pistachios, raisins and more. Freshly packed and delivered across India."
-        canonicalPath="/products"
+        title={selectedCategory ? `${selectedCategory.name} Dry Fruits & Nuts` : 'Shop Premium Dry Fruits & Nuts'}
+        description={selectedCategory?.description || "Browse Kamyaabi's full range of premium dry fruits and nuts — almonds, cashews, pistachios, raisins and more. Freshly packed and delivered across India."}
+        canonicalPath={selectedCategory ? `/products/category/${selectedCategory.slug}` : '/products'}
+        noindex={Boolean(tagSlug)}
       />
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, bgcolor: 'var(--color-surface-bg)', minHeight: '80vh' }}>
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 1 }}>
         <Box>
-          <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>
+          <Typography variant="h3" component="h1" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text-primary)' }}>
             {selectedCategory ? selectedCategory.name : 'All Products'}
           </Typography>
           <Typography variant="body1" sx={{ color: 'var(--color-text-muted)', mt: 0.5, fontWeight: 500 }}>
@@ -465,4 +466,3 @@ const ProductsPage: React.FC = () => {
 };
 
 export default ProductsPage;
-

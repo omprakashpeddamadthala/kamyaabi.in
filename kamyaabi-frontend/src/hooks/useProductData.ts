@@ -14,7 +14,7 @@ export function useProductData(productSlug: string | undefined) {
   const navigate = useNavigate();
   const location = useLocation();
   const paramIsNumericId = !!productSlug && /^\d+$/.test(productSlug);
-  const { selectedProduct: product, products } = useAppSelector((s) => s.products);
+  const { selectedProduct: product, products, loading, error } = useAppSelector((s) => s.products);
 
   useEffect(() => {
     if (productSlug) {
@@ -47,5 +47,5 @@ export function useProductData(productSlug: string | undefined) {
     }
   }, [dispatch, productId]);
 
-  return { product, products, paramIsNumericId };
+  return { product, products, loading, error, paramIsNumericId };
 }
