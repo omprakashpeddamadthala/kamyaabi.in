@@ -186,8 +186,8 @@ const ProductDetailPage: React.FC = () => {
   const trustReveal = useRevealOnScroll();
   const tabsReveal = useRevealOnScroll();
 
-  if (loading) return <ProductDetailSkeleton />;
-  if (error || !product) {
+  if (!product && (loading || !error)) return <ProductDetailSkeleton />;
+  if (!product && error?.status === 404) {
     return (
       <Container maxWidth="sm" sx={{ py: 10, textAlign: 'center' }}>
         <Seo
@@ -201,6 +201,22 @@ const ProductDetailPage: React.FC = () => {
           This product is unavailable or no longer exists.
         </Typography>
         <Button component={Link} to="/products" variant="contained">Browse Products</Button>
+      </Container>
+    );
+  }
+  if (!product) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 10, textAlign: 'center' }}>
+        <Seo
+          title="Product Temporarily Unavailable"
+          description="This Kamyaabi product could not be loaded right now. Please try again shortly."
+          canonicalPath={window.location.pathname}
+        />
+        <Typography component="h1" variant="h4" gutterBottom>Product Temporarily Unavailable</Typography>
+        <Typography color="text.secondary" sx={{ mb: 3 }}>
+          We could not load this product right now. Please try again shortly.
+        </Typography>
+        <Button onClick={() => window.location.reload()} variant="contained">Try Again</Button>
       </Container>
     );
   }

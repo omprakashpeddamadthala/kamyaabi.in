@@ -93,7 +93,18 @@ test('product page returns rendered content, metadata, and Product JSON-LD in th
   assert.match(html, /name="twitter:card"/);
   assert.match(html, /"@type":"Product"/);
   assert.match(html, /"@type":"AggregateRating"/);
+  assert.doesNotMatch(html, /noindex/);
   assert.doesNotMatch(html, /<div id="root"><\/div>/);
+
+  const bootstrapMatch = html.match(
+    /<script id="kamyaabi-bootstrap-data" type="application\/json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(bootstrapMatch);
+  assert.match(bootstrapMatch[1], /\\u003cp\\u003eLarge, crunchy premium cashews/);
+  assert.deepEqual(JSON.parse(bootstrapMatch[1]), {
+    path: '/products/cashews/premium-cashews-500g',
+    product,
+  });
 });
 
 test('missing and arbitrary page URLs return real HTTP 404 responses with noindex HTML', async () => {
@@ -107,6 +118,7 @@ test('missing and arbitrary page URLs return real HTTP 404 responses with noinde
     assert.equal(response.status, 404);
     assert.match(html, /Page Not Found/);
     assert.match(html, /name="robots" content="noindex,nofollow"/);
+    assert.doesNotMatch(html, /kamyaabi-bootstrap-data/);
   }
 });
 
