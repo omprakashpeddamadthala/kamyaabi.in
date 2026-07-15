@@ -129,26 +129,44 @@ export async function createApp({
   const htmlTemplate = template || await readFile(defaultTemplatePath, 'utf8');
   const cache = new Map();
 
-  async function api(endpoint) {
+  async function backendRequest(endpoint, accept) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5_000);
     try {
-      const response = await fetchImpl(`${backendUrl}${endpoint}`, {
-        headers: { Accept: 'application/json', 'User-Agent': 'Kamyaabi-Prerender/1.0' },
+      return await fetchImpl(`${backendUrl}${endpoint}`, {
+        headers: { Accept: accept, 'User-Agent': 'Kamyaabi-Prerender/1.0' },
         signal: controller.signal,
       });
-      if (!response.ok) {
-        const message = response.status === 404 ? 'Resource not found' : `Backend returned HTTP ${response.status}`;
-        throw new ApiError(response.status, message);
-      }
-      const payload = await response.json();
-      return payload.data;
     } catch (error) {
-      if (error instanceof ApiError) throw error;
       throw new ApiError(503, 'Content is temporarily unavailable');
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  async function api(endpoint) {
+    const response = await backendRequest(endpoint, 'application/json');
+    if (!response.ok) {
+      const message = response.status === 404 ? 'Resource not found' : `Backend returned HTTP ${response.status}`;
+      throw new ApiError(response.status, message);
+    }
+    const payload = await response.json();
+    return payload.data;
+  }
+
+  async function proxySeoEndpoint(request, response, pathname) {
+    const contentType = pathname === '/sitemap.xml'
+      ? 'application/xml; charset=utf-8'
+      : 'text/plain; charset=utf-8';
+    const backendResponse = await backendRequest(pathname, contentType);
+    if (!backendResponse.ok) {
+      throw new ApiError(backendResponse.status, `Backend returned HTTP ${backendResponse.status}`);
+    }
+    const content = Buffer.from(await backendResponse.arrayBuffer());
+    await send(request, response, backendResponse.status, content, {
+      contentType,
+      cacheControl: backendResponse.headers.get('cache-control') || undefined,
+    });
   }
 
   async function renderPath(url) {
@@ -319,6 +337,10 @@ export async function createApp({
           contentType: 'text/plain; charset=utf-8',
           cacheControl: 'no-store',
         });
+        return;
+      }
+      if (url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') {
+        await proxySeoEndpoint(request, response, url.pathname);
         return;
       }
       if (await serveStatic(request, response, url.pathname)) return;

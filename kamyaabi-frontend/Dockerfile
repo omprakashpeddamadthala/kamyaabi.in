@@ -27,6 +27,8 @@ FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=80
+ENV BACKEND_INTERNAL_URL=http://backend:8080
+ENV PUBLIC_SITE_URL=https://kamyaabi.in
 COPY --from=build /app/dist ./dist
 COPY server ./server
 EXPOSE 80
