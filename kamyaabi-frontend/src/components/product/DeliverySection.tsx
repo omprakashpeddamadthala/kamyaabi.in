@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Button, CircularProgress, Skeleton, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Typography } from '@mui/material';
 import { CheckCircle, Close, LocalShippingOutlined, LocationOnOutlined, PaymentOutlined } from '@mui/icons-material';
 import type { PincodeServiceability } from '../../api/shippingApi';
 import type { User } from '../../types';

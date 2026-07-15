@@ -19,7 +19,6 @@ import {
   Container,
   Drawer,
   List,
-  ListItem,
   ListItemText,
   ListItemIcon,
   Divider,
@@ -38,7 +37,6 @@ import {
   Receipt,
   Dashboard,
   Logout,
-  Login,
   Info,
   ContactMail,
   Person,
@@ -324,18 +322,14 @@ const Navbar: React.FC = () => {
                         </MenuItem>
                       )}
                       
-                      {true && (
-                        <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }} sx={{ py: 1.5 }}>
-                          <ListItemIcon><Person fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
-                          <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
-                        </MenuItem>
-                      )}
-                      {true && (
-                        <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }} sx={{ py: 1.5 }}>
-                          <ListItemIcon><Receipt fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
-                          <ListItemText primary="My Orders" primaryTypographyProps={{ fontWeight: 600 }} />
-                        </MenuItem>
-                      )}
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }} sx={{ py: 1.5 }}>
+                        <ListItemIcon><Person fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
+                        <ListItemText primary="My Profile" primaryTypographyProps={{ fontWeight: 600 }} />
+                      </MenuItem>
+                      <MenuItem onClick={() => { handleMenuClose(); navigate('/orders'); }} sx={{ py: 1.5 }}>
+                        <ListItemIcon><Receipt fontSize="small" sx={{ color: 'var(--color-text-primary)' }} /></ListItemIcon>
+                        <ListItemText primary="My Orders" primaryTypographyProps={{ fontWeight: 600 }} />
+                      </MenuItem>
                       {user.role === 'ADMIN' && (
                         <MenuItem onClick={() => { handleMenuClose(); navigate('/admin'); }} sx={{ py: 1.5 }}>
                           <ListItemIcon><Dashboard fontSize="small" sx={{ color: 'var(--color-brand-primary)' }} /></ListItemIcon>

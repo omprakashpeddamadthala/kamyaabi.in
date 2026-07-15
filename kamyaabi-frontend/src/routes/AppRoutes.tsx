@@ -34,6 +34,7 @@ const AdminBlogTagsPage = lazy(() => import('../pages/AdminBlogTagsPage'));
 const AdminProductTagsPage = lazy(() => import('../pages/AdminProductTagsPage'));
 const TrackOrderPage = lazy(() => import('../pages/TrackOrderPage'));
 const WishlistPage = lazy(() => import('../pages/WishlistPage'));
+const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 const AdminProductsPage = lazy(() => import('../pages/admin/AdminProductsPage'));
 const AdminCategoriesPage = lazy(() => import('../pages/admin/AdminCategoriesPage'));
@@ -102,6 +103,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/category/:categorySlug" element={<ProductsPage />} />
         {/* Canonical, SEO-friendly hierarchy: /products/:categorySlug/:productSlug.
             The flat /products/:slug form is kept for backward compatibility and
             redirects to the canonical URL (see useProductData). */}
@@ -167,7 +169,7 @@ const AppRoutes: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
       {/* Admin panel — dedicated shell (sidebar + top app bar), guarded by role */}

@@ -49,7 +49,7 @@ class CategoryServiceImplTest {
 
     @Test
     void getAllCategories_shouldReturnList() {
-        when(categoryRepository.findAll()).thenReturn(List.of(category));
+        when(categoryRepository.findByIsActiveTrueOrderByDisplayOrderAscNameAsc()).thenReturn(List.of(category));
         when(categoryMapper.toResponse(category)).thenReturn(categoryResponse);
 
         List<CategoryResponse> result = categoryService.getAllCategories();
@@ -60,7 +60,7 @@ class CategoryServiceImplTest {
 
     @Test
     void getCategoryById_existing_shouldReturnCategory() {
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+        when(categoryRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(category));
         when(categoryMapper.toResponse(category)).thenReturn(categoryResponse);
 
         CategoryResponse result = categoryService.getCategoryById(1L);
@@ -70,7 +70,7 @@ class CategoryServiceImplTest {
 
     @Test
     void getCategoryById_notFound_shouldThrowException() {
-        when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
+        when(categoryRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> categoryService.getCategoryById(999L))
                 .isInstanceOf(ResourceNotFoundException.class);

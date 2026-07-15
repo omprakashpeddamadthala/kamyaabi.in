@@ -171,6 +171,7 @@ const TrackOrderPage: React.FC = () => {
             <LocalShipping sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
             <Typography
               variant="h4"
+              component="h1"
               sx={{
                 fontFamily: 'var(--font-display)',
                 fontWeight: 700,

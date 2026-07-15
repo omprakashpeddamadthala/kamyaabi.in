@@ -123,7 +123,7 @@ const RefundPolicyPage: React.FC = () => {
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
             Customer Support
           </Typography>
-          <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
+          <Typography variant="h3" component="h1" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
             Refund Policy
           </Typography>
           <Typography variant="body1" sx={{ color: '#666', mt: 2, maxWidth: 600, mx: 'auto' }}>

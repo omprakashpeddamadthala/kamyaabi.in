@@ -318,7 +318,7 @@ const HomePage: React.FC = () => {
         <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
           <Grid container alignItems="center" sx={{ minHeight: { xs: '60vh', md: '70vh' }, maxHeight: 700 }}>
             <Grid item xs={12} md={6} sx={{ py: { xs: 4, md: 6 }, position: 'relative', zIndex: 2, order: { xs: 2, md: 1 } }}>
-              <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, mb: 2, color: 'var(--color-text-primary)', fontSize: { xs: '2.5rem', md: '3.5rem' }, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+              <Typography variant="h3" component="h1" sx={{ fontFamily: 'var(--font-display)', fontWeight: 800, mb: 2, color: 'var(--color-text-primary)', fontSize: { xs: '2.5rem', md: '3.5rem' }, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                 {activeSlide.title}
               </Typography>
               <Typography variant="body1" sx={{ mb: 4, color: 'var(--color-text-secondary)', lineHeight: 1.8, maxWidth: 500, fontSize: { xs: '1rem', md: '1.1rem' } }}>
@@ -425,7 +425,7 @@ const HomePage: React.FC = () => {
                         '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 12px 24px rgba(0,0,0,0.1)' } 
                       }}
                       onClick={() => {
-                        navigate(`/products?category=${cat.slug}`);
+                        navigate(`/products/category/${cat.slug}`);
                       }}
                     >
                       <CardMedia component="img" loading="lazy" image={getCategoryImage(cat.name, cat.imageUrl)} alt={cat.name} sx={{ height: { xs: 130, md: 160 }, objectFit: 'cover' }} />
@@ -648,7 +648,7 @@ const HomePage: React.FC = () => {
             position: 'relative',
             border: '1px solid rgba(0,0,0,0.04)'
           }}>
-            <Typography variant="h1" sx={{ position: 'absolute', top: -20, left: 30, color: 'rgba(29, 78, 216, 0.1)', fontFamily: 'serif', fontSize: '8rem', lineHeight: 1 }}>"</Typography>
+            <Typography component="span" aria-hidden="true" sx={{ position: 'absolute', top: -20, left: 30, color: 'rgba(29, 78, 216, 0.1)', fontFamily: 'serif', fontSize: '8rem', lineHeight: 1 }}>"</Typography>
             <Typography variant="body1" sx={{ color: 'var(--color-text-primary)', lineHeight: 1.8, fontSize: '1.1rem', fontStyle: 'italic', mb: 3, position: 'relative', zIndex: 1 }}>
               {testimonials[currentTestimonial].text}
             </Typography>
@@ -730,4 +730,3 @@ const HomePage: React.FC = () => {
 };
 
 export default HomePage;
-

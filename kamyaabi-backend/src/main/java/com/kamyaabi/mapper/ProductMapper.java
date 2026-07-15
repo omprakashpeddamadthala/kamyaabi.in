@@ -86,6 +86,7 @@ public class ProductMapper {
                 .storageTips(readList(product.getStorageTipsJson()))
                 .active(product.getActive())
                 .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .seoTitle(product.getSeoTitle())
                 .seoDescription(product.getSeoDescription())
                 .seoKeywords(product.getSeoKeywords())

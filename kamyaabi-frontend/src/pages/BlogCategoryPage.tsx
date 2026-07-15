@@ -5,8 +5,8 @@ import {
   Box, Pagination, Skeleton, Stack, Breadcrumbs, Link,
 } from '@mui/material';
 import { AccessTime } from '@mui/icons-material';
-import { Helmet } from 'react-helmet-async';
 import { blogApi } from '../api/blogApi';
+import Seo from '../components/common/Seo';
 import { BlogPost, BlogCategory } from '../types';
 
 const BlogCategoryPage: React.FC = () => {
@@ -42,15 +42,12 @@ const BlogCategoryPage: React.FC = () => {
   const formatDate = (d: string | null) =>
     d ? new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
-  const title = category ? `${category.name} - Blog | Kamyaabi` : 'Blog Category | Kamyaabi';
+  const title = category ? `${category.name} Articles` : 'Blog Category';
   const description = category?.description || `Articles about ${category?.name || 'this category'} from Kamyaabi`;
 
   return (
     <>
-      <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-      </Helmet>
+      <Seo title={title} description={description} canonicalPath={slug ? `/blog/category/${slug}` : '/blog'} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link component={RouterLink} to="/" underline="hover" color="inherit">Home</Link>
@@ -58,7 +55,7 @@ const BlogCategoryPage: React.FC = () => {
           <Typography color="text.primary">{category?.name || slug}</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h3" sx={{ mb: 1, fontWeight: 700 }}>{category?.name || slug}</Typography>
+        <Typography variant="h3" component="h1" sx={{ mb: 1, fontWeight: 700 }}>{category?.name || slug}</Typography>
         {category?.description && (
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>{category.description}</Typography>
         )}

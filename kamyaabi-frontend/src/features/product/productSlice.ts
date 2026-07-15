@@ -209,18 +209,26 @@ const productSlice = createSlice({
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
         state.featuredProducts = action.payload;
       })
-      .addCase(fetchProductById.pending, (state) => { state.loading = true; })
+      .addCase(fetchProductById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
         state.selectedProduct = action.payload;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(fetchProductBySlug.pending, (state) => { state.loading = true; })
+      .addCase(fetchProductBySlug.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchProductBySlug.fulfilled, (state, action) => {
         state.loading = false;
+        state.error = null;
         state.selectedProduct = action.payload;
       })
       .addCase(fetchProductBySlug.rejected, (state, action) => {

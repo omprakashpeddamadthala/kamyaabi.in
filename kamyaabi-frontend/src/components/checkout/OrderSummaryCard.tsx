@@ -4,7 +4,6 @@ import { Box, Button, Card, Divider, Typography, useMediaQuery, useTheme } from 
 import { PaymentMethod } from '../../types';
 import { useCheckoutCoupons } from '../../hooks/useCheckoutCoupons';
 import CouponSection from './CouponSection';
-import { useAppSelector } from '../../hooks/useAppDispatch';
 
 interface OrderSummaryCardProps {
   subtotal: number;
@@ -31,7 +30,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { user } = useAppSelector((state) => state.auth);
 
   return (
     <>

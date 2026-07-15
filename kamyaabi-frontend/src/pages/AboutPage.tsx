@@ -37,7 +37,7 @@ const AboutPage: React.FC = () => {
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>About Us</Typography>
-          <Typography variant="h3" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
+          <Typography variant="h3" component="h1" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mt: 1 }}>
             Kamyaabi: Where Freshness Meets Flavor
           </Typography>
         </Container>

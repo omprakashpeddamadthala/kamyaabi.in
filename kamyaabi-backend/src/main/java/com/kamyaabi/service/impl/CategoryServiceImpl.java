@@ -41,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Cacheable(value = CacheNames.CATEGORIES)
     public List<CategoryResponse> getAllCategories() {
         log.debug("Fetching all categories");
-        return categoryRepository.findAll().stream()
+        return categoryRepository.findByIsActiveTrueOrderByDisplayOrderAscNameAsc().stream()
                 .map(categoryMapper::toResponse)
                 .toList();
     }
@@ -58,7 +58,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Long id) {
         log.debug("Fetching category by id: {}", id);
-        Category category = categoryRepository.findById(id)
+        Category category = categoryRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", id));
         return categoryMapper.toResponse(category);
     }

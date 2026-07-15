@@ -75,7 +75,7 @@ const ProductDetailPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
-  const { product, products } = useProductData(slugParam);
+  const { product, products, loading, error } = useProductData(slugParam);
   const { user } = useAppSelector((s) => s.auth);
   const { addingProductIds } = useAppSelector((s) => s.cart);
   const publicSettings = usePublicSettings();
@@ -186,7 +186,24 @@ const ProductDetailPage: React.FC = () => {
   const trustReveal = useRevealOnScroll();
   const tabsReveal = useRevealOnScroll();
 
-  if (!product) return <ProductDetailSkeleton />;
+  if (loading) return <ProductDetailSkeleton />;
+  if (error || !product) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 10, textAlign: 'center' }}>
+        <Seo
+          title="Product Not Found"
+          description="The requested Kamyaabi product could not be found."
+          canonicalPath={window.location.pathname}
+          noindex
+        />
+        <Typography component="h1" variant="h4" gutterBottom>Product Not Found</Typography>
+        <Typography color="text.secondary" sx={{ mb: 3 }}>
+          This product is unavailable or no longer exists.
+        </Typography>
+        <Button component={Link} to="/products" variant="contained">Browse Products</Button>
+      </Container>
+    );
+  }
 
   const hasDiscount = product.discountPrice !== null && product.discountPrice > 0 && product.discountPrice < product.price;
   const discountPercent = hasDiscount
@@ -530,8 +547,7 @@ const ProductDetailPage: React.FC = () => {
                   </Box>
                 )}
 
-                {true && (
-                  <Box ref={ctaRef} sx={{ mb: 3, p: 3, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-2xl)', border: '1px solid rgba(0,0,0,0.04)' }}>
+                <Box ref={ctaRef} sx={{ mb: 3, p: 3, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-2xl)', border: '1px solid rgba(0,0,0,0.04)' }}>
                     <FormControl size="small" sx={{ mb: 2.5, minWidth: 120 }}>
                       <Select
                         id="qty-select"
@@ -629,8 +645,7 @@ const ProductDetailPage: React.FC = () => {
                     <Box sx={{ mt: 2 }}>
                       <WishlistToggleButton />
                     </Box>
-                  </Box>
-                )}
+                </Box>
 
             <Box
               ref={trustReveal.ref}

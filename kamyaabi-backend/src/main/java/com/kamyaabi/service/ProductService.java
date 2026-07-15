@@ -2,6 +2,7 @@ package com.kamyaabi.service;
 
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
+import com.kamyaabi.dto.response.ProductSitemapResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ public interface ProductService {
     String getSlugForId(Long id);
 
     List<ProductResponse> getFeaturedProducts();
+    List<ProductSitemapResponse> getSitemapProducts();
 
     ProductResponse createProduct(ProductRequest request, List<MultipartFile> images, int mainImageIndex);
 
