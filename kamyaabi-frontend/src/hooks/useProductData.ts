@@ -14,18 +14,38 @@ export function useProductData(productSlug: string | undefined) {
   const navigate = useNavigate();
   const location = useLocation();
   const paramIsNumericId = !!productSlug && /^\d+$/.test(productSlug);
-  const { selectedProduct: product, products, loading, error } = useAppSelector((s) => s.products);
+  const {
+    selectedProduct,
+    selectedProductLoading,
+    selectedProductError,
+    selectedProductRequestKey,
+    products,
+  } = useAppSelector((s) => s.products);
+  const requestKey = productSlug
+    ? `${paramIsNumericId ? 'id' : 'slug'}:${productSlug}`
+    : null;
+  const product = selectedProduct && (
+    paramIsNumericId
+      ? selectedProduct.id === Number(productSlug)
+      : selectedProduct.slug === productSlug
+  )
+    ? selectedProduct
+    : null;
+  const loading = selectedProductRequestKey === requestKey && selectedProductLoading;
+  const error = selectedProductRequestKey === requestKey ? selectedProductError : null;
 
   useEffect(() => {
-    if (productSlug) {
-      if (paramIsNumericId) {
-        dispatch(fetchProductById(Number(productSlug)));
-      } else {
-        dispatch(fetchProductBySlug(productSlug));
-      }
+    if (!productSlug || product) return;
+    if (paramIsNumericId) {
+      dispatch(fetchProductById(Number(productSlug)));
+    } else {
+      dispatch(fetchProductBySlug(productSlug));
     }
+  }, [dispatch, productSlug, paramIsNumericId, product]);
+
+  useEffect(() => {
     return () => { dispatch(clearSelectedProduct()); };
-  }, [dispatch, productSlug, paramIsNumericId]);
+  }, [dispatch]);
 
   // Canonicalize the URL once the product is loaded: legacy numeric-id URLs,
   // the flat /products/:slug form, and any mismatched categorySlug all redirect

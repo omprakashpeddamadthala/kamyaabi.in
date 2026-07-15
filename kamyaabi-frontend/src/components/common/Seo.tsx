@@ -68,8 +68,12 @@ const Seo: React.FC<SeoProps> = ({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-      {/* GSC FIX: noindex keeps private/transactional pages out of the index. */}
-      {noindex && <meta name="robots" content="noindex,nofollow" />}
+      <meta
+        name="robots"
+        content={noindex
+          ? 'noindex,nofollow'
+          : 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'}
+      />
       {/* GSC FIX: self-referencing canonical to avoid duplicate-URL warnings. */}
       <link rel="canonical" href={canonical} />
 

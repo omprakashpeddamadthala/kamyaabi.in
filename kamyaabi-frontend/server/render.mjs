@@ -107,11 +107,15 @@ const CRITICAL_STYLES = `
   @media(max-width:720px){.seo-product{grid-template-columns:1fr}.seo-page{padding:24px 16px}}
 </style>`;
 
-export function renderDocument(template, head, body) {
+export function renderDocument(template, head, body, bootstrapData) {
+  const bootstrap = bootstrapData
+    ? `<script id="kamyaabi-bootstrap-data" type="application/json">${safeJson(bootstrapData)}</script>`
+    : '';
   return template
     .replace(/<!--app-seo-start-->[\s\S]*?<!--app-seo-end-->/, head)
     .replace('</head>', `${CRITICAL_STYLES}\n</head>`)
-    .replace('<div id="root"></div>', `<div id="root">${body}</div>`);
+    .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+    .replace('</body>', `${bootstrap}\n</body>`);
 }
 
 function breadcrumbs(items, siteUrl) {
@@ -235,7 +239,7 @@ export function renderProduct(template, siteUrl, product, rating) {
       </div>
     </article>
   </main>`;
-  return renderDocument(template, head, body);
+  return renderDocument(template, head, body, { path, product });
 }
 
 export function renderProductList(template, siteUrl, { products, categories, category }) {
