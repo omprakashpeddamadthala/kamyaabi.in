@@ -37,7 +37,7 @@ const MIME_TYPES = new Map([
   ['.woff', 'font/woff'],
   ['.woff2', 'font/woff2'],
 ]);
-const PRIVATE_ROUTE_PATTERN = /^\/(?:admin(?:\/|$)|cart$|checkout$|login$|orders(?:\/|$)|order(?:\/|$)|profile$|wishlist$|oauth2(?:\/|$))/;
+const PRIVATE_ROUTE_PATTERN = /^\/(?:admin(?:\/|$)|cart$|checkout$|orders(?:\/|$)|order(?:\/|$)|profile$|wishlist$|oauth2(?:\/|$))/;
 const CACHE_TTL_MS = 60_000;
 
 class ApiError extends Error {
@@ -236,10 +236,16 @@ export async function createApp({
         ? `/api/products/${identifier}`
         : `/api/products/slug/${encodeURIComponent(identifier)}`;
       const product = await api(endpoint);
-      return { redirect: productPath(product) };
+      let rating = null;
+      try {
+        rating = await api(`/api/products/${product.id}/reviews/summary`);
+      } catch (error) {
+        if (error.status !== 404) console.warn(`Rating pre-render failed for product ${product.id}: ${error.message}`);
+      }
+      return { status: 200, html: renderProduct(htmlTemplate, siteUrl, product, rating) };
     }
 
-    if (pathname === '/blog') {
+    if (pathname === '/blog' || pathname === '/blogs') {
       const [posts, categories, tags] = await Promise.all([
         api('/api/blog/posts?page=0&size=50'),
         api('/api/blog/categories'),
@@ -285,7 +291,7 @@ export async function createApp({
       return { status: 200, html: renderBlogPost(htmlTemplate, siteUrl, post) };
     }
 
-    if (pathname === '/blogs') return { redirect: '/blog' };
+
     const staticPage = renderStaticPage(htmlTemplate, siteUrl, pathname);
     if (staticPage) return { status: 200, html: staticPage };
     if (PRIVATE_ROUTE_PATTERN.test(pathname)) {

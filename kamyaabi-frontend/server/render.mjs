@@ -413,6 +413,12 @@ const STATIC_PAGES = {
     heading: 'Track Your Order',
     content: 'Enter your order information on this page to view the latest available shipment and delivery status.',
   },
+  '/login': {
+    title: 'Sign In to Your Account | Kamyaabi',
+    description: 'Sign in to your Kamyaabi account. Access your profile, track active orders, manage your wishlist, and enjoy a seamless checkout experience.',
+    heading: 'Sign In',
+    content: 'Access your account using Google Sign-In, WhatsApp OTP Login, or developer credentials.',
+  },
 };
 
 export function renderStaticPage(template, siteUrl, path) {

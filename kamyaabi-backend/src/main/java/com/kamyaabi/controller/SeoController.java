@@ -36,12 +36,13 @@ public class SeoController {
             new StaticRoute("/about", "monthly", "0.5"),
             new StaticRoute("/contact", "monthly", "0.5"),
             new StaticRoute("/track-order", "monthly", "0.4"),
-            new StaticRoute("/refund-policy", "yearly", "0.3")
+            new StaticRoute("/refund-policy", "yearly", "0.3"),
+            new StaticRoute("/login", "monthly", "0.3")
     );
 
     private static final List<String> DISALLOWED_PATHS = List.of(
             "/api/", "/admin", "/cart", "/checkout", "/orders", "/order",
-            "/profile", "/wishlist", "/login", "/oauth2/", "/swagger-ui/",
+            "/profile", "/wishlist", "/oauth2/", "/swagger-ui/",
             "/api-docs", "/v3/api-docs"
     );
 

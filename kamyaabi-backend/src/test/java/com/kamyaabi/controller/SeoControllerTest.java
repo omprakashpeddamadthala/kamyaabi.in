@@ -100,6 +100,7 @@ class SeoControllerTest {
                 .contains("Sitemap: https://kamyaabi.in/sitemap.xml")
                 .contains("Disallow: /admin")
                 .doesNotContain("Disallow: /products")
-                .doesNotContain("Disallow: /blog");
+                .doesNotContain("Disallow: /blog")
+                .doesNotContain("Disallow: /login");
     }
 }

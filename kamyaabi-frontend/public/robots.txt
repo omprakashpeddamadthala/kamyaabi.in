@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+Disallow: /order
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /oauth2/
+Disallow: /swagger-ui/
+Disallow: /api-docs
+Disallow: /v3/api-docs
+
+Sitemap: https://kamyaabi.in/sitemap.xml
