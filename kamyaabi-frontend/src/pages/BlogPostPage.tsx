@@ -27,10 +27,10 @@ import {
   ContentCopy,
   Facebook,
 } from '@mui/icons-material';
-import { Helmet } from 'react-helmet-async';
 import { blogApi } from '../api/blogApi';
 import { BlogPost } from '../types';
 import { config } from '../config';
+import Seo from '../components/common/Seo';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -64,7 +64,7 @@ const BlogPostPage: React.FC = () => {
     });
   };
 
-  const postUrl = `https://${config.brandDomain}/blog/${slug}`;
+  const postUrl = `${config.brandSiteUrl}/blog/${slug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(postUrl).catch(() => {});
@@ -101,6 +101,14 @@ const BlogPostPage: React.FC = () => {
   if (error || !post) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        {/* GSC FIX: noindex the 404 error state — a missing blog post must not
+            be presented to Google as a real indexable page.                   */}
+        <Seo
+          title="Post Not Found"
+          description="The blog post you are looking for does not exist on Kamyaabi."
+          canonicalPath={`/blog/${slug}`}
+          noindex
+        />
         <Typography variant="h4" component="h1" gutterBottom>Post Not Found</Typography>
         <Typography color="text.secondary">The blog post you are looking for does not exist.</Typography>
         <Link component={RouterLink} to="/blog" sx={{ mt: 2, display: 'inline-block' }}>
@@ -110,57 +118,76 @@ const BlogPostPage: React.FC = () => {
     );
   }
 
-  const seoTitle = post.seoTitle || `${post.title} | Kamyaabi`;
+  const seoTitle = post.seoTitle || post.title;
   const seoDescription = post.seoDescription || post.excerpt || '';
   const ogImage = post.ogImageUrl || post.coverImageUrl || '';
   const canonical = post.canonicalUrl || postUrl;
 
+  // ── Schema.org JSON-LD blocks ──────────────────────────────────────────────
+
+  const articleJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    image: ogImage ? [ogImage] : undefined,
+    author: {
+      '@type': 'Person',
+      name: post.authorName || 'Kamyaabi',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Kamyaabi',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${config.brandSiteUrl}/pwa-512x512.png`,
+        width: 512,
+        height: 512,
+      },
+    },
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt || post.publishedAt,
+    description: seoDescription,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': postUrl,
+    },
+    url: postUrl,
+    ...(post.readingTimeMinutes
+      ? { timeRequired: `PT${post.readingTimeMinutes}M` }
+      : {}),
+    ...(post.categories?.length
+      ? { articleSection: post.categories[0].name }
+      : {}),
+    ...(post.tags?.length
+      ? { keywords: post.tags.map((t) => t.name).join(', ') }
+      : {}),
+  };
+
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${config.brandSiteUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: postUrl },
+    ],
+  };
+
   return (
     <>
-      <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDescription} />
-        {post.seoKeywords && <meta name="keywords" content={post.seoKeywords} />}
-        <link rel="canonical" href={canonical} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={postUrl} />
-        {ogImage && <meta property="og:image" content={ogImage} />}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={seoDescription} />
-        {ogImage && <meta name="twitter:image" content={ogImage} />}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline: post.title,
-            image: ogImage || undefined,
-            author: { '@type': 'Person', name: post.authorName || 'Kamyaabi' },
-            publisher: {
-              '@type': 'Organization',
-              name: 'Kamyaabi',
-              logo: { '@type': 'ImageObject', url: `https://${config.brandDomain}/logo.png` },
-            },
-            datePublished: post.publishedAt,
-            dateModified: post.updatedAt,
-            description: seoDescription,
-            mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
-          })}
-        </script>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: `https://${config.brandDomain}/` },
-              { '@type': 'ListItem', position: 2, name: 'Blog', item: `https://${config.brandDomain}/blog` },
-              { '@type': 'ListItem', position: 3, name: post.title, item: postUrl },
-            ],
-          })}
-        </script>
-      </Helmet>
+      {/* GSC FIX: unified <Seo> handles all required meta, OG, Twitter,
+          canonical, robots, hreflang and JSON-LD in one component.      */}
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={canonical}
+        image={ogImage || undefined}
+        keywords={post.seoKeywords || undefined}
+        publishedTime={post.publishedAt || undefined}
+        modifiedTime={post.updatedAt || undefined}
+        authorName={post.authorName || undefined}
+        jsonLd={[articleJsonLd, breadcrumbJsonLd]}
+      />
 
       <Container maxWidth="md" sx={{ py: 4 }}>
         {/* Breadcrumb */}

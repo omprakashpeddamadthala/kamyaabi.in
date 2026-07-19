@@ -270,7 +270,13 @@ const ProductDetailPage: React.FC = () => {
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
+      seller: {
+        '@type': 'Organization',
+        name: 'Kamyaabi',
+        url: config.brandSiteUrl,
+      },
     },
+
     ...(hasRating && reviewSummary
       ? {
           aggregateRating: {
@@ -287,12 +293,13 @@ const ProductDetailPage: React.FC = () => {
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
       { '@type': 'ListItem', position: 2, name: 'Products', item: `${config.brandSiteUrl}/products` },
-      ...(product.categoryName
+      ...(product.categoryName && product.categorySlug
         ? [{
             '@type': 'ListItem',
             position: 3,
             name: product.categoryName,
-            item: `${config.brandSiteUrl}/products?category=${product.categorySlug || product.categoryId}`,
+            // GSC FIX: use canonical /products/category/:slug, NOT ?category= query param.
+            item: `${config.brandSiteUrl}/products/category/${product.categorySlug}`,
           }]
         : []),
       {
@@ -303,6 +310,7 @@ const ProductDetailPage: React.FC = () => {
       },
     ],
   };
+
 
   const hasNutrition = !!product.nutritionalInfo && Object.keys(product.nutritionalInfo).length > 0;
   const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;
@@ -330,16 +338,17 @@ const ProductDetailPage: React.FC = () => {
         <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
           <MuiLink component={Link} to="/products" underline="hover" color="inherit">Products</MuiLink>
-          {product.categoryName && (
+          {product.categoryName && product.categorySlug && (
             <MuiLink
               component={Link}
-              to={`/products?category=${product.categorySlug || product.categoryId}`}
+              to={`/products/category/${product.categorySlug}`}
               underline="hover"
               color="inherit"
             >
               {product.categoryName}
             </MuiLink>
           )}
+
           <Typography color="text.primary" fontWeight={500}>{product.name}</Typography>
         </Breadcrumbs>
       </Container>

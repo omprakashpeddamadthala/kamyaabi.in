@@ -8,6 +8,8 @@ import { AccessTime } from '@mui/icons-material';
 import { blogApi } from '../api/blogApi';
 import Seo from '../components/common/Seo';
 import { BlogPost, BlogCategory } from '../types';
+import { config } from '../config';
+
 
 const BlogCategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -45,9 +47,47 @@ const BlogCategoryPage: React.FC = () => {
   const title = category ? `${category.name} Articles` : 'Blog Category';
   const description = category?.description || `Articles about ${category?.name || 'this category'} from Kamyaabi`;
 
+  const categoryUrl = `${config.brandSiteUrl}/blog/category/${slug}`;
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${config.brandSiteUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: category?.name || slug, item: categoryUrl },
+    ],
+  };
+
+  const collectionPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: title,
+    description,
+    url: categoryUrl,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Kamyaabi',
+      logo: `${config.brandSiteUrl}/pwa-512x512.png`,
+    },
+  };
+
   return (
     <>
-      <Seo title={title} description={description} canonicalPath={slug ? `/blog/category/${slug}` : '/blog'} />
+      <Seo
+        title={title}
+        description={description}
+        canonicalPath={slug ? `/blog/category/${slug}` : '/blog'}
+        jsonLd={[breadcrumbJsonLd, collectionPageJsonLd]}
+      />
+      {/* Pagination link relations for Google. */}
+      {page > 0 && (
+        <link rel="prev" href={page === 1 ? categoryUrl : `${categoryUrl}?page=${page}`} />
+      )}
+      {page < totalPages - 1 && (
+        <link rel="next" href={`${categoryUrl}?page=${page + 2}`} />
+      )}
+
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link component={RouterLink} to="/" underline="hover" color="inherit">Home</Link>

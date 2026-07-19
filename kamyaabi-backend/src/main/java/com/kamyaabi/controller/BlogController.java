@@ -28,9 +28,14 @@ import java.util.stream.Collectors;
 public class BlogController {
 
     private final BlogService blogService;
+    private final String publicSiteUrl;
 
-    public BlogController(BlogService blogService) {
+    public BlogController(BlogService blogService,
+                          @org.springframework.beans.factory.annotation.Value("${app.frontend-url:https://kamyaabi.in}") String publicSiteUrl) {
         this.blogService = blogService;
+        // Strip trailing slash to match SeoController convention.
+        this.publicSiteUrl = publicSiteUrl == null ? "https://kamyaabi.in"
+                : publicSiteUrl.trim().replaceAll("/+$", "");
     }
 
     @GetMapping("/posts")
@@ -124,7 +129,7 @@ public class BlogController {
         sb.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
         for (BlogPostResponse post : posts) {
             sb.append("  <url>\n");
-            sb.append("    <loc>https://kamyaabi.in/blog/").append(escapeXml(post.slug())).append("</loc>\n");
+            sb.append("    <loc>").append(publicSiteUrl).append("/blog/").append(escapeXml(post.slug())).append("</loc>\n");
             if (post.updatedAt() != null) {
                 sb.append("    <lastmod>").append(post.updatedAt().toLocalDate().toString()).append("</lastmod>\n");
             } else if (post.publishedAt() != null) {
@@ -159,14 +164,14 @@ public class BlogController {
         sb.append("<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n");
         sb.append("  <channel>\n");
         sb.append("    <title>Kamyaabi Blog - Premium Dry Fruits</title>\n");
-        sb.append("    <link>https://kamyaabi.in/blog</link>\n");
+        sb.append("    <link>").append(publicSiteUrl).append("/blog</link>\n");
         sb.append("    <description>Latest articles about premium dry fruits, health tips, and recipes from Kamyaabi</description>\n");
         sb.append("    <language>en-in</language>\n");
         for (BlogPostResponse post : posts) {
             sb.append("    <item>\n");
             sb.append("      <title>").append(escapeXml(post.title())).append("</title>\n");
-            sb.append("      <link>https://kamyaabi.in/blog/").append(post.slug()).append("</link>\n");
-            sb.append("      <guid isPermaLink=\"true\">https://kamyaabi.in/blog/").append(post.slug()).append("</guid>\n");
+            sb.append("      <link>").append(publicSiteUrl).append("/blog/").append(post.slug()).append("</link>\n");
+            sb.append("      <guid isPermaLink=\"true\">").append(publicSiteUrl).append("/blog/").append(post.slug()).append("</guid>\n");
             if (post.excerpt() != null) {
                 sb.append("      <description>").append(escapeXml(post.excerpt())).append("</description>\n");
             }

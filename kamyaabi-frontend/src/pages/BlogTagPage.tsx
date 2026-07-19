@@ -8,6 +8,8 @@ import { AccessTime } from '@mui/icons-material';
 import { blogApi } from '../api/blogApi';
 import Seo from '../components/common/Seo';
 import { BlogPost, BlogTag } from '../types';
+import { config } from '../config';
+
 
 const BlogTagPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -45,9 +47,30 @@ const BlogTagPage: React.FC = () => {
   const title = tag ? `${tag.name} Articles` : 'Blog Tag';
   const description = tag?.description || `Articles tagged with ${tag?.name || slug} from Kamyaabi`;
 
+  const tagUrl = `${config.brandSiteUrl}/blog/tag/${slug}`;
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${config.brandSiteUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: tag?.name || slug, item: tagUrl },
+    ],
+  };
+
   return (
     <>
-      <Seo title={title} description={description} canonicalPath={slug ? `/blog/tag/${slug}` : '/blog'} />
+      {/* GSC FIX: tag pages are thin content — noindex prevents crawl budget waste.
+          The JSON-LD BreadcrumbList is still emitted so internal link signals work. */}
+      <Seo
+        title={title}
+        description={description}
+        canonicalPath={slug ? `/blog/tag/${slug}` : '/blog'}
+        noindex
+        jsonLd={breadcrumbJsonLd}
+      />
+
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link component={RouterLink} to="/" underline="hover" color="inherit">Home</Link>

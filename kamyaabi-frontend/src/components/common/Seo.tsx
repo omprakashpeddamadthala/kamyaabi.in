@@ -13,6 +13,8 @@ import { config } from '../../config';
  *  - optional robots `noindex,nofollow` for private/transactional pages so
  *    they never enter the index ("Crawled - currently not indexed" noise)
  *  - optional JSON-LD structured data blocks (schema.org)
+ *  - hreflang for en-IN locale targeting
+ *  - article published/modified dates for blog posts
  *
  * react-helmet-async de-dupes by tag, and because this renders inside the
  * Router (after the sitewide <SiteHead/> defaults) the page-level values win.
@@ -31,6 +33,14 @@ export interface SeoProps {
   noindex?: boolean;
   /** One or more schema.org JSON-LD objects rendered as <script> blocks. */
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+  /**
+   * ISO 8601 date strings for article Open Graph tags (blog posts).
+   * Setting these changes og:type to "article" automatically.
+   */
+  publishedTime?: string | null;
+  modifiedTime?: string | null;
+  /** Author name for article Open Graph. */
+  authorName?: string | null;
 }
 
 const SITE_NAME = 'Kamyaabi';
@@ -38,6 +48,8 @@ const DEFAULT_DESCRIPTION =
   'Shop premium, hand-picked dry fruits and nuts at Kamyaabi — almonds, cashews, '
   + 'pistachios and more. Sourced for purity, sealed for freshness, delivered across India.';
 const DEFAULT_OG_IMAGE = `${config.brandSiteUrl}/pwa-512x512.png`;
+const OG_IMAGE_WIDTH = '512';
+const OG_IMAGE_HEIGHT = '512';
 
 const resolveCanonical = (canonicalUrl?: string, canonicalPath?: string): string => {
   if (canonicalUrl) return canonicalUrl;
@@ -58,10 +70,15 @@ const Seo: React.FC<SeoProps> = ({
   keywords,
   noindex = false,
   jsonLd,
+  publishedTime,
+  modifiedTime,
+  authorName,
 }) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Premium Dry Fruits`;
   const canonical = resolveCanonical(canonicalUrl, canonicalPath);
   const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+  // Auto-switch og:type to "article" when publish dates are provided.
+  const resolvedType = publishedTime ? 'article' : type;
 
   return (
     <Helmet>
@@ -77,13 +94,25 @@ const Seo: React.FC<SeoProps> = ({
       {/* GSC FIX: self-referencing canonical to avoid duplicate-URL warnings. */}
       <link rel="canonical" href={canonical} />
 
+      {/* GSC FIX: hreflang targeting India / English. */}
+      <link rel="alternate" hrefLang="en-IN" href={canonical} />
+      <link rel="alternate" hrefLang="x-default" href={canonical} />
+
       {/* GSC FIX: Open Graph tags for rich link previews. */}
       <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:type" content={type} />
+      <meta property="og:type" content={resolvedType} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content={OG_IMAGE_WIDTH} />
+      <meta property="og:image:height" content={OG_IMAGE_HEIGHT} />
+      <meta property="og:locale" content="en_IN" />
+
+      {/* Article-specific Open Graph tags (blog posts). */}
+      {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+      {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+      {authorName && <meta property="article:author" content={authorName} />}
 
       {/* GSC FIX: Twitter Card tags. */}
       <meta name="twitter:card" content="summary_large_image" />

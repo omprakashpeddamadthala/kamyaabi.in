@@ -42,6 +42,8 @@ import { ProductSort } from '../api/productApi';
 import { usePublicSettings } from '../hooks/usePublicSettings';
 import { productTagApi } from '../api/productTagApi';
 import { ProductTag } from '../types';
+import { config } from '../config';
+
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: 'newest', label: 'Newest First' },
@@ -301,14 +303,58 @@ const ProductsPage: React.FC = () => {
     </Box>
   );
 
+  const productsBaseUrl = `${config.brandSiteUrl}/products`;
+  const canonicalUrl = selectedCategory
+    ? `${productsBaseUrl}/category/${selectedCategory.slug}`
+    : productsBaseUrl;
+
+  // Noindex for search, tag-filtered, and sort-filtered paginated variants
+  // (thin/parameterised content that duplicates category canonicals).
+  const shouldNoindex = Boolean(tagSlug) || Boolean(searchQuery);
+
+  const breadcrumbItems: Array<Record<string, unknown>> = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+    { '@type': 'ListItem', position: 2, name: 'Products', item: productsBaseUrl },
+  ];
+  if (selectedCategory) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: 3,
+      name: selectedCategory.name,
+      item: canonicalUrl,
+    });
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems,
+  };
+
+  const collectionPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: selectedCategory ? `${selectedCategory.name} Dry Fruits & Nuts` : 'Shop Premium Dry Fruits & Nuts',
+    description: selectedCategory?.description
+      || "Browse Kamyaabi's full range of premium dry fruits and nuts — almonds, cashews, pistachios, raisins and more.",
+    url: canonicalUrl,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Kamyaabi',
+      logo: `${config.brandSiteUrl}/pwa-512x512.png`,
+    },
+  };
+
   return (
     <PageTransition>
       <Seo
         title={selectedCategory ? `${selectedCategory.name} Dry Fruits & Nuts` : 'Shop Premium Dry Fruits & Nuts'}
         description={selectedCategory?.description || "Browse Kamyaabi's full range of premium dry fruits and nuts — almonds, cashews, pistachios, raisins and more. Freshly packed and delivered across India."}
         canonicalPath={selectedCategory ? `/products/category/${selectedCategory.slug}` : '/products'}
-        noindex={Boolean(tagSlug)}
+        noindex={shouldNoindex}
+        jsonLd={shouldNoindex ? undefined : [breadcrumbJsonLd, collectionPageJsonLd]}
       />
+
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, bgcolor: 'var(--color-surface-bg)', minHeight: '80vh' }}>
       
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 1 }}>
