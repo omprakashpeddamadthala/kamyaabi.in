@@ -115,7 +115,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/login" element={<LoginPage />} />
 
         {/* Public Blog Routes */}
-        <Route path="/blogs" element={<Navigate to="/blog" replace />} />
+        <Route path="/blogs" element={<BlogListPage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
         <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
