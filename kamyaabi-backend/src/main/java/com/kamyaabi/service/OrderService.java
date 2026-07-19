@@ -15,4 +15,12 @@ public interface OrderService {
     Page<OrderResponse> getOrdersByStatus(Order.OrderStatus status, Pageable pageable);
     Page<OrderResponse> getOrdersByStatuses(java.util.List<Order.OrderStatus> statuses, Pageable pageable);
     OrderResponse updateOrderStatus(Long orderId, Order.OrderStatus status);
+
+    /**
+     * Triggers a live Shiprocket status refresh for the given order and
+     * returns the updated {@link OrderResponse}.  If the order has no AWB
+     * or Shiprocket is not configured, the current DB values are returned
+     * unchanged.
+     */
+    OrderResponse refreshShipmentStatus(Long orderId);
 }

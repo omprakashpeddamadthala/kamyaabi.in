@@ -2,6 +2,7 @@
  * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
  * - Preserves order detail fetching, invoice/download behavior, payment retry, Razorpay verification, and status/payment rendering.
  * - Visual-only tokenization of Razorpay theme color from design tokens.
+ * - Background status refresh: after initial load, silently re-syncs from Shiprocket to ensure latest status.
  */
 import React, { useEffect } from 'react';
 import Seo from '../components/common/Seo';
@@ -23,7 +24,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
-import { fetchOrderById } from '../features/order/orderSlice';
+import { fetchOrderById, patchSelectedOrder } from '../features/order/orderSlice';
 import { paymentApi } from '../api/paymentApi';
 import { orderApi } from '../api/orderApi';
 import { triggerBlobDownload } from '../utils/download';
@@ -31,31 +32,18 @@ import Loading from '../components/common/Loading';
 import TrackingWidget from '../components/common/TrackingWidget';
 import { PRODUCT_PLACEHOLDER_IMAGE } from '../config/images';
 import { Alert, Button, CircularProgress } from '@mui/material';
+import {
+  getActiveStep,
+  getPrimaryStatusLabel,
+  getPrimaryStatusColor,
+  ORDER_STEP_LABELS,
+} from '../utils/orderStatusUtils';
 
 declare global {
   interface Window {
     Razorpay: new (options: Record<string, unknown>) => { open: () => void };
   }
 }
-
-const ORDER_STEP_LABELS = ['Placed', 'Paid', 'Processing', 'Shipped', 'Delivered'] as const;
-
-const PAID_STEP_INDEX = 1;
-
-const getActiveStep = (status: string, paymentStatus?: string): number => {
-  if (paymentStatus === 'COMPLETED' && status === 'PENDING') {
-    return PAID_STEP_INDEX + 1;
-  }
-  switch (status) {
-    case 'PENDING': return 0;
-    case 'PAID': return PAID_STEP_INDEX + 1;
-    case 'CONFIRMED':
-    case 'PROCESSING': return 2;
-    case 'SHIPPED': return 3;
-    case 'DELIVERED': return ORDER_STEP_LABELS.length;
-    default: return -1;
-  }
-};
 
 const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -69,8 +57,25 @@ const OrderDetailPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Initial load — clears stale data immediately (pending reducer sets selectedOrder=null)
   useEffect(() => {
     if (id) dispatch(fetchOrderById(Number(id)));
+  }, [dispatch, id]);
+
+  // Background refresh — after initial render, silently pull the latest status
+  // from Shiprocket so the displayed status is always fresh without blocking load.
+  useEffect(() => {
+    if (!id) return;
+    const numericId = Number(id);
+    orderApi.refreshStatus(numericId)
+      .then((res) => {
+        if (res.data?.data) {
+          dispatch(patchSelectedOrder(res.data.data));
+        }
+      })
+      .catch(() => {
+        // Background refresh failure is non-fatal — silently ignore
+      });
   }, [dispatch, id]);
 
   const handleDownloadInvoice = async () => {
@@ -160,7 +165,10 @@ const OrderDetailPage: React.FC = () => {
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h3">Order #{order.id}</Typography>
-        <Chip label={order.status} color="primary" />
+        <Chip
+          label={getPrimaryStatusLabel(order.status, order.shippingStatus)}
+          color={getPrimaryStatusColor(order.status, order.shippingStatus)}
+        />
       </Box>
 
       {paymentError && (

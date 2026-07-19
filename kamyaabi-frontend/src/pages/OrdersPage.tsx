@@ -25,36 +25,14 @@ import { Receipt, ExpandMore, ExpandLess, LocalShipping } from '@mui/icons-mater
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchOrders } from '../features/order/orderSlice';
 import Loading from '../components/common/Loading';
+import {
+  getActiveStep,
+  getPrimaryStatusLabel,
+  getPrimaryStatusColor,
+  ORDER_STEP_LABELS,
+} from '../utils/orderStatusUtils';
 
-const statusColors: Record<string, 'warning' | 'info' | 'primary' | 'secondary' | 'success' | 'error'> = {
-  PENDING: 'warning',
-  PAID: 'info',
-  CONFIRMED: 'info',
-  PROCESSING: 'primary',
-  SHIPPED: 'secondary',
-  DELIVERED: 'success',
-  CANCELLED: 'error',
-  PAYMENT_FAILED: 'error',
-};
 
-const ORDER_STEP_LABELS = ['Placed', 'Paid', 'Processing', 'Shipped', 'Delivered'] as const;
-
-const PAID_STEP_INDEX = 1;
-
-const getActiveStep = (status: string, paymentStatus?: string): number => {
-  if (paymentStatus === 'COMPLETED' && status === 'PENDING') {
-    return PAID_STEP_INDEX + 1;
-  }
-  switch (status) {
-    case 'PENDING': return 0;
-    case 'PAID': return PAID_STEP_INDEX + 1;
-    case 'CONFIRMED':
-    case 'PROCESSING': return 2;
-    case 'SHIPPED': return 3;
-    case 'DELIVERED': return ORDER_STEP_LABELS.length;
-    default: return -1;
-  }
-};
 
 const OrdersPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -147,8 +125,8 @@ const OrdersPage: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
               <Box sx={{ textAlign: 'right' }}>
                 <Chip
-                  label={order.status}
-                  color={statusColors[order.status] || 'default'}
+                  label={getPrimaryStatusLabel(order.status, order.shippingStatus)}
+                  color={getPrimaryStatusColor(order.status, order.shippingStatus)}
                   size="small"
                   sx={{ mb: 1, borderRadius: 'var(--radius-full)', fontWeight: 800 }}
                 />

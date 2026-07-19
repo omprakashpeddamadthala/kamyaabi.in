@@ -81,4 +81,15 @@ public class OrderController {
         OrderResponse order = orderService.getOrderById(id);
         return ResponseEntity.ok(ApiResponse.success(order));
     }
+
+    @PostMapping("/{id}/refresh-status")
+    @PreAuthorize("!hasRole('ADMIN')")
+    @Operation(summary = "Refresh order shipment status",
+            description = "Triggers a live Shiprocket status pull for this order and returns the updated order. "
+                    + "Call this in the background after loading the order detail page to ensure the latest status is shown.")
+    public ResponseEntity<ApiResponse<OrderResponse>> refreshOrderStatus(@PathVariable Long id) {
+        log.info("Customer-triggered Shiprocket status refresh for order {}", id);
+        OrderResponse order = orderService.refreshShipmentStatus(id);
+        return ResponseEntity.ok(ApiResponse.success("Status refreshed", order));
+    }
 }

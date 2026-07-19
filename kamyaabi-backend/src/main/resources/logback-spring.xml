@@ -75,7 +75,7 @@
     </appender>
 
     <!-- ==================== PROFILE-AWARE ROOTS ==================== -->
-    <springProfile name="dev">
+    <springProfile name="dev,local">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE"/>

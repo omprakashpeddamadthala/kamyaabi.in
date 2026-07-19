@@ -27,4 +27,12 @@ export const orderApi = {
 
   trackShipment: (orderId: number) =>
     axiosInstance.get<ApiResponse<TrackingInfo>>(`/api/shipping/track/${orderId}`),
+
+  /**
+   * Triggers a background Shiprocket status refresh for the given order.
+   * Call this after the order detail page loads to ensure the UI reflects
+   * the latest status from Shiprocket without blocking the initial render.
+   */
+  refreshStatus: (id: number) =>
+    axiosInstance.post<ApiResponse<Order>>(`/api/orders/${id}/refresh-status`),
 };

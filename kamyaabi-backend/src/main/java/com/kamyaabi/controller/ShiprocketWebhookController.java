@@ -4,6 +4,7 @@ import com.kamyaabi.entity.Order;
 import com.kamyaabi.event.OrderEventPublisher;
 import com.kamyaabi.event.OrderEventType;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +12,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Handles incoming Shiprocket status webhooks.
+ * <p>
+ * All status mapping is delegated to {@link ShiprocketStatusMapper} —
+ * no status-mapping logic lives here.  Events are published after the
+ * mapper has updated the entity so listeners always see the final state.
+ * </p>
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/webhooks")
@@ -23,11 +31,14 @@ public class ShiprocketWebhookController {
 
     private final OrderRepository orderRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final ShiprocketStatusMapper statusMapper;
 
     public ShiprocketWebhookController(OrderRepository orderRepository,
-                                       OrderEventPublisher orderEventPublisher) {
+                                       OrderEventPublisher orderEventPublisher,
+                                       ShiprocketStatusMapper statusMapper) {
         this.orderRepository = orderRepository;
         this.orderEventPublisher = orderEventPublisher;
+        this.statusMapper = statusMapper;
     }
 
     @PostMapping("/shiprocket")
@@ -65,14 +76,24 @@ public class ShiprocketWebhookController {
             }
 
             Order order = orderOpt.get();
-            order.setShippingStatus(currentStatus);
+            Order.OrderStatus statusBefore = order.getStatus();
 
+            // Update the raw shipping status first
             if (currentStatus != null) {
-                mapShiprocketStatusToOrderStatus(order, currentStatus);
+                order.setShippingStatus(currentStatus);
+            }
+
+            // Delegate to the single canonical mapper
+            if (currentStatus != null) {
+                statusMapper.applyTo(order, currentStatus);
             }
 
             orderRepository.save(order);
-            log.info("Order {} updated with Shiprocket status: {}", order.getId(), currentStatus);
+            log.info("Order {} updated via webhook: shippingStatus='{}', orderStatus={} → {}",
+                    order.getId(), currentStatus, statusBefore, order.getStatus());
+
+            // Publish lifecycle events based on the final order status
+            publishEventIfChanged(order, statusBefore);
 
             return ResponseEntity.ok(Map.of("status", "ok"));
 
@@ -82,38 +103,23 @@ public class ShiprocketWebhookController {
         }
     }
 
-    private void mapShiprocketStatusToOrderStatus(Order order, String shiprocketStatus) {
-        String statusUpper = shiprocketStatus.toUpperCase().trim();
-        Order.OrderStatus previousStatus = order.getStatus();
-
-        switch (statusUpper) {
-            case "PICKED UP" -> {
-                if (previousStatus != Order.OrderStatus.SHIPPED) {
-                    order.setStatus(Order.OrderStatus.PROCESSING);
-                    orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_PROCESSING);
-                }
-            }
-            case "IN TRANSIT", "SHIPPED" -> {
-                order.setStatus(Order.OrderStatus.SHIPPED);
-                orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_SHIPPED);
-            }
-            case "OUT FOR DELIVERY" -> {
-                order.setStatus(Order.OrderStatus.SHIPPED);
-                order.setShippingStatus("OUT_FOR_DELIVERY");
-            }
-            case "DELIVERED" -> {
-                order.setStatus(Order.OrderStatus.DELIVERED);
-                order.setDeliveredAt(LocalDateTime.now());
-                orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_DELIVERED);
-            }
-            case "RTO INITIATED", "RTO" -> {
-                order.setShippingStatus("RETURN_INITIATED");
-            }
-            case "CANCELLED" -> {
-                order.setStatus(Order.OrderStatus.CANCELLED);
-                orderEventPublisher.publishOrderEvent(order, OrderEventType.ORDER_CANCELLED);
-            }
-            default -> log.info("Unmapped Shiprocket status '{}' for order {}", shiprocketStatus, order.getId());
+    /**
+     * Publishes a domain event only when the order status actually changed,
+     * to avoid double-firing on repeated webhook deliveries.
+     */
+    private void publishEventIfChanged(Order order, Order.OrderStatus previousStatus) {
+        if (order.getStatus() == previousStatus) {
+            return;
+        }
+        OrderEventType eventType = switch (order.getStatus()) {
+            case PROCESSING  -> OrderEventType.ORDER_PROCESSING;
+            case SHIPPED     -> OrderEventType.ORDER_SHIPPED;
+            case DELIVERED   -> OrderEventType.ORDER_DELIVERED;
+            case CANCELLED   -> OrderEventType.ORDER_CANCELLED;
+            default          -> null;
+        };
+        if (eventType != null) {
+            orderEventPublisher.publishOrderEvent(order, eventType);
         }
     }
 

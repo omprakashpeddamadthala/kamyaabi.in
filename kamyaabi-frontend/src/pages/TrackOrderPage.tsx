@@ -36,6 +36,7 @@ import Seo from '../components/common/Seo';
 import { PublicOrderTracking, TrackingEvent } from '../types';
 import { parseApiError } from '../utils/apiError';
 import PageTransition from '../components/common/PageTransition';
+import { STATUS_COLORS, formatStatus } from '../utils/orderStatusUtils';
 
 /* ── Order lifecycle steps ────────────────────────────────── */
 
@@ -61,22 +62,7 @@ const STATUS_TO_STEP: Record<string, number> = {
   RTO: -1,
 };
 
-const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'success' | 'error'> = {
-  PENDING: 'warning',
-  PAID: 'info',
-  CONFIRMED: 'info',
-  PROCESSING: 'info',
-  SHIPPED: 'info',
-  IN_TRANSIT: 'info',
-  OUT_FOR_DELIVERY: 'info',
-  DELIVERED: 'success',
-  CANCELLED: 'error',
-  PAYMENT_FAILED: 'error',
-  RTO: 'error',
-};
-
-const formatLabel = (s: string) =>
-  s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const formatLabel = formatStatus;
 
 /* ── Styled stepper connector ─────────────────────────────── */
 

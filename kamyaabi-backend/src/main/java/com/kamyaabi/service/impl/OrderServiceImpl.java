@@ -276,6 +276,30 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toResponse(saved);
     }
 
+    @Override
+    @Transactional
+    public OrderResponse refreshShipmentStatus(Long orderId) {
+        log.info("Refreshing Shiprocket shipment status for order {}", orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+
+        // Only refresh if order has an AWB and is not already in a terminal state
+        boolean isTerminal = order.getStatus() == Order.OrderStatus.DELIVERED
+                || order.getStatus() == Order.OrderStatus.CANCELLED;
+
+        if (!isTerminal && order.getShiprocketOrderId() != null) {
+            shiprocketService.refreshShipmentStatus(order);
+            // Re-fetch after mutation so the response reflects persisted values
+            order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+        } else {
+            log.debug("Skipping Shiprocket refresh for order {} (terminal={}, shiprocketId={})",
+                    orderId, isTerminal, order.getShiprocketOrderId());
+        }
+
+        return orderMapper.toResponse(order);
+    }
+
     static BigDecimal parseWeightKg(String weight, String unit) {
         if (weight == null || weight.isBlank()) return null;
         try {
