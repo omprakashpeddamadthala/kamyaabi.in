@@ -360,7 +360,7 @@ export function renderBlogPost(template, siteUrl, post) {
     ${post.coverImageUrl ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(post.coverImageAlt || post.title)}" width="1200" height="675" fetchpriority="high" />` : ''}
     ${paragraphs || `<p>${escapeHtml(description)}</p>`}
   </article></main>`;
-  return renderDocument(template, head, body);
+  return renderDocument(template, head, body, { path, post });
 }
 
 export function renderHome(template, siteUrl, { products, categories, posts }) {

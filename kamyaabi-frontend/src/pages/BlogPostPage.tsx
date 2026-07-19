@@ -31,16 +31,29 @@ import { blogApi } from '../api/blogApi';
 import { BlogPost } from '../types';
 import { config } from '../config';
 import Seo from '../components/common/Seo';
+import { readBootstrapBlog } from '../utils/bootstrapData';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(() => {
+    const bootstrap = readBootstrapBlog();
+    if (bootstrap && bootstrap.slug === slug) {
+      return bootstrap;
+    }
+    return null;
+  });
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!post);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
+    // If the post is already loaded via bootstrap for the current slug, bypass initial load.
+    if (post && post.slug === slug) {
+      blogApi.incrementViewCount(post.id).catch(() => {});
+      blogApi.getRelatedPosts(post.id, 3).then((r) => setRelatedPosts(r.data.data)).catch(() => {});
+      return;
+    }
     setLoading(true);
     setError(null);
     blogApi
@@ -53,7 +66,7 @@ const BlogPostPage: React.FC = () => {
       })
       .catch(() => setError('Post not found'))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, post]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '';
