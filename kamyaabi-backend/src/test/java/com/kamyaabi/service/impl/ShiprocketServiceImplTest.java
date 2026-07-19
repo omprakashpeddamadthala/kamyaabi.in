@@ -754,7 +754,7 @@ class ShiprocketServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void refreshShipmentStatus_cancelledStatus_doesNotAutoCancel() {
+    void refreshShipmentStatus_cancelledStatus_autoCancels() {
         Order order = buildOrder();
         order.setShiprocketOrderId("12345");
         order.setShiprocketSynced(true);
@@ -774,7 +774,7 @@ class ShiprocketServiceImplTest {
 
         shiprocketService.refreshShipmentStatus(order);
 
-        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.PAID);
+        assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.CANCELLED);
         verify(orderRepository).save(order);
     }
 
