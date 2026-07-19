@@ -76,7 +76,7 @@ class ShiprocketIntegrationTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void listChannels_withRealToken_returnsData() {
         String token = authClient.getToken();
         HttpHeaders headers = new HttpHeaders();
@@ -95,7 +95,7 @@ class ShiprocketIntegrationTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     void listPickupLocations_withRealToken_returnsData() {
         String token = authClient.getToken();
         HttpHeaders headers = new HttpHeaders();

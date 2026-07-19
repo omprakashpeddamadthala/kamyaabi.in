@@ -1,6 +1,5 @@
 package com.kamyaabi.service.impl;
 
-import com.kamyaabi.config.InvoiceProperties;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.entity.User;
 import com.kamyaabi.invoice.InvoiceDocument;
@@ -38,7 +37,7 @@ class InvoiceServiceImplTest {
     @BeforeEach
     void setUp() {
         invoiceService = new InvoiceServiceImpl(orderRepository, templateRenderer, pdfRenderer,
-                invoiceStorage, new InvoiceProperties());
+                invoiceStorage);
         User user = User.builder().id(7L).email("buyer@test.com").name("Buyer").role(User.Role.USER).build();
         paidOrder = Order.builder()
                 .id(100L)

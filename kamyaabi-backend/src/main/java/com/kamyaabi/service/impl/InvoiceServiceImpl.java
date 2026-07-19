@@ -1,6 +1,5 @@
 package com.kamyaabi.service.impl;
 
-import com.kamyaabi.config.InvoiceProperties;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.invoice.InvoiceDocument;
@@ -24,18 +23,15 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceTemplateRenderer templateRenderer;
     private final InvoicePdfRenderer pdfRenderer;
     private final InvoiceStorage invoiceStorage;
-    private final InvoiceProperties invoiceProperties;
 
     public InvoiceServiceImpl(OrderRepository orderRepository,
                               InvoiceTemplateRenderer templateRenderer,
                               InvoicePdfRenderer pdfRenderer,
-                              InvoiceStorage invoiceStorage,
-                              InvoiceProperties invoiceProperties) {
+                              InvoiceStorage invoiceStorage) {
         this.orderRepository = orderRepository;
         this.templateRenderer = templateRenderer;
         this.pdfRenderer = pdfRenderer;
         this.invoiceStorage = invoiceStorage;
-        this.invoiceProperties = invoiceProperties;
     }
 
     @Override

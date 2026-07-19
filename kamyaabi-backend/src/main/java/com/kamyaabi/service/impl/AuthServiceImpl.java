@@ -8,7 +8,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.kamyaabi.dto.response.AuthResponse;
 import com.kamyaabi.dto.response.UserResponse;
 import com.kamyaabi.entity.User;
-import com.kamyaabi.exception.BadRequestException;
 import com.kamyaabi.exception.ResourceNotFoundException;
 import com.kamyaabi.exception.UnauthorizedException;
 import com.kamyaabi.mapper.UserMapper;

@@ -9,7 +9,6 @@ import com.kamyaabi.dto.response.ProductVariationResponse;
 import com.kamyaabi.entity.Category;
 import com.kamyaabi.entity.Product;
 import com.kamyaabi.entity.ProductImage;
-import com.kamyaabi.entity.ProductTag;
 import com.kamyaabi.util.JsonFieldConverter;
 import org.springframework.stereotype.Component;
 

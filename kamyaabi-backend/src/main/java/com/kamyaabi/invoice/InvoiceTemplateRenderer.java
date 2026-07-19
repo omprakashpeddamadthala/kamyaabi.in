@@ -371,10 +371,6 @@ public class InvoiceTemplateRenderer {
         };
     }
 
-    private String shorten(String value) {
-        String plain = value.replaceAll("<[^>]*>", "").trim();
-        return plain.length() <= 90 ? plain : plain.substring(0, 87) + "...";
-    }
 
     private String text(String value) {
         return value == null ? "" : value;
