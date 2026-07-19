@@ -47,6 +47,9 @@ const AdminReviewsPage = lazy(() => import('../pages/admin/AdminReviewsPage'));
 const AdminUsersPage = lazy(() => import('../pages/admin/AdminUsersPage'));
 const AdminAnalyticsPage = lazy(() => import('../pages/admin/AdminAnalyticsPage'));
 const AdminSettingsPage = lazy(() => import('../pages/admin/AdminSettingsPage'));
+const PackageDimensionSettingsPage = lazy(
+  () => import('../pages/admin/PackageDimensionSettingsPage'),
+);
 const AdminHeroBannersPage = lazy(() => import('../pages/admin/AdminHeroBannersPage'));
 
 const AdminProductFormPage = lazy(() => import('../pages/admin/AdminProductFormPage'));
@@ -184,6 +187,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
         <Route path="/admin/settings" element={<AdminSettingsPage />} />
+        <Route path="/admin/settings/package-dimensions" element={<PackageDimensionSettingsPage />} />
         <Route path="/admin/hero-banners" element={<AdminHeroBannersPage />} />
         <Route path="/admin/gallery" element={<AdminGalleryPage />} />
         <Route path="/admin/shiprocket" element={<AdminShiprocketDashboardPage />} />

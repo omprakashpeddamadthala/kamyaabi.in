@@ -2,6 +2,7 @@ package com.kamyaabi.service.impl;
 
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.PackageDimensionSettingService;
 import com.kamyaabi.service.shiprocket.ShiprocketApiClient;
 import com.kamyaabi.service.shiprocket.ShiprocketAuthClient;
 import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
@@ -48,8 +49,9 @@ class ShiprocketIntegrationTest {
         properties.setApiToken("");
 
         restTemplate = new RestTemplate();
-        authClient = new ShiprocketAuthClient(properties, restTemplate);
-        ShiprocketApiClient apiClient = new ShiprocketApiClient(properties, restTemplate, authClient);
+        authClient = new HttpEntity<>(null) != null ? new ShiprocketAuthClient(properties, restTemplate) : null;
+        ShiprocketApiClient apiClient = new ShiprocketApiClient(
+                properties, restTemplate, authClient, mock(PackageDimensionSettingService.class));
         shiprocketService = new ShiprocketServiceImpl(
                 properties, mock(OrderRepository.class), apiClient, new ShiprocketStatusMapper());
     }

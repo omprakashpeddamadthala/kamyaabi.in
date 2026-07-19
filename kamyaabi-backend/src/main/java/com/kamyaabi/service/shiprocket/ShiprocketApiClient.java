@@ -3,6 +3,8 @@ package com.kamyaabi.service.shiprocket;
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.entity.Address;
 import com.kamyaabi.entity.Order;
+import com.kamyaabi.entity.PackageDimensionSetting;
+import com.kamyaabi.service.PackageDimensionSettingService;
 import com.kamyaabi.entity.OrderItem;
 import com.kamyaabi.entity.Product;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +33,16 @@ public class ShiprocketApiClient {
     private final ShiprocketProperties properties;
     private final RestTemplate restTemplate;
     private final ShiprocketAuthClient authClient;
+    private final PackageDimensionSettingService packageDimensionSettingService;
 
     public ShiprocketApiClient(ShiprocketProperties properties,
                                RestTemplate restTemplate,
-                               ShiprocketAuthClient authClient) {
+                               ShiprocketAuthClient authClient,
+                               PackageDimensionSettingService packageDimensionSettingService) {
         this.properties = properties;
         this.restTemplate = restTemplate;
         this.authClient = authClient;
+        this.packageDimensionSettingService = packageDimensionSettingService;
     }
 
     public Map<String, Object> createOrder(Order order) {
@@ -160,15 +165,23 @@ public class ShiprocketApiClient {
                 order.getPaymentMethod() == Order.PaymentMethod.COD ? PAYMENT_COD : PAYMENT_PREPAID);
         body.put("sub_total", order.getTotalAmount().doubleValue());
 
-        body.put("length", properties.getDefaultLength());
-        body.put("breadth", properties.getDefaultBreadth());
-        body.put("height", properties.getDefaultHeight());
-
         double totalWeightKg = order.getItems().stream()
                 .filter(i -> i.getWeightKg() != null)
                 .mapToDouble(i -> i.getWeightKg().doubleValue() * i.getQuantity())
                 .sum();
-        body.put("weight", totalWeightKg > 0 ? totalWeightKg : properties.getDefaultWeight());
+        double finalWeightKg = totalWeightKg > 0 ? totalWeightKg : properties.getDefaultWeight();
+
+        PackageDimensionSetting slab = packageDimensionSettingService.findBestPackageForWeight(finalWeightKg);
+        if (slab != null) {
+            body.put("length", slab.getLength());
+            body.put("breadth", slab.getBreadth());
+            body.put("height", slab.getHeight());
+        } else {
+            body.put("length", properties.getDefaultLength());
+            body.put("breadth", properties.getDefaultBreadth());
+            body.put("height", properties.getDefaultHeight());
+        }
+        body.put("weight", finalWeightKg);
 
         return body;
     }

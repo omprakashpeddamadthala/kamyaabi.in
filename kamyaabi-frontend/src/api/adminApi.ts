@@ -12,6 +12,8 @@ import {
   AnalyticsResponse,
   AdminUser,
   ShiprocketStats,
+  PackageDimensionSetting,
+  PackageDimensionSettingRequest,
 } from '../types';
 
 export type SettingDataType =
@@ -275,6 +277,25 @@ export const adminApi = {
 
   trackShiprocketOrder: (orderId: number) =>
     axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/admin/shiprocket/track/${orderId}`),
+
+  // ── Package Dimension Settings ─────────────────────────
+  getPackageDimensionSettings: () =>
+    axiosInstance.get<ApiResponse<PackageDimensionSetting[]>>('/api/admin/package-dimension-settings'),
+
+  getPackageDimensionSetting: (id: number) =>
+    axiosInstance.get<ApiResponse<PackageDimensionSetting>>(`/api/admin/package-dimension-settings/${id}`),
+
+  createPackageDimensionSetting: (data: PackageDimensionSettingRequest) =>
+    axiosInstance.post<ApiResponse<PackageDimensionSetting>>('/api/admin/package-dimension-settings', data),
+
+  updatePackageDimensionSetting: (id: number, data: PackageDimensionSettingRequest) =>
+    axiosInstance.put<ApiResponse<PackageDimensionSetting>>(`/api/admin/package-dimension-settings/${id}`, data),
+
+  deletePackageDimensionSetting: (id: number) =>
+    axiosInstance.delete<ApiResponse<void>>(`/api/admin/package-dimension-settings/${id}`),
+
+  updatePackageDimensionSettingStatus: (id: number, active: boolean) =>
+    axiosInstance.patch<ApiResponse<PackageDimensionSetting>>(`/api/admin/package-dimension-settings/${id}/status`, { active }),
 };
 
 export interface CouponFormRequest {

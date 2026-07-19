@@ -15,6 +15,7 @@ import {
   SettingsOutlined,
   LocalShippingOutlined,
   PhotoLibraryOutlined,
+  Straighten,
 } from '@mui/icons-material';
 
 export interface AdminNavItem {
@@ -74,7 +75,10 @@ export const ADMIN_NAV: AdminNavSection[] = [
   },
   {
     heading: 'System',
-    items: [{ label: 'Settings', to: '/admin/settings', icon: SettingsOutlined }],
+    items: [
+      { label: 'Settings', to: '/admin/settings', icon: SettingsOutlined },
+      { label: 'Package Dimensions', to: '/admin/settings/package-dimensions', icon: Straighten },
+    ],
   },
 ];
 
@@ -96,6 +100,7 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/users': 'Users',
   '/admin/analytics': 'Analytics',
   '/admin/settings': 'Settings',
+  '/admin/settings/package-dimensions': 'Package Dimension & Weight',
   '/admin/hero-banners': 'Hero Banners',
   '/admin/blog': 'Blog Posts',
   '/admin/blog/new': 'New Post',

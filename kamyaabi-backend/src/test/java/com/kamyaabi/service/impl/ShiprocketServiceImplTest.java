@@ -3,6 +3,7 @@ package com.kamyaabi.service.impl;
 import com.kamyaabi.config.ShiprocketProperties;
 import com.kamyaabi.entity.*;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.PackageDimensionSettingService;
 import com.kamyaabi.service.shiprocket.ShiprocketApiClient;
 import com.kamyaabi.service.shiprocket.ShiprocketAuthClient;
 import com.kamyaabi.service.shiprocket.ShiprocketResponseParser;
@@ -28,6 +29,7 @@ class ShiprocketServiceImplTest {
 
     @Mock private OrderRepository orderRepository;
     @Mock private RestTemplate restTemplate;
+    @Mock private PackageDimensionSettingService packageDimensionSettingService;
 
     private ShiprocketProperties properties;
     private ShiprocketAuthClient authClient;
@@ -44,7 +46,8 @@ class ShiprocketServiceImplTest {
         properties.setDefaultHeight(10);
 
         authClient = new ShiprocketAuthClient(properties, restTemplate);
-        ShiprocketApiClient apiClient = new ShiprocketApiClient(properties, restTemplate, authClient);
+        ShiprocketApiClient apiClient = new ShiprocketApiClient(
+                properties, restTemplate, authClient, packageDimensionSettingService);
         shiprocketService = new ShiprocketServiceImpl(
                 properties, orderRepository, apiClient, new ShiprocketStatusMapper());
     }

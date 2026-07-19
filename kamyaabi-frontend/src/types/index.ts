@@ -410,3 +410,22 @@ export interface ProductImportResult {
   created: number;
   errors?: string[];
 }
+
+export interface PackageDimensionSetting {
+  id: number;
+  packageWeightGram: number;
+  length: number;
+  breadth: number;
+  height: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PackageDimensionSettingRequest {
+  packageWeightGram: number;
+  length: number;
+  breadth: number;
+  height: number;
+  active?: boolean;
+}
