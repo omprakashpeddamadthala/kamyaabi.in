@@ -122,27 +122,17 @@ test('missing and arbitrary page URLs return real HTTP 404 responses with noinde
   }
 });
 
-test('legacy product URLs render directly with SSR, but mismatched paths redirect to canonical hierarchy', async () => {
+test('legacy and mismatched product URLs redirect to the canonical hierarchy', async () => {
   const origin = await start({
     '/api/products/slug/premium-cashews-500g': { data: product },
     '/api/products/12': { data: product },
-    '/api/products/12/reviews/summary': {
-      data: { averageRating: 4.8, totalReviews: 32 },
-    },
   });
 
-  // Legacy URLs should now return 200 with pre-rendered content
-  for (const pathname of ['/products/premium-cashews-500g', '/products/12']) {
-    const response = await fetch(`${origin}${pathname}`);
-    const html = await response.text();
-    assert.equal(response.status, 200);
-    assert.match(html, /<h1>Premium Cashews 500g<\/h1>/);
+  for (const pathname of ['/products/premium-cashews-500g', '/products/12', '/products/wrong/premium-cashews-500g']) {
+    const response = await fetch(`${origin}${pathname}`, { redirect: 'manual' });
+    assert.equal(response.status, 301);
+    assert.equal(response.headers.get('location'), '/products/cashews/premium-cashews-500g');
   }
-
-  // Mismatched category slug should still redirect to the canonical path
-  const redirectResponse = await fetch(`${origin}/products/wrong/premium-cashews-500g`, { redirect: 'manual' });
-  assert.equal(redirectResponse.status, 301);
-  assert.equal(redirectResponse.headers.get('location'), '/products/cashews/premium-cashews-500g');
 });
 
 test('login page returns static pre-rendered SEO content', async () => {
@@ -155,17 +145,11 @@ test('login page returns static pre-rendered SEO content', async () => {
   assert.doesNotMatch(html, /noindex/);
 });
 
-test('blogs url returns pre-rendered blog list content', async () => {
-  const origin = await start({
-    '/api/blog/posts?page=0&size=50': { data: { content: [post] } },
-    '/api/blog/categories': { data: [] },
-    '/api/blog/tags': { data: [] },
-  });
-  const response = await fetch(`${origin}/blogs`);
-  const html = await response.text();
-  assert.equal(response.status, 200);
-  assert.match(html, /<h1>Kamyaabi Dry Fruits Blog<\/h1>/);
-  assert.match(html, /Health Benefits of Cashews/);
+test('blogs url redirects to blog list page', async () => {
+  const origin = await start({});
+  const response = await fetch(`${origin}/blogs`, { redirect: 'manual' });
+  assert.equal(response.status, 301);
+  assert.equal(response.headers.get('location'), '/blog');
 });
 
 test('blog and category pages return useful crawlable HTML', async () => {
