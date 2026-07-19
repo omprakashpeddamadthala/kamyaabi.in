@@ -27,10 +27,12 @@ import {
   NavigateBefore,
   NavigateNext,
 } from '@mui/icons-material';
-import { Helmet } from 'react-helmet-async';
 import { blogApi } from '../api/blogApi';
 import { BlogPost } from '../types';
 import { parseApiError } from '../utils/apiError';
+import { config } from '../config';
+import Seo from '../components/common/Seo';
+
 
 const BLOG_PAGE_SIZE = 9;
 
@@ -148,23 +150,51 @@ const BlogListPage: React.FC = () => {
   const getShareUrl = (post: BlogPost) =>
     window.location.origin + '/blog/' + post.slug;
 
+  const blogListUrl = `${config.brandSiteUrl}/blog`;
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${config.brandSiteUrl}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: blogListUrl },
+    ],
+  };
+
+  const collectionPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Kamyaabi Blog — Premium Dry Fruits Health Tips & Recipes',
+    description: 'Read the latest articles about premium dry fruits, health tips, recipes, and more from Kamyaabi.',
+    url: blogListUrl,
+    publisher: {
+      '@type': 'Organization',
+      name: 'Kamyaabi',
+      logo: `${config.brandSiteUrl}/pwa-512x512.png`,
+    },
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Blog | Kamyaabi - Premium Dry Fruits</title>
-        <meta name="description" content="Read the latest articles about premium dry fruits, health tips, recipes, and more from Kamyaabi." />
-        <link rel="canonical" href="https://kamyaabi.in/blog" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://kamyaabi.in/' },
-              { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://kamyaabi.in/blog' },
-            ],
-          })}
-        </script>
-      </Helmet>
+      {/* GSC FIX: Unified <Seo> replaces raw <Helmet>.
+          - Search results are noindexed to prevent thin-content signals.
+          - rel=prev/next pagination links help Google understand the series.
+          - CollectionPage + BreadcrumbList JSON-LD added.              */}
+      <Seo
+        title={searchQuery ? `Search: ${searchQuery}` : 'Blog — Dry Fruits Tips & Recipes'}
+        description="Read the latest articles about premium dry fruits, health tips, recipes, and more from Kamyaabi."
+        canonicalPath={searchQuery ? '/blog' : (page > 0 ? `/blog?page=${page + 1}` : '/blog')}
+        noindex={Boolean(searchQuery)}
+        jsonLd={[breadcrumbJsonLd, collectionPageJsonLd]}
+      />
+      {/* Pagination link relations for Google. */}
+      {page > 0 && (
+        <link rel="prev" href={page === 1 ? blogListUrl : `${blogListUrl}?page=${page}`} />
+      )}
+      {page < totalPages - 1 && (
+        <link rel="next" href={`${blogListUrl}?page=${page + 2}`} />
+      )}
+
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography variant="h3" component="h1" sx={{ mb: 1, fontWeight: 700 }}>
           Blog

@@ -186,11 +186,15 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByActiveTrueOrderByUpdatedAtDesc().stream()
                 .map(product -> new ProductSitemapResponse(
                         product.getSlug(),
+                        product.getName(),
                         product.getCategory() != null ? product.getCategory().getSlug() : null,
+                        product.getImageUrl(),
+                        product.getMainImageUrl(),
                         product.getUpdatedAt(),
                         product.getCreatedAt()))
                 .toList();
     }
+
 
     @Override
     @CacheEvict(value = {CacheNames.PRODUCTS, CacheNames.FEATURED_PRODUCTS, CacheNames.PRODUCTS_BY_CATEGORY}, allEntries = true)
