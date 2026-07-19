@@ -135,6 +135,18 @@ function startServer() {
 async function renderRoute(browser, route) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800 });
+
+  // Intercept API requests and redirect them to the real backend
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = new URL(req.url());
+    if (url.port === String(PORT) && url.pathname.startsWith('/api/')) {
+      req.continue({ url: `${API_BASE}${url.pathname}${url.search}` });
+    } else {
+      req.continue();
+    }
+  });
+
   // Suppress non-critical console noise from the SPA
   page.on('console', () => {});
   try {
