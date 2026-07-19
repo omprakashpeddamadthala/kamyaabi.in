@@ -43,6 +43,7 @@ import { usePublicSettings } from '../hooks/usePublicSettings';
 import { productTagApi } from '../api/productTagApi';
 import { ProductTag } from '../types';
 import { config } from '../config';
+import { readBootstrapProductsList } from '../utils/bootstrapData';
 
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
@@ -128,13 +129,21 @@ const ProductsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    if (categories.length === 0) {
+      dispatch(fetchCategories());
+    }
     productTagApi.getAll()
       .then((res) => setProductTags(res.data.data))
       .catch(() => {});
-  }, [dispatch]);
+  }, [dispatch, categories.length]);
 
   useEffect(() => {
+    // Skip initial API load if we hydrated valid matching bootstrap data from the server
+    const bootstrap = readBootstrapProductsList();
+    if (bootstrap && bootstrap.path === window.location.pathname) {
+      return;
+    }
+
     if (searchQuery) {
       dispatch(searchProducts({ keyword: searchQuery, page: zeroBasedPage, size: productsPerPage, sort }));
     } else if (tagSlug) {

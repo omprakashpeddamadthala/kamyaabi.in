@@ -243,6 +243,7 @@ export function renderProduct(template, siteUrl, product, rating) {
 }
 
 export function renderProductList(template, siteUrl, { products, categories, category }) {
+  const productsArray = products?.content || products || [];
   const path = category ? `/products/category/${encodeURIComponent(category.slug)}` : '/products';
   const title = category ? `${category.name} Dry Fruits & Nuts` : 'Shop Premium Dry Fruits & Nuts';
   const description = category?.description
@@ -269,10 +270,20 @@ export function renderProductList(template, siteUrl, { products, categories, cat
     <p>${escapeHtml(description)}</p>
     ${categoryLinks ? `<nav aria-label="Product categories"><h2>Shop by category</h2><ul>${categoryLinks}</ul></nav>` : ''}
     <section aria-labelledby="products-heading"><h2 id="products-heading">${category ? `Products in ${escapeHtml(category.name)}` : 'All products'}</h2>
-      <div class="seo-list">${products.length ? products.map((product) => productCard(product, siteUrl)).join('') : '<p>No products are currently available.</p>'}</div>
+      <div class="seo-list">${productsArray.length ? productsArray.map((product) => productCard(product, siteUrl)).join('') : '<p>No products are currently available.</p>'}</div>
     </section>
   </main>`;
-  return renderDocument(template, head, body);
+
+  const bootstrapData = {
+    path,
+    products: productsArray,
+    categories,
+    category: category || null,
+    totalElements: products?.totalElements || productsArray.length,
+    totalPages: products?.totalPages || 1,
+  };
+
+  return renderDocument(template, head, body, bootstrapData);
 }
 
 export function renderBlogList(template, siteUrl, { posts, categories = [], tags = [], category, tag }) {

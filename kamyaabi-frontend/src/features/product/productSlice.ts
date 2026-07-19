@@ -193,6 +193,24 @@ const productSlice = createSlice({
       state.selectedProductError = null;
       state.selectedProductRequestKey = `slug:${action.payload.slug}`;
     },
+    hydrateProductsList: (
+      state,
+      action: {
+        payload: {
+          products: Product[];
+          categories: Category[];
+          totalElements: number;
+          totalPages: number;
+        };
+      }
+    ) => {
+      state.products = action.payload.products;
+      state.categories = action.payload.categories;
+      state.totalElements = action.payload.totalElements;
+      state.totalPages = action.payload.totalPages;
+      state.loading = false;
+      state.error = null;
+    },
     clearSelectedProduct: (state) => {
       state.selectedProduct = null;
       state.selectedProductLoading = false;
@@ -290,5 +308,5 @@ const productSlice = createSlice({
   },
 });
 
-export const { clearSelectedProduct, hydrateSelectedProduct } = productSlice.actions;
+export const { clearSelectedProduct, hydrateSelectedProduct, hydrateProductsList } = productSlice.actions;
 export default productSlice.reducer;
