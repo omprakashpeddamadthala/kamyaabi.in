@@ -3,6 +3,7 @@ package com.kamyaabi.controller;
 import com.kamyaabi.entity.Order;
 import com.kamyaabi.event.OrderEventPublisher;
 import com.kamyaabi.repository.OrderRepository;
+import com.kamyaabi.service.shiprocket.ShiprocketStatusMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,11 +24,12 @@ class ShiprocketWebhookControllerTest {
     @Mock private OrderRepository orderRepository;
     @Mock private OrderEventPublisher orderEventPublisher;
 
+    private final ShiprocketStatusMapper statusMapper = new ShiprocketStatusMapper();
     private ShiprocketWebhookController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new ShiprocketWebhookController(orderRepository, orderEventPublisher);
+        controller = new ShiprocketWebhookController(orderRepository, orderEventPublisher, statusMapper);
     }
 
     @Test
