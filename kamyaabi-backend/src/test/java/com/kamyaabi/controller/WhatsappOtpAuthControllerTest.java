@@ -3,14 +3,16 @@ package com.kamyaabi.controller;
 import com.kamyaabi.dto.response.AuthResponse;
 import com.kamyaabi.dto.response.UserResponse;
 import com.kamyaabi.dto.response.WhatsappOtpRequestResponse;
+import com.kamyaabi.config.CacheConfig;
 import com.kamyaabi.security.JwtTokenProvider;
 import com.kamyaabi.repository.UserRepository;
 import com.kamyaabi.service.whatsapp.WhatsappOtpAuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,13 +26,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = WhatsappOtpAuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(CacheConfig.class)
 class WhatsappOtpAuthControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
-    @MockBean private WhatsappOtpAuthService whatsappOtpAuthService;
-    @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private UserRepository userRepository;
+    @MockitoBean private WhatsappOtpAuthService whatsappOtpAuthService;
+    @MockitoBean private JwtTokenProvider jwtTokenProvider;
+    @MockitoBean private UserRepository userRepository;
 
     @Test
     void requestOtp_shouldReturnQueuedResponse() throws Exception {

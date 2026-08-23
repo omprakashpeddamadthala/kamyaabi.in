@@ -49,7 +49,7 @@ class ShiprocketIntegrationTest {
         properties.setApiToken("");
 
         restTemplate = new RestTemplate();
-        authClient = new HttpEntity<>(null) != null ? new ShiprocketAuthClient(properties, restTemplate) : null;
+        authClient = new ShiprocketAuthClient(properties, restTemplate);
         ShiprocketApiClient apiClient = new ShiprocketApiClient(
                 properties, restTemplate, authClient, mock(PackageDimensionSettingService.class));
         shiprocketService = new ShiprocketServiceImpl(

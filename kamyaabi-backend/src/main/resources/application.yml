@@ -43,8 +43,6 @@ spring:
     open-in-view: false
 
   jackson:
-    serialization:
-      write-dates-as-timestamps: false
     default-property-inclusion: non_null
 
   cache:
@@ -84,12 +82,13 @@ management:
         include: health,info,metrics,loggers,env
   endpoint:
     health:
+      access: read-only
       show-details: when-authorized
       show-components: always
       probes:
         enabled: true
     loggers:
-      enabled: true
+      access: read-only
   info:
     env:
       enabled: true
