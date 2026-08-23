@@ -40,25 +40,25 @@ wired in by default.
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Java | 17 | Language runtime |
-| Spring Boot | 3.2.5 | Web framework, auto-config |
-| Spring Security + OAuth2 Client | 3.2.x | Authentication, JWT, Google OAuth |
-| Spring Data JPA / Hibernate | 3.2.x | ORM and repositories |
+| Java | 21 | Language runtime |
+| Spring Boot | 4.1.1 | Web framework, auto-config |
+| Spring Security + OAuth2 Client | 7.1.x | Authentication, JWT, Google OAuth |
+| Spring Data JPA / Hibernate | 4.1.x / 7.4.x | ORM and repositories |
 | PostgreSQL | 14+ (prod) | Primary database |
 | H2 | runtime | In-memory database for local dev |
-| Flyway | 9.x (via Boot) | Versioned schema migrations (prod) |
+| Flyway | 13.3.0 | Versioned schema migrations (prod) |
 | Caffeine | latest | In-process read-aside cache |
 | JJWT | 0.12.5 | JWT signing and parsing |
 | Razorpay Java SDK | 1.4.6 | Payment order + signature verification |
 | Cloudinary (cloudinary-http44) | 1.37.0 | Product image hosting |
 | SendGrid Java | 4.10.2 | Transactional email (primary) |
-| Spring Boot Starter Mail | 3.2.x | SMTP email fallback |
+| Spring Boot Starter Mail | 4.1.1 | SMTP email fallback |
 | Google API Client | 2.2.0 | Google ID token verification |
-| springdoc-openapi | 2.5.0 | Swagger UI / OpenAPI docs |
+| springdoc-openapi | 3.1.0 | Swagger UI / OpenAPI docs |
 | Lombok | latest | Boilerplate reduction |
 | JUnit 5 + Mockito | latest | Unit tests |
 | JaCoCo | 0.8.12 | Coverage gating (≥ 80% lines) |
-| Maven | 3.6+ | Build tool |
+| Maven | 3.9.9+ | Build tool |
 
 ### Frontend
 
@@ -167,8 +167,8 @@ locally:
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Java JDK | 17 (Temurin recommended) | Backend build & run |
-| Maven | 3.6+ | Backend build (or use `mvnw` if added) |
+| Java JDK | 21 (Temurin recommended) | Backend build & run |
+| Maven | 3.9.9+ | Backend build (or use `mvnw` if added) |
 | Node.js | 18.x or 20.x | Frontend build & dev server |
 | npm | 9+ | Frontend package manager |
 | Docker | 20.10+ | Container builds |
@@ -307,7 +307,7 @@ docker compose down
 
 This starts:
 
-- `kamyaabi-backend` — Spring Boot, on `127.0.0.1:8080`
+- `kamyaabi-backend` — Spring Boot 4.1.1, on `127.0.0.1:8080`
 - `kamyaabi-frontend` — Nginx serving the built SPA, on `127.0.0.1:3000`
 
 Logs are bind-mounted to `./logs/` on the host for easy `tail -f`.

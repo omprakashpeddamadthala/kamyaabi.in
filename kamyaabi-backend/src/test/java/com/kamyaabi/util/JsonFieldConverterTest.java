@@ -1,7 +1,8 @@
 package com.kamyaabi.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,7 +15,8 @@ class JsonFieldConverterTest {
     private static final TypeReference<Map<String, String>> MAP_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<String>> LIST_TYPE = new TypeReference<>() {};
 
-    private final JsonFieldConverter converter = new JsonFieldConverter(new ObjectMapper());
+    private final JsonFieldConverter converter = new JsonFieldConverter(
+            JsonMapper.builder().enable(SerializationFeature.FAIL_ON_EMPTY_BEANS).build());
 
     @Test
     void read_validMapJson_returnsMap() {

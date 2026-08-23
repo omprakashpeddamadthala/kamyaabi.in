@@ -1,6 +1,6 @@
 package com.kamyaabi.mapper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductResponse;
 import com.kamyaabi.entity.Category;

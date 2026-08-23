@@ -1,6 +1,6 @@
 package com.kamyaabi.mapper;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import com.kamyaabi.dto.request.ProductRequest;
 import com.kamyaabi.dto.response.ProductImageResponse;
 import com.kamyaabi.dto.response.ProductResponse;
