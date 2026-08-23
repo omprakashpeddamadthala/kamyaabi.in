@@ -247,6 +247,13 @@
             <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- BootUI (Bootstrap-based admin UI) -->
+        <dependency>
+            <groupId>com.julien-dubois.bootui</groupId>
+            <artifactId>bootui-spring-boot-starter</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Apache Commons CSV for product CSV export/import -->
         <dependency>
             <groupId>org.apache.commons</groupId>
