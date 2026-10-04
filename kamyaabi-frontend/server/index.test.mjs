@@ -218,3 +218,16 @@ test('sitemap and robots are proxied with crawler-safe status and MIME types', a
   assert.equal(robotsResponse.headers.get('cache-control'), 'public, max-age=3600');
   assert.equal(await robotsResponse.text(), robots);
 });
+
+test('pre-rendered markup is hidden for JS-capable browsers so it never flashes before the app', async () => {
+  const origin = await start({
+    '/api/categories': { data: [{ id: 1, name: 'Cashews', slug: 'cashews' }] },
+    '/api/products/featured': { data: [product] },
+    '/api/blog/posts?page=0&size=3': { data: { content: [post] } },
+  });
+  const html = await (await fetch(`${origin}/`)).text();
+  assert.match(html, /<main class="seo-page">/);
+  assert.match(html, /\.kamyaabi-boot \.seo-page\{display:none\}/);
+  assert.match(html, /<script id="kamyaabi-boot">[\s\S]*classList\.add\('kamyaabi-boot'\)[\s\S]*<\/script>\s*<\/head>/);
+  assert.ok(html.indexOf('id="kamyaabi-boot"') < html.indexOf('<div id="root">'));
+});
