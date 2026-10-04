@@ -4,7 +4,7 @@
  * - Adds React Query cache provider only around existing API consumers; no endpoints, payloads, or auth logic changed.
  * - Existing route-level lazy loading and Suspense fallback remain active for all customer/admin pages.
  */
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';
@@ -35,6 +35,21 @@ const queryClient = new QueryClient({
   },
 });
 
+let initialRouteRendered = false;
+
+// On first load the lazy route chunk is still downloading; render nothing rather
+// than a spinner so the page's entrance animation is the first visible frame.
+const RouteFallback: React.FC = () => (
+  initialRouteRendered ? <Loading message="Loading page..." /> : null
+);
+
+const InitialRouteMarker: React.FC = () => {
+  useEffect(() => {
+    initialRouteRendered = true;
+  }, []);
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <Provider store={store}>
@@ -51,7 +66,8 @@ const App: React.FC = () => {
               <ToastProvider>
                 <BrowserRouter>
                   <ScrollToTop />
-                  <Suspense fallback={<Loading message="Loading page..." />}>
+                  <Suspense fallback={<RouteFallback />}>
+                    <InitialRouteMarker />
                     <FlyToCartProvider>
                       <AppRoutes />
                     </FlyToCartProvider>

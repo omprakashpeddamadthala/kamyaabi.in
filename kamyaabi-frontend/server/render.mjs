@@ -94,6 +94,9 @@ export function seoHead({
   ].filter(Boolean).join('\n');
 }
 
+// The SEO markup in #root is for crawlers and no-JS visitors. Browsers that run
+// JS hide it until React replaces it, so the first visible frame is the app's own
+// entrance animation; it is revealed again if an app bundle fails to load or run.
 const CRITICAL_STYLES = `
 <style id="prerender-critical-css">
   .seo-page{max-width:1200px;margin:0 auto;padding:32px 20px;color:#172033;font-family:"Plus Jakarta Sans",Arial,sans-serif;line-height:1.6}
@@ -105,7 +108,19 @@ const CRITICAL_STYLES = `
   .seo-card{border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fff}.seo-card h2,.seo-card h3{margin:12px 0 4px;font-size:1.05rem}
   .seo-muted{color:#5f6b7a}.seo-status{font-weight:700}.seo-article{max-width:800px;margin:0 auto}.seo-article p{margin:16px 0}
   @media(max-width:720px){.seo-product{grid-template-columns:1fr}.seo-page{padding:24px 16px}}
-</style>`;
+  .kamyaabi-boot .seo-page{display:none}
+</style>
+<script id="kamyaabi-boot">
+  (function(root){
+    root.classList.add('kamyaabi-boot');
+    addEventListener('error',function(event){
+      var target=event.target;
+      var tag=target&&target.tagName;
+      var url=tag==='SCRIPT'?target.src:tag==='LINK'?target.href:event.filename||'';
+      if(url&&url.indexOf(location.origin+'/assets/')===0)root.classList.remove('kamyaabi-boot');
+    },true);
+  })(document.documentElement);
+</script>`;
 
 export function renderDocument(template, head, body, bootstrapData) {
   const bootstrap = bootstrapData
