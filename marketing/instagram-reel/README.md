@@ -1,4 +1,47 @@
-# Kamyaabi — 30s Instagram Reel
+# Kamyaabi Instagram Reels
+
+## ⭐ Full-catalog price reel (recommended)
+
+All **14 live products × 3 sizes (100 g / 250 g / 500 g)** with sale price, struck-through MRP and savings,
+pulled from the live store API (`/api/products` + each product's `variations`) and the current jar photos.
+
+| File | Use |
+|------|-----|
+| `kamyaabi-catalog-reel.mp4` | **Post this.** 1080×1920, 30 fps, H.264 + AAC, 58 s, original royalty-free music, -14 LUFS |
+| `kamyaabi-catalog-reel-no-audio.mp4` | Silent version for adding a trending Instagram sound |
+| `kamyaabi-catalog-reel-cover.jpg` | Cover frame ("Premium Dry Fruits starting at just ₹100") |
+| `story-cards/*.jpg` | One finished 1080×1920 price card per product, for Stories / WhatsApp Status |
+| `CATALOG_REEL_CAPTION.txt` | Ready-to-paste caption with the full price list, generated from the same data |
+
+**Storyboard (58 s; every cut is on the 120 BPM beat):**
+0–3 s hook "Premium Dry Fruits starting at just ₹100 · up to 20% OFF · free delivery" →
+3–6 s all 14 jars pop into a grid →
+6–48 s one 3-second card per product (category chip, `01 / 14` counter, jar, "20% OFF" stamp, three price cards) →
+48–52 s Why Kamyaabi (free delivery, up to 20% off, sealed fresh, secure payments) →
+52–58 s `kamyaabi.in` + pulsing **Shop Now**, "Prices as on <date> · subject to change".
+
+**Rebuilding when prices change** (needs network access to `kamyaabi.in` and `res.cloudinary.com`):
+
+```bash
+cd marketing/instagram-reel/catalog-reel
+./build.sh             # fetch live catalog -> frames -> music -> MP4s + story cards
+./build.sh --offline   # re-render from the last fetched data/
+```
+
+New products show up automatically (add a display name, tagline and colour in `STYLE` in
+`fetch_catalog.py`, otherwise a fallback is used). Out-of-stock sizes are left out. The % OFF uses the
+same `Math.round` as the storefront.
+
+> ⚠️ **Pricing check:** for Chilean Walnuts and California Almonds, the 250 g pack costs more per 100 g
+> than the 100 g pack (Walnuts ₹232 vs ₹200; Almonds ₹160 vs ₹150 per 100 g). Customers comparing
+> sizes in the reel may notice that, so you may want to adjust those prices and re-run `./build.sh`.
+
+---
+
+## Original 30 s brand reel
+
+> Note: this one uses the older **pouch** packaging images bundled in the frontend repo; the live store
+> now shows **jars**. Prefer the catalog reel above.
 
 | File | Use |
 |------|-----|
