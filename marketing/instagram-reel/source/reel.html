@@ -1,0 +1,328 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Inter:wght@500;600;700;800;900&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #14110d; }
+  body { font-family: 'Inter', sans-serif; color: #fff; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  .scene { position: absolute; inset: 0; overflow: hidden; opacity: 0; will-change: transform, opacity, clip-path; }
+  .abs { position: absolute; will-change: transform, opacity; }
+  .serif { font-family: 'Playfair Display', serif; }
+  .gold { color: #d8c08f; }
+  .center-x { left: 0; right: 0; text-align: center; }
+
+  /* Grain / vignette overlay for a premium filmic look */
+  #vignette { position: absolute; inset: 0; pointer-events: none; z-index: 50;
+    background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,.38) 100%); }
+
+  /* Progress bar at top (story-style) */
+  #progress { position: absolute; top: 0; left: 0; height: 8px; z-index: 60;
+    background: linear-gradient(90deg, #a59069, #f1dcae); }
+
+  /* ---------- Scene 1: hook ---------- */
+  #s1 { background: radial-gradient(circle at 50% 40%, #2a2117 0%, #14110d 70%); }
+  #s1 .line { font-weight: 900; font-size: 118px; line-height: 1.04; letter-spacing: -3px; }
+  #s1 .strike { position: absolute; left: 6%; top: 54%; height: 14px; background: #e2513b; border-radius: 8px; transform-origin: left center; }
+  .nut { position: absolute; width: 220px; filter: drop-shadow(0 22px 30px rgba(0,0,0,.55)); }
+
+  /* ---------- Scene 2: brand ---------- */
+  #s2 { background: radial-gradient(circle at 50% 36%, #3a2d1c 0%, #17130e 62%, #0f0c09 100%); }
+  .rays { position: absolute; left: 50%; top: 600px; width: 1800px; height: 1800px; margin: -900px 0 0 -900px;
+    background: repeating-conic-gradient(rgba(216,192,143,.07) 0deg 6deg, rgba(0,0,0,0) 6deg 18deg);
+    border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 0%, transparent 65%); mask: radial-gradient(circle, #000 0%, transparent 65%); }
+
+  /* ---------- Product scenes ---------- */
+  .product .bigword { position: absolute; left: -40px; right: -40px; text-align: center; font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: 330px; letter-spacing: -6px; opacity: 0; white-space: nowrap; }
+  .product .kicker { display: inline-block; font-weight: 800; font-size: 32px; letter-spacing: 6px; text-transform: uppercase;
+    padding: 14px 30px; border-radius: 999px; }
+  .product h2 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 100px; line-height: 1.02; letter-spacing: -1px; }
+  .product .pack { position: absolute; border-radius: 34px; box-shadow: 0 50px 90px rgba(0,0,0,.45); }
+  .pill { display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 280px; height: 170px; border-radius: 30px; margin: 0 12px; backdrop-filter: blur(6px); }
+  .pill b { font-size: 64px; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+  .pill span { font-size: 26px; font-weight: 700; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: .85; }
+  .note { font-size: 26px; font-weight: 600; opacity: .7; letter-spacing: .5px; }
+
+  #s3 { background: radial-gradient(circle at 50% 55%, #0a9a9a 0%, #008080 55%, #005d5e 100%); }
+  #s4 { background: radial-gradient(circle at 50% 55%, #4d6a50 0%, #3d5540 55%, #2a3c2c 100%); }
+  #s5 { background: radial-gradient(circle at 50% 55%, #3c3759 0%, #2c2842 55%, #1c192c 100%); }
+  #s6 { background: radial-gradient(circle at 50% 55%, #ffffff 0%, #f3f3f3 55%, #e2ddd3 100%); color: #1b1712; }
+
+  .on-dark .kicker { background: rgba(255,255,255,.14); color: #fff; border: 2px solid rgba(255,255,255,.35); }
+  .on-dark .pill { background: rgba(0,0,0,.22); border: 2px solid rgba(255,255,255,.22); }
+  .on-light .kicker { background: #1b1712; color: #f1dcae; }
+  .on-light .pill { background: rgba(27,23,18,.06); border: 2px solid rgba(27,23,18,.15); }
+
+  /* ---------- Scene 7: why ---------- */
+  #s7 { background: radial-gradient(circle at 50% 30%, #2a2117 0%, #14110d 70%); }
+  .why { position: absolute; left: 90px; right: 90px; height: 190px; border-radius: 36px; display: flex; align-items: center; gap: 36px;
+    padding: 0 44px; background: linear-gradient(135deg, rgba(216,192,143,.16), rgba(216,192,143,.05)); border: 2px solid rgba(216,192,143,.35); }
+  .why .ic { flex: 0 0 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg,#f1dcae,#a59069);
+    display: flex; align-items: center; justify-content: center; }
+  .why .ic svg { width: 60px; height: 60px; }
+  .why .tx b { display: block; font-size: 52px; font-weight: 800; letter-spacing: -1px; }
+  .why .tx span { display: block; font-size: 30px; font-weight: 600; color: #cdbf9f; margin-top: 6px; }
+
+  /* ---------- Scene 8: CTA ---------- */
+  #s8 { background: radial-gradient(circle at 50% 45%, #3a2d1c 0%, #17130e 60%, #0d0b08 100%); }
+  .btn { display: inline-flex; align-items: center; gap: 22px; padding: 36px 74px; border-radius: 999px; font-weight: 900; font-size: 58px;
+    color: #17130e; background: linear-gradient(135deg, #f6e3b4 0%, #d8c08f 45%, #a59069 100%);
+    box-shadow: 0 24px 60px rgba(216,192,143,.35); }
+  .url { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 112px; letter-spacing: -1px; }
+  .badge-row { display: flex; justify-content: center; gap: 20px; }
+  .badge { font-size: 30px; font-weight: 700; padding: 16px 28px; border-radius: 999px; border: 2px solid rgba(216,192,143,.5); color: #f1dcae; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="progress"></div>
+
+  <!-- S1 HOOK -->
+  <section class="scene" id="s1">
+    <img class="nut" id="n1" src="../../../kamyaabi-frontend/public/assets/img/product/cs1.webp" style="left:40px; top:300px;">
+    <img class="nut" id="n2" src="../../../kamyaabi-frontend/public/assets/img/product/cr1.webp" style="left:800px; top:430px; width:200px;">
+    <img class="nut" id="n3" src="../../../kamyaabi-frontend/public/assets/img/product/cs1.webp" style="left:760px; top:1400px; width:240px;">
+    <img class="nut" id="n4" src="../../../kamyaabi-frontend/public/assets/img/product/cr1.webp" style="left:70px; top:1480px; width:190px;">
+    <div class="abs center-x" style="top:640px;">
+      <div class="line" id="h1a">Still buying</div>
+      <div class="line gold serif" id="h1b" style="font-style:italic; font-weight:800; position:relative;">loose, stale<span class="strike" id="h1strike"></span></div>
+      <div class="line" id="h1c">dry fruits?</div>
+    </div>
+    <div class="abs center-x" id="h1d" style="top:1130px; font-size:46px; font-weight:700; color:#cdbf9f;">There's a better way&nbsp;&nbsp;→</div>
+  </section>
+
+  <!-- S2 BRAND -->
+  <section class="scene" id="s2">
+    <div class="rays" id="rays"></div>
+    <img class="abs" id="logo" src="../../../kamyaabi-frontend/public/assets/img/klogo1.webp" style="left:110px; top:330px; width:860px;">
+    <div class="abs center-x serif" id="s2h" style="top:640px; font-size:84px; font-weight:800; line-height:1.08;">Premium Dry Fruits,<br><i class="gold">hand-picked</i> for you</div>
+    <img class="abs" id="trio" src="../../../kamyaabi-frontend/public/assets/img/hero/banner1.webp" style="left:90px; top:930px; width:900px; filter: drop-shadow(0 40px 60px rgba(0,0,0,.6));">
+  </section>
+
+  <!-- S3 ALMONDS -->
+  <section class="scene product on-dark" id="s3">
+    <div class="bigword" style="top:820px;" id="s3w">ALMONDS</div>
+    <div class="abs center-x" style="top:250px;" id="s3k"><span class="kicker">California · Premium</span></div>
+    <div class="abs center-x" style="top:360px;" id="s3t"><h2>California<br>Almonds</h2></div>
+    <img class="pack" id="s3p" src="../../../kamyaabi-frontend/public/assets/img/product/almond_1.webp" style="left:240px; top:600px; width:600px;">
+    <div class="abs center-x" style="top:1340px;" id="s3s">
+      <div class="pill"><b>22.7g</b><span>Protein</span></div><div class="pill"><b>11.6g</b><span>Fibre</span></div>
+      <div class="note" style="margin-top:22px;">per 100 g · Pure · Wholesome · Energising</div>
+    </div>
+  </section>
+
+  <!-- S4 PISTACHIOS -->
+  <section class="scene product on-dark" id="s4">
+    <div class="bigword" style="top:820px;" id="s4w">PISTA</div>
+    <div class="abs center-x" style="top:250px;" id="s4k"><span class="kicker">Roasted · Salted</span></div>
+    <div class="abs center-x" style="top:360px;" id="s4t"><h2>Crunchy<br>Pistachios</h2></div>
+    <img class="pack" id="s4p" src="../../../kamyaabi-frontend/public/assets/img/product/pista1.webp" style="left:240px; top:600px; width:600px;">
+    <div class="abs center-x" style="top:1340px;" id="s4s">
+      <div class="pill"><b>20.9g</b><span>Protein</span></div><div class="pill"><b>9.9g</b><span>Fibre</span></div>
+      <div class="note" style="margin-top:22px;">per 100 g · High in antioxidants</div>
+    </div>
+  </section>
+
+  <!-- S5 CASHEWS -->
+  <section class="scene product on-dark" id="s5">
+    <div class="bigword" style="top:820px;" id="s5w">CASHEW</div>
+    <div class="abs center-x" style="top:250px;" id="s5k"><span class="kicker">Split · Whole W320</span></div>
+    <div class="abs center-x" style="top:360px;" id="s5t"><h2>Creamy<br>Cashews</h2></div>
+    <img class="pack" id="s5a" src="../../../kamyaabi-frontend/public/assets/img/product/splitcashew1.webp" style="left:60px; top:640px; width:520px;">
+    <img class="pack" id="s5b" src="../../../kamyaabi-frontend/public/assets/img/product/wholecashew3.webp" style="left:500px; top:640px; width:520px;">
+    <div class="abs center-x" style="top:1340px;" id="s5s">
+      <div class="pill" style="width:620px;"><b style="font-size:54px;">Buttery &amp; Rich</b><span>Healthy fats · Magnesium</span></div>
+      <div class="note" style="margin-top:22px;">Excellent plant-based protein</div>
+    </div>
+  </section>
+
+  <!-- S6 JUMBO -->
+  <section class="scene product on-light" id="s6">
+    <div class="bigword" style="top:820px;" id="s6w">JUMBO</div>
+    <div class="abs center-x" style="top:250px;" id="s6k"><span class="kicker">Bigger · Bolder</span></div>
+    <div class="abs center-x" style="top:360px;" id="s6t"><h2>Jumbo<br>Almonds</h2></div>
+    <img class="pack" id="s6p" src="../../../kamyaabi-frontend/public/assets/img/product/almond_jumbo1.webp" style="left:240px; top:600px; width:600px; box-shadow: 0 50px 90px rgba(60,45,20,.25);">
+    <div class="abs center-x" style="top:1340px;" id="s6s">
+      <div class="pill"><b>22.6g</b><span>Protein</span></div><div class="pill"><b>628</b><span>kcal energy</span></div>
+      <div class="note" style="margin-top:22px;">per 100 g · Boosts brain &amp; heart health</div>
+    </div>
+  </section>
+
+  <!-- S7 WHY -->
+  <section class="scene" id="s7">
+    <div class="abs center-x serif" id="s7h" style="top:290px; font-size:104px; font-weight:800;">Why <i class="gold">Kamyaabi?</i></div>
+    <div class="why" id="w1" style="top:520px;">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#17130e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 21l1.6-7L2 9.2l7.1-.6z"/></svg></div>
+      <div class="tx"><b>Hand-picked quality</b><span>Sourced from trusted farms</span></div></div>
+    <div class="why" id="w2" style="top:740px;">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#17130e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      <div class="tx"><b>Sealed for freshness</b><span>Hygienically packed</span></div></div>
+    <div class="why" id="w3" style="top:960px;">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#17130e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h13v10H1zM14 10h4l3 3v3h-7z"/><circle cx="5.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg></div>
+      <div class="tx"><b>FREE delivery</b><span>Shipped across India</span></div></div>
+    <div class="why" id="w4" style="top:1180px;">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#17130e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
+      <div class="tx"><b>Secure payments</b><span>UPI · Cards · Netbanking</span></div></div>
+  </section>
+
+  <!-- S8 CTA -->
+  <section class="scene" id="s8">
+    <div class="rays" id="rays2" style="top:760px;"></div>
+    <img class="abs" id="logo2" src="../../../kamyaabi-frontend/public/assets/img/klogo1.webp" style="left:190px; top:270px; width:700px;">
+    <img class="abs" id="duo" src="../../../kamyaabi-frontend/public/assets/img/hero/banner2.webp" style="left:200px; top:500px; width:680px; filter: drop-shadow(0 40px 60px rgba(0,0,0,.6));">
+    <div class="abs center-x" id="s8a" style="top:1170px; font-size:40px; font-weight:700; color:#cdbf9f; letter-spacing:4px; text-transform:uppercase;">Order now at</div>
+    <div class="abs center-x url gold" id="s8u" style="top:1220px;">kamyaabi.in</div>
+    <div class="abs center-x" id="s8b" style="top:1390px;"><span class="btn">Shop Now <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#17130e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+    <div class="abs center-x" id="s8c" style="top:1570px;"><div class="badge-row"><span class="badge">🔗 Link in bio</span><span class="badge">🚚 Free delivery</span></div></div>
+  </section>
+
+  <div id="vignette"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const easeIn = p => p * p * p;
+const easeInOut = p => p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2;
+const back = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+// progress of t within [a, b]
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+
+// Pop-in helper: fade + rise + scale with overshoot
+function pop(el, t, start, dur=.45, dy=60, s0=.85) {
+  const p = prog(t, start, start + dur);
+  const e = back(p);
+  el.style.opacity = clamp(p * 1.8);
+  el.style.transform = `translateY(${lerp(dy, 0, e)}px) scale(${lerp(s0, 1, e)})`;
+}
+
+const TOTAL = 30;
+// Scene windows [in, out]. Each scene fades/wipes in over TR seconds at its start.
+const SCENES = [
+  ['s1', 0.0, 3.0],
+  ['s2', 3.0, 6.6],
+  ['s3', 6.6, 10.0],
+  ['s4', 10.0, 13.4],
+  ['s5', 13.4, 16.8],
+  ['s6', 16.8, 20.0],
+  ['s7', 20.0, 24.6],
+  ['s8', 24.6, 30.0],
+];
+const TR = 0.45;
+
+function render(t) {
+  $('progress').style.width = (t / TOTAL * 1080) + 'px';
+
+  // Scene visibility + circular wipe reveal
+  SCENES.forEach(([id, a, b], i) => {
+    const el = $(id);
+    const visible = t >= a - 0.001 && t < b + TR;
+    el.style.opacity = visible ? 1 : 0;
+    el.style.zIndex = i + 1;
+    if (!visible) return;
+    if (i === 0) { el.style.clipPath = 'none'; return; }
+    const p = easeInOut(prog(t, a, a + TR));
+    el.style.clipPath = p >= 1 ? 'none' : `circle(${lerp(0, 1400, p)}px at 50% 55%)`;
+    const lt = t - a; // local time
+    el.style.transform = `scale(${lerp(1.08, 1, easeOut(prog(lt, 0, .9)))})`;
+  });
+
+  // ---- S1 hook ----
+  {
+    const lt = t;
+    pop($('h1a'), lt, 0.10, .45, 80);
+    pop($('h1b'), lt, 0.45, .45, 80);
+    pop($('h1c'), lt, 0.80, .45, 80);
+    const sp = easeOut(prog(lt, 1.35, 1.75));
+    const s = $('h1strike'); s.style.width = '88%'; s.style.transform = `scaleX(${sp})`;
+    pop($('h1d'), lt, 1.8, .5, 40, 1);
+    [['n1', 1, 0], ['n2', -1, .5], ['n3', 1, 1], ['n4', -1, 1.5]].forEach(([id, dir, ph]) => {
+      const n = $(id);
+      n.style.opacity = clamp(prog(lt, .1 + ph*.2, .6 + ph*.2));
+      n.style.transform = `translateY(${Math.sin(lt*2 + ph*3) * 22 - lt*18}px) rotate(${dir * lt * 24}deg)`;
+    });
+  }
+
+  // ---- S2 brand ----
+  {
+    const lt = t - 3.0;
+    $('rays').style.transform = `rotate(${lt * 9}deg)`;
+    $('rays').style.opacity = clamp(prog(lt, .2, 1));
+    const lp = easeOut(prog(lt, .35, 1.0));
+    $('logo').style.opacity = lp;
+    $('logo').style.transform = `scale(${lerp(.7, 1, back(prog(lt, .35, 1.0)))})`;
+    $('logo').style.filter = `drop-shadow(0 0 ${lerp(0, 40, Math.sin(clamp(lt/1.4)*Math.PI))}px rgba(241,220,174,.55))`;
+    pop($('s2h'), lt, 0.9, .55, 60, .95);
+    const tp = easeOut(prog(lt, 1.3, 2.1));
+    $('trio').style.opacity = tp;
+    $('trio').style.transform = `translateY(${lerp(320, 0, tp) + Math.sin(lt*1.6)*8}px) scale(${lerp(.9, 1.0, tp) + lt*.008})`;
+  }
+
+  // ---- Product scenes ----
+  const productScene = (pre, a, packs) => {
+    const lt = t - a;
+    const w = $(pre + 'w');
+    w.style.opacity = clamp(prog(lt, .1, .6)) * (pre === "s6" ? .07 : .1);
+    w.style.transform = `translateX(${lerp(260, -260, prog(lt, 0, 3.8))}px)`;
+    pop($(pre + 'k'), lt, .25, .4, 40, .9);
+    pop($(pre + 't'), lt, .40, .5, 70, .92);
+    packs.forEach(([id, fromX, rot, delay]) => {
+      const el = $(id);
+      const p = prog(lt, .30 + delay, 1.05 + delay);
+      const e = back(p);
+      el.style.opacity = clamp(p * 2);
+      const floatY = Math.sin((lt + delay) * 2.1) * 10;
+      el.style.transform = `translateX(${lerp(fromX, 0, e)}px) translateY(${floatY}px) rotate(${lerp(rot * 3, rot, e)}deg) scale(${1 + lt * .012})`;
+    });
+    pop($(pre + 's'), lt, 1.05, .5, 70, .9);
+  };
+  productScene('s3', 6.6,  [['s3p', 900, -3, 0]]);
+  productScene('s4', 10.0, [['s4p', -900, 3, 0]]);
+  productScene('s5', 13.4, [['s5a', -800, -6, 0], ['s5b', 800, 6, .12]]);
+  productScene('s6', 16.8, [['s6p', 900, -3, 0]]);
+
+  // ---- S7 why ----
+  {
+    const lt = t - 20.0;
+    pop($('s7h'), lt, .25, .5, 60, .9);
+    ['w1', 'w2', 'w3', 'w4'].forEach((id, i) => {
+      const el = $(id);
+      const p = prog(lt, .7 + i * .55, 1.2 + i * .55);
+      const e = back(p);
+      el.style.opacity = clamp(p * 2);
+      el.style.transform = `translateX(${lerp(i % 2 ? 700 : -700, 0, e)}px)`;
+      const ic = el.querySelector('.ic');
+      const ip = prog(lt, 1.0 + i * .55, 1.4 + i * .55);
+      ic.style.transform = `scale(${lerp(0, 1, back(ip))}) rotate(${lerp(-90, 0, easeOut(ip))}deg)`;
+    });
+  }
+
+  // ---- S8 CTA ----
+  {
+    const lt = t - 24.6;
+    $('rays2').style.transform = `rotate(${-lt * 10}deg)`;
+    $('rays2').style.opacity = clamp(prog(lt, .2, 1));
+    pop($('logo2'), lt, .25, .5, -40, .8);
+    const dp = easeOut(prog(lt, .35, 1.1));
+    $('duo').style.opacity = dp;
+    $('duo').style.transform = `translateY(${lerp(260, 0, dp) + Math.sin(lt*1.8)*10}px) scale(${lerp(.85, 1, dp)})`;
+    pop($('s8a'), lt, .9, .4, 40, 1);
+    pop($('s8u'), lt, 1.05, .55, 60, .8);
+    const bp = prog(lt, 1.5, 2.0);
+    const pulse = lt > 2.0 ? 1 + Math.sin((lt - 2.0) * Math.PI * 2 / 0.9) * 0.045 : 1;
+    $('s8b').style.opacity = clamp(bp * 2);
+    $('s8b').style.transform = `translateY(${lerp(60, 0, back(bp))}px) scale(${lerp(.8, 1, back(bp)) * pulse})`;
+    pop($('s8c'), lt, 2.0, .45, 40, .9);
+  }
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>
