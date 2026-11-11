@@ -36,12 +36,6 @@ public class ProductController {
         this.settingsService = settingsService;
     }
 
-    /**
-     * Maps a frontend-friendly {@code sort} query param (e.g. {@code price_asc},
-     * {@code newest}) to a Spring Data {@link Sort}. Falls back to legacy
-     * {@code sortBy}+{@code sortDir} pair when {@code sort} is absent so existing
-     * callers stay green.
-     */
     static Sort resolveSort(String sort, String sortBy, String sortDir) {
         if (sort != null && !sort.isBlank()) {
             return switch (sort.toLowerCase()) {

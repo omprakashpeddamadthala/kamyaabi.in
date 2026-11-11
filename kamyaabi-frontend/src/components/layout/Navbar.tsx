@@ -1,9 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves all nav links, role-based Admin/Product visibility, cart badge, login/logout, account menu, social links.
- * - Adds a premium mobile Bottom Navigation bar for quick thumb-friendly access (Zepto/Blinkit style).
- * - Desktop remains a sleek, expansive header.
- */
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -130,7 +124,6 @@ const Navbar: React.FC = () => {
     '/contact': <ContactMail />,
   };
 
-  // Determine active bottom nav value
   let bottomNavValue = location.pathname;
   if (bottomNavValue.startsWith('/products')) bottomNavValue = '/products';
   if (bottomNavValue.startsWith('/cart')) bottomNavValue = '/cart';
@@ -369,7 +362,6 @@ const Navbar: React.FC = () => {
         </Container>
       </AppBar>
 
-      {/* Mobile Drawer (Left Menu) */}
       <Drawer 
         open={drawerOpen} 
         onClose={() => setDrawerOpen(false)}
@@ -433,7 +425,6 @@ const Navbar: React.FC = () => {
         </Box>
       </Drawer>
 
-      {/* Mobile Bottom Navigation (Zepto/Blinkit Style) */}
       {isMobile && (
         <Paper 
           elevation={0}
@@ -445,7 +436,7 @@ const Navbar: React.FC = () => {
             zIndex: (t) => t.zIndex.appBar,
             boxShadow: 'var(--shadow-sticky)',
             borderTop: '1px solid var(--color-border)',
-            pb: 'env(safe-area-inset-bottom)' // iOS safe area
+            pb: 'env(safe-area-inset-bottom)'
           }}
         >
           <BottomNavigation

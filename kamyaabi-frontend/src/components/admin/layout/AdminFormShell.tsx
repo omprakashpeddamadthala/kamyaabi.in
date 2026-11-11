@@ -10,16 +10,10 @@ interface AdminFormShellProps {
   saving?: boolean;
   submitLabel?: string;
   cancelLabel?: string;
-  /** Disable the submit button (e.g. while loading the entity). */
   submitDisabled?: boolean;
   children: React.ReactNode;
 }
 
-/**
- * Standard layout for admin create/edit pages:
- * page header + a single card with grouped form content + a sticky
- * save/cancel footer that stays in view while scrolling long forms.
- */
 const AdminFormShell: React.FC<AdminFormShellProps> = ({
   title,
   subtitle,

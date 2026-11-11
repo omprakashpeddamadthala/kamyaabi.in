@@ -298,7 +298,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                   }}
                 >
                   <Stack spacing={1.5}>
-                    {/* Top Row: ID, Avatar, Name */}
                     <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
                       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
                         <Avatar
@@ -326,7 +325,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
 
                     <Divider sx={{ borderColor: 'rgba(0,0,0,0.04)' }} />
 
-                    {/* Middle Rows: Email & Joined date */}
                     <Box>
                       <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, wordBreak: 'break-all', mb: 0.5 }}>
                         <strong>Email:</strong> {user.email}
@@ -336,7 +334,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
                       </Typography>
                     </Box>
 
-                    {/* Chips Row: Role & Status */}
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                       <Chip
                         size="small"
@@ -367,7 +364,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ active, currentUserId }) => {
 
                     <Divider sx={{ borderColor: 'rgba(0,0,0,0.04)' }} />
 
-                    {/* Actions Row */}
                     <Stack direction="row" spacing={1.5} justifyContent="flex-end" alignItems="center">
                       <Tooltip
                         title={

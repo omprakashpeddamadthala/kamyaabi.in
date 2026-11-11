@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves all footer links, contact details, WhatsApp link, and social links.
- * - Visual-only tokenization of dark surface, muted text, spacing, and responsive layout.
- */
 import React from 'react';
 import { Box, Container, Typography, Link as MuiLink, Grid, Divider, Stack } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -28,7 +23,6 @@ const Footer: React.FC = () => {
     >
       <Container maxWidth="lg">
         <Grid container spacing={{ xs: 5, md: 8 }}>
-          {/* Brand Column */}
           <Grid item xs={12} md={4}>
             <Box component={Link} to="/" sx={{ display: 'inline-block', mb: 3, transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}>
               <Box
@@ -52,7 +46,6 @@ const Footer: React.FC = () => {
             <SocialLinks size={22} color="#9ca3af" />
           </Grid>
 
-          {/* Quick Links */}
           <Grid item xs={6} sm={4} md={2}>
             <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Company
@@ -73,7 +66,6 @@ const Footer: React.FC = () => {
             </Stack>
           </Grid>
 
-          {/* Support */}
           <Grid item xs={6} sm={4} md={2}>
             <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Support
@@ -91,7 +83,6 @@ const Footer: React.FC = () => {
             </Stack>
           </Grid>
 
-          {/* Contact Details */}
           <Grid item xs={12} sm={4} md={4}>
             <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '0.75rem' }}>
               Get in Touch

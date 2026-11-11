@@ -8,7 +8,7 @@ interface NotificationState {
   traceId?: string;
 }
 
-export const ApiErrorNotifier: React.FC = () => {
+const ApiErrorNotifier: React.FC = () => {
   const [state, setState] = useState<NotificationState>({
     open: false,
     severity: 'error',

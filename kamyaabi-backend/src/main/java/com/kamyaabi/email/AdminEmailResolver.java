@@ -9,13 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Resolves admin recipient emails dynamically from the {@code users} table —
- * any active {@link User} with role {@code ADMIN} is treated as a recipient.
- *
- * <p>Replaces the legacy {@code app.email.admin-emails} list config so that
- * adding/removing admins via the admin UI is sufficient (no redeploys).
- */
 @Slf4j
 @Component
 public class AdminEmailResolver {

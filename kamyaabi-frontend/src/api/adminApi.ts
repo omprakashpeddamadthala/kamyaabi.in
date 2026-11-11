@@ -66,7 +66,7 @@ export interface CategoryRequest {
   parentId?: number | null;
 }
 
-export interface AdminProductFilters {
+interface AdminProductFilters {
   page?: number;
   size?: number;
   sortBy?: string;
@@ -84,7 +84,7 @@ const buildProductFormData = (data: ProductRequest, images: File[]) => {
   return formData;
 };
 
-export type UploadProgressHandler = (fraction: number) => void;
+type UploadProgressHandler = (fraction: number) => void;
 
 export const adminApi = {
   getProducts: (filters: AdminProductFilters = {}) =>
@@ -240,7 +240,6 @@ export const adminApi = {
   updateSettings: (values: Record<string, string>) =>
     axiosInstance.put<ApiResponse<Record<string, string>>>('/api/admin/settings', values),
 
-  // ── Coupon Admin ─────────────────────────────────────────
   getCoupons: (page = 0, size = 10, q?: string, active?: boolean) =>
     axiosInstance.get<ApiResponse<PageResponse<Coupon>>>('/api/admin/coupons', {
       params: {
@@ -260,7 +259,6 @@ export const adminApi = {
   deactivateCoupon: (id: number) =>
     axiosInstance.delete<ApiResponse<void>>(`/api/admin/coupons/${id}`),
 
-  // ── Shiprocket Admin Dashboard ────────────────────────
   getShiprocketStats: () =>
     axiosInstance.get<ApiResponse<ShiprocketStats>>('/api/admin/shiprocket/stats'),
 
@@ -278,7 +276,6 @@ export const adminApi = {
   trackShiprocketOrder: (orderId: number) =>
     axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/api/admin/shiprocket/track/${orderId}`),
 
-  // ── Package Dimension Settings ─────────────────────────
   getPackageDimensionSettings: () =>
     axiosInstance.get<ApiResponse<PackageDimensionSetting[]>>('/api/admin/package-dimension-settings'),
 

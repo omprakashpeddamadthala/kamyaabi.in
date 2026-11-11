@@ -79,8 +79,6 @@ class BlogServiceImplTest {
         post.setTags(new HashSet<>(Set.of(tag)));
     }
 
-    // ── Public post operations ──────────────────────────────────
-
     @Test
     void getPublishedPosts_shouldReturnPage() {
         Pageable pageable = PageRequest.of(0, 10);
@@ -207,8 +205,6 @@ class BlogServiceImplTest {
 
         assertThat(result).hasSize(1);
     }
-
-    // ── Admin post operations ───────────────────────────────────
 
     @Test
     void getAdminPosts_withValidStatus_shouldReturnPage() {
@@ -493,8 +489,6 @@ class BlogServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ── Category operations ─────────────────────────────────────
-
     @Test
     void getAllCategories_shouldReturnList() {
         when(categoryRepository.findAll()).thenReturn(List.of(category));
@@ -694,8 +688,6 @@ class BlogServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ── Tag operations ──────────────────────────────────────────
-
     @Test
     void getAllTags_shouldReturnList() {
         when(tagRepository.findAll()).thenReturn(List.of(tag));
@@ -824,8 +816,6 @@ class BlogServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ── Scheduled publishing ────────────────────────────────────
-
     @Test
     void publishScheduledPosts_shouldPublishDuePosts() {
         BlogPost scheduledPost = BlogPost.builder()
@@ -857,8 +847,6 @@ class BlogServiceImplTest {
 
         verify(postRepository, never()).save(any());
     }
-
-    // ── toPostResponse edge cases ───────────────────────────────
 
     @Test
     void toPostResponse_nullAuthor_shouldHandleGracefully() {

@@ -12,10 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * Public read-only endpoint returning the active homepage hero banners in
- * display order. Admin CRUD lives on {@code AdminHeroBannerController}.
- */
 @RestController
 @RequestMapping("/api/hero-banners")
 @Tag(name = "Hero Banners", description = "Public homepage hero banners")

@@ -47,12 +47,8 @@ export function useProductData(productSlug: string | undefined) {
     return () => { dispatch(clearSelectedProduct()); };
   }, [dispatch]);
 
-  // Canonicalize the URL once the product is loaded: legacy numeric-id URLs,
-  // the flat /products/:slug form, and any mismatched categorySlug all redirect
-  // (client-side 301-equivalent) to /products/:categorySlug/:productSlug.
   useEffect(() => {
     if (!product?.slug) return;
-    // Avoid redirecting from a stale product still in the store mid-transition.
     if (!paramIsNumericId && product.slug !== productSlug) return;
     const canonical = productUrl(product);
     if (location.pathname !== canonical) {

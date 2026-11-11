@@ -1,9 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves Navbar, Outlet, and Footer composition for all public/customer routes.
- * - Adds main landmark id for skip-to-content accessibility only.
- * - Adds safe area padding for mobile bottom navigation.
- */
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Box, useMediaQuery, useTheme } from '@mui/material';

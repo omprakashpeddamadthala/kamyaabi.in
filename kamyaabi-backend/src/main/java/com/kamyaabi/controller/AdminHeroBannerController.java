@@ -17,10 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Admin CRUD for homepage hero banners — upload images, set order/priority,
- * enable/disable, and edit alt text + link URL.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/hero-banners")

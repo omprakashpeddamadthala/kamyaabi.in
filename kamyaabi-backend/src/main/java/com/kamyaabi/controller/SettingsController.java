@@ -11,11 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * Read-only public endpoint exposing the safe-for-anonymous subset of platform
- * settings (e.g. products per page, optional UI badges). Admin-only endpoints
- * for the full settings map live on {@link AdminController}.
- */
 @RestController
 @RequestMapping("/api/settings")
 @Tag(name = "Settings", description = "Public read-only platform settings")

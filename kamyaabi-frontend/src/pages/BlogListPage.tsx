@@ -33,7 +33,6 @@ import { parseApiError } from '../utils/apiError';
 import { config } from '../config';
 import Seo from '../components/common/Seo';
 
-
 const BLOG_PAGE_SIZE = 9;
 
 const BlogListPage: React.FC = () => {
@@ -176,10 +175,6 @@ const BlogListPage: React.FC = () => {
 
   return (
     <>
-      {/* GSC FIX: Unified <Seo> replaces raw <Helmet>.
-          - Search results are noindexed to prevent thin-content signals.
-          - rel=prev/next pagination links help Google understand the series.
-          - CollectionPage + BreadcrumbList JSON-LD added.              */}
       <Seo
         title={searchQuery ? `Search: ${searchQuery}` : 'Blog — Dry Fruits Tips & Recipes'}
         description="Read the latest articles about premium dry fruits, health tips, recipes, and more from Kamyaabi."
@@ -187,7 +182,6 @@ const BlogListPage: React.FC = () => {
         noindex={Boolean(searchQuery)}
         jsonLd={[breadcrumbJsonLd, collectionPageJsonLd]}
       />
-      {/* Pagination link relations for Google. */}
       {page > 0 && (
         <link rel="prev" href={page === 1 ? blogListUrl : `${blogListUrl}?page=${page}`} />
       )}
@@ -203,7 +197,6 @@ const BlogListPage: React.FC = () => {
           Latest articles about premium dry fruits, health tips, and recipes
         </Typography>
 
-        {/* Search only */}
         <Box sx={{ mb: 4 }}>
           <TextField
             size="small"
@@ -229,7 +222,6 @@ const BlogListPage: React.FC = () => {
           />
         </Box>
 
-        {/* Posts Grid */}
         <Box
           ref={gridRef}
           sx={{
@@ -353,7 +345,6 @@ const BlogListPage: React.FC = () => {
                       </Stack>
                     </CardContent>
                   </CardActionArea>
-                  {/* Share button */}
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 1, pb: 1 }}>
                     <Tooltip title="Share">
                       <IconButton
@@ -369,7 +360,6 @@ const BlogListPage: React.FC = () => {
               ))}
         </Box>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <Box
             sx={{
@@ -425,7 +415,6 @@ const BlogListPage: React.FC = () => {
           </Box>
         )}
 
-        {/* Share popover for desktop */}
         <Popover
           open={Boolean(shareAnchor)}
           anchorEl={shareAnchor}

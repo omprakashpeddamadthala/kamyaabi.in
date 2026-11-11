@@ -8,16 +8,6 @@ import java.util.stream.Collectors;
 
 import static com.kamyaabi.service.SettingsService.*;
 
-/**
- * Single source of truth for the catalog of admin-tunable platform settings:
- * their labels, descriptions, categories, data types, defaults and validation
- * rules. The admin settings UI is rendered entirely from this metadata so new
- * settings can be added here (plus a value/validation rule) without touching the
- * frontend.
- *
- * <p>Definitions are listed in the order they should appear in the UI, grouped
- * by {@code category}.
- */
 public final class SettingsCatalog {
 
     public static final String CATEGORY_PLATFORM = "Platform";
@@ -26,7 +16,6 @@ public final class SettingsCatalog {
     public static final String CATEGORY_AMAZON = "Amazon";
 
     public static final List<SettingDefinition> DEFINITIONS = List.of(
-            // ── Platform ──────────────────────────────────────────────
             SettingDefinition.builder()
                     .key(LOW_STOCK_THRESHOLD)
                     .label("Low Stock Alert Threshold")
@@ -62,7 +51,6 @@ public final class SettingsCatalog {
                     .required(true)
                     .build(),
 
-            // ── WhatsApp ──────────────────────────────────────────────
             SettingDefinition.builder()
                     .key(WHATSAPP_OTP_AUTH_ENABLED)
                     .label("WhatsApp OTP Login")
@@ -129,7 +117,6 @@ public final class SettingsCatalog {
                     .required(false)
                     .build(),
 
-            // ── Coupons ───────────────────────────────────────────────
             SettingDefinition.builder()
                     .key(COUPON_ENABLED)
                     .label("Enable Coupon System")
@@ -199,7 +186,6 @@ public final class SettingsCatalog {
                     .required(true)
                     .build(),
 
-            // ── Amazon ────────────────────────────────────────────────
             SettingDefinition.builder()
                     .key(AMAZON_STORE_URL)
                     .label("Amazon Store URL")

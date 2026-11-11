@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves React root mounting and global error reporter startup.
- * - Adds global design-token/responsive CSS imports only; no app logic changes.
- */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

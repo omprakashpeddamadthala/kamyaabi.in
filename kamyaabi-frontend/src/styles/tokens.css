@@ -1,49 +1,36 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Backend routes, auth flows, Redux slices, API clients, forms, validators, and role guards remain unchanged.
- * - This token layer only centralizes visual primitives consumed by the MUI theme and redesigned components.
- * - Upgraded to Premium Mobile-First Design System (Zepto/Blinkit inspired).
- */
 :root {
-  /* Brand */
-  --color-brand-primary: #1D4ED8;   /* cobalt — primary CTAs */
+  --color-brand-primary: #1D4ED8;
   --color-brand-primary-dark: #1E40AF;
   --color-brand-primary-light: #3B82F6;
-  --color-brand-secondary: #F59E0B; /* warm amber — accents, sale */
-  --color-brand-accent: #10B981;    /* vibrant green for 'Add to Cart' / success */
-  --color-brand-light: #EFF6FF;     /* cobalt tint backgrounds */
+  --color-brand-secondary: #F59E0B;
+  --color-brand-accent: #10B981;
+  --color-brand-light: #EFF6FF;
 
-  /* Surfaces & Backgrounds */
   --color-surface-0: #FFFFFF;
   --color-surface-1: #F8FAFC;
   --color-surface-2: #F1F5F9;
-  --color-surface-bg: #F4F6F8;      /* Slightly darker for premium contrast against white cards */
+  --color-surface-bg: #F4F6F8;
   --color-surface-card: #FFFFFF;
   --color-surface-dark: #0F172A;
   --color-surface-hover: #F1F5F9;
   --color-border: #E2E8F0;
 
-  /* Text (slate) */
   --color-text-primary: #0F172A;
   --color-text-secondary: #475569;
   --color-text-muted: #94A3B8;
 
-  /* Semantic */
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-error: #EF4444;
   --color-info: #3B82F6;
 
-  /* RGB channels for translucent brand fills (used in rgba()) */
   --rgb-brand-primary: 29, 78, 216;
   --rgb-brand-accent: 16, 185, 129;
 
-  /* Typography */
   --font-display: 'Inter', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Fluid type scale — clamp(min, preferred, max) */
   --text-xs:   clamp(0.7rem, 1vw, 0.75rem);
   --text-sm:   clamp(0.8rem, 1.2vw, 0.875rem);
   --text-base: clamp(0.9rem, 1.5vw, 1rem);
@@ -54,7 +41,6 @@
   --text-4xl:  clamp(1.875rem, 4vw, 2.25rem);
   --text-5xl:  clamp(2.25rem, 5vw, 3rem);
 
-  /* Legacy aliases (mapped to fluid scale) */
   --font-size-12: var(--text-xs);
   --font-size-14: var(--text-sm);
   --font-size-16: var(--text-base);
@@ -66,13 +52,11 @@
   --font-size-48: var(--text-5xl);
   --font-size-64: clamp(2rem, 6vw, 4rem);
 
-  /* Wishlist icon sizing */
   --icon-wishlist: clamp(16px, 2.5vw, 20px);
 
   --line-height-body: 1.5;
   --line-height-display: 1.2;
 
-  /* Spacing (4px base) */
   --space-2: 2px;
   --space-4: 4px;
   --space-8: 8px;
@@ -85,7 +69,6 @@
   --space-64: 64px;
   --space-96: 96px;
 
-  /* Radius (More rounded for modern mobile feel) */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -93,27 +76,23 @@
   --radius-2xl: 32px;
   --radius-full: 9999px;
 
-  /* Elevation (Premium soft shadows) */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.04);
   
-  /* Aliases */
   --shadow-card: var(--shadow-sm);
   --shadow-hover: var(--shadow-md);
   --shadow-modal: var(--shadow-lg);
-  --shadow-sticky: 0 -4px 16px rgba(0, 0, 0, 0.08); /* For bottom nav bars */
+  --shadow-sticky: 0 -4px 16px rgba(0, 0, 0, 0.08);
 
-  /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
   --transition-base: var(--transition-normal);
 
-  /* Breakpoints */
   --bp-xs: 360px;
   --bp-sm: 480px;
   --bp-md: 768px;
@@ -167,7 +146,6 @@ picture {
   height: auto;
 }
 
-/* Remove default highlight on mobile */
 button,
 a,
 input,
@@ -177,7 +155,6 @@ textarea,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Minimum touch target sizes for accessibility (Mobile First) */
 @media (pointer: coarse) {
   button,
   [role='button'],
@@ -189,7 +166,6 @@ textarea,
   }
 }
 
-/* Premium Animations */
 @keyframes kamyaabiFadeUp {
   from {
     opacity: 0;
@@ -221,7 +197,6 @@ textarea,
   animation: kamyaabiFadeUp var(--transition-bounce) both;
 }
 
-/* Utilities */
 .text-truncate {
   white-space: nowrap;
   overflow: hidden;
@@ -235,7 +210,6 @@ textarea,
   overflow: hidden;
 }
 
-/* Responsive Table layout for mobile viewports */
 @media (max-width: 900px) {
   .responsive-table {
     background: transparent !important;

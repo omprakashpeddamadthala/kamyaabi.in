@@ -58,7 +58,6 @@ const AdminCouponFormPage: React.FC = () => {
     let active = true;
     setLoading(true);
     setLoadError(null);
-    // No single-coupon endpoint exists; locate the coupon within the admin list.
     adminApi
       .getCoupons(0, 200)
       .then((res) => {

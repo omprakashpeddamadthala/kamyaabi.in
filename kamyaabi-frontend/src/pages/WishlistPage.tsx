@@ -223,7 +223,6 @@ const WishlistPage: React.FC = () => {
 
   return (
     <PageTransition>
-      {/* GSC FIX: account wishlist is private — noindex. */}
       <Seo title="My Wishlist" noindex />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Typography

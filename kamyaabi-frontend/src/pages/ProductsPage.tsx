@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves search, sort, category/tag URL params, pagination, public settings page size, and product API dispatch behavior.
- * - Visual-only redesign of headings, filter surfaces, and responsive product presentation. Includes off-canvas filters for mobile.
- */
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Seo from '../components/common/Seo';
@@ -44,7 +39,6 @@ import { productTagApi } from '../api/productTagApi';
 import { ProductTag } from '../types';
 import { config } from '../config';
 import { readBootstrapProductsList } from '../utils/bootstrapData';
-
 
 const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: 'newest', label: 'Newest First' },
@@ -138,7 +132,6 @@ const ProductsPage: React.FC = () => {
   }, [dispatch, categories.length]);
 
   useEffect(() => {
-    // Skip initial API load if we hydrated valid matching bootstrap data from the server
     const bootstrap = readBootstrapProductsList();
     if (bootstrap && bootstrap.path === window.location.pathname) {
       return;
@@ -317,8 +310,6 @@ const ProductsPage: React.FC = () => {
     ? `${productsBaseUrl}/category/${selectedCategory.slug}`
     : productsBaseUrl;
 
-  // Noindex for search, tag-filtered, and sort-filtered paginated variants
-  // (thin/parameterised content that duplicates category canonicals).
   const shouldNoindex = Boolean(tagSlug) || Boolean(searchQuery);
 
   const breadcrumbItems: Array<Record<string, unknown>> = [
@@ -492,7 +483,6 @@ const ProductsPage: React.FC = () => {
         </Grid>
       </Grid>
       
-      {/* Mobile Filters Drawer */}
       <Drawer
         anchor="bottom"
         open={isFilterDrawerOpen}

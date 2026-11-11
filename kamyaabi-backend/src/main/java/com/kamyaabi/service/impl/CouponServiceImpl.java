@@ -92,7 +92,6 @@ public class CouponServiceImpl implements CouponService {
                     .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
         }
 
-        // Atomic redemption — record usage within the same transaction
         CouponUsage usage = CouponUsage.builder()
                 .coupon(coupon)
                 .user(user)
@@ -217,10 +216,6 @@ public class CouponServiceImpl implements CouponService {
                 .toList();
     }
 
-    /**
-     * Core validation logic — fail-fast ordered checks reading dynamic config
-     * from the settings service on every call.
-     */
     private CouponValidationResponse doValidate(String code, Long userId, BigDecimal orderTotal) {
         if (code == null || code.isBlank()) {
             return invalid(code, "Coupon code is required");
@@ -228,7 +223,6 @@ public class CouponServiceImpl implements CouponService {
 
         Coupon coupon = couponRepository.findByCodeIgnoreCase(code.trim()).orElse(null);
 
-        // 1. Does coupon exist and is it active?
         if (coupon == null || !coupon.getIsActive()) {
             return invalid(code, "Invalid or inactive coupon code");
         }
@@ -237,23 +231,19 @@ public class CouponServiceImpl implements CouponService {
             return invalid(code, "This coupon has expired");
         }
 
-        // 2. Has the coupon hit its global member cap?
         int maxTotalMembers = settingsService.getInt(COUPON_MAX_TOTAL_MEMBERS, 20);
         long uniqueMembers = couponUsageRepository.countDistinctUsersByCouponId(coupon.getId());
-        // Only count toward the cap if this user hasn't used it before
         boolean userHasUsedBefore = couponUsageRepository.countByCouponIdAndUserId(coupon.getId(), userId) > 0;
         if (!userHasUsedBefore && uniqueMembers >= maxTotalMembers) {
             return invalid(code, "This coupon has reached its maximum redemption limit");
         }
 
-        // 3. Has this user exceeded max all-time uses?
         int maxUsesPerUser = settingsService.getInt(COUPON_MAX_USES_PER_USER, 1);
         long userUsageCount = couponUsageRepository.countByCouponIdAndUserId(coupon.getId(), userId);
         if (userUsageCount >= maxUsesPerUser) {
             return invalid(code, "You have already used this coupon the maximum number of times");
         }
 
-        // 4. Has this user exceeded max daily uses?
         int maxUsesPerUserPerDay = settingsService.getInt(COUPON_MAX_USES_PER_USER_PER_DAY, 1);
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         long todayCount = couponUsageRepository.countByCouponIdAndUserIdAndUsedAtAfter(
@@ -262,7 +252,6 @@ public class CouponServiceImpl implements CouponService {
             return invalid(code, "You have reached the daily usage limit for this coupon");
         }
 
-        // 5. Calculate discount
         BigDecimal discountAmount = calculateDiscount(coupon, orderTotal);
 
         return CouponValidationResponse.builder()
@@ -288,7 +277,6 @@ public class CouponServiceImpl implements CouponService {
             discount = coupon.getDiscountValue();
         }
 
-        // Discount cannot exceed order total
         if (discount.compareTo(orderTotal) > 0) {
             discount = orderTotal;
         }

@@ -6,17 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-/**
- * Canonical Shiprocket → internal status mapper.
- * <p>
- * This is the <strong>single source of truth</strong> for mapping raw Shiprocket
- * shipment status strings to our {@link Order.OrderStatus} enum and the
- * {@code shippingStatus} string field.  Both the scheduled refresh job
- * ({@link com.kamyaabi.service.impl.ShiprocketServiceImpl}) and the
- * {@link com.kamyaabi.controller.ShiprocketWebhookController} must delegate
- * here — no independent mapping logic may exist elsewhere.
- * </p>
- */
 @Slf4j
 @Component
 public class ShiprocketStatusMapper {
@@ -24,13 +13,6 @@ public class ShiprocketStatusMapper {
     private static final String SHIPPING_STATUS_OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY";
     private static final String SHIPPING_STATUS_RETURN_INITIATED  = "RETURN_INITIATED";
 
-    /**
-     * Apply the Shiprocket status string to the given {@link Order}.
-     * The caller is responsible for persisting the entity afterwards.
-     *
-     * @param order           the managed order entity (mutated in place)
-     * @param shiprocketStatus raw status string from Shiprocket (case-insensitive)
-     */
     public void applyTo(Order order, String shiprocketStatus) {
         if (shiprocketStatus == null) {
             return;

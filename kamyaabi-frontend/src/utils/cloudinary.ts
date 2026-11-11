@@ -1,4 +1,4 @@
-export const CLOUDINARY_THUMBNAIL_TRANSFORM = 'w_300,h_300,c_fill,q_auto,f_auto';
+const CLOUDINARY_THUMBNAIL_TRANSFORM = 'w_300,h_300,c_fill,q_auto,f_auto';
 
 const UPLOAD_SEGMENT = '/upload/';
 

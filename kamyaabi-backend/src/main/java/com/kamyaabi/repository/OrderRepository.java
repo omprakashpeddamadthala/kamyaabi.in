@@ -95,6 +95,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.shiprocketSynced = true AND o.shiprocketOrderId IS NOT NULL "
             + "AND o.status NOT IN :terminalStatuses")
     List<Order> findSyncedOrdersNotInTerminalStatus(@Param("terminalStatuses") List<Order.OrderStatus> terminalStatuses);
-
-    Optional<Order> findByShiprocketOrderId(String shiprocketOrderId);
 }

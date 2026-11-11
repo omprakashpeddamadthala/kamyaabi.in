@@ -78,13 +78,8 @@ const orderSlice = createSlice({
   name: 'orders',
   initialState,
   reducers: {
-    /**
-     * Patch the selectedOrder in place after a background status refresh.
-     * This avoids triggering a full loading spinner — the UI updates silently.
-     */
     patchSelectedOrder(state, action: { payload: Order }) {
       state.selectedOrder = action.payload;
-      // Also update the order in the list view if it's present
       const idx = state.orders.findIndex((o) => o.id === action.payload.id);
       if (idx !== -1) state.orders[idx] = action.payload;
     },
@@ -113,13 +108,10 @@ const orderSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // ── fetchOrderById ─────────────────────────────────────────────────────
-      // Clear stale selectedOrder immediately so the old order's status cannot
-      // appear while the new one is loading (fixes the /orders/1016 stale bug).
       .addCase(fetchOrderById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.selectedOrder = null;  // ← key fix: clear stale data
+        state.selectedOrder = null;
       })
       .addCase(fetchOrderById.fulfilled, (state, action) => {
         state.loading = false;

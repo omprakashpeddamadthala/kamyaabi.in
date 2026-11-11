@@ -57,7 +57,6 @@ class KamyaabiApplicationTests {
         System.out.println("Content-Type: " + result.getResponse().getContentType());
         System.out.println("Content-Length: " + result.getResponse().getContentLength());
         
-        // Query database again to see new path
         Order updatedOrder = orderRepository.findById(1016L).get();
         System.out.println("Updated Order Invoice URL: " + updatedOrder.getInvoiceUrl());
         if (updatedOrder.getInvoiceUrl() != null) {

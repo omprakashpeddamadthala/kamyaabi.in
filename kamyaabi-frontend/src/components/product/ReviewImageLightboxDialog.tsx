@@ -1,7 +1,4 @@
 import React from 'react';
-// TASK 2: review images use the same zoomable lightbox (pinch / double-tap /
-// scroll zoom, swipe + ESC to dismiss, keyboard nav, ARIA labels) for parity
-// with the product gallery.
 import Lightbox from 'yet-another-react-lightbox';
 import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 import 'yet-another-react-lightbox/styles.css';

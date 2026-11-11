@@ -54,8 +54,6 @@ public class BlogServiceImpl implements BlogService {
         this.userRepository = userRepository;
     }
 
-    // ── Public post operations ──────────────────────────────────
-
     @Override
     @Transactional(readOnly = true)
     public Page<BlogPostResponse> getPublishedPosts(Pageable pageable) {
@@ -127,8 +125,6 @@ public class BlogServiceImpl implements BlogService {
                 .collect(Collectors.toList());
     }
 
-    // ── Admin post operations ───────────────────────────────────
-
     @Override
     @Transactional(readOnly = true)
     public Page<BlogPostResponse> getAdminPosts(String status, String query, Pageable pageable) {
@@ -137,7 +133,6 @@ public class BlogServiceImpl implements BlogService {
             try {
                 statusEnum = BlogPostStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException ignored) {
-                // ignore invalid status
             }
         }
         String q = (query != null && !query.isBlank()) ? query : null;
@@ -242,8 +237,6 @@ public class BlogServiceImpl implements BlogService {
         return toPostResponse(postRepository.save(post));
     }
 
-    // ── Category operations ─────────────────────────────────────
-
     @Override
     @Transactional(readOnly = true)
     public List<BlogCategoryResponse> getAllCategories() {
@@ -323,8 +316,6 @@ public class BlogServiceImpl implements BlogService {
         categoryRepository.deleteById(id);
     }
 
-    // ── Tag operations ──────────────────────────────────────────
-
     @Override
     @Transactional(readOnly = true)
     public List<BlogTagResponse> getAllTags() {
@@ -384,10 +375,8 @@ public class BlogServiceImpl implements BlogService {
         tagRepository.deleteById(id);
     }
 
-    // ── Scheduled publishing ────────────────────────────────────
-
     @Override
-    @Scheduled(fixedRate = 300_000) // every 5 minutes
+    @Scheduled(fixedRate = 300_000)
     @Transactional
     public void publishScheduledPosts() {
         List<BlogPost> due = postRepository.findScheduledPostsDue(LocalDateTime.now());
@@ -398,8 +387,6 @@ public class BlogServiceImpl implements BlogService {
             log.info("Auto-published scheduled blog post: id={}, title={}", post.getId(), post.getTitle());
         }
     }
-
-    // ── Helper methods ──────────────────────────────────────────
 
     private String resolveUniqueSlug(String requestSlug, String title, Long existingId) {
         String baseSlug = (requestSlug != null && !requestSlug.isBlank())

@@ -11,7 +11,6 @@ import java.util.List;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Optional<Category> findByName(String name);
     Optional<Category> findBySlug(String slug);
     Optional<Category> findByIdAndIsActiveTrue(Long id);
     List<Category> findByIsActiveTrueOrderByDisplayOrderAscNameAsc();

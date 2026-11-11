@@ -381,7 +381,6 @@ kamyaabi.in/
 │
 ├── kamyaabi-frontend/               # React SPA
 │   ├── Dockerfile                   # Multi-stage Node + Nginx build
-│   ├── nginx.conf                   # SPA fallback to index.html
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tsconfig*.json

@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves orders fetch/pagination, order expansion, status stepper, payment/shipping details, and navigation to products.
- * - Visual-only redesign of order cards, status pills, price typography, and item surfaces.
- */
 import React, { useEffect, useState } from 'react';
 import Seo from '../components/common/Seo';
 import { useNavigate } from 'react-router-dom';
@@ -32,8 +27,6 @@ import {
   ORDER_STEP_LABELS,
 } from '../utils/orderStatusUtils';
 
-
-
 const OrdersPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -60,7 +53,6 @@ const OrdersPage: React.FC = () => {
   if (orders.length === 0) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
-        {/* GSC FIX: account orders page is private — noindex. */}
         <Seo title="My Orders" noindex />
         <Receipt sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
         <Typography variant="h4" sx={{ mb: 2 }}>
@@ -78,7 +70,6 @@ const OrdersPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      {/* GSC FIX: account orders page is private — noindex. */}
       <Seo title="My Orders" noindex />
       <Typography variant="h3" sx={{ mb: 1, fontFamily: 'var(--font-display)', fontWeight: 800, letterSpacing: '-0.02em' }}>
         My Orders
@@ -173,7 +164,6 @@ const OrdersPage: React.FC = () => {
               </Box>
             )}
 
-            {}
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>Items</Typography>
             {order.items.map((item) => (
               <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5, p: 1, bgcolor: 'var(--color-surface-bg)', borderRadius: 'var(--radius-md)' }}>
@@ -219,7 +209,6 @@ const OrdersPage: React.FC = () => {
               </Box>
             )}
 
-            {}
             <Grid container spacing={2} sx={{ mt: 1 }}>
               {order.shippingAddress && (
                 <Grid item xs={12} sm={6}>

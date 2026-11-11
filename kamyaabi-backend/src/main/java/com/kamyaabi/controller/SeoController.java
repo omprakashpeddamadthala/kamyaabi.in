@@ -29,7 +29,6 @@ import java.util.Set;
 @Tag(name = "SEO", description = "Public sitemap.xml, sitemap-index.xml and robots.txt endpoints")
 public class SeoController {
 
-    // Static routes that should appear in the sitemap (login/private pages excluded intentionally).
     private static final List<StaticRoute> STATIC_ROUTES = List.of(
             new StaticRoute("/", "daily", "1.0"),
             new StaticRoute("/products", "daily", "0.9"),
@@ -38,7 +37,6 @@ public class SeoController {
             new StaticRoute("/contact", "monthly", "0.5"),
             new StaticRoute("/track-order", "monthly", "0.4"),
             new StaticRoute("/refund-policy", "yearly", "0.3")
-            // /login intentionally excluded — private/transactional page, not indexable.
     );
 
     private static final List<String> DISALLOWED_PATHS = List.of(
@@ -62,10 +60,6 @@ public class SeoController {
         this.publicSiteUrl = removeTrailingSlash(publicSiteUrl);
     }
 
-    // =========================================================================
-    // Sitemap Index
-    // =========================================================================
-
     @GetMapping(value = "/sitemap-index.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Sitemap Index",
             description = "References all sub-sitemaps. Submit this URL to Google Search Console.")
@@ -86,10 +80,6 @@ public class SeoController {
                 .body(xml.toString());
     }
 
-    // =========================================================================
-    // Main sitemap (static + category pages)
-    // =========================================================================
-
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Main XML sitemap",
             description = "Static pages and category pages. Product/blog detail pages are in their own sub-sitemaps.")
@@ -97,7 +87,6 @@ public class SeoController {
         List<CategoryResponse> categories = categoryService.getAllCategories();
         List<ProductSitemapResponse> products = productService.getSitemapProducts();
 
-        // Collect category slugs that actually have products.
         Set<String> usedCategorySlugs = new HashSet<>();
         for (ProductSitemapResponse p : products) {
             if (!isBlank(p.categorySlug())) usedCategorySlugs.add(p.categorySlug());
@@ -124,10 +113,6 @@ public class SeoController {
                 .body(xml.toString());
     }
 
-    // =========================================================================
-    // Products sub-sitemap
-    // =========================================================================
-
     @GetMapping(value = "/products-sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Products XML sitemap", description = "All active product detail pages.")
     public ResponseEntity<String> getProductsSitemap() {
@@ -152,10 +137,6 @@ public class SeoController {
                 .cacheControl(CacheControl.maxAge(Duration.ofMinutes(5)).cachePublic().mustRevalidate())
                 .body(xml.toString());
     }
-
-    // =========================================================================
-    // Blog posts sub-sitemap
-    // =========================================================================
 
     @GetMapping(value = "/blogs-sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Blog posts XML sitemap", description = "All published blog post pages.")
@@ -220,10 +201,6 @@ public class SeoController {
                 .body(xml.toString());
     }
 
-    // =========================================================================
-    // Categories sub-sitemap
-    // =========================================================================
-
     @GetMapping(value = "/categories-sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Categories XML sitemap", description = "All product category pages.")
     public ResponseEntity<String> getCategoriesSitemap() {
@@ -251,10 +228,6 @@ public class SeoController {
                 .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic().mustRevalidate())
                 .body(xml.toString());
     }
-
-    // =========================================================================
-    // Images sub-sitemap
-    // =========================================================================
 
     @GetMapping(value = "/images-sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Images XML sitemap",
@@ -295,10 +268,6 @@ public class SeoController {
                 .body(xml.toString());
     }
 
-    // =========================================================================
-    // robots.txt
-    // =========================================================================
-
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @Operation(summary = "robots.txt",
             description = "Allows public pages, blocks private areas, and references all sitemaps.")
@@ -310,7 +279,6 @@ public class SeoController {
             robots.append("Disallow: ").append(path).append('\n');
         }
         robots.append("\n");
-        // Reference the sitemap index so Google submits all sub-sitemaps at once.
         robots.append("Sitemap: ").append(publicSiteUrl).append("/sitemap-index.xml\n");
         robots.append("Sitemap: ").append(publicSiteUrl).append("/sitemap.xml\n");
         robots.append("Sitemap: ").append(publicSiteUrl).append("/products-sitemap.xml\n");
@@ -320,10 +288,6 @@ public class SeoController {
                 .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic().mustRevalidate())
                 .body(robots.toString());
     }
-
-    // =========================================================================
-    // Helpers
-    // =========================================================================
 
     private static void appendSitemapEntry(StringBuilder xml, String loc, String lastmod) {
         xml.append("  <sitemap>\n");

@@ -2,7 +2,7 @@ const SITE_NAME = 'Kamyaabi';
 const DEFAULT_DESCRIPTION = 'Shop premium, hand-picked dry fruits and nuts at Kamyaabi. Sourced for purity, sealed for freshness, and delivered across India.';
 const DEFAULT_IMAGE_PATH = '/pwa-512x512.png';
 
-export function escapeHtml(value = '') {
+function escapeHtml(value = '') {
   return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -11,7 +11,7 @@ export function escapeHtml(value = '') {
     .replaceAll("'", '&#39;');
 }
 
-export function plainText(value = '') {
+function plainText(value = '') {
   return String(value)
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -24,7 +24,7 @@ export function plainText(value = '') {
     .trim();
 }
 
-export function absoluteUrl(siteUrl, value) {
+function absoluteUrl(siteUrl, value) {
   if (!value) return `${siteUrl}${DEFAULT_IMAGE_PATH}`;
   try {
     return new URL(value, siteUrl).toString();
@@ -54,7 +54,7 @@ function safeJson(value) {
     .replaceAll('&', '\\u0026');
 }
 
-export function seoHead({
+function seoHead({
   siteUrl,
   title,
   description = DEFAULT_DESCRIPTION,
@@ -107,7 +107,7 @@ const CRITICAL_STYLES = `
   @media(max-width:720px){.seo-product{grid-template-columns:1fr}.seo-page{padding:24px 16px}}
 </style>`;
 
-export function renderDocument(template, head, body, bootstrapData) {
+function renderDocument(template, head, body, bootstrapData) {
   const bootstrap = bootstrapData
     ? `<script id="kamyaabi-bootstrap-data" type="application/json">${safeJson(bootstrapData)}</script>`
     : '';

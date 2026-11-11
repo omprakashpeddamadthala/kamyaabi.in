@@ -18,22 +18,17 @@ import {
   Straighten,
 } from '@mui/icons-material';
 
-export interface AdminNavItem {
+interface AdminNavItem {
   label: string;
-  /** Route path the link points to. */
   to: string;
   icon: SvgIconComponent;
 }
 
-export interface AdminNavSection {
+interface AdminNavSection {
   heading: string;
   items: AdminNavItem[];
 }
 
-/**
- * Single source of truth for the admin sidebar and breadcrumb labels.
- * Every admin section is a dedicated route.
- */
 export const ADMIN_NAV: AdminNavSection[] = [
   {
     heading: 'Overview',
@@ -84,7 +79,7 @@ export const ADMIN_NAV: AdminNavSection[] = [
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV.flatMap((s) => s.items);
 
-export interface Crumb {
+interface Crumb {
   label: string;
   to?: string;
 }
@@ -117,7 +112,6 @@ const STATIC_CRUMB_LABELS: Record<string, string> = {
   '/admin/blog/tags/new': 'New Blog Tag',
 };
 
-/** Parameterised edit routes -> [parent label, parent path, default leaf label]. */
 const EDIT_CRUMBS: { prefix: string; parentLabel: string; parentTo: string; leaf: string }[] = [
   { prefix: '/admin/blog/categories/edit', parentLabel: 'Blog Categories', parentTo: '/admin/blog/categories', leaf: 'Edit Category' },
   { prefix: '/admin/blog/tags/edit', parentLabel: 'Blog Tags', parentTo: '/admin/blog/tags', leaf: 'Edit Tag' },
@@ -129,10 +123,6 @@ const EDIT_CRUMBS: { prefix: string; parentLabel: string; parentTo: string; leaf
   { prefix: '/admin/hero-banners/edit', parentLabel: 'Hero Banners', parentTo: '/admin/hero-banners', leaf: 'Edit Hero Banner' },
 ];
 
-/**
- * Build breadcrumb trail from the current pathname. Always rooted at the Admin
- * dashboard.
- */
 export const buildAdminBreadcrumbs = (
   pathname: string,
   trailingLabel?: string,

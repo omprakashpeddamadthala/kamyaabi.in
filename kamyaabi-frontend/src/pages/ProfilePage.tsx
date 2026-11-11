@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves profile fetch/update validation, address CRUD, default-address setting, and delete confirmation behavior.
- * - Visual-only redesign of account shell, profile avatar, form surfaces, and address cards.
- */
 import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '../components/common/Seo';
 import {
@@ -133,7 +128,6 @@ const ProfilePage: React.FC = () => {
       const res = await addressApi.getAll();
       setAddresses(res.data.data);
     } catch {
-      // Silently fail — addresses are non-critical on this view
     }
   }, []);
 
@@ -224,9 +218,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-      {/* GSC FIX: account profile is private — noindex. */}
       <Seo title="My Profile" noindex />
-      {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
           <Avatar
@@ -303,7 +295,6 @@ const ProfilePage: React.FC = () => {
         </Box>
       </Paper>
 
-      {}
       <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, borderRadius: 3 }}>
         <Box sx={{ 
           display: 'flex', 
@@ -412,7 +403,6 @@ const ProfilePage: React.FC = () => {
         )}
       </Paper>
 
-      {}
       <AddressFormDialog
         open={addressDialogOpen}
         onClose={() => setAddressDialogOpen(false)}
@@ -420,7 +410,6 @@ const ProfilePage: React.FC = () => {
         editAddress={editingAddress}
       />
 
-      {}
       <Dialog open={deleteDialogOpen} onClose={() => !deletingAddress && setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Address</DialogTitle>
         <DialogContent>

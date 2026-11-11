@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves Google OAuth login, dev quick login, session-expired notice, auth error display, and redirect behavior.
- * - Visual-only tokenization of centered auth card, radius, and shadow.
- */
 import React from 'react';
 import Seo from '../components/common/Seo';
 import { useNavigate } from 'react-router-dom';
@@ -234,7 +229,6 @@ const LoginPage: React.FC = () => {
       }
     }}>
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* GSC FIX: auth page is private — noindex. */}
         <Seo title="Sign In" noindex />
         <GoogleOAuthProvider clientId={clientId}>
           <Card sx={{ 

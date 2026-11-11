@@ -179,7 +179,6 @@ const AdminBlogEditorPage: React.FC = () => {
     }
   };
 
-  // Auto-save every 60s
   useEffect(() => {
     autoSaveRef.current = setInterval(() => {
       if (postIdRef.current && title.trim() && !saving) {
@@ -304,7 +303,6 @@ const AdminBlogEditorPage: React.FC = () => {
       {saving && <LinearProgress sx={{ mb: 2 }} />}
 
       <Grid container spacing={3}>
-        {/* Left: Editor */}
         <Grid item xs={12} md={8}>
           <TextField
             fullWidth
@@ -315,7 +313,6 @@ const AdminBlogEditorPage: React.FC = () => {
             inputProps={{ style: { fontSize: '1.5rem', fontWeight: 600 } }}
           />
 
-          {/* Toolbar */}
           {editor && (
             <Paper variant="outlined" sx={{ mb: 1, p: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {[
@@ -387,10 +384,8 @@ const AdminBlogEditorPage: React.FC = () => {
           </Stack>
         </Grid>
 
-        {/* Right: Settings Sidebar */}
         <Grid item xs={12} md={4}>
           <Stack spacing={2}>
-            {/* Status */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>Publish Settings</Typography>
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
@@ -414,7 +409,6 @@ const AdminBlogEditorPage: React.FC = () => {
               )}
             </Paper>
 
-            {/* Cover Image */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>Featured Image</Typography>
               {coverImageUrl && (
@@ -428,7 +422,6 @@ const AdminBlogEditorPage: React.FC = () => {
               <TextField fullWidth size="small" label="Alt text" value={coverImageAlt} onChange={(e) => setCoverImageAlt(e.target.value)} sx={{ mt: 1 }} />
             </Paper>
 
-            {/* Slug */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>Slug</Typography>
               <TextField
@@ -440,7 +433,6 @@ const AdminBlogEditorPage: React.FC = () => {
               />
             </Paper>
 
-            {/* Excerpt */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Typography variant="subtitle2">Excerpt</Typography>
@@ -459,7 +451,6 @@ const AdminBlogEditorPage: React.FC = () => {
               />
             </Paper>
 
-            {/* Categories */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>Categories</Typography>
               <Autocomplete
@@ -480,7 +471,6 @@ const AdminBlogEditorPage: React.FC = () => {
               </Stack>
             </Paper>
 
-            {/* Tags */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Typography variant="subtitle2" gutterBottom>Tags</Typography>
               <Autocomplete
@@ -501,7 +491,6 @@ const AdminBlogEditorPage: React.FC = () => {
               </Stack>
             </Paper>
 
-            {/* Featured */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <FormControlLabel
                 control={<Switch checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />}
@@ -509,7 +498,6 @@ const AdminBlogEditorPage: React.FC = () => {
               />
             </Paper>
 
-            {/* SEO */}
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" onClick={() => setSeoOpen(!seoOpen)} sx={{ cursor: 'pointer' }}>
                 <Typography variant="subtitle2">SEO Settings</Typography>
@@ -531,7 +519,6 @@ const AdminBlogEditorPage: React.FC = () => {
                   <TextField fullWidth size="small" label="OG Image URL" value={ogImageUrl} onChange={(e) => setOgImageUrl(e.target.value)} />
                   <TextField fullWidth size="small" label="Canonical URL" value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} />
 
-                  {/* SEO Preview */}
                   <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'grey.50' }}>
                     <Typography variant="caption" color="text.secondary" gutterBottom>Google Preview</Typography>
                     <Typography variant="body2" sx={{ color: '#1a0dab', fontWeight: 500, fontSize: '1rem' }}>

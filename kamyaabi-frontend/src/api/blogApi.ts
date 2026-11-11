@@ -40,8 +40,6 @@ export interface BlogTagRequest {
   description?: string;
 }
 
-// ── Public Blog API ─────────────────────────────────────────
-
 export const blogApi = {
   getPosts: (params: {
     page?: number;
@@ -76,8 +74,6 @@ export const blogApi = {
   getTagBySlug: (slug: string) =>
     axiosInstance.get<ApiResponse<BlogTag>>(`/api/blog/tags/${slug}`),
 };
-
-// ── Admin Blog API ──────────────────────────────────────────
 
 export const adminBlogApi = {
   getPosts: (params: { page?: number; size?: number; status?: string; q?: string } = {}) =>

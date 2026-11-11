@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 
-export interface FlyToCartContextType {
+interface FlyToCartContextType {
   cartIconRef: React.RefObject<HTMLElement | null>;
   triggerFlyToCart: (imageUrl: string, startElement: HTMLElement) => void;
 }

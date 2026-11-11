@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { config } from '../config';
 
-export interface ClientErrorReport {
+interface ClientErrorReport {
   message: string;
   stack?: string;
   componentStack?: string;
@@ -33,7 +33,6 @@ export const errorApi = {
         withCredentials: false,
       });
     } catch {
-      // Swallow — error reporting must never throw
     }
   },
 };

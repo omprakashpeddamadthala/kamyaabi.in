@@ -28,7 +28,6 @@ public class DeliveryEstimateServiceImpl implements DeliveryEstimateService {
     private final UserDeliveryEstimateRepository estimateRepository;
     private final ShiprocketService shiprocketService;
 
-    /** Default weight (kg) used for serviceability check when no product is known. */
     private static final double DEFAULT_WEIGHT_KG = 0.5;
 
     @Override
@@ -42,7 +41,6 @@ public class DeliveryEstimateServiceImpl implements DeliveryEstimateService {
                 return;
             }
 
-            // Prefer the default address; fall back to the first available one
             Address target = addresses.stream()
                     .filter(a -> Boolean.TRUE.equals(a.getIsDefault()))
                     .findFirst()
@@ -58,7 +56,6 @@ public class DeliveryEstimateServiceImpl implements DeliveryEstimateService {
             PincodeServiceabilityResponse result =
                     shiprocketService.checkServiceability(pincode, DEFAULT_WEIGHT_KG);
 
-            // Upsert — one row per user
             UserDeliveryEstimate estimate = estimateRepository.findByUserId(userId)
                     .orElseGet(() -> {
                         var u = userRepository.getReferenceById(userId);

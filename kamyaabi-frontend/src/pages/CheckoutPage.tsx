@@ -46,7 +46,6 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      {/* GSC FIX: checkout is a private/transactional page — noindex. */}
       <Seo title="Checkout" noindex />
       <Typography
         variant="h3"

@@ -41,8 +41,6 @@ public class AdminBlogController {
         this.currentUser = currentUser;
     }
 
-    // ── Posts ────────────────────────────────────────────────────
-
     @GetMapping("/posts")
     @Operation(summary = "List all blog posts (admin)", description = "Paginated list with optional status and search filters")
     public ResponseEntity<ApiResponse<Page<BlogPostResponse>>> getPosts(
@@ -97,8 +95,6 @@ public class AdminBlogController {
         return ResponseEntity.ok(ApiResponse.success("Blog post unpublished", blogService.unpublishPost(id)));
     }
 
-    // ── Media ───────────────────────────────────────────────────
-
     @PostMapping("/media/upload")
     @Operation(summary = "Upload blog image", description = "Uploads to Cloudinary and returns the URL")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadMedia(
@@ -109,8 +105,6 @@ public class AdminBlogController {
                 "publicId", result.publicId()
         )));
     }
-
-    // ── Categories ──────────────────────────────────────────────
 
     @GetMapping("/categories")
     @Operation(summary = "List blog categories (admin)")
@@ -140,8 +134,6 @@ public class AdminBlogController {
         blogService.deleteCategory(id);
         return ResponseEntity.ok(ApiResponse.success("Blog category deleted", null));
     }
-
-    // ── Tags ────────────────────────────────────────────────────
 
     @GetMapping("/tags")
     @Operation(summary = "List blog tags (admin)")

@@ -32,7 +32,6 @@ public class BlogController {
     public BlogController(BlogService blogService,
                           @org.springframework.beans.factory.annotation.Value("${app.frontend-url:https://kamyaabi.in}") String publicSiteUrl) {
         this.blogService = blogService;
-        // Strip trailing slash to match SeoController convention.
         this.publicSiteUrl = publicSiteUrl == null ? "https://kamyaabi.in"
                 : publicSiteUrl.trim().replaceAll("/+$", "");
     }

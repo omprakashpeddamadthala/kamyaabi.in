@@ -143,7 +143,6 @@ public class InvoiceTemplateRenderer {
             return "<img class=\"logo\" src=\"" + attr(transformCloudinaryUrl(logoUrl, "w_360,h_120,c_limit,q_90")) + "\" alt=\"Logo\" />";
         }
 
-        // Try reading local logo from classpath first
         try (InputStream is = getClass().getResourceAsStream("/images/logo.png")) {
             if (is != null) {
                 byte[] bytes = is.readAllBytes();
@@ -151,7 +150,6 @@ public class InvoiceTemplateRenderer {
                 return "<img class=\"logo\" src=\"data:image/png;base64," + base64 + "\" alt=\"Logo\" />";
             }
         } catch (Exception e) {
-            // Ignore
         }
         return "<div class=\"logo-placeholder\">K</div>";
     }
@@ -370,7 +368,6 @@ public class InvoiceTemplateRenderer {
             default -> text(currency) + " ";
         };
     }
-
 
     private String text(String value) {
         return value == null ? "" : value;

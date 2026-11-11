@@ -48,7 +48,6 @@ const AdminPage: React.FC = () => {
     { icon: <Warning sx={{ fontSize: 36, color: 'warning.main', mb: 1 }} />, value: statsLoading ? '—' : (dashboardStats?.lowStockCount ?? 0).toLocaleString('en-IN'), label: 'Low Stock Alerts' },
   ];
 
-  // Launcher tiles: every admin section except the dashboard itself.
   const sections = ADMIN_NAV
     .map((section) => ({
       heading: section.heading,
