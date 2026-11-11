@@ -50,6 +50,9 @@ spring:
     caffeine:
       spec: maximumSize=500,expireAfterWrite=10m
 
+bootui:
+  enabled: true
+
 springdoc:
   api-docs:
     path: /api-docs

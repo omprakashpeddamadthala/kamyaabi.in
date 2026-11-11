@@ -29,6 +29,21 @@ const queryClient = new QueryClient({
   },
 });
 
+let initialRouteRendered = false;
+
+// On first load the lazy route chunk is still downloading; render nothing rather
+// than a spinner so the page's entrance animation is the first visible frame.
+const RouteFallback: React.FC = () => (
+  initialRouteRendered ? <Loading message="Loading page..." /> : null
+);
+
+const InitialRouteMarker: React.FC = () => {
+  useEffect(() => {
+    initialRouteRendered = true;
+  }, []);
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <Provider store={store}>
@@ -45,7 +60,8 @@ const App: React.FC = () => {
               <ToastProvider>
                 <BrowserRouter>
                   <ScrollToTop />
-                  <Suspense fallback={<Loading message="Loading page..." />}>
+                  <Suspense fallback={<RouteFallback />}>
+                    <InitialRouteMarker />
                     <FlyToCartProvider>
                       <AppRoutes />
                     </FlyToCartProvider>
