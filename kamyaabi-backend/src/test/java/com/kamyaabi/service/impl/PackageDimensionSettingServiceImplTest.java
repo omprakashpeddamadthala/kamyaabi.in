@@ -223,7 +223,6 @@ class PackageDimensionSettingServiceImplTest {
     void findBestPackageForWeight_whenExactMatch_returnsSetting() {
         when(repository.findByActiveTrueOrderByPackageWeightGramAsc()).thenReturn(List.of(setting100, setting250));
 
-        // 0.10 kg = 100 grams
         PackageDimensionSetting result = service.findBestPackageForWeight(0.10);
 
         assertThat(result).isNotNull();
@@ -234,7 +233,6 @@ class PackageDimensionSettingServiceImplTest {
     void findBestPackageForWeight_whenIntermediateWeight_returnsNextSlab() {
         when(repository.findByActiveTrueOrderByPackageWeightGramAsc()).thenReturn(List.of(setting100, setting250));
 
-        // 0.15 kg = 150 grams -> should map to 250g slab
         PackageDimensionSetting result = service.findBestPackageForWeight(0.15);
 
         assertThat(result).isNotNull();
@@ -245,7 +243,6 @@ class PackageDimensionSettingServiceImplTest {
     void findBestPackageForWeight_whenExceedsAll_returnsLargestSlab() {
         when(repository.findByActiveTrueOrderByPackageWeightGramAsc()).thenReturn(List.of(setting100, setting250));
 
-        // 0.40 kg = 400 grams -> exceeds all (100g, 250g) -> should fallback to largest active (250g)
         PackageDimensionSetting result = service.findBestPackageForWeight(0.40);
 
         assertThat(result).isNotNull();

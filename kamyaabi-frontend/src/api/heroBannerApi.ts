@@ -29,11 +29,9 @@ const buildFormData = (data: HeroBannerRequest, image?: File | null) => {
 };
 
 export const heroBannerApi = {
-  // Public
   getActive: () =>
     axiosInstance.get<ApiResponse<HeroBanner[]>>('/api/hero-banners'),
 
-  // Admin
   list: () =>
     axiosInstance.get<ApiResponse<HeroBanner[]>>('/api/admin/hero-banners'),
 

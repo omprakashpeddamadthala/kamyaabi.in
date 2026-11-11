@@ -39,7 +39,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        // GSC FIX: sitemap.xml + robots.txt must be publicly crawlable.
                         .requestMatchers(HttpMethod.GET,
                                 "/sitemap.xml", "/sitemap-index.xml",
                                 "/products-sitemap.xml", "/blogs-sitemap.xml",

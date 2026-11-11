@@ -315,7 +315,6 @@ class ShiprocketServiceImplTest {
         String token = authClient.getToken();
         assertThat(token).isEqualTo("fresh-token-from-login");
 
-        // Second call should hit the cache (no extra /auth/login invocation).
         authClient.getToken();
         verify(restTemplate, times(1)).postForEntity(
                 contains("/auth/login"),
@@ -340,7 +339,6 @@ class ShiprocketServiceImplTest {
         properties.setEmail("merchant@example.com");
         properties.setPassword("secret");
 
-        // /auth/login returns a fresh token on every call.
         Map<String, Object> loginResponse = new HashMap<>();
         loginResponse.put("token", "refreshed-token");
         when(restTemplate.postForEntity(
@@ -349,7 +347,6 @@ class ShiprocketServiceImplTest {
                 any(Class.class)))
                 .thenReturn(ResponseEntity.ok(loginResponse));
 
-        // First create-order call fails with 401; second call succeeds.
         Map<String, Object> createResponse = new HashMap<>();
         createResponse.put("order_id", 12345);
         createResponse.put("shipment_id", 67890);
@@ -362,7 +359,6 @@ class ShiprocketServiceImplTest {
                         new HttpHeaders(), new byte[0], null))
                 .thenReturn(ResponseEntity.ok(createResponse));
 
-        // AWB + pickup succeed so we exercise the full happy path post-retry.
         Map<String, Object> awbResponseData = new HashMap<>();
         awbResponseData.put("data", Map.of("awb_code", "AWB1", "courier_name", "Delhivery"));
         Map<String, Object> awbResponse = new HashMap<>();
@@ -384,12 +380,10 @@ class ShiprocketServiceImplTest {
 
         assertThat(order.getShiprocketOrderId()).isEqualTo("12345");
         assertThat(order.getShiprocketSynced()).isTrue();
-        // /orders/create/adhoc should have been called twice (initial + retry).
         verify(restTemplate, times(2)).postForEntity(
                 contains("/orders/create/adhoc"),
                 any(HttpEntity.class),
                 any(Class.class));
-        // /auth/login should have been called at least once to refresh.
         verify(restTemplate, atLeastOnce()).postForEntity(
                 contains("/auth/login"),
                 any(HttpEntity.class),
@@ -416,19 +410,15 @@ class ShiprocketServiceImplTest {
         shiprocketService.syncOrderToShiprocket(order);
 
         assertThat(order.getShiprocketSynced()).isFalse();
-        // Should NOT call /auth/login when no login credentials are configured.
         verify(restTemplate, never()).postForEntity(
                 contains("/auth/login"),
                 any(HttpEntity.class),
                 any(Class.class));
-        // Should NOT retry the create call (only the initial attempt).
         verify(restTemplate, times(1)).postForEntity(
                 contains("/orders/create/adhoc"),
                 any(HttpEntity.class),
                 any(Class.class));
     }
-
-    // ── checkServiceability tests ─────────────────────────────────────────
 
     @Test
     void checkServiceability_whenNotConfigured_returnsNotServiceable() {
@@ -549,8 +539,6 @@ class ShiprocketServiceImplTest {
         assertThat(result.serviceable()).isFalse();
         assertThat(result.message()).contains("No response");
     }
-
-    // ── refreshShipmentStatus tests ──────────────────────────────────────
 
     @Test
     void refreshShipmentStatus_whenNotConfigured_skips() {
@@ -874,8 +862,6 @@ class ShiprocketServiceImplTest {
         assertThat(order.getShippingStatus()).isEqualTo("IN TRANSIT");
         verify(orderRepository).save(order);
     }
-
-    // ── refreshAllShipmentStatuses tests ────────────────────────────────
 
     @Test
     void refreshAllShipmentStatuses_whenNotConfigured_returnsZero() {

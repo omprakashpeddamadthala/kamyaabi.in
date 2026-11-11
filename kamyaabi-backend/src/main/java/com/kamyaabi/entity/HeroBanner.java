@@ -7,11 +7,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Admin-managed homepage hero/banner image. Drives the rotating hero slider on
- * the storefront homepage. Seeded with the previously hard-coded slides so the
- * homepage looks identical until an admin customises it.
- */
 @Entity
 @Table(name = "hero_banners", indexes = {
         @Index(name = "idx_hero_banners_active_order", columnList = "active, display_order")
@@ -30,7 +25,6 @@ public class HeroBanner {
     @Column(name = "image_url", nullable = false, length = 1024)
     private String imageUrl;
 
-    /** Cloudinary public id; null for seeded local assets that are not Cloudinary-managed. */
     @Column(name = "public_id", length = 512)
     private String publicId;
 

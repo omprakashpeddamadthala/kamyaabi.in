@@ -10,7 +10,6 @@ import Seo from '../components/common/Seo';
 import { BlogPost, BlogTag } from '../types';
 import { config } from '../config';
 
-
 const BlogTagPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,8 +60,6 @@ const BlogTagPage: React.FC = () => {
 
   return (
     <>
-      {/* GSC FIX: tag pages are thin content — noindex prevents crawl budget waste.
-          The JSON-LD BreadcrumbList is still emitted so internal link signals work. */}
       <Seo
         title={title}
         description={description}

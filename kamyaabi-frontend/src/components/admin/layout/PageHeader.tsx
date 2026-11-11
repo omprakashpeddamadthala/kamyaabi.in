@@ -4,14 +4,9 @@ import { Box, Typography, Stack } from '@mui/material';
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  /** Primary action(s) rendered on the right (desktop) / below the title (mobile). */
   action?: React.ReactNode;
 }
 
-/**
- * Consistent admin page header: title + optional subtitle + primary action.
- * Stacks vertically on mobile, splits horizontally from `sm` upwards.
- */
 const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, action }) => (
   <Box component="header" sx={{ mb: 3 }}>
     <Stack

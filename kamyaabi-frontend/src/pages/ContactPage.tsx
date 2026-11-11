@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves contact content, contact links, and routing.
- * - Visual-only tokenization of section backgrounds and typography.
- */
 import React from 'react';
 import { Box, Container, Typography, Grid, Link as MuiLink } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -15,13 +10,11 @@ import { config } from '../config';
 const ContactPage: React.FC = () => {
   return (
     <Box>
-      {/* GSC FIX: per-page title/description/canonical/OG for the Contact page. */}
       <Seo
         title="Contact Us"
         description="Get in touch with Kamyaabi. Reach our customer support by phone, WhatsApp or email for orders, delivery and product queries."
         canonicalPath="/contact"
       />
-      {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography
@@ -44,7 +37,6 @@ const ContactPage: React.FC = () => {
         </Container>
       </Box>
 
-      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="md">
           <Grid container spacing={6}>

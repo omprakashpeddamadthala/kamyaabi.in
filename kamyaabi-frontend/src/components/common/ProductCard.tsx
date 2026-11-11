@@ -1,9 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves product navigation to /products/:slug-or-id, auth redirect to /login, optimistic cart update, fly-to-cart animation, and addToCart payload.
- * - Preserves existing product fields: image/mainImage, category, discountPrice, stock, variationCount, rating summary API, and review count display.
- * - Visual-only changes: tokenized card, responsive media ratio, low-stock badge, hover actions, and add-to-cart micro-interaction styling.
- */
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -31,7 +25,6 @@ import { reviewApi } from '../../api/reviewApi';
 
 interface ProductCardProps {
   product: Product;
-  /** Renders a smaller, more compact card (e.g. for "You May Also Like" rails). */
   compact?: boolean;
 }
 
@@ -116,7 +109,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
     if (product.stock === 0) return 'Out of Stock';
     if (isAdding) return 'Adding...';
     if (justAdded) return 'Added \u2713';
-    return 'Add'; // Sleeker text for premium feel
+    return 'Add';
   };
 
   const getButtonIcon = () => {
@@ -132,7 +125,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'visible', // For squircle shadows to bleed out if needed
+        overflow: 'visible',
         bgcolor: 'var(--color-surface-card)',
         borderRadius: 'var(--radius-xl)',
         border: '1px solid rgba(29, 78, 216, 0.08)',
@@ -203,7 +196,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, compact = false }) =
               }}
             />
           )}
-
 
           {lowStock && (
             <Chip

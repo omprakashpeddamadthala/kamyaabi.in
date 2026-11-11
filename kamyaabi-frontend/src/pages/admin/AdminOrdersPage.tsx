@@ -392,7 +392,6 @@ const AdminOrdersPage: React.FC = () => {
         </Table>
       </TableContainer>
 
-      {/* Detail popup for Items / Shipping Address */}
       <Dialog open={!!detailOrder} onClose={closeDetail} maxWidth="sm" fullWidth>
         {detailOrder && (
           <>

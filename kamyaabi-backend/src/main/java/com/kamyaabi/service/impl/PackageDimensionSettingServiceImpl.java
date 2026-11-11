@@ -119,7 +119,6 @@ public class PackageDimensionSettingServiceImpl implements PackageDimensionSetti
             return null;
         }
 
-        // Find the first slab that is large enough to contain the order's weight
         for (PackageDimensionSetting setting : activeSettings) {
             if (setting.getPackageWeightGram() >= weightGrams) {
                 log.debug("Selected package slab: {}g for weight {}g", setting.getPackageWeightGram(), weightGrams);
@@ -127,7 +126,6 @@ public class PackageDimensionSettingServiceImpl implements PackageDimensionSetti
             }
         }
 
-        // If the weight exceeds all configured active slabs, return the largest configured slab
         PackageDimensionSetting largestSlab = activeSettings.get(activeSettings.size() - 1);
         log.warn("Order weight {}g exceeds all configured slabs. Falling back to the largest slab: {}g",
                 weightGrams, largestSlab.getPackageWeightGram());

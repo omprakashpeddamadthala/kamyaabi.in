@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves ADMIN_NAV-driven route links, active route matching, collapsed tooltips, and mobile close callback.
- * - Visual-only tokenization of active/hover sidebar states.
- */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -18,17 +13,10 @@ import {
 import { ADMIN_NAV, ADMIN_NAV_ITEMS } from './adminNav';
 
 interface AdminSidebarProps {
-  /** Mini (icon-only) mode on desktop. */
   collapsed: boolean;
-  /** Called when a nav item is chosen (used to close the mobile drawer). */
   onNavigate?: () => void;
 }
 
-/**
- * The active nav item is the one whose `to` is the longest prefix of the
- * current pathname (exact match or a `/`-delimited descendant). `/admin` only
- * matches exactly so it isn't selected for every sub-route.
- */
 const activeNavTo = (pathname: string): string => {
   let best = '';
   for (const item of ADMIN_NAV_ITEMS) {

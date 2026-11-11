@@ -227,7 +227,6 @@ class BlogControllerTest {
         ResponseEntity<String> response = blogController.getRssFeed();
 
         assertThat(response.getBody()).doesNotContain("<author>");
-        // channel-level <description> is always present; item-level should be absent
         String itemBlock = response.getBody().substring(response.getBody().indexOf("<item>"));
         assertThat(itemBlock).doesNotContain("<description>");
     }

@@ -17,7 +17,6 @@ export function useCheckoutCoupons() {
         const res = await couponApi.getAvailable();
         setAvailableCoupons(res.data.data || []);
       } catch {
-        // Silently fail — available coupons is not critical
       }
     };
     loadAvailableCoupons();

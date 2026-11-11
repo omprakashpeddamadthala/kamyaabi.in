@@ -4,13 +4,11 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { usePublicSettings } from '../../hooks/usePublicSettings';
 
 interface AmazonBannerProps {
-  /** `product` renders a compact ribbon for PDPs; `home` renders a full-width hero section. */
   variant?: 'product' | 'home';
 }
 
 const AMAZON_ORANGE = '#FF9900';
 
-/** Stylised "amazon" wordmark + smile arrow (no external asset needed). */
 const AmazonWordmark: React.FC<{ light?: boolean }> = ({ light }) => (
   <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
     <Typography
@@ -120,7 +118,6 @@ const AmazonBanner: React.FC<AmazonBannerProps> = ({ variant = 'product' }) => {
     );
   }
 
-  // Compact product-page ribbon.
   return (
     <Box
       sx={{

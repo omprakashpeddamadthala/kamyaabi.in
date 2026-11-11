@@ -25,11 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Admin-only endpoints for monitoring and managing the Shiprocket integration.
- * Authorisation is enforced by {@code SecurityConfig} for everything under
- * {@code /api/admin/**} — only users with role {@code ADMIN} can hit these.
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/shiprocket")

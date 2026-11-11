@@ -13,11 +13,6 @@ interface InlineConfirmBarProps {
   onCancel: () => void;
 }
 
-/**
- * Non-blocking inline confirmation banner used in place of blocking modal
- * dialogs for destructive actions. Announced to assistive tech via the
- * Alert's implicit `role="alert"`.
- */
 const InlineConfirmBar: React.FC<InlineConfirmBarProps> = ({
   open,
   title,

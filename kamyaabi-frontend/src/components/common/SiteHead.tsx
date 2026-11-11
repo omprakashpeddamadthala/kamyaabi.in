@@ -4,16 +4,6 @@ import { config } from '../../config';
 
 const GOOGLE_SITE_VERIFICATION = '1e586fe8a6a37882';
 
-/**
- * Global, site-wide <head> tags rendered on every page:
- *  - Google Search Console site-verification meta tag (backup to the static
- *    /google1e586fe8a6a37882.html file).
- *  - GSC FIX: sitewide Organization + WebSite + LocalBusiness JSON-LD so every
- *    page exposes valid structured data (enables sitelinks search box + brand
- *    knowledge panel + local pack eligibility).
- *  - hreflang="en-IN" global alternate tag (geographic/language targeting).
- *  - Google Analytics (gtag.js) loaded as early as the app mounts.
- */
 const SiteHead: React.FC = () => {
   const { gaId, brandSiteUrl, supportPhoneDisplay, supportEmail, facebookUrl, instagramUrl } = config;
 
@@ -88,10 +78,8 @@ const SiteHead: React.FC = () => {
   return (
     <Helmet>
       <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
-      {/* GSC FIX: hreflang global alternate for India/English targeting. */}
       <link rel="alternate" hrefLang="en-IN" href={brandSiteUrl} />
       <link rel="alternate" hrefLang="x-default" href={brandSiteUrl} />
-      {/* GSC FIX: sitewide structured data (schema.org Organization + WebSite + LocalBusiness). */}
       <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
       <script type="application/ld+json">{JSON.stringify(webSiteJsonLd)}</script>
       <script type="application/ld+json">{JSON.stringify(localBusinessJsonLd)}</script>

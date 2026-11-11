@@ -37,7 +37,7 @@ interface ApiErrorBody {
   fieldErrors?: Record<string, string>;
 }
 
-export const extractTraceId = (error: AxiosError): string | undefined => {
+const extractTraceId = (error: AxiosError): string | undefined => {
   const headerId = error.response?.headers?.['x-correlation-id'];
   if (typeof headerId === 'string' && headerId.length > 0) return headerId;
   const body = error.response?.data as ApiErrorBody | undefined;
@@ -96,5 +96,5 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export { setTokenExpiry, isSessionExpired, clearSession, SESSION_LIFETIME_MS };
+export { setTokenExpiry, isSessionExpired, clearSession };
 export default axiosInstance;

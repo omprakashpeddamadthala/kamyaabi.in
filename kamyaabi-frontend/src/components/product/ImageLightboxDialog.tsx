@@ -1,10 +1,4 @@
 import React from 'react';
-// GSC FIX / TASK 2: replace the bespoke MUI dialog with yet-another-react-lightbox
-// so product images get proper zoom on every device — pinch-to-zoom + double-tap
-// on touch screens, scroll / double-click / button zoom on desktop (>=2x), swipe
-// to navigate, swipe/ESC to dismiss, keyboard arrow navigation and built-in ARIA
-// labelling on all controls. Lazy loading + alt text on the gallery thumbnails are
-// untouched.
 import Lightbox from 'yet-another-react-lightbox';
 import Zoom from 'yet-another-react-lightbox/plugins/zoom';
 import 'yet-another-react-lightbox/styles.css';
@@ -43,7 +37,6 @@ const ImageLightboxDialog: React.FC<ImageLightboxDialogProps> = ({
       index={safeIdx}
       slides={slides}
       plugins={[Zoom]}
-      // Keep the external thumbnail strip in sync as the user swipes/navigates.
       on={{ view: ({ index }) => onSelectIdx(index) }}
       carousel={{ finite: slides.length <= 1 }}
       controller={{ closeOnBackdropClick: true }}
@@ -54,7 +47,6 @@ const ImageLightboxDialog: React.FC<ImageLightboxDialogProps> = ({
         doubleClickMaxStops: 2,
         scrollToZoom: true,
       }}
-      // Hide prev/next affordances when there is only a single image.
       render={
         slides.length <= 1
           ? { buttonPrev: () => null, buttonNext: () => null }

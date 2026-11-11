@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves static about content, images, and routing.
- * - Visual-only tokenization of section backgrounds and typography.
- */
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography, Grid, Skeleton } from '@mui/material';
 import SocialLinks from '../components/common/SocialLinks';
@@ -27,13 +22,11 @@ const AboutPage: React.FC = () => {
   }, []);
   return (
     <Box>
-      {/* GSC FIX: per-page title/description/canonical/OG for the About page. */}
       <Seo
         title="About Us"
         description="Learn about Kamyaabi — our story, our commitment to purity, and how we source and deliver premium dry fruits and nuts fresh across India."
         canonicalPath="/about"
       />
-      {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>About Us</Typography>
@@ -43,7 +36,6 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
@@ -65,7 +57,6 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {}
       <Box sx={{ py: 8, bgcolor: 'var(--color-surface-bg)' }}>
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}>
@@ -89,7 +80,6 @@ const AboutPage: React.FC = () => {
         </Container>
       </Box>
 
-      {}
       <Box sx={{ py: 8, bgcolor: '#fff' }}>
         <Container maxWidth="lg">
           <Typography variant="h4" align="center" sx={{ fontFamily: 'var(--font-display)', fontWeight: 700, mb: 4 }}>

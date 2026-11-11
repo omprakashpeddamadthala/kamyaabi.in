@@ -4,7 +4,6 @@ import {
   Typography,
   Box,
   Button,
-  Card,
   Table,
   TableBody,
   TableCell,
@@ -48,14 +47,12 @@ const PackageDimensionSettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Dialog states
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<PackageDimensionSettingRequest>(initialRequest);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletingWeight, setDeletingWeight] = useState<number>(0);
@@ -112,7 +109,6 @@ const PackageDimensionSettingsPage: React.FC = () => {
       errors.height = 'Height must be greater than 0';
     }
 
-    // Check for duplicate weight slabs (excluding the currently edited setting)
     const isDuplicate = settings.some(
       (s) => s.packageWeightGram === form.packageWeightGram && s.id !== editingId
     );
@@ -152,14 +148,12 @@ const PackageDimensionSettingsPage: React.FC = () => {
   const handleToggleStatus = async (setting: PackageDimensionSetting) => {
     const nextStatus = !setting.active;
     try {
-      // Optimistic update
       setSettings((prev) =>
         prev.map((s) => (s.id === setting.id ? { ...s, active: nextStatus } : s))
       );
       await adminApi.updatePackageDimensionSettingStatus(setting.id, nextStatus);
       toast.showSuccess(`Weight slab status ${nextStatus ? 'enabled' : 'disabled'} successfully`);
     } catch (err) {
-      // Revert status
       setSettings((prev) =>
         prev.map((s) => (s.id === setting.id ? { ...s, active: setting.active } : s))
       );
@@ -189,7 +183,6 @@ const PackageDimensionSettingsPage: React.FC = () => {
     }
   };
 
-  // Search filter
   const filteredSettings = settings.filter((s) =>
     s.packageWeightGram.toString().includes(searchQuery.trim())
   );
@@ -287,7 +280,6 @@ const PackageDimensionSettingsPage: React.FC = () => {
         </TableContainer>
       )}
 
-      {/* Add / Edit Dialog */}
       <Dialog open={formOpen} onClose={() => !saving && setFormOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontWeight: 700 }}>
           {editingId ? 'Edit Package Slab' : 'Add Package Weight Slab'}
@@ -379,7 +371,6 @@ const PackageDimensionSettingsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteConfirmOpen}
         title="Delete Package Slab?"

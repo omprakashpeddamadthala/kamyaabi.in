@@ -1,10 +1,4 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves Provider, Helmet, theme, route, session, error, toast, and fly-to-cart wrapper order.
- * - Adds React Query cache provider only around existing API consumers; no endpoints, payloads, or auth logic changed.
- * - Existing route-level lazy loading and Suspense fallback remain active for all customer/admin pages.
- */
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Provider } from 'react-redux';

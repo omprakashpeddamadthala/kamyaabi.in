@@ -9,20 +9,12 @@ const FACEBOOK_BLUE = '#1877F2';
 const INSTAGRAM_GRADIENT = 'linear-gradient(45deg, #E1306C, #833AB4)';
 
 interface SocialLinksProps {
-  /** Icon glyph size in px. */
   size?: number;
-  /** Resting icon color (defaults to inherit). */
   color?: string;
-  /** Spacing between icons (MUI spacing units). */
   gap?: number;
   sx?: SxProps<Theme>;
 }
 
-/**
- * Facebook + Instagram links with branded hover colors, scale-up transition,
- * tooltips and accessible labels. URLs are sourced from app config so they can
- * be overridden via env vars.
- */
 const SocialLinks: React.FC<SocialLinksProps> = ({ size = 24, color = 'inherit', gap = 1, sx }) => {
   const platforms = [
     {

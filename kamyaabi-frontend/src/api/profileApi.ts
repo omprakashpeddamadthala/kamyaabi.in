@@ -12,7 +12,7 @@ export interface ProfileResponse {
   addresses: Address[];
 }
 
-export interface ProfileRequest {
+interface ProfileRequest {
   firstName: string;
   lastName: string;
 }

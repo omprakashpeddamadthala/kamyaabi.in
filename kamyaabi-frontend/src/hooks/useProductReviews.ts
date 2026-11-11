@@ -91,7 +91,8 @@ export function useProductReviews(product: Product | null, user: User | null) {
         ...prev,
         totalReviews: prev.totalReviews - 1,
       } : prev);
-    } catch { /* silently handle */ }
+    } catch {
+    }
   };
 
   const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

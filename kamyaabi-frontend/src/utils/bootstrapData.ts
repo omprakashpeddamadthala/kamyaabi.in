@@ -37,13 +37,6 @@ const isBlogPost = (value: unknown): value is BlogPost => (
   && typeof value.slug === 'string'
 );
 
-const isCategory = (value: unknown): value is Category => (
-  isRecord(value)
-  && typeof value.id === 'number'
-  && typeof value.name === 'string'
-  && typeof value.slug === 'string'
-);
-
 const isProductBootstrapData = (value: unknown): value is ProductBootstrapData => (
   isRecord(value)
   && typeof value.path === 'string'

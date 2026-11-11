@@ -1,9 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves hero banner API/fallback behavior, featured products, categories dispatch, track-order form, testimonials, WhatsApp link, and admin product-section visibility.
- * - Visual-only tokenization of hero, sections, cards, typography, and responsive heights.
- * - Introduces horizontal scrolling ribbons for touch-friendly mobile navigation.
- */
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -30,7 +24,6 @@ interface HeroSlide {
   link?: string;
 }
 
-// Fallback used only if no banners are configured in the admin panel / the API fails.
 const fallbackHeroSlides: HeroSlide[] = [
   { title: 'Almonds & Cashews: A Perfect Nutty Pair', desc: 'Our Premium California Almonds are handpicked for superior flavor and packed with healthy fats and protein, making them the perfect nutritious snack or recipe addition.', image: 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551827/kamyaabi/assets/img/hero/banner2.webp', alt: 'Premium almonds and cashews' },
   { title: 'The Ultimate Nut Trio: Pistachios, Cashews & Almonds', desc: 'Our Roasted and Salted Pistachios, Premium Split Cashews, and California Almonds offer a savory, crunchy snack packed with antioxidants and healthy fats.', image: 'https://res.cloudinary.com/dsibez7to/image/upload/v1782551825/kamyaabi/assets/img/hero/banner1.webp', alt: 'Pistachios, cashews and almonds' },
@@ -219,7 +212,6 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Auto-scroll Categories periodically
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.hidden) return;
@@ -239,7 +231,6 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, [categories]);
 
-  // Auto-scroll Products periodically
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.hidden) return;
@@ -313,7 +304,6 @@ const HomePage: React.FC = () => {
         jsonLd={faqJsonLd}
       />
     <Box>
-      {/* Hero Section */}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', position: 'relative', overflow: 'hidden' }}>
         <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
           <Grid container alignItems="center" sx={{ minHeight: { xs: '60vh', md: '70vh' }, maxHeight: 700 }}>
@@ -331,7 +321,6 @@ const HomePage: React.FC = () => {
               </Box>
             </Grid>
             <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center', position: 'relative', order: { xs: 1, md: 2 }, height: { xs: 280, md: 'auto' }, pt: { xs: 4, md: 0 } }}>
-              {/* Dynamic Blob Background */}
               <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: { xs: 240, md: 400 }, height: { xs: 240, md: 400 }, background: 'radial-gradient(circle, rgba(29, 78, 216, 0.15) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%', zIndex: 0 }} />
               
               {activeSlide.link ? (
@@ -346,7 +335,6 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Categories Horizontal Ribbon */}
       <Box sx={{ py: { xs: 4, md: 6 }, overflow: 'hidden' }}>
         <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
           <Box sx={{ px: { xs: 2, sm: 0 }, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -393,7 +381,7 @@ const HomePage: React.FC = () => {
               scrollSnapType: 'x mandatory',
               px: { xs: 2, sm: 0 },
               pb: 2,
-              '&::-webkit-scrollbar': { display: 'none' }, // Hide scrollbar for slick look
+              '&::-webkit-scrollbar': { display: 'none' },
               msOverflowStyle: 'none',
               scrollbarWidth: 'none',
             }}
@@ -442,7 +430,6 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Featured Products (Horizontal Carousel) */}
       {!isAdmin && (
         <Box sx={{ py: { xs: 4, md: 8 }, bgcolor: 'var(--color-surface-bg)' }}>
           <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
@@ -494,7 +481,7 @@ const HomePage: React.FC = () => {
                   overflowX: 'auto',
                   scrollSnapType: 'x mandatory',
                   px: { xs: 2, sm: 0 },
-                  pb: 3, // space for shadow
+                  pb: 3,
                   '&::-webkit-scrollbar': { display: 'none' },
                   msOverflowStyle: 'none',
                   scrollbarWidth: 'none',
@@ -522,7 +509,6 @@ const HomePage: React.FC = () => {
         </Box>
       )}
 
-      {/* Brand Story / Welcome */}
       <Box sx={{ py: { xs: 6, md: 10 }, bgcolor: '#ffffff' }}>
         <Container maxWidth="lg">
           <Grid container spacing={6} alignItems="center">
@@ -549,7 +535,6 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Track Your Order */}
       <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: 'var(--color-surface-bg)' }}>
         <Container maxWidth="sm">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -605,7 +590,6 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Counters */}
       <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: 'var(--color-surface-dark)', color: '#fff', backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(29, 78, 216, 0.2) 0%, transparent 70%)' }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 6 }}>
@@ -627,7 +611,6 @@ const HomePage: React.FC = () => {
 
       <AmazonBanner variant="home" />
 
-      {/* Testimonials */}
       <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: '#ffffff' }}>
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: 5 }}>
@@ -662,7 +645,6 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* FAQ */}
       <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: 'var(--color-surface-bg)' }}>
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: 5 }}>
@@ -706,11 +688,10 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Floating WhatsApp Button */}
       <Box component="a" href={`${config.whatsappUrl}?text=Hello%20Kamyaabi`} target="_blank" rel="noopener noreferrer"
         sx={{ 
           position: 'fixed', 
-          bottom: { xs: 80, md: 24 }, // higher on mobile due to bottom nav
+          bottom: { xs: 80, md: 24 },
           right: 24, 
           zIndex: 1000, 
           width: 56, 

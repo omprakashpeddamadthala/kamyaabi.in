@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves admin auth shell, collapsible sidebar, mobile drawer, breadcrumbs, low-stock notification, storefront link, and logout behavior.
- * - Visual-only tokenization of app bar, content surface, and borders.
- */
 import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
@@ -65,12 +60,10 @@ const AdminLayout: React.FC = () => {
   const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
 
-  // Close the mobile drawer whenever the route changes.
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.search]);
 
-  // Surface existing low-stock data (dashboard endpoint) in the top bar.
   useEffect(() => {
     let active = true;
     adminApi
@@ -105,9 +98,7 @@ const AdminLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'var(--color-surface-bg)' }}>
-      {/* GSC FIX: every /admin/* route is private — keep it out of the index. */}
       <Seo title="Admin" noindex />
-      {/* Desktop: permanent (collapsible) sidebar */}
       {!isMobile && (
         <Box
           component="aside"
@@ -135,7 +126,6 @@ const AdminLayout: React.FC = () => {
         </Box>
       )}
 
-      {/* Mobile: off-canvas overlay drawer */}
       {isMobile && (
         <Drawer
           variant="temporary"

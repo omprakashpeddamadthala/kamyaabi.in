@@ -131,7 +131,6 @@ test('legacy product URLs render directly with SSR, but mismatched paths redirec
     },
   });
 
-  // Legacy URLs should now return 200 with pre-rendered content
   for (const pathname of ['/products/premium-cashews-500g', '/products/12']) {
     const response = await fetch(`${origin}${pathname}`);
     const html = await response.text();
@@ -139,7 +138,6 @@ test('legacy product URLs render directly with SSR, but mismatched paths redirec
     assert.match(html, /<h1>Premium Cashews 500g<\/h1>/);
   }
 
-  // Mismatched category slug should still redirect to the canonical path
   const redirectResponse = await fetch(`${origin}/products/wrong/premium-cashews-500g`, { redirect: 'manual' });
   assert.equal(redirectResponse.status, 301);
   assert.equal(redirectResponse.headers.get('location'), '/products/cashews/premium-cashews-500g');

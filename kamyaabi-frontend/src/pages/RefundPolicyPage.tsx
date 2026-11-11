@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves static refund policy content and route.
- * - Visual-only tokenization of policy section backgrounds and cards.
- */
 import React from 'react';
 import {
   Box,
@@ -111,13 +106,11 @@ const RefundPolicyPage: React.FC = () => {
 
   return (
     <Box>
-      {/* GSC FIX: per-page title/description/canonical/OG for the Refund Policy page. */}
       <Seo
         title="Refund & Cancellation Policy"
         description="Read Kamyaabi's refund, return and cancellation policy for dry fruit and nut orders, including eligibility, timelines and how to raise a request."
         canonicalPath="/refund-policy"
       />
-      {}
       <Box sx={{ bgcolor: 'var(--color-surface-bg)', py: { xs: 6, md: 10 }, textAlign: 'center' }}>
         <Container maxWidth="md">
           <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 700, letterSpacing: 2 }}>
@@ -132,7 +125,6 @@ const RefundPolicyPage: React.FC = () => {
         </Container>
       </Box>
 
-      {}
       <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: '#fff' }}>
         <Container maxWidth="md">
           {sections.map((section, sIdx) => (

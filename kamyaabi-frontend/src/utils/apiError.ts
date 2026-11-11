@@ -1,7 +1,7 @@
 import { AxiosError } from 'axios';
 import { ApiErrorResponse, ApiResponse } from '../types';
 
-export interface ParsedApiError {
+interface ParsedApiError {
   status?: number;
   message: string;
   fieldErrors: Record<string, string>;

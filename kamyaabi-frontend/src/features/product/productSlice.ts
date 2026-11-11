@@ -4,7 +4,7 @@ import { productApi } from '../../api/productApi';
 import { categoryApi } from '../../api/categoryApi';
 import { Product, Category } from '../../types';
 
-export interface ProductLoadError {
+interface ProductLoadError {
   message: string;
   status?: number;
 }

@@ -77,7 +77,6 @@ public class DeliveryController {
             if (normalizedUnit.startsWith("kg")) {
                 return numericWeight;
             }
-            // Default to grams
             return numericWeight / 1000.0;
         } catch (NumberFormatException e) {
             return 0.5;

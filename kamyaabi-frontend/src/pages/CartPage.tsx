@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves cart fetch/update/remove, optimistic quantity updates, address loading/selection, address dialog, and checkout navigation requirements.
- * - Visual-only tokenization of cart heading, address cards, line items, and order summary.
- */
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import Seo from '../components/common/Seo';
 import { useNavigate, Link } from 'react-router-dom';
@@ -179,7 +174,6 @@ const CartPage: React.FC = () => {
   return (
     <PageTransition>
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* GSC FIX: cart is a private/transactional page — noindex. */}
       <Seo title="Your Cart" noindex />
       <Typography variant="h3" sx={{ mb: 4, fontFamily: 'var(--font-display)', fontWeight: 700 }}>
         Shopping Cart
@@ -187,7 +181,6 @@ const CartPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          {}
           <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -277,7 +270,6 @@ const CartPage: React.FC = () => {
             )}
           </Card>
 
-          {}
           {cart.items.map((item) => (
             <Card key={item.id} sx={{ mb: 2, p: { xs: 1.5, sm: 2 }, '&:hover': { transform: 'none' } }}>
               <Box
@@ -413,7 +405,6 @@ const CartPage: React.FC = () => {
               justifyContent: 'space-between',
               gap: 2,
             }}>
-              {/* Header / Mobile Total */}
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'var(--font-display)', display: { xs: 'none', md: 'block' }, mb: 2 }}>
                   Order Summary
@@ -426,7 +417,6 @@ const CartPage: React.FC = () => {
                 )}
               </Box>
 
-              {/* Desktop-only itemized list */}
               <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                 {selectedAddress && (
                   <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(29, 78, 216, 0.04)', borderRadius: 'var(--radius-xl)' }}>
@@ -497,10 +487,8 @@ const CartPage: React.FC = () => {
         </Grid>
       </Grid>
       
-      {/* Spacer for mobile to prevent content hiding behind fixed card */}
       {isMobile && <Box sx={{ height: 140 }} />}
 
-      {}
       <AddressFormDialog
         open={showAddressForm}
         onClose={() => setShowAddressForm(false)}

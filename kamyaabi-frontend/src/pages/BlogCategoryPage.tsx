@@ -10,7 +10,6 @@ import Seo from '../components/common/Seo';
 import { BlogPost, BlogCategory } from '../types';
 import { config } from '../config';
 
-
 const BlogCategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,7 +79,6 @@ const BlogCategoryPage: React.FC = () => {
         canonicalPath={slug ? `/blog/category/${slug}` : '/blog'}
         jsonLd={[breadcrumbJsonLd, collectionPageJsonLd]}
       />
-      {/* Pagination link relations for Google. */}
       {page > 0 && (
         <link rel="prev" href={page === 1 ? categoryUrl : `${categoryUrl}?page=${page}`} />
       )}

@@ -10,7 +10,7 @@ interface AuthState {
   error: string | null;
 }
 
-export interface AuthSessionPayload {
+interface AuthSessionPayload {
   token: string;
   user: User;
 }
@@ -39,19 +39,6 @@ export const googleLogin = createAsyncThunk(
   }
 );
 
-export const fetchCurrentUser = createAsyncThunk(
-  'auth/fetchCurrentUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await authApi.getCurrentUser();
-      return response.data.data;
-    } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return rejectWithValue(err.response?.data?.message || 'Failed to fetch user');
-    }
-  }
-);
-
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -66,9 +53,6 @@ const authSlice = createSlice({
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('tokenExpiry');
-    },
-    clearError: (state) => {
-      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -85,12 +69,9 @@ const authSlice = createSlice({
       .addCase(googleLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.user = action.payload;
       });
   },
 });
 
-export const { setSession, logout, clearError } = authSlice.actions;
+export const { setSession, logout } = authSlice.actions;
 export default authSlice.reducer;

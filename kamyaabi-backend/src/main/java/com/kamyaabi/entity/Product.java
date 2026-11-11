@@ -113,11 +113,6 @@ public class Product {
         this.images.add(image);
     }
 
-    public void removeImage(ProductImage image) {
-        this.images.remove(image);
-        image.setProduct(null);
-    }
-
     public String getMainImageUrl() {
         if (images == null || images.isEmpty()) {
             return imageUrl;

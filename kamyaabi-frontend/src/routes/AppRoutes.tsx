@@ -107,9 +107,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/category/:categorySlug" element={<ProductsPage />} />
-        {/* Canonical, SEO-friendly hierarchy: /products/:categorySlug/:productSlug.
-            The flat /products/:slug form is kept for backward compatibility and
-            redirects to the canonical URL (see useProductData). */}
         <Route path="/products/:categorySlug/:productSlug" element={<ProductDetailPage />} />
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -117,7 +114,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/track-order" element={<TrackOrderPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Public Blog Routes */}
         <Route path="/blogs" element={<BlogListPage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
@@ -175,7 +171,6 @@ const AppRoutes: React.FC = () => {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      {/* Admin panel — dedicated shell (sidebar + top app bar), guarded by role */}
       <Route element={<AdminLayoutRoute />}>
         <Route path="/admin" element={<AdminPage />} />
 

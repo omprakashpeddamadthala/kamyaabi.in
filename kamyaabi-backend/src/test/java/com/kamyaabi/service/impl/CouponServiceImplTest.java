@@ -43,8 +43,6 @@ class CouponServiceImplTest {
 
     @InjectMocks private CouponServiceImpl couponService;
 
-    // ── Validation Tests ────────────────────────────────────
-
     @Test
     void validateCoupon_returnsInvalid_whenSystemDisabled() {
         when(settingsService.getBoolean(CouponServiceImpl.COUPON_ENABLED, true)).thenReturn(false);
@@ -155,8 +153,6 @@ class CouponServiceImplTest {
         assertThat(res.message()).contains("required");
     }
 
-    // ── Apply Tests ──────────────────────────────────────────
-
     @Test
     void applyCoupon_recordsUsage_whenValid() {
         Coupon coupon = buildCoupon(true, LocalDateTime.now().plusDays(30));
@@ -186,8 +182,6 @@ class CouponServiceImplTest {
         assertThat(res.valid()).isFalse();
         verify(couponUsageRepository, never()).save(any());
     }
-
-    // ── CRUD Tests ──────────────────────────────────────────
 
     @Test
     void createCoupon_saves_withUpperCaseCode() {
@@ -302,8 +296,6 @@ class CouponServiceImplTest {
         assertThat(res.valid()).isTrue();
         assertThat(res.discountAmount()).isEqualByComparingTo(new BigDecimal("100.00"));
     }
-
-    // ── Helpers ──────────────────────────────────────────────
 
     private Coupon buildCoupon(boolean active, LocalDateTime expiresAt) {
         return Coupon.builder()

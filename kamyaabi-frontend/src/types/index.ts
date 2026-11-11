@@ -288,8 +288,6 @@ export interface AuthResponse {
   user: User;
 }
 
-// ── Blog Types ──────────────────────────────────────────────
-
 export interface BlogCategory {
   id: number;
   name: string;
@@ -340,8 +338,6 @@ export interface BlogPost {
   updatedAt: string;
 }
 
-// ── Product Tag Types ───────────────────────────────────────
-
 export interface ProductTag {
   id: number;
   name: string;
@@ -349,8 +345,6 @@ export interface ProductTag {
   productCount?: number;
   createdAt: string;
 }
-
-// ── Wishlist Types ──────────────────────────────────────────
 
 export interface WishlistItem {
   id: number;
@@ -370,8 +364,6 @@ export interface Wishlist {
   items: WishlistItem[];
   totalItems: number;
 }
-
-// ── Coupon Types ────────────────────────────────────────────
 
 export interface Coupon {
   id: number;
@@ -394,8 +386,6 @@ export interface CouponValidationResult {
   discountAmount: number | null;
   message: string;
 }
-
-// ── Order CSV Import Types ──────────────────────────────────
 
 export interface OrderImportResult {
   success: boolean;

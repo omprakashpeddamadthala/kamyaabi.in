@@ -56,7 +56,6 @@ public class ShiprocketProperties {
         return hasStaticToken() || hasLoginCredentials();
     }
 
-    /** Strip surrounding quotes and whitespace that may leak in from .env files. */
     public static String sanitize(String value) {
         if (value == null) return "";
         String trimmed = value.trim();

@@ -48,7 +48,6 @@ const BlogPostPage: React.FC = () => {
 
   useEffect(() => {
     if (!slug) return;
-    // If the post is already loaded via bootstrap for the current slug, bypass initial load.
     if (post && post.slug === slug) {
       blogApi.incrementViewCount(post.id).catch(() => {});
       blogApi.getRelatedPosts(post.id, 3).then((r) => setRelatedPosts(r.data.data)).catch(() => {});
@@ -114,8 +113,6 @@ const BlogPostPage: React.FC = () => {
   if (error || !post) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
-        {/* GSC FIX: noindex the 404 error state — a missing blog post must not
-            be presented to Google as a real indexable page.                   */}
         <Seo
           title="Post Not Found"
           description="The blog post you are looking for does not exist on Kamyaabi."
@@ -135,8 +132,6 @@ const BlogPostPage: React.FC = () => {
   const seoDescription = post.seoDescription || post.excerpt || '';
   const ogImage = post.ogImageUrl || post.coverImageUrl || '';
   const canonical = post.canonicalUrl || postUrl;
-
-  // ── Schema.org JSON-LD blocks ──────────────────────────────────────────────
 
   const articleJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -188,8 +183,6 @@ const BlogPostPage: React.FC = () => {
 
   return (
     <>
-      {/* GSC FIX: unified <Seo> handles all required meta, OG, Twitter,
-          canonical, robots, hreflang and JSON-LD in one component.      */}
       <Seo
         title={seoTitle}
         description={seoDescription}
@@ -203,7 +196,6 @@ const BlogPostPage: React.FC = () => {
       />
 
       <Container maxWidth="md" sx={{ py: 4 }}>
-        {/* Breadcrumb */}
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link component={RouterLink} to="/" underline="hover" color="inherit">Home</Link>
           <Link component={RouterLink} to="/blog" underline="hover" color="inherit">Blog</Link>
@@ -212,7 +204,6 @@ const BlogPostPage: React.FC = () => {
           </Typography>
         </Breadcrumbs>
 
-        {/* Categories */}
         {post.categories.length > 0 && (
           <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
             {post.categories.map((c) => (
@@ -229,12 +220,10 @@ const BlogPostPage: React.FC = () => {
           </Stack>
         )}
 
-        {/* Title */}
         <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 2, lineHeight: 1.2 }}>
           {post.title}
         </Typography>
 
-        {/* Author & Meta */}
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
           <Avatar src={post.authorAvatarUrl || undefined} sx={{ width: 40, height: 40 }}>
             {post.authorName?.[0] || 'A'}
@@ -258,7 +247,6 @@ const BlogPostPage: React.FC = () => {
           </Box>
         </Stack>
 
-        {/* Cover Image */}
         {post.coverImageUrl && (
           <Box
             component="img"
@@ -268,7 +256,6 @@ const BlogPostPage: React.FC = () => {
           />
         )}
 
-        {/* Content */}
         <Box
           sx={{
             '& h1, & h2, & h3, & h4': { mt: 3, mb: 1.5, fontWeight: 600 },
@@ -284,7 +271,6 @@ const BlogPostPage: React.FC = () => {
           dangerouslySetInnerHTML={{ __html: post.content || '' }}
         />
 
-        {/* Tags */}
         {post.tags.length > 0 && (
           <>
             <Divider sx={{ my: 3 }} />
@@ -304,7 +290,6 @@ const BlogPostPage: React.FC = () => {
           </>
         )}
 
-        {/* Social Share */}
         <Divider sx={{ my: 3 }} />
         <Stack direction="row" spacing={1} alignItems="center">
           <Typography variant="subtitle2" sx={{ mr: 1 }}>Share:</Typography>
@@ -330,7 +315,6 @@ const BlogPostPage: React.FC = () => {
           </Tooltip>
         </Stack>
 
-        {/* Related Posts */}
         {relatedPosts.length > 0 && (
           <>
             <Divider sx={{ my: 4 }} />

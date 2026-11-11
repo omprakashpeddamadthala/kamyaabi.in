@@ -11,6 +11,5 @@ public enum OrderEventType {
     PAYMENT_SUCCESS,
     PAYMENT_PENDING,
     PAYMENT_FAILED,
-    /** Customer placed an order with payment method = Cash on Delivery. */
     COD_ORDER_PLACED
 }

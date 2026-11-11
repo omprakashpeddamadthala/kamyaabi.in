@@ -1,9 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves order detail fetching, invoice/download behavior, payment retry, Razorpay verification, and status/payment rendering.
- * - Visual-only tokenization of Razorpay theme color from design tokens.
- * - Background status refresh: after initial load, silently re-syncs from Shiprocket to ensure latest status.
- */
 import React, { useEffect } from 'react';
 import Seo from '../components/common/Seo';
 import { useParams, Link } from 'react-router-dom';
@@ -57,13 +51,10 @@ const OrderDetailPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Initial load — clears stale data immediately (pending reducer sets selectedOrder=null)
   useEffect(() => {
     if (id) dispatch(fetchOrderById(Number(id)));
   }, [dispatch, id]);
 
-  // Background refresh — after initial render, silently pull the latest status
-  // from Shiprocket so the displayed status is always fresh without blocking load.
   useEffect(() => {
     if (!id) return;
     const numericId = Number(id);
@@ -74,7 +65,6 @@ const OrderDetailPage: React.FC = () => {
         }
       })
       .catch(() => {
-        // Background refresh failure is non-fatal — silently ignore
       });
   }, [dispatch, id]);
 
@@ -155,7 +145,6 @@ const OrderDetailPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
-      {/* GSC FIX: account order detail is private — noindex. */}
       <Seo title="Order Details" noindex />
       <Breadcrumbs sx={{ mb: 3 }}>
         <MuiLink component={Link} to="/" underline="hover" color="inherit">Home</MuiLink>
@@ -219,7 +208,6 @@ const OrderDetailPage: React.FC = () => {
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
-          {}
           <Card sx={{ p: { xs: 1.5, sm: 3 }, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Items</Typography>
             {order.items.map((item) => (
@@ -279,7 +267,6 @@ const OrderDetailPage: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          {}
           {order.shippingAddress && (
             <Card sx={{ p: 3, mb: 3, '&:hover': { transform: 'none' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Shipping Address</Typography>
@@ -296,7 +283,6 @@ const OrderDetailPage: React.FC = () => {
             </Card>
           )}
 
-          {}
           {(order.payment || order.paymentMethod === 'COD') && (
             <Card sx={{ p: 3, '&:hover': { transform: 'none' } }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Payment</Typography>
@@ -347,7 +333,6 @@ const OrderDetailPage: React.FC = () => {
             </Card>
           )}
 
-          {}
           {(order.awbNumber || order.shippingStatus) && (
             <Box sx={{ mt: 3 }}>
               <TrackingWidget
@@ -359,7 +344,6 @@ const OrderDetailPage: React.FC = () => {
             </Box>
           )}
 
-          {}
           <Card sx={{ p: 3, mt: 3, '&:hover': { transform: 'none' } }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Order Info</Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

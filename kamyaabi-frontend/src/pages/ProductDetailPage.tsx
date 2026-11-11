@@ -239,7 +239,6 @@ const ProductDetailPage: React.FC = () => {
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 8);
   const hasRating = !!reviewSummary && reviewSummary.totalReviews > 0;
 
-  // GSC FIX: build per-product SEO metadata + schema.org structured data.
   const productPath = productUrl(product);
   const productAbsoluteUrl = `${config.brandSiteUrl}${productPath}`;
   const seoCanonical = product.canonicalUrl || productAbsoluteUrl;
@@ -298,7 +297,6 @@ const ProductDetailPage: React.FC = () => {
             '@type': 'ListItem',
             position: 3,
             name: product.categoryName,
-            // GSC FIX: use canonical /products/category/:slug, NOT ?category= query param.
             item: `${config.brandSiteUrl}/products/category/${product.categorySlug}`,
           }]
         : []),
@@ -310,7 +308,6 @@ const ProductDetailPage: React.FC = () => {
       },
     ],
   };
-
 
   const hasNutrition = !!product.nutritionalInfo && Object.keys(product.nutritionalInfo).length > 0;
   const hasHowToUse = !!product.howToUse && product.howToUse.length > 0;

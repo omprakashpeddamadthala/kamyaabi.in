@@ -13,7 +13,6 @@ import java.util.List;
 
 public interface BlogService {
 
-    // Public post operations
     Page<BlogPostResponse> getPublishedPosts(Pageable pageable);
     Page<BlogPostResponse> getPublishedPostsByCategory(String categorySlug, Pageable pageable);
     Page<BlogPostResponse> getPublishedPostsByTag(String tagSlug, Pageable pageable);
@@ -24,7 +23,6 @@ public interface BlogService {
     void incrementViewCount(Long postId);
     List<BlogPostResponse> getAllPublishedPosts();
 
-    // Admin post operations
     Page<BlogPostResponse> getAdminPosts(String status, String query, Pageable pageable);
     BlogPostResponse getAdminPostById(Long id);
     BlogPostResponse createPost(BlogPostRequest request, Long authorId);
@@ -33,20 +31,17 @@ public interface BlogService {
     BlogPostResponse publishPost(Long id);
     BlogPostResponse unpublishPost(Long id);
 
-    // Category operations
     List<BlogCategoryResponse> getAllCategories();
     BlogCategoryResponse getCategoryBySlug(String slug);
     BlogCategoryResponse createCategory(BlogCategoryRequest request);
     BlogCategoryResponse updateCategory(Long id, BlogCategoryRequest request);
     void deleteCategory(Long id);
 
-    // Tag operations
     List<BlogTagResponse> getAllTags();
     BlogTagResponse getTagBySlug(String slug);
     BlogTagResponse createTag(BlogTagRequest request);
     BlogTagResponse updateTag(Long id, BlogTagRequest request);
     void deleteTag(Long id);
 
-    // Scheduled publishing
     void publishScheduledPosts();
 }

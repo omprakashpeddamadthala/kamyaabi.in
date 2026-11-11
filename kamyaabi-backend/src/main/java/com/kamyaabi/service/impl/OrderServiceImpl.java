@@ -123,8 +123,6 @@ public class OrderServiceImpl implements OrderService {
         order.setItems(orderItems);
         order.setTotalAmount(totalAmount);
 
-        // COD orders are confirmed at creation — deduct stock immediately (mirrors
-        // what updateOrderStatus does when an admin confirms a prepaid order).
         if (isCod) {
             for (OrderItem orderItem : orderItems) {
                 Product product = orderItem.getProduct();
@@ -139,7 +137,6 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
-        // Apply coupon if provided
         if (request.couponCode() != null && !request.couponCode().isBlank()) {
             CouponValidationResponse couponResult = couponService.applyCoupon(
                     request.couponCode(), userId, null, totalAmount);
@@ -283,13 +280,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
-        // Only refresh if order has an AWB and is not already in a terminal state
         boolean isTerminal = order.getStatus() == Order.OrderStatus.DELIVERED
                 || order.getStatus() == Order.OrderStatus.CANCELLED;
 
         if (!isTerminal && order.getShiprocketOrderId() != null) {
             shiprocketService.refreshShipmentStatus(order);
-            // Re-fetch after mutation so the response reflects persisted values
             order = orderRepository.findById(orderId)
                     .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
         } else {

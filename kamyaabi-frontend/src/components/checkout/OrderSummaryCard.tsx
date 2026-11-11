@@ -55,7 +55,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
           justifyContent: 'space-between',
           gap: 2,
         }}>
-          {/* Header / Mobile Total */}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" sx={{ fontWeight: 800, fontFamily: 'var(--font-display)', display: { xs: 'none', md: 'block' }, mb: 2 }}>
               Order Summary
@@ -68,7 +67,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
             )}
           </Box>
 
-          {/* Desktop-only itemized list */}
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography sx={{ color: 'var(--color-text-secondary)', fontWeight: 600 }}>Subtotal</Typography>
@@ -151,7 +149,6 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
         )}
       </Card>
       
-      {/* Spacer for mobile to prevent content hiding behind fixed card */}
       {isMobile && <Box sx={{ height: 140 }} />}
     </>
   );

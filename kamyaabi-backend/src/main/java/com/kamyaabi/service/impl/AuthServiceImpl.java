@@ -179,7 +179,6 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException(reason);
         }
 
-        // Refresh cached delivery estimate if missing or older than 24 h
         refreshEstimateIfStale(user.getId());
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole().name());
@@ -211,7 +210,7 @@ public class AuthServiceImpl implements AuthService {
         boolean stale = estimateRepository.findByUserId(userId)
                 .map(e -> e.getLastRefreshedAt() == null
                         || e.getLastRefreshedAt().isBefore(LocalDateTime.now().minusHours(24)))
-                .orElse(true); // no record yet → treat as stale
+                .orElse(true);
         if (stale) {
             log.debug("Delivery estimate stale for user {} — scheduling async refresh", userId);
             deliveryEstimateService.refreshForUser(userId);

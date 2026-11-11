@@ -38,8 +38,6 @@ import { parseApiError } from '../utils/apiError';
 import PageTransition from '../components/common/PageTransition';
 import { STATUS_COLORS, formatStatus } from '../utils/orderStatusUtils';
 
-/* ── Order lifecycle steps ────────────────────────────────── */
-
 const ORDER_STEPS = [
   { key: 'PLACED', label: 'Order Placed', icon: <Inventory2 /> },
   { key: 'PAID', label: 'Payment Confirmed', icon: <Payment /> },
@@ -64,8 +62,6 @@ const STATUS_TO_STEP: Record<string, number> = {
 
 const formatLabel = formatStatus;
 
-/* ── Styled stepper connector ─────────────────────────────── */
-
 const LifecycleConnector = styled(StepConnector)(({ theme }) => ({
   '& .MuiStepConnector-line': {
     borderColor: theme.palette.grey[300],
@@ -76,8 +72,6 @@ const LifecycleConnector = styled(StepConnector)(({ theme }) => ({
     borderColor: theme.palette.success.main,
   },
 }));
-
-/* ── Component ────────────────────────────────────────────── */
 
 const TrackOrderPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -124,7 +118,6 @@ const TrackOrderPage: React.FC = () => {
         .then((r) => setTracking(r.data.data))
         .catch((e) => setError(parseApiError(e).message));
     }
-    // only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -144,7 +137,6 @@ const TrackOrderPage: React.FC = () => {
 
   return (
     <PageTransition>
-      {/* GSC FIX: public order-tracking tool — indexable with canonical/OG. */}
       <Seo
         title="Track Your Order"
         description="Track your Kamyaabi order in real time. Enter your order ID or AWB number to see the latest shipment status and estimated delivery date."
@@ -152,7 +144,6 @@ const TrackOrderPage: React.FC = () => {
       />
       <Box sx={{ bgcolor: '#f5f5f5', minHeight: '80vh', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="md">
-          {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <LocalShipping sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
             <Typography
@@ -171,7 +162,6 @@ const TrackOrderPage: React.FC = () => {
             </Typography>
           </Box>
 
-          {/* Search Card */}
           <Card sx={{ p: { xs: 2, md: 3 }, mb: 4, borderRadius: 3 }}>
             <Tabs
               value={tab}
@@ -221,17 +211,14 @@ const TrackOrderPage: React.FC = () => {
             </Box>
           </Card>
 
-          {/* Error */}
           {error && (
             <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }} onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
 
-          {/* Results */}
           {tracking && (
             <Box>
-              {/* Order Status Chip Bar */}
               <Card sx={{ p: { xs: 2, md: 3 }, mb: 3, borderRadius: 3 }}>
                 <Box
                   sx={{
@@ -291,7 +278,6 @@ const TrackOrderPage: React.FC = () => {
                 </Box>
               </Card>
 
-              {/* Order Lifecycle Stepper (horizontal) */}
               {!isCancelled && (
                 <Card sx={{
                   p: { xs: 2, md: 3 },
@@ -342,7 +328,6 @@ const TrackOrderPage: React.FC = () => {
                 </Card>
               )}
 
-              {/* Cancelled / RTO banner */}
               {isCancelled && (
                 <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
                   {tracking.orderStatus === 'CANCELLED'
@@ -353,7 +338,6 @@ const TrackOrderPage: React.FC = () => {
                 </Alert>
               )}
 
-              {/* Shipment Tracking Activities (vertical) */}
               {activities.length > 0 && (
                 <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: 3 }}>
                   <Box
@@ -397,7 +381,6 @@ const TrackOrderPage: React.FC = () => {
                 </Card>
               )}
 
-              {/* No tracking yet */}
               {!isCancelled && activities.length === 0 && !tracking.awbNumber && (
                 <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, textAlign: 'center' }}>
                   <Typography variant="body1" color="text.secondary">

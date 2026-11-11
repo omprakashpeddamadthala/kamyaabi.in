@@ -1,10 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves MUI provider integration, all existing Redux/Auth/API behavior, and responsive overflow safeguards.
- * - Replaces only visual primitives with design-token-backed palette, typography, spacing, radii, shadows, and states.
- * - Keeps current page routes, role guards, form handling, and backend request contracts untouched.
- * - Updated to Zepto/Blinkit premium mobile-first aesthetic.
- */
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({

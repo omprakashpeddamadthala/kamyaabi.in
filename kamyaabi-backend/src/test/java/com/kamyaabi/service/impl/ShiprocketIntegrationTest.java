@@ -18,18 +18,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-/**
- * Integration tests that hit the real Shiprocket API.
- * <p>
- * Run with:
- * <pre>
- * SHIPROCKET_EMAIL=... SHIPROCKET_PASSWORD=... mvn test \
- *   -Dtest=ShiprocketIntegrationTest -Dgroups=integration
- * </pre>
- * <p>
- * These tests are <b>read-only</b> (auth + channel listing) —
- * they do NOT create orders, assign AWBs, or schedule pickups.
- */
 @Tag("integration")
 @EnabledIfEnvironmentVariable(named = "SHIPROCKET_EMAIL", matches = ".+")
 class ShiprocketIntegrationTest {

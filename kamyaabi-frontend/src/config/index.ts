@@ -11,7 +11,7 @@ const DEFAULT_FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=6159017352
 const DEFAULT_INSTAGRAM_URL = 'https://www.instagram.com/kamyaabi_dryfruits/';
 const DEFAULT_GA_ID = 'G-M887QJRB53';
 
-export interface DevLoginConfig {
+interface DevLoginConfig {
   readonly enabled: boolean;
   readonly adminEmail: string;
   readonly userEmail: string;

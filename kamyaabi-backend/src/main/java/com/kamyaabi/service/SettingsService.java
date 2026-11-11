@@ -5,15 +5,6 @@ import com.kamyaabi.dto.response.SettingMetadataResponse;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Read/write access to runtime-tunable platform settings (key/value pairs
- * persisted in the {@code settings} table).
- *
- * <p>Settings drive low-stock alert thresholds, product-listing page size,
- * and conditional UI features (e.g. the "X bought this in last 7 days" badge).
- * Defaults are applied per-key when a row is missing or the stored value
- * fails type coercion.
- */
 public interface SettingsService {
 
     String LOW_STOCK_THRESHOLD = "low_stock_threshold";
@@ -60,12 +51,6 @@ public interface SettingsService {
 
     Map<String, String> getAll();
 
-    /**
-     * Returns the full settings catalog as metadata (label, description,
-     * category, data type, default value, validation rules) combined with each
-     * setting's current value, in display order. Drives the dynamic admin
-     * settings UI.
-     */
     List<SettingMetadataResponse> getAllMetadata();
 
     Map<String, String> getPublicSettings();

@@ -36,7 +36,6 @@ const DeliverySection: React.FC<DeliverySectionProps> = ({
       Delivery
     </Typography>
 
-    {/* Loading state */}
     {pincodeLoading && (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <Skeleton variant="rounded" height={22} width="70%" />
@@ -45,7 +44,6 @@ const DeliverySection: React.FC<DeliverySectionProps> = ({
       </Box>
     )}
 
-    {/* Result from Shiprocket */}
     {!pincodeLoading && pincodeResult && (
       <Box
         sx={{
@@ -137,7 +135,6 @@ const DeliverySection: React.FC<DeliverySectionProps> = ({
       </Box>
     )}
 
-    {/* Error from API call */}
     {!pincodeLoading && !pincodeResult && pincodeError && (
       <Box
         sx={{
@@ -157,7 +154,6 @@ const DeliverySection: React.FC<DeliverySectionProps> = ({
       </Box>
     )}
 
-    {/* No address saved */}
     {!pincodeLoading && !pincodeResult && !pincodeError && user && hasNoAddress && (
       <Box
         sx={{
@@ -191,7 +187,6 @@ const DeliverySection: React.FC<DeliverySectionProps> = ({
       </Box>
     )}
 
-    {/* Guest / not logged in */}
     {!user && (
       <Box
         sx={{

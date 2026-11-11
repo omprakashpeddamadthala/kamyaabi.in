@@ -14,8 +14,6 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    Page<Product> findByActiveTrue(Pageable pageable);
-
     Optional<Product> findBySlug(String slug);
     Optional<Product> findBySlugAndActiveTrue(String slug);
     Optional<Product> findByIdAndActiveTrue(Long id);
@@ -24,13 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndIdNot(String slug, Long id);
-
-    Page<Product> findByCategoryIdAndActiveTrue(Long categoryId, Pageable pageable);
-
-    @Query("SELECT p FROM Product p WHERE p.active = true AND " +
-           "(LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Product> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
     List<Product> findTop8ByActiveTrueOrderByCreatedAtDesc();
 
@@ -48,14 +39,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                               @Param("active") Boolean active,
                               Pageable pageable);
 
-    long countByCategoryId(Long categoryId);
-
     long countByActiveTrueAndStockLessThan(int threshold);
 
     @Query("SELECT DISTINCT p FROM Product p JOIN p.tags t WHERE p.active = true AND t.slug = :tagSlug")
     Page<Product> findByTagSlug(@Param("tagSlug") String tagSlug, Pageable pageable);
-
-    // ── Variation support ───────────────────────────────────────────────
 
     @Query(value = """
             SELECT p.* FROM products p

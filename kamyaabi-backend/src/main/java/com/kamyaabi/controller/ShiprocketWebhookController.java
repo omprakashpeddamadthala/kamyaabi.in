@@ -15,14 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Handles incoming Shiprocket status webhooks.
- * <p>
- * All status mapping is delegated to {@link ShiprocketStatusMapper} —
- * no status-mapping logic lives here.  Events are published after the
- * mapper has updated the entity so listeners always see the final state.
- * </p>
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/webhooks")
@@ -78,12 +70,10 @@ public class ShiprocketWebhookController {
             Order order = orderOpt.get();
             Order.OrderStatus statusBefore = order.getStatus();
 
-            // Update the raw shipping status first
             if (currentStatus != null) {
                 order.setShippingStatus(currentStatus);
             }
 
-            // Delegate to the single canonical mapper
             if (currentStatus != null) {
                 statusMapper.applyTo(order, currentStatus);
             }
@@ -92,7 +82,6 @@ public class ShiprocketWebhookController {
             log.info("Order {} updated via webhook: shippingStatus='{}', orderStatus={} → {}",
                     order.getId(), currentStatus, statusBefore, order.getStatus());
 
-            // Publish lifecycle events based on the final order status
             publishEventIfChanged(order, statusBefore);
 
             return ResponseEntity.ok(Map.of("status", "ok"));
@@ -103,10 +92,6 @@ public class ShiprocketWebhookController {
         }
     }
 
-    /**
-     * Publishes a domain event only when the order status actually changed,
-     * to avoid double-firing on repeated webhook deliveries.
-     */
     private void publishEventIfChanged(Order order, Order.OrderStatus previousStatus) {
         if (order.getStatus() == previousStatus) {
             return;

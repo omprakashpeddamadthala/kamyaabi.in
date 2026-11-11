@@ -1,8 +1,3 @@
-/*
- * UI REDESIGN AUDIT — PRESERVED FUNCTIONALITY
- * - Preserves Shiprocket dashboard API data, metrics, status rendering, and admin actions.
- * - Visual-only tokenization of status colors.
- */
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Container,
